@@ -1,3 +1,3 @@
-target/mt5882/5882_driver/chip/chip_bim.o,chip.a
-target/mt5882/5882_driver/chip/prot_cli.o,chip.a
 target/mt5882/5882_driver/chip/chip_id.o,chip.a
+target/mt5882/5882_driver/chip/prot_cli.o,chip.a
+target/mt5882/5882_driver/chip/chip_bim.o,chip.a
