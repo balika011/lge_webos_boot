@@ -44,8 +44,9 @@ ifndef BUILD_SPC
 export BUILD_SPC := EU
 endif
 
-include $(shell pwd)/kdriver/Makefile.mak
-export KDRIVER_ROOT = $(shell pwd)/kdriver
+PWD := $(shell pwd)
+include $(PWD)/kdriver/Makefile.mak
+export KDRIVER_ROOT = $(PWD)/kdriver
 
 include  $(KDRIVER_ROOT)/host.mak
 
@@ -56,6 +57,14 @@ TOOL_CHAIN=4.8.2
 #TOOL_CHAIN=webos
 #ENABLE_CA9=true
 
+ifeq ($(LG_CONFIG), y)
+	TOOL_DIR ?= "/opt/crosstool/webostv/arm-lg115x-linux-gnueabi-4.8-2014.11-i686"
+    SIGN_DIR ?= $(PWD)/uboot/tools/sign_dir
+	TOOL_CHAIN_ROOT=${TOOL_DIR}
+	export CROSS_TOOLCHAIN_SYSROOT ?= $(TOOL_CHAIN_ROOT)/arm-lg115x-linux-gnueabi/sysroot/usr
+	export CROSS_TOOLCHAIN_SYSROOT_LIB ?= $(TOOL_CHAIN_ROOT)/arm-lg115x-linux-gnueabi/sysroot/lib
+	export LIBC_PATH_482 ?= $(LIBC_PATH)
+else
 ifeq "$(TOOL_CHAIN)" "4.8.2"
   	ifeq "$(ENABLE_CA9)" "true"
 			export TOOL_DIR = /mtkoss/gnuarm/vfp_4.8.2_2.6.35_cortex-a9-ubuntu/x86_64
@@ -103,6 +112,7 @@ else
     export CROSS_TOOLCHAIN_SYSROOT_LIB ?= $(TOOL_CHAIN_ROOT)/lib
 endif
 endif
+endif
 
 HOST_NAME=`hostname`
 
@@ -117,9 +127,9 @@ IMG_TOOL_BIN=${TOOL_DIR}/image-tools/IMG_TOOL_BIN_NOT_DEFINE
 SDE_BIN=/opt/toolchains/sde5/bin/SDE_BIN_NOT_DEFNIE
 
 
-SIGN_TOOL_DIR=${SIGN_DIR}/tool
-SIGN_KEY_DIR=${SIGN_DIR}/key
-SIGN_SCRIPT=${SIGN_TOOL_DIR}/sign.sh
+SIGN_TOOL_DIR?=${SIGN_DIR}/tool
+SIGN_KEY_DIR?=${SIGN_DIR}/key
+SIGN_SCRIPT?=${SIGN_TOOL_DIR}/sign.sh
 SIGN_USE_PARTIAL=YES
 
 
@@ -256,7 +266,7 @@ ifneq "$(SECURE_BOOT)" "y"
 else
 	$(CP) $(CP_FLAG) $(BOOT_ROOT)/$(SOC_UBOOT)/$(MODEL)_secure_$(BOOT)boot.bin $(BOOT_RESULT_DIR)/$(BOOT_NAME_DV).bin
 	$(CHMOD) +x $(MK_EPAK)
-	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/boot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/u-boot_pack.lzhs	\
+	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/boot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/u-boot_pack_secure.lzhs	\
 				boot $(MODEL_NAME) $(BUILD_VERS) $(COMPILE_DATE) 0x0 RELEASE
 endif
 	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/secureboot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/mtkloader.bin	\
