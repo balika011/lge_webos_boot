@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date: 2015/01/09 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -399,7 +399,7 @@ REGTBL_T const CODE REGTBL_COMB_PAL_AV[] = {
 	{COMB2D_05, 0x14060208, 0xFFFFFFFF},
 	{COMB2D_06, 0x0C0A2808, 0xFFFFFFFF},
 	{COMB2D_07, 0x0A0D9226, 0x7FFFFFFF},
-	{COMB2D_08, 0x33112029, 0xFFFFFFFF},
+	{COMB2D_08, 0x33110029, 0xFFFFFFFF},
 	{COMB2D_09, 0x1311042A, 0xFFFFFFFF},
 	{COMB2D_0A, 0x8C03100A, 0xFC7FFFFF},
 	{COMB2D_0B, 0x12345678, 0xFFFFFFFF},
@@ -972,6 +972,8 @@ void vDrvTDCSet(void)
         vIO32WriteFldAlign(CTG_00, SV_ON, BST_0DEG);     // Change TVD CGen color 0 degree .
         break;
     }
+
+    vIO32WriteFldAlign(TDC_FW_00, SV_ON, TDC_CCS_ADAP_EN);
     // Re-enable TDC.        
     if (fgTDCEnabled)    
 	{        
