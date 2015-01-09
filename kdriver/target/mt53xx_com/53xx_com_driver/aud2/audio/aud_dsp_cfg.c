@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date: 2015/01/09 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -264,6 +264,7 @@ typedef enum
 	AUDIO_LGSE_LGSEFN004MODE3	= 23,
 	AUDIO_LGSE_MODE 			= 24,
 	AUDIO_LGSE_MAIN 			= 25,	//new webOS 1.0
+	AUDIO_LGSE_GET_DATA         = 26,
 	AUDIO_LGSE_FUNC_NUM
 } AUDIO_LGSE_FUNCLIST_T;
 

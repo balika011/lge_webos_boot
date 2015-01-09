@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date: 2015/01/09 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5512,6 +5512,27 @@ typedef enum {
     APROC_REG_BIQ_HP_EQ_7_GAIN
 }APROC_ASM_POSTPROC3B_T;
 
+typedef enum {
+    // Trims
+    APROC_REG_SP_CH7CH8_TRIM = 0x0,
+    APROC_REG_DELAY7_TRIM,
+    APROC_REG_DELAY8_TRIM,
+    APROC_REG_DELAY_INPUT0_TRIM,
+    APROC_REG_DELAY_INPUT1_TRIM,
+    
+    // Inverter
+    APROC_REG_SP_CH7CH8_INV = 0x8,
+    
+    // Volume
+    APROC_REG_SP_CH7CH8_VOL = 0xc,
+
+    // Delay
+    APROC_REG_DELAY_SP_CH7CH8 = 0x10,
+    APROC_REG_DELAY_BT,
+    APROC_REG_DELAY_INPUT0,
+    APROC_REG_DELAY_INPUT1,
+    
+} APROC_ASM_POSTPROC3C_T;
 
 /* APROC Data Port (ADP)
     */
