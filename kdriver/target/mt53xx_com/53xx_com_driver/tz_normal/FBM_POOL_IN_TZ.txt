@@ -1,0 +1,32 @@
+ FBM_POOL_TYPE_T aeSecure_pool[] =
+    {
+        FBM_POOL_TYPE_DRM,
+#ifndef CC_SVP_SUPPORT
+        FBM_POOL_TYPE_DMX,
+		FBM_POOL_TYPE_DMX2, 	   
+		FBM_POOL_TYPE_DMX3,
+		FBM_POOL_TYPE_DMX4,
+#endif
+        FBM_POOL_TYPE_MPEG,
+        FBM_POOL_TYPE_SCPOS_MAIN,
+        FBM_POOL_TYPE_SCPOS_PIP,
+        FBM_POOL_TYPE_MDDI_1,
+        FBM_POOL_TYPE_MDDI_PIP,
+        FBM_POOL_TYPE_NR_1,
+        FBM_POOL_TYPE_B2R,
+        FBM_POOL_TYPE_OD,
+        FBM_POOL_TYPE_MPEG2,
+        FBM_POOL_TYPE_MPEG3,
+        FBM_POOL_TYPE_MPEG4,
+        FBM_POOL_TYPE_TVE,
+        FBM_POOL_TYPE_MJC_1,
+		#if defined(CC_MT5890)
+        FBM_POOL_TYPE_MPEG_C,
+        FBM_POOL_TYPE_MPEG2_C,
+        FBM_POOL_TYPE_MPEG3_C,
+        FBM_POOL_TYPE_MPEG4_C,
+        FBM_POOL_TYPE_W2D_R2R,
+        FBM_POOL_TYPE_W2D_R2R_Y,
+		//FBM_POOL_TYPE_VSS,
+		#endif
+    };

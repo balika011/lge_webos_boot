@@ -1,0 +1,25 @@
+common {
+..\obj\startup.obj
+,..\obj\l51bank.obj
+,..\obj\drv_pdwnc.obj
+,..\obj\drv_timer.obj
+,..\obj\drv_wdt.obj
+,..\obj\drv_kr.obj
+,..\obj\drv_rs232.obj
+,..\obj\drv_hdmicec.obj
+,..\obj\drv_mhlcbus.obj
+,..\obj\main.obj
+,..\obj\drv_sif.obj
+,..\obj\drv_eeprom.obj
+,..\obj\command_task.obj
+,..\obj\cust_tasks.obj
+,..\obj\drv_gpio.obj
+,..\obj\drv_t8032_pwm.obj
+},
+
+bank0 {
+..\obj\drv_avlink.obj
+}
+
+to UI.OMF DS DL NOINDIRECTCALL PAGELENGTH(65535) RS(256) XDATA(0D000h-0E7FFh) RC(0)
+

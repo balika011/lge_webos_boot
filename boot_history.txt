@@ -1,0 +1,394 @@
++------------------------------------------------------------------------------
+<Format>
+version : author[ : title]
+yyyy/mm/dd hh:mm
+	#. content
++------------------------------------------------------------------------------
+*  <Example 1 - 한명이 Update하는 경우>
+*  1.00.01 : user
+*  2002/04/08 19:00
+*  channel change시 pid setting 수정
+*
+*  <Example 2 - 여러명이 Update하는 경우>
+*  1.00.02 : user1, user2, user3
+*  2002/04/30 20:00
+*  	1. mp3api에 undefined symbol error 수정: user1 WS#-##
+*  	2. Channel Change시 화면에 이상한 색깔이 보이는것 수정 : user2
+*  	3. recording된 program 재생시 progress bar에서q cursor진행 문제 수정 : user3
++------------------------------------------------------------------------------
+* 2009/11/19 일 이후 Concept 변경.
+* Version Update Concept
+* x.yy.zz     : 각각의 version 의 field 1, 2, 3라고 하였을 때.
+* x (field 1) : Base code 의 version 이 바뀐 경우 또는 Code 의 체계가 바뀐 경우
+*			    (예. CFE 2.10 -> CFE 2.40)
+* yy(field 2) : Code 변경에 의하여 다른 S/W의 동작성 및 I/F 가 달라질 경우
+* zz(field 3) : Code 변경이 되었으나 S/W 의 동작성 등 영향을 끼치지 않을 경우
+*
+* == comment ==
+* version field 3의 overflow를 줄이기 위해서 field 1, 또는 field 2가
+* update 되면 그 이하 field는 자동으로 0으로 초기화 되도록 합니다.
+* (예. 1.00.23  --> 1.01.00)
++------------------------------------------------------------------------------
+* 주의사항
+*   A) 버전필드는 반드시 첫번째 열에서 시작하여야 합니다. make 시 이 화일을
+*      자동으로 읽어서, 버전을 작성하게 제작되어 있습니다.
++-----------------------------------------------------------------------------
+3.00.05 : kenneth0.park
+2013/03/07 15:31
+		1. LN571 Tool Type ADD
+
+3.00.04 : kenneth0.park
+2013/02/28 16:31
+		1. UHD Tool 65Inch ADD
+
+3.00.03 : kenneth0.park
+2013/02/27 13:31
+		1. Final Tool Option Add/Del
+
+3.00.02 : kenneth0.park
+2013/02/19 08:24
+		1. Unregister TOOL Option Add/Del
+
+3.00.01 : haeyong.pyun
+2013/02/07 16:00
+        1. Chang chip_boot.c to fix power on failure in low temp.
+
+1.01.00 : sungsu85.kim
+2013/01/28 11:20
+        1. Chang MTK chip.a to block Dport
+
+1.01.00 : kenneth0.park
+2013/01/16 09:42
+	1. Unregister TOOL Option Add
+
+1.00.79 : haeyong.pyun
+2012/03/07 11:30
+	1. deliver emmc size to lg app
+
+1.00.78 : jaehan.park
+2012/02/01 20:10
+	1. reduce delay of T2 timing in case of sharp module (T2 spec : 10ms ~ 20ms)
+
+1.00.77 : haeyong.pyun
+2012/01/27 17:00
+	1. move bootsplash function for power seq. T2 value DA model
+	2. can enter boot prompt when RELEASE and INSTOP mode
+	3. applied uboot packing
+
+1.00.76 : haeyong.pyun
+2012/01/18 11:35
+	1. modify bootsplash function to remove preimage before inverter on
+
+1.00.75 : haeyong.pyun
+2012/01/12 15:10
+	1. modify bootsplash function postition to reduce power on time
+
+1.00.74 : haeyong.pyun
+2012/01/11 20:10
+	1. make changing mem map of ch B don't affect boot binary
+
+1.00.73 : haeyong.pyun
+2012/01/07 11:20
+	1. apply secure boot check tzfw in snapshot boot
+
+1.00.72 : juno.choi
+2012/01/04 14:50
+	1. fix-up erase over the range(offset+len) when mmc erase operation.
+
+1.00.71 : haeyong.pyun
+2012/01/04 14:10
+	1. apply patch 11-0944_DTV00387512 for boot logo disappear
+
+1.00.70 : jeongeun.min
+2012/01/03 16:40
+	1. solved BCAS problem at Japan
+
+1.00.69 : namhyung.kim
+2012/01/03 14:38
+	1. enable secure boot for snapshot image
+
+1.00.68 : juno.choi
+2012/01/03 13:30
+	1. apply confirmation about capacity check when swu
+
+1.00.67 : haeyong.pyun
+2011/12/29 14:30
+	1. apply trustzone patch
+
+1.00.66 : jinhyuk.hong
+2011/12/28 16:33
+	1. change 2D gfx video memory size (155MB -> 130MB)
+
+1.00.65 : namhyung.kim
+2011/12/28 11:33
+	1. fix build failure due to #include <linux/mm.h> in module/dmx_drm_if.c
+	   i) define __BOOT_LOADER__ in cfg.mk to distinguish compile environment
+	   ii) and conditionally include the header (only for kernel)
+	2. don't turn off GD_FLG_SILENT in case of signing success
+
+1.00.64 : earnest.son
+2011/12/28 09:32
+	1. update official patch about emmc r/w error on low temp. and normal temp. (by MTK)
+	   i) enable smittrigger on emmc Clock line
+	   ii) change the sequence of emmc controller init about inputting clock
+
+1.00.63 : youngsim.choi
+2011/12/24 17:30
+	1. increase FBM 14MB by '11-0873_DTV00381510_[A1][EU][GStreamer] mp4(AVC MP@5.0) file isn't played'
+
+1.00.62 : juno.choi
+2011/12/22 13:30
+	1. support part erasing for PART_FLG_ERASE when boot-up
+
+1.00.61 : juno.choi
+2011/12/22 11:19
+	1. adjust samsung emmc real size(0x77400000)
+
+1.00.60 : earnest.son
+2011/12/21 16:33
+	1. patch emmc low temp workaround patch on resume function
+
+1.00.59 : haeyong.pyun
+2011/12/21 16:20
+	1. apply HD boot logo image by down scaling
+
+1.00.58 : juno.choi
+2011/12/20 9:56
+	1. fix-up env relocate spec problem.
+
+1.00.57 : juno.choi
+2011/12/19 15:53
+	1. adjust id key backup when hynix -> others swu
+	2. adjust checking storeage capacity for swu
+
+1.00.56 : juno.choi
+2011/12/16 16:53
+	1. re-upload 1.00.55 with the latest kdrv
+	2. fix print error of emmc real size
+
+1.00.55 : juno.choi
+2011/12/16 14:12
+	1. adjust samsung emmc reserved size in emmc init
+
+1.00.54 : haeyong.pyun
+2011/12/14 15:20
+	1. change buf size for PVR 0x700000 -> 0xac0000 in kernel driver
+
+1.00.53 : haeyong.pyun
+2011/12/14 12:00
+	1. apply grey boot logo image for moudel light leakage problem
+
+1.00.52 : haeyong.pyun
+2011/12/13 16:00
+	1. apply patch for lasting boot logo longer
+
+1.00.51 : ieeum.lee
+2011/12/09 15:40
+	1. correct H/W OPTION GPIO TABLE(OPTION7)
+
+1.00.50 : yk.son
+2011/12/09 14:30
+	1. Reserve  sdec memory region
+	2. Apply background color change function in boot (haeyong.pyun)
+	3. Move inverter on before verifying lgapp to last displaying boot logo a little (haeyong.pyun)
+
+1.00.49 : juno.choi
+2011/12/07 17:15
+	1. adjust swm mode magic(4bytes) in SYS_DB
+
+1.00.48 : earnest.son
+2011/12/06 09:55
+	1. patch eMMC r/w work around code on low temp. ( mtk patch .. 2nd version )
+
+1.00.47 : jaehan.park
+2011/12/02 17:30
+	1. 65inch AUO edge LED model pwm duty initial value change to 75%.
+
+1.00.46 : jaehan.park
+2011/12/01 10:40
+	1. when snapshot booting, make tv can showed up the boot logo.
+
+1.00.45 : zaewon.lee
+2011/11/28 11:00
+	1. after clearing nvram, default debug level is set to RELEASE_LEVEL.
+
+1.00.44 : jinhyuk.hong
+2011/11/25 11:25
+	1. change 2D gfx video memory size (128MB -> 155MB)
+
+1.00.43 : jinhyuk.hong
+2011/11/24 10:10
+	1. 1.00.42 변경 내용 rollback.
+
+1.00.42 : jinhyuk.hong
+2011/11/23 15:10
+	1. change 2D gfx video memory size (128MB -> 155MB)
+
+1.00.41 : haeyong.pyun
+2011/11/22 21:30
+	1. add FRC3 reset function
+
+1.00.40 : earnest.son
+2011/11/22 14:30
+	1. patch eMMC r/w  work around code on low tempature ( mtk patch )
+
+1.00.39 : haeyong.pyun
+2011/11/22 14:00
+	1. apply new secure key and tool
+
+1.00.38 : haeyong.pyun
+2011/11/17 14:00
+	1. fix problem cannot print out for terminal out
+
+1.00.37 : haeyong.pyun
+2011/11/15 16:55
+	1. modified bootcmd for secure
+
+1.00.36 : taesun.song
+2011/11/15 15:00
+	1. local dimming command word 변경.
+
+1.00.35 : jaesung5.lee
+2011/11/14 14:10
+	1. usb port switching patch apply
+
+1.00.34 : juno.choi
+2011/11/14 11:30
+	1. adjust the defense code for swue mode (with magic key)
+
+1.00.33 : chongheun.kim
+	1. PWM init freq 120Hz fix.
+
+1.00.32 : jaehan.park
+2011/11/14 11:00
+	1. apply eMMC Write Protection. enable W/P in preloader
+	and then disable before jump to kernel or snapshot booting
+	disable W/P also when user enter boot prompt.
+
+1.00.31: chongheun.kim
+	1. pwm duty caculation error fix.
+
+1.00.30: taesun.song
+2011/11/10 10:30
+	1. add flag for lvds/tcon init
+
+1.00.29: ieeum.lee
+2011/11/08 15:15
+	1. corrrect CAM port default value.
+
+1.00.28: haeyong.pyun
+2011/11/07 10:15
+	1. applied new boot logo
+
+1.00.27: hojin.koh
+2011/11/05 10:00
+	1. Change DDR Speed 1404->1512MHz
+	2. Fix eMMC Data/Clock Timing.
+
+1.00.26: ieeum.lee
+2011/11/04 16:00
+	1. set CAM port default value.
+
+1.00.25 : juno.choi
+2011/11/04 14:10
+	1. edit storage_erase using mmc_erase()
+	2. add make_hib cmd for snapshot boot
+
+1.00.24 : haeyong.pyun
+2011/11/03 15:00
+	1. 60Hz local dimming support
+
+1.00.23 : haeyong.pyun
+2011/11/02 09:00
+	1. apply mirror mode for AUO LVDS model
+	2. tool option bug fix
+
+1.00.22 : jaehan.park
+2011/11/02 00:30
+	1. apply emmc erase patch after operation test
+	2. add emmc erase all command in boot.(gp4_mtk# mmc eraseall)
+
+1.00.21 : haeyong.pyun
+2011/10/26 14:10
+	1. apply lzo algorithm ready to boot image
+	2. apply SPI init
+	3. gSytemdb read function ready
+
+1.00.20 : chongheun.kim
+	1. to enable boot version display in instart menu
+
+1.00.19 : haeyong.pyun
+2011/10/15 18:10
+	1. Fix boot logo am/pm problem
+	2. apply verificatino to lginit
+	3. apply epi tcon init
+
+1.00.18 : ieeum.lee
+	1. implement port Portection, but not yet on Boot
+
+1.00.17 : jaehan.park
+	1. Add print for elapsed time to MMC read command
+
+1.00.16 : ieeum.lee
+	1. apply DDR Spread spectrum
+
+1.00.15 : haeyong.pyun
+	1. modify verification function
+
+1.00.14 : chongheun.kim
+	1. PWM #2 Default+2 value change D8 -> B7
+	2. tool option arrange
+
+1.00.13 : haeyong.pyun
+	1. ready verification function application including kernel
+
+1.00.12 : chongheun.kim
+	1. PWM #2 control
+
+1.00.11 : ieeum.lee
+2011/09/29 20:10
+	1. apply boot speed up && XIP
+
+1.00.11 : haeyong.pyun
+2011/09/26 18:00
+	1. fix compile error, fixed in kernel driver
+
+1.00.10 : haeyong.pyun
+2011/09/17 17:00
+	1. Modified EPI mirror
+
+1.00.09 : haeyong.pyun
+2011/09/15 19:45
+	1. Support 60Hz LVDS/Color depth/Vesa panel
+
+1.00.08 : hojin.koh
+2011/09/15 15:00
+	1. Change DDR Setting for DV/PT B'd.
+
+1.00.07 : haeyong.pyun
+2011/09/07 15:00
+	1. applided EPI / color depth / mirror mode
+
+1.00.06 : haeyong.pyun
+2011/09/06 10:20
+	1. modified boot logo functions
+
+1.00.05 : ieeum.lee
+2011/09/05 11:15
+	1. apply PWM patch (only boot)
+
+1.00.04 : ieeum.lee
+2011/09/02 12:15
+	1. apply power-on latch patch
+
+1.00.03 : haeyong.pyun
+2011/08/27 17:45
+	1. bug fix in gethwoption function
+
+1.00.02 : haeyong.pyun
+2011/08/26 09:40
+	1. use HW option to disable on 60Hz LVDS, EPI temporily
+
+1.00.01 : haeyong.pyun
+2011/06/23 11:00
+	1. GP4 mtk boot start

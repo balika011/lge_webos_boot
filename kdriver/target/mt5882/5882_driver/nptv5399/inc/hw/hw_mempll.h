@@ -1,0 +1,46 @@
+#ifndef _HW_MEMPLL_H_
+#define _HW_MEMPLL_H_
+
+//Page HISTORY
+#define IO_MEMPLL_BASE (IO_VIRT + 0x58000)
+
+//Page IO_DDRPHY_1
+#define REG_MEMPLL0 (IO_MEMPLL_BASE + 0xA90)
+    #define FLD_RG_MEMPLL_PWD Fld(1,31,AC_MSKB3)//[31:31]
+    #define FLD_RG_MEMPLL_FBDIV Fld(7,24,AC_MSKB3)//[30:24]
+    #define FLD_RG_MEMPLL_PREDIV Fld(2,22,AC_MSKB2)//[23:22]
+    #define FLD_RG_MEMPLL_POSDIV Fld(2,20,AC_MSKB2)//[21:20]
+    #define FLD_RG_MEMPLL_CKCTRL Fld(2,18,AC_MSKB2)//[19:18]
+    #define FLD_RG_MEMPLL_FBSEL Fld(2,16,AC_MSKB2)//[17:16]
+    #define FLD_RG_MEMPLL_DIVEN Fld(3,13,AC_MSKB1)//[15:13]
+    #define FLD_RG_MEMPLL_BP Fld(1,12,AC_MSKB1)//[12:12]
+    #define FLD_RG_MEMPLL_BR Fld(1,11,AC_MSKB1)//[11:11]
+    #define FLD_RG_MEMPLL_HF Fld(1,10,AC_MSKB1)//[10:10]
+    #define FLD_RG_MEMPLL_LF Fld(1,9,AC_MSKB1)//[9:9]
+    #define FLD_RG_MEMPLL_FPEN Fld(1,8,AC_MSKB1)//[8:8]
+    #define FLD_RG_MEMPLL_MONEN Fld(1,7,AC_MSKB0)//[7:7]
+    #define FLD_RG_MEMPLL_ACCEN Fld(1,6,AC_MSKB0)//[6:6]
+    #define FLD_RG_MEMPLL_BIAS_RST Fld(1,5,AC_MSKB0)//[5:5]
+    #define FLD_RG_MEMPLL_BIAS_PWD Fld(1,4,AC_MSKB0)//[4:4]
+    #define FLD_RG_MEMPLL_BRCKRX_PD Fld(1,3,AC_MSKB0)//[3:3]
+    #define FLD_RG_MEMPLL_BRCKMON_PD Fld(1,2,AC_MSKB0)//[2:2]
+    #define FLD_RG_MEMPLL_VODEN Fld(1,1,AC_MSKB0)//[1:1]
+    #define FLD_RG_MEMPLL_SEL_CK Fld(1,0,AC_MSKB0)//[0:0]
+#define REG_MEMPLL1 (IO_MEMPLL_BASE + 0xA94)
+    #define FLD_RG_MEMPLL_MONSEL Fld(4,28,AC_MSKB3)//[31:28]
+    #define FLD_RG_MEMPLL_BRCKMON_AMPADJ Fld(3,25,AC_MSKB3)//[27:25]
+    #define FLD_RG_MEMPLL_MONCKEN Fld(1,24,AC_MSKB3)//[24:24]
+    #define FLD_RG_MEMPLL_DDS_CK_EN Fld(1,23,AC_MSKB2)//[23:23]
+    #define FLD_RG_MEMPLL_FMEN Fld(1,22,AC_MSKB2)//[22:22]
+    #define FLD_RG_MEMPLL_REFCK_SEL Fld(2,20,AC_MSKB2)//[21:20]
+    #define FLD_RG_MEMPLL_M4PDIV Fld(2,18,AC_MSKB2)//[19:18]
+    #define FLD_RG_MEMPLL_V11EN Fld(1,17,AC_MSKB2)//[17:17]
+    #define FLD_RG_MEMPLL_D2S_SEL Fld(1,16,AC_MSKB2)//[16:16]
+    #define FLD_RG_MEMPLL_DET_EN Fld(1,15,AC_MSKB1)//[15:15]
+    #define FLD_RG_MEMPLL_RESERVE Fld(5,10,AC_MSKB1)//[14:10]
+    #define FLD_RG_MEMPLL_MON Fld(2,8,AC_MSKB1)//[9:8]
+    #define FLD_RG_MEMPLL_D2S Fld(8,0,AC_FULLB0)//[7:0]
+#define REG_MEMPLL2 (IO_MEMPLL_BASE + 0xA98)
+    #define FLD_RG_MEMPLL_DMSUS Fld(1,31,AC_MSKB3)//[31:31]
+
+#endif /* _HW_MEMPLL_H_ */

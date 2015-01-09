@@ -1,0 +1,4389 @@
+<?xml version="1.0"?>
+<root>
+  <version>2</version>
+
+  <page>
+    <name>Audio Tool</name>
+    
+    <group>
+      <name>Global Control</name>
+
+      <field>
+        <name>Read All</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>0</upper>
+          <lower>0</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write All</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>16</upper>
+          <lower>16</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    
+    <group>
+      <name>Query</name>
+    
+      <field>
+        <name>QUERY_DEC1</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>0</upper>
+          <lower>0</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>QUERY_DEC2</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>1</upper>
+          <lower>1</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>QUERY_DEC3</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>2</upper>
+          <lower>2</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+    
+      <field>
+        <name>QUERY_DEC4</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>3</upper>
+          <lower>3</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+    
+      <field>
+        <name>QUERY_DSP</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>4</upper>
+          <lower>4</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>QUERY_VC</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>5</upper>
+          <lower>5</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+    
+      <field>
+        <name>QUERY_CVC</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>6</upper>
+          <lower>6</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+    
+    </group>  
+    
+    <group>
+      <name>Tone</name>
+            
+      <field>
+        <name>TONE_PLAY</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>8</upper>
+          <lower>8</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>TONE_STOP</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>9</upper>
+          <lower>9</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+            
+      <field>
+        <name>TONE_RESTORE</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>10</upper>
+          <lower>10</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+            
+      <field>
+        <name>TONE_SELECT</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <pair>
+          <desc>1K tone 0dB</desc>
+          <value>0</value>
+        </pair>
+        <pair>
+          <desc>1K tone -20dB</desc>
+          <value>1</value>
+        </pair>        
+        <pair>
+          <desc>1K tone -60dB</desc>
+          <value>2</value>
+        </pair>
+        <pair>
+          <desc>1K tone -120dB</desc>
+          <value>3</value>
+        </pair>        
+        <pair>
+          <desc>20K tone 0dB</desc>
+          <value>4</value>
+        </pair>        
+        <pair>
+          <desc>4K tone 0dB</desc>
+          <value>5</value>
+        </pair>                
+        <pair>
+          <desc>200 tone 0dB</desc>
+          <value>6</value>
+        </pair>        
+        <pair>
+          <desc>200 tone -60dB</desc>
+          <value>7</value>
+        </pair>        
+        <pair>
+          <desc>400 tone 0dB</desc>
+          <value>8</value>
+        </pair>        
+        <pair>
+          <desc>1K/3K tone 0dB</desc>
+          <value>9</value>
+        </pair>        
+        <pair>
+          <desc>1K tone 0dB L channel only</desc>
+          <value>10</value>
+        </pair>        
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>14</upper>
+          <lower>11</lower>
+          <min>0</min>
+          <max>10</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+            
+    </group>
+
+
+    <group>
+      <name>Post-Proc On/Off</name>
+      
+      <field>
+        <name>Read Status</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>1</upper>
+          <lower>1</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Update Status</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>17</upper>
+          <lower>17</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>All Bypass</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>16</upper>
+          <lower>16</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>EQ Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>17</upper>
+          <lower>17</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Bass Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>18</upper>
+          <lower>18</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Treble Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>19</upper>
+          <lower>19</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Limiter Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>20</upper>
+          <lower>20</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>AVC Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>21</upper>
+          <lower>21</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Surround Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>22</upper>
+          <lower>22</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Bass Mng Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>23</upper>
+          <lower>23</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+
+    <group>
+      <name>Master Volume Table (0~10)</name>
+      
+      <field>
+        <name>Read Volume Tbl</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>8</upper>
+          <lower>8</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write Volume Tbl</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>24</upper>
+          <lower>24</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Master Volume</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f19c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 00</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f008</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 01</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f00c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 02</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f010</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 03</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f014</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 04</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f018</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 05</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f01c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 06</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f020</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 07</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f024</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 08</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f028</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 09</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f02c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 10</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f030</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (11~20)</name>
+      <field>
+        <name>Volume 11</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f034</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 12</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f038</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 13</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f03c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 14</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f040</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 15</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f044</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 16</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f048</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 17</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f04c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 18</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f050</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 19</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f054</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 20</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f058</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (21~30)</name>
+      <field>
+        <name>Volume 21</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f05c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 22</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f060</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 23</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f064</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 24</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f068</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 25</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f06c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 26</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f070</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 27</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f074</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 28</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f078</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 29</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f07c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 30</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f080</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (31~40)</name>
+      <field>
+        <name>Volume 31</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f084</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 32</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f088</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 33</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f08c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 34</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f090</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 35</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f094</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 36</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f098</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 37</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f09c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 38</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0a0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 39</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0a4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 40</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0a8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (41~50)</name>
+      <field>
+        <name>Volume 41</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0ac</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 42</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0b0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 43</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0b4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 44</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0b8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 45</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0bc</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 46</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0c0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 47</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0c4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 48</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0c8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 49</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0cc</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 50</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0d0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (51~60)</name>
+      <field>
+        <name>Volume 51</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0d4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 52</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0d8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 53</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0dc</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 54</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0e0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 55</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0e4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 56</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0e8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 57</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0ec</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 58</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0f0</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 59</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0f4</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 60</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0f8</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (61~70)</name>
+      <field>
+        <name>Volume 61</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f0fc</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 62</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f100</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 63</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f104</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 64</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f108</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 65</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f10c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 66</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f110</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 67</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f114</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 68</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f118</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 69</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f11c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 70</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f120</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (71~80)</name>
+      <field>
+        <name>Volume 71</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f124</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 72</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f128</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 73</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f12c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 74</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f130</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 75</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f134</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 76</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f138</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 77</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f13c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 78</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f140</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 79</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f144</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 80</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f148</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (81~90)</name>
+      <field>
+        <name>Volume 81</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f14c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 82</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f150</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 83</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f154</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 84</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f158</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 85</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f15c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 86</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f160</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 87</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f164</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 88</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f168</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 89</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f16c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 90</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f170</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Master Volume Table (91~100)</name>
+      <field>
+        <name>Volume 91</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f174</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 92</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f178</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 93</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f17c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 94</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f180</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 95</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f184</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 96</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f188</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 97</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f18c</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 98</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f190</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 99</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f194</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Volume 100</name>
+        <sign>unsigned</sign>
+        <base>hex</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f198</addr2>
+          <upper>23</upper>
+          <lower>0</lower>
+          <min>0</min>
+          <max>0x20000</max>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+    </group>
+    <group>
+      <name>Input Source Gain</name>
+
+      <field>
+        <name>Read SV</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>9</upper>
+          <lower>9</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write SV</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>25</upper>
+          <lower>25</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+  		<field>
+			  <name>Others</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1a0</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Digital Tuner</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1a4</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>Analog Tuner</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1a8</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>SPDIF</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1ac</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>Line-In</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1b0</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>HDMI</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1b4</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>Memory</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1b8</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>Buffer Agent</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1bc</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+     
+  		<field>
+			  <name>Feeder</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1c0</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+  		<field>
+			  <name>MultiMedia</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1c4</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>36</max>
+			  </data>
+			  <description>(-128~36 every 0.5db per setp, -128: -64db, 0: 0dB, 36: 18db)</description>
+			  <ro>0</ro>
+	    </field>
+      
+    </group>
+    
+    <group>
+      <name>Channel Volume</name>
+      
+      <field>
+        <name>Read CV</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>10</upper>
+          <lower>10</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write CV</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>26</upper>
+          <lower>26</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+  		<field>
+			  <name>Left</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1cc</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Right</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1d0</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Left-Surround</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1d4</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Right-Surround</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1d8</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Center</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1c8</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Subwoofer</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1e4</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Bypass L</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1dc</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Bypass R</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1e0</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+<!--
+  		<field>
+			  <name>LFE</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1e8</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+-->
+
+  		<field>
+			  <name>Downmix L</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1ec</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Downmix R</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1f0</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>AUX_L</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f248</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>AUX_R</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f24c</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+<!--
+  		<field>
+			  <name>AUX_LFE</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f250</addr2>
+			  <upper>24</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x1FFFFFF</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+-->
+
+    </group>
+
+    <group>
+      <name>Channel Volume Extra Gain</name>
+      
+      <field>
+        <name>Read ExGain</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>11</upper>
+          <lower>11</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write ExGain</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>27</upper>
+          <lower>27</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+  		<field>
+			  <name>Left</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f254</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Right</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f254</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Left-Surround</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f254</addr2>
+			  <upper>23</upper>
+			  <lower>16</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Right-Surround</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f254</addr2>
+			  <upper>31</upper>
+			  <lower>24</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Center</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f258</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Subwoofer</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f258</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Bypass L</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f258</addr2>
+			  <upper>23</upper>
+			  <lower>16</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Bypass R</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f258</addr2>
+			  <upper>31</upper>
+			  <lower>24</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>	    
+	    
+  		<field>
+			  <name>Downmix L</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f25c</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Downmix R</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f25c</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>AUX_L</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f25c</addr2>
+			  <upper>23</upper>
+			  <lower>16</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>	    
+	    	    
+  		<field>
+			  <name>AUX_R</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f25c</addr2>
+			  <upper>31</upper>
+			  <lower>24</lower>
+			  <min>-128</min>
+			  <max>48</max>			  
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    	    	    
+    </group>
+    
+    <group>
+      <name>Channel Delay</name>
+      
+      <field>
+        <name>Read ChDelay</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>12</upper>
+          <lower>12</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Write ChDelay</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>28</upper>
+          <lower>28</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+  		<field>
+			  <name>Left</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f260</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Right</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f260</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Left-Surround</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f260</addr2>
+			  <upper>23</upper>
+			  <lower>16</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Right-Surround</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f260</addr2>
+			  <upper>31</upper>
+			  <lower>24</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Center</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f264</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Subwoofer</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f264</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>	    
+	    
+  		<field>
+			  <name>Bypass-L</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f264</addr2>
+			  <upper>23</upper>
+			  <lower>16</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    	    
+  		<field>
+			  <name>Bypass-R</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f264</addr2>
+			  <upper>31</upper>
+			  <lower>24</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    	    	    
+  		<field>
+			  <name>Downmix-L</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f268</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    	    	    	  
+  		<field>
+			  <name>Downmix-R</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f268</addr2>
+			  <upper>15</upper>
+			  <lower>8</lower>
+			  <min>0</min>
+			  <max>25</max>			  
+			  </data>
+			  <description>10ms /unit (0~25 unit)</description>
+			  <ro>0</ro>
+	    </field>
+	    	    	    	    	    
+	  </group>
+	      
+    <group>
+      <name>Equalizer (5Band)</name>
+      
+      <field>
+        <name>Read EQ</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>2</upper>
+          <lower>2</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Write EQ</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>18</upper>
+          <lower>18</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>EQ Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>17</upper>
+          <lower>17</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+            
+  		<field>
+			  <name>BAND1</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1f4</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 0->0db)</description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>BAND2</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1f8</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 0->0db)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>BAND3</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f1fc</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 0->0db)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>BAND4</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f200</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 0->0db)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>BAND5</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f204</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 0->0db)</description>
+			  <ro>0</ro>
+	    </field>
+<!--	    
+  		<field>
+			  <name>BAND6</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f208</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 28->0db)</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>BAND7</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f20c</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>-28</min>
+			  <max>28</max>
+			  </data>
+			  <description>(-28~28 for -14db~14db, 0.5db/step, 28->0db)</description>
+			  <ro>0</ro>
+	    </field>
+-->	    
+	  </group>
+    <group>
+      <name>Bass</name>
+      
+      <field>
+        <name>Read Bass</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>3</upper>
+          <lower>3</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Write Bass</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>19</upper>
+          <lower>19</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Bass Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>18</upper>
+          <lower>18</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+            
+  		<field>
+			  <name>Bass</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f210</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>28</max>			  
+			  </data>
+			  <description>(0~28 for -14db~14db, 1db/step, 14->0db)</description>
+			  <ro>0</ro>
+	    </field>
+
+	  </group>
+
+    <group>
+      <name>Treble</name>
+      
+      <field>
+        <name>Read Treble</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>4</upper>
+          <lower>4</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Write Treble</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>20</upper>
+          <lower>20</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+      <field>
+        <name>Treble Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>19</upper>
+          <lower>19</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      
+  		<field>
+			  <name>Treble</name>
+			  <sign>unsigned</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f214</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>28</max>			  
+			  </data>
+			  <description>(0~28 for -14db~14db, 1db/step, 14->0db)</description>
+			  <ro>0</ro>
+	    </field>
+	  </group>
+	  
+	  <group>
+	    <name>Limiter</name>
+	    
+      <field>
+        <name>Read Limiter</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>5</upper>
+          <lower>5</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Write Limiter</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>21</upper>
+          <lower>21</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Limiter Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>20</upper>
+          <lower>20</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+  		<field>
+			  <name>Mode</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+        <pair>
+          <desc>0ff</desc>
+          <value>0</value>
+        </pair>			  
+        <pair>
+          <desc>Adaptive Mode</desc>
+          <value>1</value>
+        </pair>			  
+        <pair>
+          <desc>Fixed Mode</desc>
+          <value>2</value>
+        </pair>			                  
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f218</addr2>
+			  <upper>7</upper>
+			  <lower>0</lower>
+			    <min>0</min>
+			    <max>2</max>
+			  </data>
+			  <description>0: off 1: adaptive mode 2: fixed mode</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Threshold</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f218</addr2>
+			  <upper>31</upper>
+			  <lower>8</lower>
+			    <min>0</min>
+			    <max>0x7fffff</max>			            			  
+			  </data>
+			  <description>0x100000 means -18dBFS</description>
+			  <ro>0</ro>
+	    </field>
+	    	    
+	  </group>
+
+	  <group>
+	    <name>AVC</name>
+	    
+      <field>
+        <name>Read AVC</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>6</upper>
+          <lower>6</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Write AVC</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>22</upper>
+          <lower>22</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>AVC Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>21</upper>
+          <lower>21</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+  		<field>
+			  <name>Target Level</name>
+			  <sign>signed</sign>
+			  <base>dec</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f21c</addr2>
+			  <upper>15</upper>
+			  <lower>0</lower>
+			  <min>-24</min>
+			  <max>-6</max>
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Max Gain Up</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f220</addr2>
+			  <upper>15</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>8</max>
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Adjust Rate</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f224</addr2>
+			  <upper>15</upper>
+			  <lower>0</lower>
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>UI Adjust Rate</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f228</addr2>
+			  <upper>15</upper>
+			  <lower>0</lower>
+			  </data>
+			  <description></description>
+			  <ro>0</ro>
+	    </field>
+	  </group>
+
+	  <group>
+	    <name>Surround</name>
+	    
+      <field>
+        <name>Read Surround</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>7</upper>
+          <lower>7</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Write Surround</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>23</upper>
+          <lower>23</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Surround Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>22</upper>
+          <lower>22</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+  		<field>
+			  <name>Speech Clarity</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f22c</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x500000</max>
+			  </data>
+			  <description>0 ~ 0x500000</description>
+			  <ro>0</ro>
+	    </field>
+
+  		<field>
+			  <name>Sound Width</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f230</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x500000</max>			  
+			  </data>
+			  <description>0 ~ 0x500000</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>L/R Boost Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f234</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x500000</max>			  
+			  </data>
+			  <description>0 ~ 0x500000</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Crosstalk Boost Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f238</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x500000</max>			  
+			  </data>
+			  <description>0 ~ 0x500000</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Output Boost Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f23c</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x700000</max>			  
+			  </data>
+			  <description>0 ~ 0x700000</description>
+			  <ro>0</ro>
+	    </field>
+	    
+	    
+  		<field>
+			  <name>Bass Boost Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f240</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x500000</max>			  
+			  </data>
+			  <description>0 ~ 0x500000</description>
+			  <ro>0</ro>
+	    </field>
+	    
+  		<field>
+			  <name>Bass Cutoff</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>7f4300</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f244</addr2>
+			  <upper>23</upper>
+			  <lower>0</lower>
+			  <min>0x7f41f2</min>
+			  <max>0x7f4400</max>			  			  
+			  </data>
+			  <description>0x7f41f2 ~ 0x7f4400</description>
+			  <ro>0</ro>
+	    </field>
+	    
+	    
+	  </group>
+        
+	  <group>
+	    <name>Bass Management</name>
+	    
+      <field>
+        <name>Read BassMng</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>13</upper>
+          <lower>13</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Write BassMng</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>29</upper>
+          <lower>29</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>BassMng Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>23</upper>
+          <lower>23</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>LR SPK Large</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>0</upper>
+          <lower>0</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>SLR SPK Large</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>1</upper>
+          <lower>1</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+      <field>
+        <name>Center SPK Large</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>2</upper>
+          <lower>2</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+      <field>
+        <name>CH9/10 SPK Large</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>3</upper>
+          <lower>3</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+      <field>
+        <name>SubWoofer Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>4</upper>
+          <lower>4</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+        <name>Bass Mng Cutoff Freq</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>100</value>
+        <pair>
+          <desc>50Hz</desc>
+          <value>50</value>
+        </pair>
+        <pair>
+          <desc>60Hz</desc>
+          <value>60</value>
+        </pair>
+        <pair>
+          <desc>70Hz</desc>
+          <value>70</value>
+        </pair>
+        <pair>
+          <desc>80Hz</desc>
+          <value>80</value>
+        </pair>
+        <pair>
+          <desc>90Hz</desc>
+          <value>90</value>
+        </pair>
+        <pair>
+          <desc>100Hz</desc>
+          <value>100</value>
+        </pair>
+        <pair>
+          <desc>110Hz</desc>
+          <value>110</value>
+        </pair>
+        <pair>
+          <desc>120Hz</desc>
+          <value>120</value>
+        </pair>
+        <pair>
+          <desc>130Hz</desc>
+          <value>130</value>
+        </pair>
+        <pair>
+          <desc>140Hz</desc>
+          <value>140</value>
+        </pair>
+        <pair>
+          <desc>150Hz</desc>
+          <value>150</value>
+        </pair>
+        <pair>
+          <desc>160Hz</desc>
+          <value>160</value>
+        </pair>
+        <pair>
+          <desc>170Hz</desc>
+          <value>170</value>
+        </pair>
+        <pair>
+          <desc>180Hz</desc>
+          <value>180</value>
+        </pair>
+        <pair>
+          <desc>190Hz</desc>
+          <value>190</value>
+        </pair>
+        <pair>
+          <desc>200Hz</desc>
+          <value>200</value>
+        </pair>
+        <pair>
+          <desc>300Hz</desc>
+          <value>300</value>
+        </pair>        
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f26c</addr2>
+          <upper>31</upper>
+          <lower>16</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+    </group>
+
+<!--                        
+    <group>
+	    <name>Bass Boost</name>
+	    
+      <field>
+        <name>Read BassBoost</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>14</upper>
+          <lower>14</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>Write BassBoost</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f004</addr2>
+          <upper>30</upper>
+          <lower>30</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+	    
+      <field>
+        <name>BassBoost Enable</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>0</value>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f000</addr2>
+          <upper>24</upper>
+          <lower>24</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+
+      <field>
+			  <name>Bass Boost Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f270</addr2>
+			  <upper>15</upper>
+			  <lower>0</lower>
+			  <min>0</min>
+			  <max>0x3000</max>			  
+			  </data>
+			  <description>0 ~ 0x3000</description>
+			  <ro>0</ro>
+	    </field>
+        <field>
+			  <name>Output Gain</name>
+			  <sign>unsigned</sign>
+			  <base>hex</base>
+			  <value>0</value>
+			  <data>
+			  <type>53_82_xdata</type>
+			  <addr1>0</addr1>
+			  <addr2>f270</addr2>
+			  <upper>31</upper>
+			  <lower>16</lower>
+			  <min>0</min>
+			  <max>0x3000</max>			  
+			  </data>
+			  <description>0 ~ 0x3000</description>
+			  <ro>0</ro>
+	    </field>
+      <field>
+        <name>Bass Boost Cutoff Freq</name>
+        <sign>unsigned</sign>
+        <base>dec</base>
+        <value>100</value>
+        <pair>
+          <desc>50Hz</desc>
+          <value>50</value>
+        </pair>
+        <pair>
+          <desc>80Hz</desc>
+          <value>80</value>
+        </pair>
+        <pair>
+          <desc>110Hz</desc>
+          <value>110</value>
+        </pair>
+        <pair>
+          <desc>140Hz</desc>
+          <value>140</value>
+        </pair>
+        <pair>
+          <desc>170Hz</desc>
+          <value>170</value>
+        </pair>
+        <pair>
+          <desc>200Hz</desc>
+          <value>200</value>
+        </pair>
+        <data>
+          <type>53_82_xdata</type>
+          <addr1>0</addr1>
+          <addr2>f274</addr2>
+          <upper>31</upper>
+          <lower>0</lower>
+        </data>
+        <description></description>
+        <ro>0</ro>
+      </field>
+      	    
+    </group>          
+-->    
+  </page>
+</root>
