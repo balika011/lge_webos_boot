@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6645,9 +6645,6 @@ BOOL AUD_Aproc_Chk_Notify(UINT8 *u1DecId, UINT32 u4NfyTag, UINT32 eNfyCond)
 
 BOOL  AUD_Aproc_Chk_Cmd(UINT8 u1DecId)
 {
-#ifdef CC_AUD_DDI
-    return FALSE;
-#endif
 #ifdef CC_DUAL_AUD_DEC_SUPPORT
     return bSkipDSPCmdLst[AUD_DSP0][u1DecId];
 #if 0
@@ -6673,7 +6670,9 @@ BOOL  AUD_Aproc_Chk_Cmd(UINT8 u1DecId)
     AUD_FMT_T eFmt = AUD_FMT_UNKNOWN;
     
     UNUSED(eStreamFrom);
-
+#ifdef CC_AUD_DDI
+    return FALSE;
+#endif
 #ifdef CC_MT5391_AUD_3_DECODER      
     AUD_GetDecodeType(AUD_DSP0, u1DecId, &eStreamFrom, &eFmt);    
     // EU TV only need DSP Dec1.
@@ -6934,9 +6933,9 @@ void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
     switch (arMwCtrl->eCmd)
     {
     case AUD_CMD_PLAY:
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SP_IN, &u1DecId, 1);
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_HP_IN, &u1DecId, 1);
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SPDIF_IN, &u1DecId, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SP_IN, (UINT32 *)&u1DecId, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_HP_IN, (UINT32 *)&u1DecId, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SPDIF_IN, (UINT32 *)&u1DecId, 1);
         break;
 
     case AUD_CMD_STOP:

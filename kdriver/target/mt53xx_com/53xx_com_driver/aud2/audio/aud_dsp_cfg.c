@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/09 $
+ * $Date: 2015/01/10 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -26967,7 +26967,6 @@ void _AUD_UserSetMixSndInputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineVo
 
 void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute)
 {
-    UINT32 u4Volumn;
     INT32 i4Vol;
     UINT32 pu4Addr[2];
     _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute;
@@ -27051,7 +27050,6 @@ void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     UINT32 u4Idx;
     UINT32 u4Volumn;
     INT32 i4Vol;
-    UINT32 pu4Addr[2];
 
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol); 
     i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!! 
