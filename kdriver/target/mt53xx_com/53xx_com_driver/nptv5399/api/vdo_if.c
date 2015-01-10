@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -545,9 +545,267 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 
 UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Type)
 {
+	UINT8 bStatus;
+	
+	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
+	
+	if(u4Type == 1)//connect source
+	{
+		if(bPath == SV_VP_MAIN)	//check the real source
+	    {
+	        bStatus = bApiVSCMainSubSrc(bSrc, SV_VS_NO_CHANGE, bEnable);
+
+	    }
+	    else
+	    {
+	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, bSrc, bEnable);
+	    }
+		
+	}
+	else//disconnect source
+	{
+		
+	}
 	return SV_SUCCESS;
 
 }
+
+UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
+{
+	static UINT8 bOldMainDec = 0xff;
+	static UINT8 bOldSubDec = 0xff;
+	UINT8 bNewMainDec, bNewSubDec;
+	ExtInputTable NewExtInput;
+	BOOL fgMainCh = FALSE;
+	BOOL fgPipCh = FALSE;
+	BOOL fgMainCombi;
+	BOOL fgSubCombi;
+
+#ifndef CC_UP8032_ATV
+	VERIFY(x_sema_lock(_hMainSubSrcSemaphore, X_SEMA_OPTION_WAIT) == OSR_OK);
+	VERIFY(AD_AcquireControl()==OSR_OK);
+	VERIFY(BIM_DisableIrq(VECTOR_VDOIN));
+#else
+	vDisableSysInt2(VDOIN_INT_EN);
+#endif
+
+	if(bMainSrc ==SV_VS_NO_CHANGE)
+	{
+		bMainSrc = _bSrcMainOld;
+	}
+
+	if(bSubSrc ==SV_VS_NO_CHANGE)
+	{
+		bSubSrc = _bSrcSubOld;
+	}
+
+	NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
+	/* is changed ? */
+	{
+		if(NewExtInput.MapIntMode == 0xFFFF)  /* check PIP constrain */
+		{
+			MainSubSrc_Biglock_Release();
+			return (SV_FAIL);
+		}
+
+		//fgMainCombi=fgApiMonitorSetup(SV_VP_MAIN,bMainSrc);
+		fgMainCombi = (_bMonMainNew == SV_VS_MAX) ? FALSE: TRUE ;
+		if(_bMonMainNew == bMainSrc)
+		{
+			fgMainCombi = FALSE;
+		}
+		//fgSubCombi=fgApiMonitorSetup(SV_VP_PIP,bSubSrc);
+		fgSubCombi = (_bMonMainNew == SV_VS_MAX) ? FALSE: TRUE ;
+		if(_bMonSubNew == bSubSrc)
+		{
+			fgSubCombi = FALSE;
+		}
+
+		if(!fgMainCombi)
+		{
+#ifndef CC_DRIVER_PROGRAM
+			_rMChannel.t_mon_id.e_type = DRVT_UNKNOWN;
+#endif
+			_bMonMainOld = SV_VS_MAX;
+			_bMonMainNew = SV_VS_MAX;
+			_bMainMonICIn = (UINT8)P_FA;
+		}
+
+		if(!fgSubCombi)
+		{
+#ifndef CC_DRIVER_PROGRAM
+			_rPChannel.t_mon_id.e_type = DRVT_UNKNOWN;
+#endif
+			_bMonSubOld = SV_VS_MAX;
+			_bMonSubNew = SV_VS_MAX;
+			_bSubMonICIn = (UINT8)P_FA;
+		}
+
+		/* Combi related behavior here */
+
+		if(_bSrcMainOld != bMainSrc)
+		{
+			fgMainCh = TRUE;
+			vApiVideoSetFixColorSpaceMode(SV_VP_MAIN,SV_FIXCOLORSPACE_OFF);
+			vDrvSwitchMTKGoodDclk(SV_OFF);
+		}
+
+		if(_bSrcSubOld != bSubSrc)
+		{
+			fgPipCh = TRUE;
+			vApiVideoSetFixColorSpaceMode(SV_VP_PIP,SV_FIXCOLORSPACE_OFF);
+		}
+
+		_bSrcMainNew = bMainSrc;
+		_bSrcMainOld = bMainSrc;
+		_bSrcSubNew = bSubSrc;
+		_bSrcSubOld = bSubSrc;
+		_bMainICIn = NewExtInput.MapIntMode >> 8;
+		_bSubICIn = NewExtInput.MapIntMode & 0xff;
+		bNewMainDec = bGetInternalDec(SV_VP_MAIN);
+		bNewSubDec = bGetInternalDec(SV_VP_PIP);
+
+		if(bNewMainDec != bOldMainDec)
+		{
+			fgMainCh = TRUE;
+		}
+
+		if(bNewSubDec != bOldSubDec)
+		{
+			fgPipCh = TRUE;
+		}
+
+		bOldMainDec = bNewMainDec;
+		bOldSubDec = bNewSubDec;
+	   
+		if((!fgMainCh) && (!fgPipCh))
+		{
+			MainSubSrc_Biglock_Release();
+			return SV_NO_CHANGE;
+		}
+	}
+
+	if(((fgMainCh== TRUE) && (bGetSignalType(SV_VP_MAIN) != SV_ST_TV) && (bGetSignalType(SV_VP_MAIN) != SV_ST_MPEG) && (bGetSignalType(SV_VP_MAIN) != SV_ST_MAX))||
+	   ((fgPipCh== TRUE)&& (bGetSignalType(SV_VP_PIP) != SV_ST_TV)&& (bGetSignalType(SV_VP_PIP) != SV_ST_MPEG) && (bGetSignalType(SV_VP_PIP) != SV_ST_MAX)))
+	{
+		_fgAutoSearch = FALSE;
+	}
+
+
+	if(bMainSrc == SV_VS_MAX)
+	{
+		_rMChannel.bIsChannelOn = SV_OFF;
+		_rMChannel.bDecType = SV_VD_NA;
+		//		  vDrvScpipWriteCtrl(SV_VP_MAIN,SV_OFF);
+	}
+	else
+	{
+		_rMChannel.bIsChannelOn = SV_ON;
+	#ifdef CC_DEMOD_FASTACQ
+		fgApiEepromWriteByte(EEP_DEMOD_FASTBOOT_LASTSRC,bMainSrc);		
+	#endif
+#if 1 // defined(CC_FAST_INIT)
+
+		//if(!b_boot_rec_once)
+		{
+		   
+#ifdef TIME_MEASUREMENT
+		   TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "bApiVideoMainSubSrc");
+		   TMS_DIFF_EX(TMS_FLAG_BOOT, TMS_COOL_BOOT_TIME, "bApiVideoMainSubSrc");
+#endif
+			x_os_drv_set_timestamp("bApiVideoMainSubSrc");
+			b_boot_rec_once = TRUE;
+		}
+
+#endif
+	}
+
+	if(bSubSrc == SV_VS_MAX)
+	{
+		_rPChannel.bIsChannelOn = SV_OFF;
+		_rPChannel.bDecType = SV_VD_NA;
+		//		  vDrvScpipWriteCtrl(SV_VP_PIP,SV_OFF);
+	}
+	else
+	{
+		_rPChannel.bIsChannelOn = SV_ON;
+	}
+
+
+	/* disconnect unused internal mux */
+	vMuxCleanup();
+	vDrvSetExternalMux(_bSrcMainNew, _bSrcSubNew);
+
+	if(fgMainCh)
+	{
+		if((_bSrcMainNew != _bSrcSubNew) || (fgPipCh))
+		{
+			vDrvSetInternalMux(0,_bSrcMainNew);
+		}
+		vSetMOutMux(bNewMainDec);
+	}
+
+#ifdef SUPPORT_AV_COMP_AUTO
+
+	if(fgMainCombi)
+	{
+		vDrvSetInternalMux(0,_bMonMainNew);
+	}
+
+#endif
+
+	if(fgPipCh)
+	{
+		if((_bSrcMainNew != _bSrcSubNew) || (fgMainCh))
+		{
+			vDrvSetInternalMux(1,_bSrcSubNew);
+		}
+		vSetSOutMux(bNewSubDec);
+	}
+
+	// MDisableMainINT();
+
+	if(fgMainCh)
+	{
+		_rMChannel.bDecType = bNewMainDec;
+
+		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
+		vClrMainFlg(MAIN_FLG_MODE_DET_DONE);
+		vSetMainFlg(MAIN_FLG_MODE_CHG);
+		// Luis060627, for delay mute
+		vApiVideoClrEvtFlg(VDO_FLG_MAIN_MODECHG_DONE);
+	}
+
+	if(fgPipCh)
+	{
+		_rPChannel.bDecType = bNewSubDec;
+
+		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
+		
+	#ifdef CC_OSD_ENCODE
+		if(bGetICInputType(SV_VP_PIP)!=P_OSDENCODE &&
+		   bGetICInputType(SV_VP_PIP)!=P_OSTGENC)
+		{
+			vClrPipFlg(PIP_FLG_MODE_DET_DONE);
+			vSetPipFlg(PIP_FLG_MODE_CHG);
+		}
+	#else
+			vClrPipFlg(PIP_FLG_MODE_DET_DONE);
+			vSetPipFlg(PIP_FLG_MODE_CHG);
+	#endif
+
+		// Luis060627, for delay mute
+		vApiVideoClrEvtFlg(VDO_FLG_PIP_MODECHG_DONE);
+	}
+
+#ifdef CC_SRM_ON
+	SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_SOURCE + (UINT32)VDP_1), (UINT32)bMainSrc, 0);
+	SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_SOURCE + (UINT32)VDP_2), (UINT32)bSubSrc, 0);
+#endif
+	MainSubSrc_Biglock_Release();
+	return SV_SUCCESS;
+}
+
 #endif
 
 /**
