@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #2 $
-# $Date: 2015/01/10 $
+# $Revision: #3 $
+# $Date: 2015/01/11 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -123,7 +123,7 @@
 ifndef EU_RUNNING_SPEC
     export EU_RUNNING_SPEC := dvbtc
 endif
-$(warning "---RUNING_SPEC=$(EU_RUNNING_SPEC)")
+#$(warning "---RUNING_SPEC=$(EU_RUNNING_SPEC)")
 
 #
 # Set initial values.
@@ -643,8 +643,8 @@ ifeq "$(DUMMY_TUNER)" "true"
     export BRDCST_IF := 5882DUMMY_F20WT_atdeu 
 endif
 
-$(warning "---BRDCST_IF=$(BRDCST_IF)")
-$(warning "3RD_PARTIES---$(3RD_PARTIES)---$(3RD_PARTIES_CUST)")
+#$(warning "---BRDCST_IF=$(BRDCST_IF)")
+#$(warning "3RD_PARTIES---$(3RD_PARTIES)---$(3RD_PARTIES_CUST)")
 #
 # MTD Encryption
 #
