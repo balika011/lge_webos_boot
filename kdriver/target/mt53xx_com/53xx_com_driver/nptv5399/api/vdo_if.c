@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/10 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -564,7 +564,15 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	}
 	else//disconnect source
 	{
-		
+		if(bPath == SV_VP_MAIN)	//check the real source
+	    {
+	        bStatus = bApiVSCMainSubSrc(SV_VS_MAX, SV_VS_NO_CHANGE, bEnable);
+
+	    }
+	    else
+	    {
+	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, SV_VS_MAX, bEnable);
+	    }	
 	}
 	return SV_SUCCESS;
 
@@ -691,7 +699,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_fgAutoSearch = FALSE;
 	}
 
-
 	if(bMainSrc == SV_VS_MAX)
 	{
 		_rMChannel.bIsChannelOn = SV_OFF;
@@ -716,7 +723,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 			x_os_drv_set_timestamp("bApiVideoMainSubSrc");
 			b_boot_rec_once = TRUE;
 		}
-
 #endif
 	}
 
@@ -724,13 +730,12 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	{
 		_rPChannel.bIsChannelOn = SV_OFF;
 		_rPChannel.bDecType = SV_VD_NA;
-		//		  vDrvScpipWriteCtrl(SV_VP_PIP,SV_OFF);
+		//vDrvScpipWriteCtrl(SV_VP_PIP,SV_OFF);
 	}
 	else
 	{
 		_rPChannel.bIsChannelOn = SV_ON;
 	}
-
 
 	/* disconnect unused internal mux */
 	vMuxCleanup();
