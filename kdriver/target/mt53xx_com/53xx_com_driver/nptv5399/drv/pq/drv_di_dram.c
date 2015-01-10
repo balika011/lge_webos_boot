@@ -74,10 +74,10 @@
 *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: drv_di.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -622,7 +622,7 @@ void vDrvDIDumpSetSize(UINT8 bPath)
     LOG(4, "Pos W %d  H %d  Length W %d  H %d  Size %d \n", 
         u4StartW, u4StartH, u4ReqWidth, u4ReqHeight, u4DumpSize);
     
-    prPool = FBM_GetPoolInfoAuto((UCHAR)FBM_POOL_TYPE_PQ_TOOL, NULL);
+    prPool = FBM_GetPoolInfoAuto((UCHAR)FBM_POOL_TYPE_VSS, NULL);
 
     // in case there is no suitable space allocated in FBM, add new way to force allocate (known) unused space for dump usage
     if(u4IO32Read4B(SWRW_08) != 0)

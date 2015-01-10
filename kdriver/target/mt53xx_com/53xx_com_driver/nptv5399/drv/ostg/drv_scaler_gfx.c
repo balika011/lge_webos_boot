@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -481,14 +481,28 @@ UINT8 u1Scpip_GFX_Write_Enable(UINT8 u1Enable)
 		_arGfxInf.u1Sel444 = 1;
 		_arGfxInf.u1Bypass3x3 = 0;
 	}
+
+	if(_arGfxInf.Format == YUVA2101010)
+	{
+		_arGfxInf.u1WriteEnable = u1Enable;
+		 _arGfxInf.u1HBoundEn = !(_arGfxInf.u1Sel444);
+
+		//if input RGB444 how to dump YUV by VSS, change to video mode?
+		//vScpipGfx422To444Enable(_arGfxInf.u1Sel444);
+		//vScpipGfxBypass3x3(!(_arGfxInf.u1Bypass3x3));
+		vScpipGfxWriteEn(u1Enable);	
+	}
+	else
+	{
+		_arGfxInf.u1WriteEnable = u1Enable;
+		 _arGfxInf.u1HBoundEn = !(_arGfxInf.u1Sel444);
+			
+		vScpipGfx422To444Enable(!(_arGfxInf.u1Sel444));
+		vScpipGfxBypass3x3(_arGfxInf.u1Bypass3x3);
+		vScpipGfxWriteEn(u1Enable);
 		
-	 _arGfxInf.u1WriteEnable = u1Enable;
-	 _arGfxInf.u1HBoundEn = !(_arGfxInf.u1Sel444);
+	}
 		
-	vScpipGfx422To444Enable(!(_arGfxInf.u1Sel444));
-	vScpipGfxBypass3x3(_arGfxInf.u1Bypass3x3);
-	vScpipGfxWriteEn(u1Enable);
-	
 	return TRUE;
 	
 }
