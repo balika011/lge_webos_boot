@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: dsp_data.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -293,7 +293,7 @@
   #if defined (CC_AUD_DISABLE_2ND_DSP) && defined (CC_AUD_ENLARGE_APROC_DRAM)
 #define DSP_APROC_SZ             (0x300000+0x2A3000) // 3MB + 2.6 MB(from 2nd DSP)
   #else
-#define DSP_APROC_SZ             (0x400000) // 3MB
+#define DSP_APROC_SZ             (0x300000) // 3MB
   #endif
 #else
 #define DSP_APROC_SZ             (0x40000) // 256k
