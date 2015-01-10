@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: vdec_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_if.h
@@ -404,9 +404,19 @@ typedef enum
     VDEC_MM_DROP_TIMEOUTFRAME,
     VDEC_MM_DUAL_CORE_ENABLE,
     VDEC_MM_UFO_MODE_ENABLE,
+    VDEC_MM_HAL_PARAMETER,
     VDEC_MM_MAX
 } VDEC_MM_PARAM_T;
 
+typedef enum
+{
+	HAL_VDEC_PARAM_3DMODE = 0,
+	HAL_VDEC_PARAM_NOT_USE_STC,
+	HAL_VDEC_PARAM_AUDIO_CHANNEL,
+	HAL_VDEC_PARAM_DISPLAY_DELAY,
+	HAL_VDEC_PARAM_LIPSYNC_MASTER,
+	HAL_VDEC_PARAM_MAX
+}HAL_VDEC_PARAM_T;
 
 /** the notify conditions.
   This structure match to the one in mw. Can't change it's sequence.
@@ -1130,4 +1140,7 @@ EXTERN void VDEC_ResetWFDInfo(UCHAR ucEsId);
 
 EXTERN BOOL VDEC_GetDelayTime(UCHAR ucEsId, VDEC_HDR_INFO_T* prHdrInfo);
 EXTERN void VDEC_VP9LogOption(const CHAR* pTypeStr, const CHAR* pArg1, const CHAR* pArg2);
+
+EXTERN void VDEC_GetHALParam(UCHAR ucEsId, UINT32 u4Type, UINT32 u4Param1, UINT32* u4Param2, UINT32 u4Param3);
+
 #endif //VDEC_IF_H

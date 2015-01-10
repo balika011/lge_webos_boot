@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -1947,6 +1947,12 @@ typedef struct
     UCHAR ucLaeId;
     BOOL fgSetTargetRdptr;
     UINT32 u4TargetRdptr;
+	//VDEC_DIRECT HAL Param
+	INT32 i4Hal3DMode;
+	INT32 i4HalNotUseSTC;
+	INT32 i4AudioChannel;
+	INT32 i4HalDisplayDelay;
+	INT32 i4HalLipsyncMaster;
 } VDEC_ES_INFO_T;
 
 
