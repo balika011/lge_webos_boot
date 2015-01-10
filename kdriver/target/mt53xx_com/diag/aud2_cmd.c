@@ -3355,7 +3355,7 @@ static INT32 _AprocPostProcBalancer(INT32 i4Argc, const CHAR ** szArgv)
         u4type = (UINT32)StrToInt(szArgv[1]);
         u4v0 = (UINT32)StrToInt(szArgv[2]);
 
-        if ( u4type > 2 )
+        if ( u4type > APROC_IOCTR_BALANCE_NUM )
         {
             u4type = 0;
             Printf ("!Wrong Type!\n");
@@ -3377,9 +3377,15 @@ static INT32 _AprocPostProcBalancer(INT32 i4Argc, const CHAR ** szArgv)
         Printf(" HP L = 0x%x, R = 0x%x\n", u4BlcVal[0], u4BlcVal[1]);
         _vAUD_Aproc_Get (APROC_CONTROL_TYPE_BALANCE, APROC_IOCTR_BALANCE_IEC, (UINT32 *) &u4BlcVal[0], 1);
         Printf(" IEC L = 0x%x, R = 0x%x\n", u4BlcVal[0], u4BlcVal[1]);
+        _vAUD_Aproc_Get (APROC_CONTROL_TYPE_BALANCE, APROC_IOCTR_BALANCE_INPUT0, (UINT32 *) &u4BlcVal[0], 1);
+        Printf(" INPUT0 L = 0x%x, R = 0x%x\n", u4BlcVal[0], u4BlcVal[1]);
+        _vAUD_Aproc_Get (APROC_CONTROL_TYPE_BALANCE, APROC_IOCTR_BALANCE_INPUT1, (UINT32 *) &u4BlcVal[0], 1);
+        Printf(" INPUT1 L = 0x%x, R = 0x%x\n", u4BlcVal[0], u4BlcVal[1]);
+        _vAUD_Aproc_Get (APROC_CONTROL_TYPE_BALANCE, APROC_IOCTR_BALANCE_INPUT2, (UINT32 *) &u4BlcVal[0], 1);
+        Printf(" INPUT2 L = 0x%x, R = 0x%x\n", u4BlcVal[0], u4BlcVal[1]);
 
         Printf("\nUsage: blc  [type][v0]\n");
-        Printf("type = 0 -> SP ; 1 -> HP ; 2 -> IEC\n");
+        Printf("type = 0 -> SP ; 1 -> HP ; 2 -> IEC; 3 -> INPUT0, 4 -> INPUT1, 5 ->INPUT2\n");
         return -1;
     }
 

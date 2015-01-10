@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -870,6 +870,10 @@ extern void _AUD_UserSetMixSndOutputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 
 extern void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute);
 extern void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol);
 extern void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol);
+extern void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol, 
+                    UINT8 u1LeftFineVol, UINT8 u1RightMainVol, UINT8 u1RightFineVol);
+extern void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime);
+extern void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT8 u1DecId); 
 #endif
 #endif
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)

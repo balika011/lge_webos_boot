@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/10 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -23543,6 +23543,12 @@ void _vAprocSetRoutine (UINT32 u4Id)
     case APROC_ROUTINE_ID_DR_SPDIF_SOUNDBAR_PATH:
         u4Idx = APROC_SIG_SET_DELAY2_ROUTINE;
         break;
+    case APROC_ROUTINE_ID_DR_INPUT0_PATH:
+        u4Idx = APROC_SIG_SET_DELAY_INPUT0_ROUTINE;
+        break;  
+    case APROC_ROUTINE_ID_DR_INPUT1_PATH:
+        u4Idx = APROC_SIG_SET_DELAY_INPUT1_ROUTINE;
+        break;  
     case APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH:
         u4Idx = APROC_SIG_SET_DELAY6_ROUTINE;
         break;
@@ -23795,15 +23801,24 @@ static void _vAproc_PostProcBalance_Set (UINT32 u4Id, INT32 i4Value)
 
     switch (u4Id)
     {
-        case APROC_IOCTR_BALANCE_SP:
-            u4Idx = APROC_REG_SP_BALANCE_0;
-            break;
-        case APROC_IOCTR_BALANCE_HP:
-            u4Idx = APROC_REG_HP_BALANCE_0;
-            break;    
-        case APROC_IOCTR_BALANCE_IEC:
-            u4Idx = APROC_REG_IEC_BALANCE_0;
-            break;                
+    case APROC_IOCTR_BALANCE_SP:
+        u4Idx = APROC_REG_SP_BALANCE_0;
+        break;
+    case APROC_IOCTR_BALANCE_HP:
+        u4Idx = APROC_REG_HP_BALANCE_0;
+        break;    
+    case APROC_IOCTR_BALANCE_IEC:
+        u4Idx = APROC_REG_IEC_BALANCE_0;
+        break;                
+    case APROC_IOCTR_BALANCE_INPUT0:
+        u4Idx = APROC_REG_INPUT0_BALANCE_L;
+        break;
+    case APROC_IOCTR_BALANCE_INPUT1:
+        u4Idx = APROC_REG_INPUT1_BALANCE_L;
+        break;
+    case APROC_IOCTR_BALANCE_INPUT2:
+        u4Idx = APROC_REG_INPUT2_BALANCE_L;
+        break;
     default:
         LOG (5, "_vAproc_PostProcBalance_Set: wrong id = 0x%x!!!\n", u4Id);
         return;
@@ -23839,7 +23854,16 @@ static void _vAproc_PostProcBalance_Get (UINT32 u4Id, INT32 *pi4Value)
         break;    
     case APROC_IOCTR_BALANCE_IEC:
         u4Idx = APROC_REG_IEC_BALANCE_0;
-        break;                
+        break;
+    case APROC_IOCTR_BALANCE_INPUT0:
+        u4Idx = APROC_REG_INPUT0_BALANCE_L;
+        break;
+    case APROC_IOCTR_BALANCE_INPUT1:
+        u4Idx = APROC_REG_INPUT1_BALANCE_L;
+        break;
+    case APROC_IOCTR_BALANCE_INPUT2:
+        u4Idx = APROC_REG_INPUT2_BALANCE_L;
+        break;        
     default:
         LOG (5, "_vAproc_PostProcBalance_Get: wrong id = 0x%x!!!\n", u4Id);
         return;
@@ -26952,6 +26976,7 @@ void _AUD_UserSetMixSndInputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineVo
     INT32 i4Vol;
     UINT32 pu4Addr[2];
 
+    AUD_MIXSND_ID_VALIDATE(u4MixIdex); 
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
     _au4MixSoundInputVolume[u4MixIdex] = u4Volumn;
     i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!!
@@ -26969,8 +26994,10 @@ void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute)
 {
     INT32 i4Vol;
     UINT32 pu4Addr[2];
-    _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute;
 
+    AUD_MIXSND_ID_VALIDATE(u4MixIdex);
+    
+    _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute; 
     i4Vol = (INT32) _au4MixSoundInputVolume[u4MixIdex] * 0x3f; // fix me!!!!
     if (_fgMixSoundInputMute[u4MixIdex])
     {
@@ -26988,6 +27015,8 @@ void _AUD_UserSetMixSndOutputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineV
     INT32 i4Vol;
     UINT32 pu4Addr[2];
 
+    AUD_MIXSND_ID_VALIDATE(u4MixIdex);
+    
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
     i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!!
     pu4Addr[0] = u4MixIdex;
@@ -27000,6 +27029,8 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 {  
     UINT32 u4Idx;
     INT32 i4Vol;
+
+    AUD_DEC_ID_VALIDATE(u1DecId);
 
     if (fgMute)
     {
@@ -27019,7 +27050,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     {
         u4Idx = APROC_IOCTR_TRIM_AMIXER2;
     } 
-    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     
 }
 
@@ -27029,6 +27060,8 @@ void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     UINT32 u4Volumn;
     INT32 i4Vol;
 
+    AUD_DEC_ID_VALIDATE(u1DecId);
+    
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol); 
     i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!! 
     u4Idx = APROC_IOCTRL_VOL_AMIXER0;
@@ -27041,7 +27074,7 @@ void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     {
         u4Idx = APROC_IOCTRL_VOL_AMIXER2;
     } 
-    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     
 }
 
@@ -27050,8 +27083,10 @@ void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     UINT32 u4Idx;
     UINT32 u4Volumn;
     INT32 i4Vol;
+    
+    AUD_DEC_ID_VALIDATE(u1DecId);
 
-    u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol); 
+    u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
     i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!! 
     u4Idx = APROC_IOCTR_TRIM_INPUT0;
 
@@ -27063,10 +27098,105 @@ void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     {
         u4Idx = APROC_IOCTR_TRIM_INPUT2;
     } 
-    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     
 }
 
+void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol, 
+                    UINT8 u1LeftFineVol, UINT8 u1RightMainVol, UINT8 u1RightFineVol)
+{  
+    UINT32 u4Volumn;
+    INT32 i4Vol;
+    UINT32 u4Idx = APROC_REG_INPUT0_BALANCE_L;
+
+    AUD_DEC_ID_VALIDATE(u1DecId);
+    
+    switch (u1DecId)
+    {
+    case AUD_DEC_MAIN:
+        u4Idx = APROC_REG_INPUT0_BALANCE_L;
+        break;
+    case AUD_DEC_AUX:
+        u4Idx = APROC_REG_INPUT1_BALANCE_L;
+        break;
+    case AUD_DEC_THIRD:
+        u4Idx = APROC_REG_INPUT2_BALANCE_L;
+        break;               
+    default:
+        LOG (5, "_vAproc_PostProcBalance_Set: wrong id = 0x%x!!!\n", u4Id);
+        return;
+    }
+
+    u4Volumn = _AUD_UserGetDrvVol(u1LetfMainVol, u1LeftFineVol); 
+    i4Vol = (INT32) u4Volumn * 0x3f;
+
+    vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_1, u4Idx), (UINT32)i4Vol);
+
+    u4Volumn = _AUD_UserGetDrvVol(u1RightMainVol, u1RightFineVol); 
+    i4Vol = (INT32) u4Volumn * 0x3f; 
+    vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_1, u4Idx+1), (UINT32)i4Vol);
+    
+}
+
+void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime)
+{ 
+    u2DelayTime = u2DelayTime * 48 / APROC_POSTBUF_BLOCK_SIZE;
+
+    AUD_DEC_ID_VALIDATE(u1DecId);
+
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        vAprocReg_Write(APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3C, APROC_REG_DELAY_INPUT0), u2DelayTime);
+        _vAprocSetRoutine(APROC_ROUTINE_ID_DR_INPUT0_PATH);
+        DSP_SendDspTaskCmd(AUD_DSP0, UOP_DSP_AOUT_REINIT); 
+    }
+    else
+    {
+        vAprocReg_Write(APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3C, APROC_REG_DELAY_INPUT1), u2DelayTime); 
+        _vAprocSetRoutine(APROC_ROUTINE_ID_DR_INPUT1_PATH);
+        DSP_SendDspTaskCmd(AUD_DSP0, UOP_DSP_AOUT_REINIT_DEC2);
+        
+    }
+}
+
+void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT8 u1DecId)
+{
+    UINT32 u4Reg;
+    AUD_DEC_ID_VALIDATE(u1DecId);
+    AUD_OUT_PORT_VALIDATE(eAudioOutPort);
+
+    LOG(5, "%s, ouput_port = %d, DEC(%d)\n", __FUNCTION__, eAudioOutPort, u1DecId);
+    
+    switch (eAudioOutPort)
+    {
+    case AUD_SPEAKER:
+        u4Reg = APROC_REG_SEL_DSP_SP_IN;
+        break;
+    case AUD_HEADPHONE:
+        u4Reg = APROC_REG_SEL_DSP_HP_IN;
+        break;
+    case AUD_SPDIF:
+        u4Reg = APROC_REG_SEL_DSP_SPDIF_IN;
+        break;
+    case AUD_AV_OUT:
+        u4Reg = APROC_REG_SEL_DSP_MON_IN;
+        break;
+    case AUD_MONITOR_SCART:
+        u4Reg = APROC_REG_SEL_DSP_MON_IN;
+        break;        
+    case AUD_TV_SCART:
+        u4Reg = APROC_REG_SEL_SCART_IN;
+        break;
+    case AUD_BLUETOOTH:
+        u4Reg = APROC_REG_SEL_DSP_BT_IN;
+        break;
+    default:
+        u4Reg = APROC_REG_SEL_DSP_SP_IN;
+        break;        
+    }
+    
+    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, u4Reg, (UINT32 *)&u1DecId, 1);   
+}
 #endif
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER) //#A0005
 

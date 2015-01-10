@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/10 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7150,10 +7150,11 @@ void AUD_SetUiSpkOnOff(BOOL fgEnable)
 void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
             UINT32 u4Arg1, UINT32 u4Arg2, UINT32 u4Arg3, UINT32 u4Arg4)
 {
-#ifdef CC_AUD_DDI 
     LOG(2, "%s, type = %d index = %d", __FUNCTION__, u4CmdType, u4Index);
     switch (u4CmdType)
     {
+#ifdef CC_AUD_DDI 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)        
     case AUD_USER_SET_DEC_INPUT_MUTE:
         _AUD_UserSetDecInputMute(u4Index, u4Arg1); 
         break;        
@@ -7164,6 +7165,7 @@ void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
         _AUD_UserSetDecOutputVol(u4Index, u4Arg1, u4Arg2); 
         break;
     case AUD_USER_SET_DEC_CHANNEL_GAIN:
+        _AUD_UserSetDecChannelGain(u4Index, u4Arg1, u4Arg2, u4Arg3, u4Arg4);
         break;
     case AUD_USER_SET_MIX_INPUT_MUTE:
         _AUD_UserSetMixSndMute(u4Index, u4Arg1); 
@@ -7174,10 +7176,17 @@ void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
     case AUD_USER_SET_MIX_OUTPUT_VOL:
         _AUD_UserSetMixSndOutputVol(u4Index, u4Arg1, u4Arg2); 
         break;
+    case AUD_USER_SET_DEC_INPUT_DELAY:
+        _AUD_UserSetDecInputDelay(u4Index, u4Arg1);
+        break;
+    case AUD_USER_SET_DEC_OUT_CTRL:
+        _AUD_UserSetDecOutCtrl((AUD_OUT_PORT_T)u4Index, u4Arg1);
+        break;
+#endif
+#endif 
     default:
         break;
     } 
-#endif    
 }
 
 
