@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/10 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -389,6 +389,7 @@ typedef enum{
 #define VDEC_PUSH_SET_INFO_SECURE_INPUT     (1<<6)
 #define VDEC_PUSH_SET_INFO_VDP_ID            (1<<7)
 #define VDEC_PUSH_SET_INFO_LOW_LATENCY      (1<<8)
+#define VDEC_PUSH_SET_INFO_LGE_GST          (1<<9)
 
 
 // VP6 alpha
@@ -2308,7 +2309,7 @@ EXTERN BOOL _VPUSH_DecodeReset(VOID* prdec);
 EXTERN VOID _VPUSH_DecodeDone(UCHAR ucEsId, VOID *prPicNfyInfo);
 EXTERN VOID _VPUSH_CreateFbgDone(UCHAR ucEsId, VOID *pVoid);
 EXTERN BOOL _VPUSH_RegCb(VOID* prdec, VDEC_PUSH_CB_T *prVdecPushCb);
-EXTERN BOOL _VPUSH_GetVFifoInfo(VDEC_VFIFO_INTO_T *prVfifoInfo);
+EXTERN BOOL _VPUSH_GetVFifoInfo(VOID* prdec,VDEC_VFIFO_INTO_T *prVfifoInfo);
 EXTERN BOOL _VPUSH_GetFeederInfo(VOID* prdec, VDEC_FEEDER_INTO_T *prFeederInfo);
 EXTERN BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo);
 EXTERN BOOL _VPUSH_GetInfo(VOID* prdec, VDEC_GET_INTO_T *prVdecGetInfo);

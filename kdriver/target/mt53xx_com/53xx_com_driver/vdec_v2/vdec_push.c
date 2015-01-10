@@ -4776,7 +4776,12 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
     {
         prVdec->fgLowLatencyMode = TRUE;
     }
-
+	
+    if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_LGE_GST)
+    {
+        prVdec->fgGstPlay=TRUE;
+        LOG(3, "VPush Marsk VDEC_PUSH_SET_INFO_LGE_GST\n");
+    }
     return TRUE;
 }
 BOOL _VPUSH_GetInfo(VOID* prdec, VDEC_GET_INTO_T *prVdecGetInfo)
@@ -4876,8 +4881,12 @@ BOOL _VPUSH_PutData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     }
 
     // check put data semaphore
-    i4Ret = x_sema_lock(prVdec->hPutDataSema, X_SEMA_OPTION_NOWAIT);
-    VERIFY(i4Ret == OSR_WOULD_BLOCK);
+    // check put data semaphore
+    if(prVdec->fgGstPlay==FALSE)
+    {
+    	i4Ret = x_sema_lock(prVdec->hPutDataSema, X_SEMA_OPTION_NOWAIT);
+        VERIFY(i4Ret == OSR_WOULD_BLOCK);
+    }
 
     i4Ret = x_sema_lock(prVdec->hMoveEsmQSema, X_SEMA_OPTION_NOWAIT);
     VERIFY(i4Ret == OSR_WOULD_BLOCK);
@@ -4896,18 +4905,30 @@ BOOL _VPUSH_PutData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     }
 
     // wait put data semaphore
-    i4Ret = x_sema_lock_timeout(prVdec->hPutDataSema, DMX_MOVE_DATA_TIMEOUT);
-    if(i4Ret != OSR_OK)
-    {
-        LOG(0, "%s(%d): putdata timeout\n", __FUNCTION__, __LINE__);
-        return VDEC_DEC_ERROR_INTERNAL_ERROR;
-    }
+    if(prVdec->fgGstPlay==FALSE)
+	{
+	    i4Ret = x_sema_lock(prVdec->hPutDataSema, X_SEMA_OPTION_WAIT);
+	    if(i4Ret != OSR_OK)
+	    {
+	        ASSERT(i4Ret == OSR_TIMEOUT);
+	        LOG(3, "%s(%d): putdata timeout\n", __FUNCTION__, __LINE__);
+	    
+	        // make the lock in lock status
+	        x_thread_delay(1);
+	        x_sema_lock(prVdec->hPutDataSema, X_SEMA_OPTION_NOWAIT);
+	        VERIFY((i4Ret == OSR_OK) || (i4Ret == OSR_WOULD_BLOCK));
+	    
+	        return FALSE;
+	    }
 
-    if (prVdec->fgFifoFull)
-    {
-        prVdec->fgFifoFull = FALSE;
-        return VDEC_DEC_ERROR_FIFO_FULL;
-    }
+	    if (prVdec->fgFifoFull)
+	    {
+	        prVdec->fgFifoFull = FALSE;
+	        return FALSE;
+	    }
+	}
+	
+
 
     i4Ret = x_sema_lock_timeout(prVdec->hMoveEsmQSema, DMX_MOVE_DATA_TIMEOUT);
     if (i4Ret != OSR_OK)
@@ -4931,15 +4952,18 @@ BOOL _VPUSH_PutDataDone(VOID* prdec, UINT32 u4Tag)
     }
     UNUSED(u4Tag);//not used currently
     prVdec = (VDEC_T*)prdec;
-    if(prVdec->rInpStrm.fnCb.pfnVdecPutDataDone)
-    {
-        i4Ret = prVdec->rInpStrm.fnCb.pfnVdecPutDataDone(
-            prVdec->rInpStrm.fnCb.u4PutTag);
-    }
+
     if(prVdec->hPutDataSema)
     {
         VERIFY(x_sema_unlock(prVdec->hPutDataSema) == OSR_OK);
     }
+
+	if(prVdec->rInpStrm.fnCb.pfnVdecPutDataDone)
+    {
+        i4Ret = prVdec->rInpStrm.fnCb.pfnVdecPutDataDone(
+            prVdec->rInpStrm.fnCb.u4PutTag);
+    }
+
 
     return i4Ret;
 }
@@ -5176,25 +5200,20 @@ VOID _VPUSH_DecodeInit(VOID)
 }
 
 
-BOOL _VPUSH_GetVFifoInfo(VDEC_VFIFO_INTO_T *prVfifoInfo)
+BOOL _VPUSH_GetVFifoInfo(VOID* prdec,VDEC_VFIFO_INTO_T *prVfifoInfo)
 {
-    UINT32 min_input_size;    
-    UINT32 i;
-    if(!prVfifoInfo)
+    VDEC_T *prVdec=(VDEC_T *)prdec;
+	
+    if(prdec==NULL || prVfifoInfo==NULL)
     {
-        LOG(3, "%s(%d): prVfifoInfo is null\n", __FUNCTION__, __LINE__);
+        LOG(3, "%s(%d,%d): prVfifoInfo is null\n", __FUNCTION__,(UINT32)prdec,(UINT32)prVfifoInfo);
         return FALSE;
     }
+	
     prVfifoInfo->u4BufferCount = VDEC_BUF_COUNT;
-    min_input_size = _prVdecPush->arDec[0].arBufInfo[0].u4BufSize;
-    for(i=1;i<VDEC_PUSH_MAX_DECODER;i++)
-    {
-        min_input_size = _prVdecPush->arDec[i].arBufInfo[0].u4BufSize < min_input_size ? _prVdecPush->arDec[i].arBufInfo[0].u4BufSize : min_input_size;
-    }
-    
-    prVfifoInfo->u4BufferSize = min_input_size;
+    prVfifoInfo->u4BufferSize = prVdec->arBufInfo[0].u4BufSize;
+    LOG(1,"_VPUSH_GetVFifoInfo BufCnt=%d,BufSize=0x%x\n",prVfifoInfo->u4BufferCount, prVfifoInfo->u4BufferSize);
     return TRUE;
-
 }
 
 #define ALIGNED(x, align) (((UINT32)(x) & (align - 1)) == 0)
@@ -5722,14 +5741,27 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
                 
                 LOG(5, "Vfifo is full!, size: %d, pts: 0x%08x, fgEsmQFull:%d\n", prVdec->rMsg.u.rBytesInfo.u4BytesSize, (UINT32)(prVdec->rMsg.u.rBytesInfo.u8BytesPTS), fgEsmQFull);
 
-                prVdec->fgFifoFull = TRUE;
-
-                if(!_VPUSH_PutDataDone(prVdec, prVdec->rMsg.u.rBytesInfo.u4BytesAddr))
+                if(prVdec->fgGstPlay)
                 {
-                    LOG(3, "%s(%d): _VPUSH_PutDataDone fail\n", __FUNCTION__, __LINE__);
+                    i4Ret = x_msg_q_send(prVdec->hMsgQ, (void *)&prVdec->rMsg,sizeof(VDEC_MSG_INTO_T), 254);
+                    UNUSED(_VPUSH_GetMsgCountInQ((VOID*)prVdec));
+                    if(i4Ret != OSR_OK)
+                    {
+                        ASSERT(0);
+                        LOG(0, "%s(%d): i4Ret(%d))\n", __FUNCTION__, __LINE__, i4Ret);
+                    }
+                    x_thread_delay(50);
                 }
-	
-                x_thread_delay(100);
+                else
+                {
+                	prVdec->fgFifoFull = TRUE;
+
+	                if(!_VPUSH_PutDataDone(prVdec, prVdec->rMsg.u.rBytesInfo.u4BytesAddr))
+	                {
+	                    LOG(3, "%s(%d): _VPUSH_PutDataDone fail\n", __FUNCTION__, __LINE__);
+	                }
+                }
+
                 continue;
             }
 
@@ -5880,7 +5912,8 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->u4AllocBufCnt=0;
     prVdec->fgIsSecureInput = FALSE;    
     prVdec->fgLowLatencyMode = FALSE;
-    x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
+    prVdec->fgGstPlay=FALSE;
+	x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
 #if defined(CC_USE_DDI)
     if (!VPUSH_IS_PIC(eFmt))
     {

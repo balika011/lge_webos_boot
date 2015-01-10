@@ -32,10 +32,10 @@
  * Unauthorized use, practice, perform, copy, distribution, reproduction,
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -212,6 +212,7 @@ typedef struct {
 	BOOL fgIsSecureInput;    
     BOOL fgFifoFull;
     BOOL fgLowLatencyMode;
+	BOOL fgGstPlay;
     UINT8 u1DmxId;
     UINT8 u1DmxPid;
     UINT8 ucVPushId;
