@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/10 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,9 +152,14 @@ UINT8 u1YFixMotion[VDP_NS] = {0, 0};
 UINT8 u1CFixMotion[VDP_NS] = {0, 0};
 UINT8 u1YMotionLevel[VDP_NS] = {0, 0};
 UINT8 u1CMotionLevel[VDP_NS] = {0, 0};
+UINT8 u1IF_MAX_MOTION_C_Value;
+extern UINT8 _fgCornPattern;
 
+UINT8 u1sawtooth_still;
+UINT8 u1smooth_still;
 static HANDLE_T _hDIAdaptivePDIsrSema;
 
+static UINT8 _u1DIState =0;
 // Chroma Jaggy & DTV Tearing Setting
 #define SCPQ_TH_TOTAL 5
 const UINT8 u1CJaggyTh[SCPQ_TH_TOTAL] = {4, 7, 10, 13, 16};
@@ -504,6 +509,14 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
         DiPQMode.bFilmOnOff_Y = (u1OnOff & DiPQMode.bCfgFilmOnOff & _u1DrvDIFullQualityOnOff(bPath));
         DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
 
+        if ((bGetSignalType(VDP_1) == SV_ST_MPEG) || (bGetSignalType(VDP_1) == SV_ST_TV))
+        {
+            DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
+        }
+        else
+        {
+            DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
+        } 
         if (IS_DI_Y4C4(VDP_1))
         {
             DiPQMode.bFilmOnOff_C = DiPQMode.bFilmOnOff_Y;
@@ -579,6 +592,16 @@ static void _vDrvDISetPDMAQuality(UINT8 bPath)
     } 
 
     vIO32WriteFldAlign(MCVP_SB_01, (SV_VD_TVD3D == _arMDDiPrm[bPath].u1DecType), SB_NR_PAL_C_FILTER);                          
+    if (_arMDDiPrm[VDP_1].u1IsDualFPI)
+    {
+        vIO32WriteFldAlign(MA4F_FCHECK_YW, 0xA, TH_NORM_FCHECK_YW);
+        vIO32WriteFldAlign(MA4F_TH_YW_NORM, 0x6, TH_NORM_YW);
+    }
+    else
+    {
+        vIO32WriteFldAlign(MA4F_FCHECK_YW, 0x36, TH_NORM_FCHECK_YW);
+        vIO32WriteFldAlign(MA4F_TH_YW_NORM, 0x1c, TH_NORM_YW);
+    } 
 }
 
 static void _vDrvDISetIFQuality(UINT8 bPath)
@@ -702,7 +725,9 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_05, 0x600, EG_MAX_END_32);
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_07, 0x600, EG_MAX_END_22);              
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, 0x16, EG_MO_FILTER_L);
-			if(PANEL_GetPanelWidth()<1200)
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
+			if(IS_PANEL_2D_N_3D_L12R12 && PANEL_GetPanelWidth()<1200)
 			{
 				vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, 0x28, EG_MO_FILTER_H); 
 			}
@@ -732,6 +757,8 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FWFILM_00, 0x20, FLD_MIN);
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MAX);
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MIN);    
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x10, FR_MO_FILTER_L);
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x30, FR_MO_FILTER_H);
 
             if (IS_PANEL_L12R12)
             {
@@ -755,6 +782,8 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FWFILM_00, 0x20, FLD_MIN);
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MAX);
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MIN);     
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
 
             if (IS_PANEL_L12R12)
             {
@@ -767,16 +796,24 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
 
     if (bGetSignalType(VDP_1) == SV_ST_MPEG)
     {
-        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x10, FR_MO_FILTER_L);
-        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x30, FR_MO_FILTER_H);
+        //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x10, FR_MO_FILTER_L);
+        //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x30, FR_MO_FILTER_H);
         vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_01, 0x04, EG_RATE_22); 
     }
     else
     {
-        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
-        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
+        //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
+        //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
+}
+    //for mp3 patch
+    if ((bGetSignalType(VDP_1) == SV_ST_YP) || (bGetSignalType(VDP_1) == SV_ST_DVI))
+    {
+        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 1, DI_FILM_APL_EN);
     }
-
+    else
+    {
+        vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0, DI_FILM_APL_EN);
+    } 
     if (DiPQMode.eFilmQty < E_DI_QUALITY_NUM_MODE)
     {
         vDrvLoadRegTbl(MDDI_PD_UI_PARAM[DiPQMode.eFilmQty]);   
@@ -789,6 +826,7 @@ static void _vDrvDISetCSQuality(UINT8 bPath)
 
     bTimingType = bDrvVideoGetTiming(bPath);
     
+    _u1DIState =0;
     switch (bGetSignalType(bPath))
     {
         case SV_ST_TV:
@@ -809,30 +847,46 @@ static void _vDrvDISetCSQuality(UINT8 bPath)
 
     if((_arMDDiPrm[bPath].u2Width <=720) || IS_OVERSAMPLE(bPath)) //SD Timing
     {
+        vIO32WriteFldAlign(MCVP_CS_00, 0, ME_MODE);
         vIO32WriteFldAlign(MCVP_CS_03, 0x1C, SAD_GRA_RATIO1);
         vIO32WriteFldAlign(MCVP_CS_03, 0x1E, SAD_GRA_RATIO2);
         vIO32WriteFldAlign(MCVP_CS_14, 0x78, SC_SAD_DIFF_THD);
+       if ((bGetVideoDecTypeNew(bPath) == SV_VD_YPBPR) &&(bPath == SV_VP_MAIN && VSS_MAJOR(_bSrcMainNew) == VSS_SCART))
+        {
+            vIO32WriteFldAlign(PSCAN_FWCS_00, 0x70, GMV_EDGE_RATIO);
+            vIO32WriteFldAlign(PSCAN_FWCS_01,0x2 ,NON_ZERO_CNT);
+        }
+        else
+        {
         vIO32WriteFldAlign(PSCAN_FWCS_00, 0x30, GMV_EDGE_RATIO); 
+            vIO32WriteFldAlign(PSCAN_FWCS_01,0x3 ,NON_ZERO_CNT);
+        } 
     }
     else if(_arMDDiPrm[bPath].u2Width <=1280)//720P
     {
+        vIO32WriteFldAlign(MCVP_CS_00, 1, ME_MODE);
         vIO32WriteFldAlign(MCVP_CS_03, 0xA, SAD_GRA_RATIO1);
         vIO32WriteFldAlign(MCVP_CS_03, 0x10, SAD_GRA_RATIO2);
         vIO32WriteFldAlign(PSCAN_FWCS_00, 0x1C, GMV_EDGE_RATIO);     
+        vIO32WriteFldAlign(PSCAN_FWCS_01,0x3 ,NON_ZERO_CNT);
         vIO32WriteFldAlign(MCVP_CS_14, 0x78, SC_SAD_DIFF_THD);    
     }
     else if(IS_INTERLACE(bPath))//1080I
     {
+        vIO32WriteFldAlign(MCVP_CS_00, 2, ME_MODE);
         vIO32WriteFldAlign(MCVP_CS_03, 0xA, SAD_GRA_RATIO1);
         vIO32WriteFldAlign(MCVP_CS_03, 0x10, SAD_GRA_RATIO2);
         vIO32WriteFldAlign(PSCAN_FWCS_00, 0x1C, GMV_EDGE_RATIO);     
+        vIO32WriteFldAlign(PSCAN_FWCS_01,0x3 ,NON_ZERO_CNT);
         vIO32WriteFldAlign(MCVP_CS_14, 0xA0, SC_SAD_DIFF_THD);
     }
     else//1080P
     {
+        vIO32WriteFldAlign(MCVP_CS_00, 3, ME_MODE);
         vIO32WriteFldAlign(MCVP_CS_03, 0xA, SAD_GRA_RATIO1);
         vIO32WriteFldAlign(MCVP_CS_03, 0x10, SAD_GRA_RATIO2);
         vIO32WriteFldAlign(PSCAN_FWCS_00, 0x1C, GMV_EDGE_RATIO);     
+       vIO32WriteFldAlign(PSCAN_FWCS_01,0x3 ,NON_ZERO_CNT);
         vIO32WriteFldAlign(MCVP_CS_14, 0xA0, SC_SAD_DIFF_THD);
     }    
 }
@@ -1115,7 +1169,7 @@ static void _vDrvDIMutliCadence(void)
 static void _vDrvDISetOSD(void)
 {
     vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, DiPar.PdPar.u4FldBit ? 1 : 0, DI_DBG_FLDBIT);
-    vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, DiPar.PdPar.u4FldBit ? 1 : 0, DI_DBG_FRMBIT);
+    vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, DiPar.PdPar.u4FrmBit ? 1 : 0, DI_DBG_FRMBIT);
     vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, DiPar.PdPar.bUnknowCnt ? 1 : 0, DI_DBG_UNKNOWN);
     vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, DiSta.PeSta.u4EdgeSum ? 0 : 1, DI_DBG_NOEDGE);
     vDrvDISetDebugOSDMask(E_OSD_DBG_PSCAN, (DiPar.CsPar.bFilmCnt==8) ? 1 : 0, DI_DBG_CSFILM);
@@ -1527,6 +1581,7 @@ static void _vDrvDISetIFQualityISR(void)
         vIO32WriteFldAlign(MCVP_FUSION_23, 0, IF_FILM_Y_W);
         vIO32WriteFldAlign(MCVP_FUSION_23, 0, IF_FILM_C_W); 
     }    
+        vIO32WriteFldAlign(MCVP_FUSION_21, 8, IF_MAX_MOTION_Y);
 
     u1MaxMo_C = (IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_IF_00, IF_C_AD_EN) && IS_SD_TIMING(VDP_1)) 
                     ? (8-(DiPar.CsPar.bFavorCS>>1)) : 8;
@@ -1575,7 +1630,7 @@ static void _vDrvDISetIFQualityISR(void)
         if (IO32ReadFldAlign(PSCAN_FWFILM_06, FILED_WEAVE_EN)
             && (((u1DI_Is50HZ == SV_TRUE)&&((DiPar.PdPar.u2FilmMode == E_DI_FILM_44) || (DiPar.PdPar.u2FilmMode == E_DI_FILM_66)))||
                 ((u1DI_Is50HZ == SV_FALSE)&&((DiPar.PdPar.u2FilmMode != E_DI_FILM_44) 
-                   && (DiPar.PdPar.u2FilmMode != E_DI_FILM_66)&&(DiPar.PdPar.u2FilmMode > E_DI_FILM_22)))||
+                   && (DiPar.PdPar.u2FilmMode != E_DI_FILM_66)&&(DiPar.PdPar.u2FilmMode != E_DI_FILM_32322)&&(DiPar.PdPar.u2FilmMode > E_DI_FILM_2224)))||
                 (DiPar.PdPar.bFilm24To50) || 
                 (((DiPar.PdPar.u2FilmMode == E_DI_FILM_22)||((DiPar.PdPar.u2FilmMode == E_DI_FILM_32)&&(u1DI_Is50HZ == SV_FALSE)))
                   &&(E_TD_OUT_3D_FS==_arMDDiPrm[VDP_1].eTDOutput))) 
@@ -1991,6 +2046,7 @@ static void _vDrvDIFavorCS(void)
     static UINT16 _u2NonZeroCnt[5] = {0, 0, 0, 0, 0};
     static UINT32 u4Index = 0;
     static UINT32  u4Count = 0;
+    static UINT8 _u1FavorState =0;
     UINT32 u4Cost, u4Stable = 0;
     UINT32 u4sawtooth_mc = 8, u4blendratio = 1, u4sawtooth_c = 2;
     UINT32 u4CostTemp, u4SmoothStill;
@@ -2025,12 +2081,12 @@ static void _vDrvDIFavorCS(void)
                     && (_u2NonZeroCnt[4] == _u2NonZeroCnt[2])) ? 1 : 0;
 
     // LG power tower patch
-    if (DiSta.CsSta.u1GmvValid && (DiSta.CsSta.u1GmvX == 0))
+    if (DiSta.CsSta.u1GmvValid && (DiSta.CsSta.u1GmvX == 0) && (DiSta.CsSta.u1GmvY != 0))
     {
         u4Stable = 0;
     }
     
-    if ((u4Stable || (DiSta.CsSta.u1GmvValid && (DiSta.CsSta.u1GmvX != 0)))
+    if (((u4Stable && !(DiSta.CsSta.u1GmvValid && (DiSta.CsSta.u1GmvX == 0) && (DiSta.CsSta.u1GmvY == 0)))|| (DiSta.CsSta.u1GmvValid && (DiSta.CsSta.u1GmvX != 0)))
         && (DiSta.CsSta.u4HistDiffAcc < u4HistThd) 
         && (bDrvGetFilmStatus() == E_DI_FILM_NONE)
         && ((_u2NonZeroCnt[u4Index] > 1) || DiSta.CsSta.u1GmvValid)
@@ -2122,17 +2178,73 @@ static void _vDrvDIFavorCS(void)
         MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u1sawtoothst_update, IF_W_SAWTOOTH_STILL);
         MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u4SmoothStill, IF_W_SMOOTH_STILL);
         MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_03, (8-DiPar.CsPar.bFavorCS)/2, IF_W_MC);        
+      _u1FavorState =1; 
     }
+   else if (_u1FavorState ==1)
+    {
+        MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, MIN(8,u4sawtooth_mc), IF_W_SAWTOOTH_MC);
+        MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u4sawtooth_c, IF_W_SAWTOOTH_C);
+        MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_03, 4, IF_W_MC);
+        MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u1sawtooth_still, IF_W_SAWTOOTH_STILL);
+        _u1FavorState =0;
+    } 
     
     u4Index = (u4Index < 4) ? (u4Index+1) : 0;
 }
 
+static void _vDrvDIStillMove(void)
+{
+
+    static UINT32 u4Count = 0;
+    static UINT32 u4Conf = 0;
+    UINT8 u1sawtoothst_update;
+    UINT8 u1smoothst_update;
+    UINT8 u1APL = IO32ReadFldAlign(METER_INFO_00, METER_APL_VAL);
+    UINT8 u1ASL = IO32ReadFldAlign(METER_INFO_00, METER_ASL_VAL);    
+    if ((DiSta.CsSta.u4MultibusrtCnt > 600)
+        && (DiSta.CsSta.u2EdgeCnt > 4500)
+        && (DiSta.IfSta.u4SawNom > 0xB8)
+        && (DiSta.IfSta.u4SawInv > 0xF8)
+        && (u1APL > 0x60)
+        && (u1ASL > 0x10))
+    {
+        u4Count = (u4Count < 160) ? (u4Count + 1) : 160;
+    }
+    else
+    {
+        u4Count = (u4Count > 0) ? (u4Count - 1) : 0;
+    }
+    if (IO32ReadFldAlign(PSCAN_FWCS_05, STILL_MOV_DEBUG))
+    {
+        u4Count = IO32ReadFldAlign(PSCAN_FWCS_05, STILL_MOVE_CNT);
+    }
+    else
+    {
+        vIO32WriteFldAlign(PSCAN_FWCS_05, u4Count, STILL_MOVE_CNT);
+    }
+        u4Conf = (u4Count > 20) ? (((u4Count - 20) > 64) ? 64 : (u4Count - 20)) : 0;
+        vIO32WriteFldAlign(PSCAN_FWCS_05, u4Conf, STILL_MOVE_CONF);
+    if (u4Count > 20)
+    {
+        u1sawtoothst_update = ((u4Conf/8) > 4)? 0 : (4 - u4Conf/8);
+        u1smoothst_update = ((u4Conf/8) > 4)? 0 : (4 - u4Conf/8);
+        if (IO32ReadFldAlign(PSCAN_FWCS_05, STILL_MOV_EN))
+        {
+            MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u1sawtoothst_update, IF_W_SAWTOOTH_STILL);
+            MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, u1smoothst_update, IF_W_SMOOTH_STILL);
+        }
+    }
+}
 static void _vDrvIFAdaptive(UINT8 bPath)
 {
     if (IS_SD_TIMING(bPath) && (u4DrvTDTV3DModeQuery() == E_TDTV_UI_3D_MODE_OFF))
     {
         _vDrvDIFieldInverse();
         _vDrvDICzpAdaptive();          
+    }
+    if(!IS_SD_HEIGHT(bPath) && (u4DrvTDTV3DModeQuery() == E_TDTV_UI_3D_MODE_OFF))
+    {
+        _vDrvDIStillMove();
     }
 }
 
@@ -2217,6 +2329,17 @@ static void _vDrvDARAdaptive(UINT8 bPath)
 
         vIO32WriteFldAlign(MCVP_DARE_11, u4NoiseLevel, DAR_V_VARIATION_O0);
         vIO32WriteFldAlign(MCVP_DARE_11, u4NoiseLevel, DAR_V_VARIATION_O1);
+    }
+    else if ((bGetSignalTypeNew(VDP_1) == SV_ST_AV)&&(bHwTvdMode()==SV_CS_NTSC358))
+    {
+        if (_fgCornPattern == 1)
+        {
+            vIO32WriteFldAlign(MCVP_DARE_11, MAX(0x04, IO32ReadFldAlign(MCVP_DARE_11, DAR_V_VARIATION_O2)-1), DAR_V_VARIATION_O2);
+        }
+        else
+        {
+            vIO32WriteFldAlign(MCVP_DARE_11, MIN(0x10,  IO32ReadFldAlign(MCVP_DARE_11, DAR_V_VARIATION_O2)+1), DAR_V_VARIATION_O2);
+        }
     }
 }
 
@@ -2326,7 +2449,14 @@ static void _vDrvCSAdaptive(UINT8 bPath)
             _u1IntCost3D_pre = IO32ReadFldAlign(MCVP_FUSION_03, IF_W_INTERNAL_3D);
         }
         
+        if (DiSta.IfSta.u4Homo < 10)
+        {
+            _u1IntCost3D_set = 2; 
+        }
+        else
+        {
         _u1IntCost3D_set = (DiSta.IfSta.u4Homo < 10) ? 2 : _u1IntCost3D_pre; 
+        }
         
         vIO32WriteFldAlign(MCVP_FUSION_03, _u1IntCost3D_set , IF_W_INTERNAL_3D);
     }
@@ -2362,6 +2492,9 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     UINT32 u4EgMoFilterThLow= IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_FILTER_L);
     UINT32 u4EgMoFilterThHigh= IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_FILTER_H);
     UINT32 u4EgMoFilterBit = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_LARGE_BIT);
+    UINT32 u4ASL = u1DrvGetASL();
+    UINT32 u4APL = bDrvGetAPL();
+    UINT32 u4OnOff = SV_ON;
     
     //Adaptive Film Mode Parameter        
     u4FrMo[u4Index] = DiSta.PdSta.u4FrmMotion;
@@ -2418,6 +2551,21 @@ static void _vDrvPDAdaptive(UINT8 bPath)
         DiPar.PdPar.u4AdaptivePxlMotionTh++;
     }            
 
+    //for mp3 1080i patch
+    if (IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_IF_00, DI_FILM_APL_EN) &&(bPath == VDP_1) 
+        && (!IS_SD_TIMING(VDP_1)) && IS_INTERLACE(VDP_1))
+    {
+        if ((u4APL < 0x30 ) && (u4ASL < 0x4))
+        {
+            u4EgMoFilterThLow = 0x50;
+            u4EgMoFilterThHigh = 0x60;
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x1, STA_DI_FILM_DARK);
+        }
+        else
+        {
+            vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0, STA_DI_FILM_DARK);
+        }
+    }
     if( u4MaxEgMo <= (1<<u4EgMoFilterBit)) 
     {
         u4EgMoFilterTh = u4EgMoFilterThLow +((u4EgMoFilterThHigh - u4EgMoFilterThLow) * u4MaxEgMo >>u4EgMoFilterBit);
@@ -2444,6 +2592,11 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     u4EgMinTh = MIN(u4EgMinTh, u4MaxEgMo>>1);
     DiPar.PdPar.u4AdaptiveEgMo22Th = MIN(MAX(u4MaxEgMo>>u4EgRate22, u4EgMinTh), u4EgMaxTh22);            
 
+    if (IS_PANEL_L12R12 && DiPar.IfPar.bCzpState)
+    {
+        u4OnOff = SV_OFF;
+    }
+    MDDI_WRITE_FLD(VDP_1, MCVP_FILM_27, u4OnOff, R_22ENABLE);  
     u4Index= (u4Index+1)&3;        
 }
 
@@ -2504,12 +2657,13 @@ static void _vDrvDIInitSwRegister(void)
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x01, CZP_AD_EN);    
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x01, IF_C_AD_EN);  
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x01, CZP_3D_EN);
+    vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x01, DI_FILM_APL_EN);
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_01, 0x08, FLD_INV_IN_THD);
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_01, 0x04, FLD_INV_OUT_THD);
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_01, 0x0C, FLD_INV_MAX_THD);
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_01, 0x04, CZP_AD_MIN_THD);    
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_02, 0x04, DI_FORCE_MODE_DELAY);
-	vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0, SAW_STILL_PATCH_EN);
+	vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 1, SAW_STILL_PATCH_EN);
     vIO32WriteFldAlign(VDP_SCPQ_04, 0x0, SCPQ_DTV_TEAR_MO_PENALTY);
     vIO32WriteFldAlign(VDP_SCPQ_04, 0x1, SCPQ_DTV_TEAR_REF_FAKEHD);
     vIO32WriteFldAlign(VDP_SCPQ_05, 0xA, SCPQ_MOTION_TH_ORDER);
@@ -2530,6 +2684,7 @@ static void _vDrvDIInitSwRegister(void)
     vIO32WriteFldAlign(PSCAN_FWCS_03, 0x0C, COUNT_MAX_BND); 
     vIO32WriteFldAlign(PSCAN_FWCS_04, 0x10, REDUCE_NOISE_TH); 
     vIO32WriteFldAlign(PSCAN_FWCS_04, 0x03, REDUCE_STEP); 
+    vIO32WriteFldAlign(PSCAN_FWCS_05, 0x00, STILL_MOV_EN);
 
     //DYNAMIC FILM MODE DETECTION
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_00, 0x10, FR_MIN);  
@@ -2846,6 +3001,9 @@ void vDrvDISetInterpMode(UINT8 u1VdpId, E_MIB_DI_DMODE eDIMode)
         vIO32WriteFldAlign(MCVP_FUSION_11, u4IF_2D_INTERNAL_DIFF_MODE , IF_2D_INTERNAL_DIFF_MODE);
         vIO32WriteFldAlign(MCVP_DARE_00  , u4DARE_TWO_FIELD_C_MODE    , DARE_TWO_FIELD_C_MODE);
                
+        #ifdef CC_MT5398    // Cobra ECO   
+        vIO32WriteFldAlign(MCVP_FUSION_20 , u4IF_THREE_FIELD_C_MODE, IF_FIX_VDWT_COEFF);
+        #endif        
         DiPar.CsPar.bCsOnOff = bFullOnOff && (E_TD_IN_2D_I == _arMDDiPrm[u1VdpId].eTDInput);
         vDrvDISetRegionMotionOnOff(VDP_1);
         _vDrvSetIfOnOff(VDP_1, bOnOff);
@@ -3954,6 +4112,7 @@ void vDrvDIAdaptivePolling(void *pvArgv)
         }
     }
 }
+
 
 DI_PQ_THREAD DIPQThread[] =
 {

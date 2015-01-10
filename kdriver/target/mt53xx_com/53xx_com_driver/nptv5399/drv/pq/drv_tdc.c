@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/09 $
+ * $Date: 2015/01/10 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -114,6 +114,22 @@ EXTERN UINT32 TDC_DRAM_BASE;
 extern UINT32 TDC_DRAM_BASE;
 #endif
 
+#define SUPPORT_PQ_FINETUNE 1
+#if SUPPORT_PQ_FINETUNE 
+UINT8 _bK2ValueByCSS;
+UINT8 _bK2ValueByWeakC;
+UINT8 _bK4ChromaThByCans;
+UINT8 _bPatchInPattern107;
+UINT8 u1fgPatternHammock;
+UINT8 _fgMovingcolorCharacter;
+UINT8 _fgCornPattern;
+UINT8 _fgMovingCans;
+EXTERN UINT16 u2MajorCnt0;
+EXTERN UINT8  u1MajorMvX0;
+EXTERN UINT8  u1MajorMvY0;
+EXTERN UINT16 u2TotalCnt;
+EXTERN UINT8 u1IF_MAX_MOTION_C_Value;
+#endif
 UINT8 _bTDCEnable;
 
 REGTBL_T const CODE REGTBL_COMB_NTSC_AV[] = {

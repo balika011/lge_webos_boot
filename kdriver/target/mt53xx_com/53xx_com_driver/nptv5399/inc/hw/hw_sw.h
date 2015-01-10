@@ -2078,6 +2078,11 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define REDUCE_STEP         Fld(4, 8, AC_MSKB1)    
     #define SAW_STILL_CNT       Fld(8, 16, AC_FULLB2)
     #define SAW_STILL_UPDATE    Fld(8, 24, AC_FULLB3)
+#define PSCAN_FWCS_05       u4SWReg(0x3064)
+    #define STILL_MOVE_CNT      Fld(8, 0, AC_FULLB0)
+    #define STILL_MOV_EN        Fld(1, 8, AC_MSKB1)   
+    #define STILL_MOV_DEBUG     Fld(1, 9, AC_MSKB1)
+    #define STILL_MOVE_CONF     Fld(8, 16, AC_FULLB2)
     
 #define PSCAN_FW_ADAPTIVE_FILM_00       u4SWReg(0x3080)
     #define FR_MIN              Fld(16, 0, AC_FULLW10)
@@ -2151,7 +2156,9 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define CZP_AD_EN                       Fld(1, 2, AC_MSKB0)
     #define IF_C_AD_EN                      Fld(1, 3, AC_MSKB0)
     #define CZP_3D_EN                       Fld(1, 4, AC_MSKB0)
+    #define DI_FILM_APL_EN               Fld(1, 5, AC_MSKB0)
     #define SAW_STILL_PATCH_EN              Fld(1, 7, AC_MSKB0)      
+    #define STA_DI_FILM_DARK               Fld(1, 31, AC_MSKDW)
 
 #define PSCAN_FW_ADAPTIVE_IF_01       u4SWReg(0x30D4)
     #define FLD_INV_IN_THD                  Fld(4, 0, AC_MSKB0)
