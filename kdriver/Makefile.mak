@@ -74,9 +74,9 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #1 $
-# $Date: 2015/01/09 $
-# $Author: dtvbm11 $
+# $Revision: #2 $
+# $Date: 2015/01/10 $
+# $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
 # $MD5HEX: 1476db419289e71bcc068156dea7ae10 $
@@ -555,7 +555,7 @@ endif
 
 ifeq "$(EU_RUNNING_SPEC)" "dvbtc"
     #export BRDCST_IF := 5882DVBTC_DTD_VDRTuner_P_atd
-    export BRDCST_IF := 5882DTDDVBTC_VDRTuner_P_atdeu
+    export BRDCST_IF := 5882DTDDVBTC_CTMRTUNER_P_atdeu
         
     ifeq "$(findstring VDRTuner,$(BRDCST_IF))" "VDRTuner"
         export 3RD_PARTIES := LINUX
