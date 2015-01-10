@@ -81,7 +81,7 @@
 // Initial dram settings
 //----------------------------------------------------------------------------
 #define DEFAULT_DRAM_TYPE                   DDR_III_x2
-#define DEFAULT_DDR_CLOCK                   (1596000000)
+#define DEFAULT_DDR_CLOCK                   (1704000000)
 
 //#ifndef DRAM_PRIORITY_LIST
 // Audio/0 > B2R/5 > NR/PSCAN/4 > Scpip/7 > OSD/3 > Mjc_in/13 > Mjc_out/14 > VLD1/9 > Vdec_mc/8 > CPU/6 > Gfx/11 > Demux/PVR/1 > VBI/3D/TVE/2 >VENC/12 > Test/15 > Unused/10
