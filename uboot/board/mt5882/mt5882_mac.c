@@ -4,7 +4,7 @@
  * MT53xx Ethernet driver
  *
  * Copyright (c) 2008-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -843,7 +843,9 @@ int mmac_initialize(bd_t * bis)
 	    //get align buffer.
         pbuf = (uchar*)(((u32)pbufOrg + (u32)(DMA_ALIGN_SIZE-1)) & ~((u32)(DMA_ALIGN_SIZE-1)));
     }
-    pr = malloc( sizeof(Private) + DMA_ALIGN_SIZE*2);
+    //pr = malloc( sizeof(Private) + DMA_ALIGN_SIZE*2);
+    //pr= 0x38400000;
+    pr = GetEthDesDramAddr();
     if( pr == NULL ) 
 	{
 		free(dev);
@@ -852,7 +854,7 @@ int mmac_initialize(bd_t * bis)
 	
     TR("priv : 0x%08x\n",(u32)pr);
 	tempPr = pr;
-    if((u32)pr & (u32)0x0F)
+    if((u32)pr & (u32)0x3F)
     {
         pr = (Private*)(((u32)pr + (u32)(DMA_ALIGN_SIZE-1)) & ~((u32)(DMA_ALIGN_SIZE-1)));
 		free(tempPr);

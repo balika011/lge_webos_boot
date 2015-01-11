@@ -955,3 +955,11 @@ int env_complete(char *var, int maxv, char *cmdv[], int bufsz, char *buf)
 	return found;
 }
 #endif
+uint GetEthDesDramAddr(void)
+{
+    uint u4DramAddr;
+
+	u4DramAddr = TOTAL_MEM_SIZE - ETHDES_MEM_SIZE -TRUSTZONE_MEM_SIZE ;
+
+	return u4DramAddr;
+}

@@ -4,7 +4,7 @@
  * MT53xx Ethernet driver
  *
  * Copyright (c) 2008-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -72,7 +72,7 @@
 #define NUM_TX_DESC   4
 #define NUM_RX_DESC   4
 #define RX_PACKET_BUFFER_SIZE 2048    /* preallocated length for rx packets is MTU + ETHERNET_PACKET_EXTRA */
-#define DMA_ALIGN_SIZE 32    /* preallocated length for rx packets is MTU + ETHERNET_PACKET_EXTRA */
+#define DMA_ALIGN_SIZE 64//32    /* preallocated length for rx packets is MTU + ETHERNET_PACKET_EXTRA */
 #else
 #define NUM_TX_DESC   2
 #define NUM_RX_DESC   4
@@ -772,6 +772,7 @@ int iPhyCtrlInit(u32 enable);
 
 extern void HalFlushInvalidateDCache(void);
 extern void _FlushDCache(void);
+extern uint GetEthDesDramAddr(void);
 
 #ifndef MT85XX_STAR_MAC
 void hw_reset(void); //no

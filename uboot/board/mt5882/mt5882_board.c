@@ -365,7 +365,7 @@ int dram_init (void)
         #endif
 #else
    /* dram_init must store complete ramsize in gd->ram_size */	
-    gd->ram_size = TOTAL_MEM_SIZE - TRUSTZONE_MEM_SIZE;
+    gd->ram_size = TOTAL_MEM_SIZE - ETHDES_MEM_SIZE -TRUSTZONE_MEM_SIZE;
 #endif
 	return 0;
 }

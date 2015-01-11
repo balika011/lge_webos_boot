@@ -4467,6 +4467,9 @@ static const UINT32 _au4PanelLvds8bitPinMap[12] =
 #define TRUSTZONE_MEM_SIZE      (0x0)
 #endif
 
+#ifndef ETHDES_MEM_SIZE
+#define ETHDES_MEM_SIZE      (0x0)
+#endif
 #ifndef TRUSTZONE_FLASH_PARTITION
 #define TRUSTZONE_FLASH_PARTITION    (-1)
 #endif

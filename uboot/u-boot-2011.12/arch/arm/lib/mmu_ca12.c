@@ -4,7 +4,7 @@
  * MT53xx common board function
  *
  * Copyright (c) 2010-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -90,6 +90,7 @@ enum PAGE_TABLE_ENTRY_TYPE
 #define MMU_ENABLE                  (1 << 0)
 
 extern void HalInvalidateDCache(void);
+extern uint GetEthDesDramAddr(void);
 
 //-----------------------------------------------------------------------------
 /** SetPageTableBase() Set base address of page table
@@ -181,6 +182,7 @@ int HalInitMMU(uint u4Addr)
     uint i;
     uint *pu4Table = (uint*)u4Addr;
     uint u4DramSize = TCMGET_CHANNELA_SIZE();
+	uint u4EDesDRAMAddr = GetEthDesDramAddr();
     if (IS_DRAM_CHANNELB_SUPPORT())
     {
         u4DramSize += TCMGET_CHANNELB_SIZE();
@@ -208,10 +210,14 @@ int HalInitMMU(uint u4Addr)
     // DRAM B 0-0xa00M(2.5G), cachable/bufferable
     for (i = 0; i < 0xa00; i++)
     {
-        if (i < u4DramSize)
+        if (((i < u4DramSize)&&(i>=((u4EDesDRAMAddr + ETHDES_MEM_SIZE)>>20)))||(i<(u4EDesDRAMAddr>>20)))
         {
             pu4Table[i] = L1Entry(SECTION, i << 20, TEX_WRITE_ALLOCATE, C_BIT | B_BIT, USER_ACCESS);
         }
+		else
+		{
+		    pu4Table[i] = L1Entry(SECTION, i << 20, 0, 0, USER_ACCESS);
+		}
     }
 
     // DRAM A 0xa00-0xe00M, non-cachable/non-bufferable

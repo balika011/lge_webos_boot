@@ -280,6 +280,7 @@
 
 #define FB_MEM_SIZE                         (180 * 1024 * 1024)
 
+#define ETHDES_MEM_SIZE                     (2 * 1024 * 1024)
 
 #ifndef FBM_MEM_CFG_SIZE
 //#define FBM_MEM_CFG_SIZE                    (FBM_MEM_CFG_MT5396_DDR3x4)
