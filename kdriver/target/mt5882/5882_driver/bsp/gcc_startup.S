@@ -235,7 +235,7 @@ L2_LATENCY:
     dsb
 
 SET_TIMER_FREQ:
-	ldr		r12, =(0x16E3600) @24MHz
+	ldr		r12, =(0x5b8d80) @6MHz
 	MCR     p15, 0, r12, c14, c0, 0
 
 NoRemapPPort:

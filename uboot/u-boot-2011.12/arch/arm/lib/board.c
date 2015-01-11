@@ -124,6 +124,87 @@ inline void __blue_led_on(void) {}
 void blue_led_on(void) __attribute__((weak, alias("__blue_led_on")));
 inline void __blue_led_off(void) {}
 void blue_led_off(void) __attribute__((weak, alias("__blue_led_off")));
+typedef void (*CoreWakeupFunc ) (void);
+volatile unsigned int GlobalActive_Area[5] = {0, 0, 0, 0, 0};
+volatile CoreWakeupFunc ActiveFuncPointer[5] = {0, 0, 0, 0, 0};
+extern void init_secondary_cpu(void);
+void secondary_start_uboot(void)
+{
+	memset(IRQ_STACK_START,IRQ_STACK_START_IN,0);
+    printf("init_secondary_cpu = %x\n", init_secondary_cpu);
+   // writel(init_secondary_cpu, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_PA_START);
+ //   writel(0xbabe, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC);
+ //   flush_cache_all();
+    return;
+}
+
+void secondary_start_uboot_cleanup(void)
+{
+    printf("%s\n", __FUNCTION__);
+   // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_PA_START);
+   // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC);
+   // flush_cache_all();
+    return;
+}
+
+void secondary_init_r(unsigned int cpu_id)
+{
+
+    u32 cpuID;
+    //u64 prevous_time;    
+   // scu_enable((void *)(0x16004000)); // SCU PA = 0x16004000
+    //writel(SMP_DBG_IN_C_CODE, SMP_RIU_BASE + (SMP_DUMMY_BANK<<1) + cpu_id*4);
+
+    //__init_dic();
+   // __init_interrupts();
+
+   // mhal_interrupt_unmask(E_INTERRUPT_IRQ);
+    // enable Timer
+   // MAsm_CPU_TimerInit();
+   // MAsm_CPU_TimerStart();
+  //  flush_cache_all();
+
+   // cpuID = get_cpu_id();
+    if(cpuID >= 4)
+    {
+        printf("Error!!, Not correct CPUID %d\n", cpuID);
+        while(1);
+    }
+
+  //  extern void set_irq_sp(ulong);
+    unsigned int sp_addr =0;// *((unsigned int *)(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_SP));
+    sp_addr = sp_addr - (2+cpuID)*0x4000;
+    //set_irq_sp(sp_addr);
+
+    enable_interrupts();
+    while(1)
+    {
+        if((GlobalActive_Area[cpuID] == 1) && (ActiveFuncPointer[cpuID] != 0))
+            ActiveFuncPointer[cpuID]();
+    }
+
+}
+
+void Core_Wakeup(CoreWakeupFunc __Addr, u32 CoreID)
+{
+    if(CoreID >= 4)
+    {
+        printf("Error!! in Core_Wakeup, Not correct CPUID %d\n", CoreID);
+        while(1);
+    }
+
+    if(GlobalActive_Area[CoreID] == 1)
+    {
+        printf("Core %d is active\n", CoreID);
+        return;
+    }
+
+    //printf("Wake UP Core %d, PC %x\n", CoreID, (unsigned int)__Addr);
+    //delayms(100);  // Wait printf finish (Critical Section problem. Need multi core lock)
+    ActiveFuncPointer[CoreID] =  __Addr;
+    GlobalActive_Area[CoreID] = 1;    
+    //flush_cache_all();    
+}
 
 /*
  ************************************************************************
@@ -143,7 +224,8 @@ static int init_baudrate(void)
 	gd->baudrate = getenv_ulong("baudrate", 10, CONFIG_BAUDRATE);
 	return 0;
 }
-
+extern  void GIC_Init(void);
+extern int cpu_init (void);
 static int display_banner(void)
 {
 	printf("\n\n%s\n\n", version_string);
@@ -154,8 +236,10 @@ static int display_banner(void)
 	debug("Modem Support enabled\n");
 #endif
 #ifdef CONFIG_USE_IRQ
-	debug("IRQ Stack: %08lx\n", IRQ_STACK_START);
-	debug("FIQ Stack: %08lx\n", FIQ_STACK_START);
+    cpu_init();
+	GIC_Init();
+	printf("IRQ Stack: %08lx\n", IRQ_STACK_START);
+	printf("FIQ Stack: %08lx\n", FIQ_STACK_START);
 #endif
 
 	return (0);
@@ -338,7 +422,7 @@ extern int verify_apps(int boot_mode);
 #endif
 
 
-static int fast_boot(void)
+ int fast_boot(void)
 {
 	char *s = NULL, key = 0;
 	int i;
@@ -843,6 +927,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #ifdef CONFIG_POST
 	post_output_backlog();
 #endif
+    secondary_start_uboot();
 
 	/* The Malloc area is immediately below the monitor copy in DRAM */
 	malloc_start = dest_addr - TOTAL_MALLOC_LEN;
@@ -933,6 +1018,8 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 	}
 	//IO_WRITE32(0xf0008000, 0x2c, 0x42000000);
+	extern void thread_start(void);
+	thread_start();
 
 	fast_boot();
 #endif
@@ -1084,6 +1171,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	}
 #endif
 
+	printf(" ###################normal uboot flow   ");
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {
 		main_loop();
@@ -1091,7 +1179,163 @@ void board_init_r(gd_t *id, ulong dest_addr)
 
 	/* NOTREACHED - no way out of command loop except booting */
 }
-
+void second_main(void)
+{
+	
+#if !defined(CONFIG_FAST_BOOT) || defined(CONFIG_SUPPORT_ETHERNET)
+			/* IP Address */
+			gd->bd->bi_ip_addr = getenv_IPaddr ("ipaddr");
+			puts("\n");
+			print_IPaddr(gd->bd->bi_ip_addr);
+			puts("\n");
+		
+			/* MAC Address */
+			{
+				int i;
+				ulong reg;
+				char *s, *e;
+				char tmp[64];
+		
+				i = getenv_r ("ethaddr", tmp, sizeof (tmp));
+				s = (i > 0) ? tmp : NULL;
+		
+				for (reg = 0; reg < 6; ++reg) {
+					gd->bd->bi_enetaddr[reg] = s ? simple_strtoul (s, &e, 16) : 0;
+					if (s)
+						s = (*e) ? e + 1 : e;
+				}
+		
+#ifdef CONFIG_HAS_ETH1
+				i = getenv_r ("eth1addr", tmp, sizeof (tmp));
+				s = (i > 0) ? tmp : NULL;
+		
+				for (reg = 0; reg < 6; ++reg) {
+					gd->bd->bi_enet1addr[reg] = s ? simple_strtoul (s, &e, 16) : 0;
+					if (s)
+						s = (*e) ? e + 1 : e;
+				}
+#endif
+			}
+#endif /* !defined(CONFIG_FAST_BOOT) */
+	
+	
+		stdio_init();	/* get the devices list going. */
+	
+		jumptable_init();
+	
+#if defined(CONFIG_API)
+		/* Initialize API */
+		api_init();
+#endif
+	
+		console_init_r();	/* fully init console as a device */
+	
+#if defined(CONFIG_ARCH_MISC_INIT)
+		/* miscellaneous arch dependent initialisations */
+		arch_misc_init();
+#endif
+#if defined(CONFIG_MISC_INIT_R)
+		/* miscellaneous platform dependent initialisations */
+		misc_init_r();
+#endif
+#ifndef CFG_LG_CHG
+#if (CONFIG_DUAL_BANK_ROOTFS) || (CONFIG_DUAL_BANK_KERNEL)
+		dual_bank_init();
+#else
+		dtvcfg_init();
+#endif
+#endif
+		 /* set up exceptions */
+		interrupt_init();
+		/* enable exceptions */
+		//enable_interrupts();
+	
+		/* Perform network card initialisation if necessary */
+#if defined(CONFIG_DRIVER_SMC91111) || defined (CONFIG_DRIVER_LAN91C96)
+		/* XXX: this needs to be moved to board init */
+		if (getenv("ethaddr")) {
+			uchar enetaddr[6];
+			eth_getenv_enetaddr("ethaddr", enetaddr);
+			smc_set_mac_addr(enetaddr);
+		}
+#endif /* CONFIG_DRIVER_SMC91111 || CONFIG_DRIVER_LAN91C96 */
+	
+		/* Initialize from environment */
+		load_addr = getenv_ulong("loadaddr", 16, load_addr);
+#if defined(CONFIG_CMD_NET)
+		{
+			char *s = getenv("bootfile");
+	
+			if (s != NULL)
+				copy_filename(BootFile, s, sizeof(BootFile));
+		}
+#endif
+	
+#ifdef CONFIG_BOARD_LATE_INIT
+		board_late_init();
+#endif
+	
+#ifdef CONFIG_BITBANGMII
+		bb_miiphy_init();
+#endif
+#if defined(CONFIG_CMD_NET)
+		puts("Net:	 ");
+		eth_initialize(gd->bd);
+#if defined(CONFIG_RESET_PHY_R)
+		debug("Reset Ethernet PHY\n");
+		reset_phy();
+#endif
+#endif
+	
+#ifdef CFG_LG_CHG
+		BootSplash();
+		BootSplash();
+		BootSplash();
+		BootSplash();
+		BootSplash();
+	
+		//BootSplash에서 등록된 타이머를 모두 지움
+		del_timer_all();
+	
+		
+		
+		
+		
+#endif
+#ifdef CONFIG_POST
+		post_run(NULL, POST_RAM | post_bootmode_get(0));
+#endif
+	
+#if defined(CONFIG_PRAM) || defined(CONFIG_LOGBUFFER)
+		/*
+		 * Export available size of memory for Linux,
+		 * taking into account the protected RAM at top of memory
+		 */
+		{
+			ulong pram = 0;
+			uchar memsz[32];
+	
+#ifdef CONFIG_PRAM
+			pram = getenv_ulong("pram", 10, CONFIG_PRAM);
+#endif
+#ifdef CONFIG_LOGBUFFER
+#ifndef CONFIG_ALT_LB_ADDR
+			/* Also take the logbuffer into account (pram is in kB) */
+			pram += (LOGBUFF_LEN + LOGBUFF_OVERHEAD) / 1024;
+#endif
+#endif
+			sprintf((char *)memsz, "%ldk", (gd->ram_size / 1024) - pram);
+			setenv("mem", (char *)memsz);
+		}
+#endif
+	
+		
+		printf(" ###################normal uboot flow	");
+		/* main_loop() can return to retry autoboot, if so just run it again. */
+		for (;;) {
+			main_loop();
+		}
+}
 void hang(void)
 {
 	puts("### ERROR ### Please RESET the board ###\n");

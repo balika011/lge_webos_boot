@@ -64,6 +64,7 @@
 #define CONFIG_SYS_HZ CFG_HZ
 #define CONFIG_SYS_FLASH_BASE   CFG_FLASH_BASE
 #define CONFIG_ENV_OFFSET   CFG_ENV_OFFSET
+#define  CONFIG_MULTICORES_PLATFORM 1
 
 
 
@@ -333,10 +334,10 @@
  *
  * The stack sizes are set up in start.S using the settings below
  */
-#define CONFIG_STACKSIZE    (128*1024)  /* regular stack */
+#define CONFIG_STACKSIZE    (512*1024)  /* regular stack */
 #ifdef CONFIG_USE_IRQ
-#define CONFIG_STACKSIZE_IRQ    (4*1024)    /* IRQ stack */
-#define CONFIG_STACKSIZE_FIQ    (4*1024)    /* FIQ stack */
+#define CONFIG_STACKSIZE_IRQ    (256*1024)    /* IRQ stack */
+#define CONFIG_STACKSIZE_FIQ    (256*1024)    /* FIQ stack */
 #endif
 
 /*-----------------------------------------------------------------------

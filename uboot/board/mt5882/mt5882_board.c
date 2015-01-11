@@ -5,7 +5,7 @@
  *	This file is based  ARM Realview platform
  *  Copyright (C) 2002 ARM Ltd.
  *  All Rights Reserved
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -33,6 +33,7 @@
 #include "drvcust_if.h"
 #include "c_model.h"
 
+#define CC_ARM_GIC
 //-----------------------------------------------------------------------------
 // Constant definitions
 //-----------------------------------------------------------------------------
@@ -364,7 +365,7 @@ int dram_init (void)
         #endif
 #else
    /* dram_init must store complete ramsize in gd->ram_size */	
-    gd->ram_size = PHYS_SDRAM_1_SIZE;
+    gd->ram_size = TOTAL_MEM_SIZE - TRUSTZONE_MEM_SIZE;
 #endif
 	return 0;
 }
@@ -784,7 +785,223 @@ U_BOOT_CMD(
 	"       - read/write `cnt' bytes at EEPROM offset `eeprom_offset'\n"
 );
 #endif
+UINT32 _bstop=1;
+typedef unsigned long           UNSIGNED;
+typedef unsigned long  UINT32;
+typedef signed long INT32;
 
+typedef unsigned short  UINT16;
+typedef void (*x_os_drv_isr_fct) (unsigned long ui2_vector_id);
+extern UINT32 HalCriticalStart(void);
+
+// ISR control block of OS driver
+typedef struct
+{
+    x_os_drv_isr_fct    pfIsr;
+    void*               pvStack;
+    UINT16              u2Vector;
+} OS_DRV_ISR_T;
+
+// List of ISR control block
+OS_DRV_ISR_T     _arIsrList[MAX_IRQ_VECTOR];
+
+#define OSR_DRV_THREAD_ACTIVE  ((INT32)   2)
+#define OSR_DRV_WOULD_BLOCK    ((INT32)   1)
+#define OSR_DRV_OK             ((INT32)   0)
+#define OSR_DRV_EXIST          ((INT32)  -1)
+#define OSR_DRV_INV_ARG        ((INT32)  -2)
+#define OSR_DRV_TIMEOUT        ((INT32)  -3)
+#define OSR_DRV_NO_RESOURCE    ((INT32)  -4)
+#define OSR_DRV_NOT_EXIT       ((INT32)  -5)
+#define OSR_DRV_NOT_FOUND      ((INT32)  -6)
+#define OSR_DRV_INVALID        ((INT32)  -7)
+#define OSR_DRV_NOT_INIT       ((INT32)  -8)
+#define OSR_DRV_DELETED        ((INT32)  -9)
+#define OSR_DRV_TOO_MANY       ((INT32) -10)
+#define OSR_DRV_FAIL           ((INT32) -11)
+extern void GIC_Uboot_DisableIrq(UINT32 u4Vector);
+extern void GIC_Uboot_ClearIrq(UINT32 u4Vector);
+void x_uboot_handle_isr(void)
+{
+    UINT32 irqnum;
+	irqnum = (GICC_READ32(GIC_CPU_INTACK)& ~0x1c00);
+	
+		/// printf("irq enable=0x%08x,\n",irqnum);
+		 
+		// GIC_Uboot_ClearIrq(irqnum);
+		//if(irqnum>15)
+		{
+		 GIC_Uboot_DisableIrq(irqnum);
+		 GIC_Uboot_ClearIrq( irqnum); 
+		}
+	_arIsrList[irqnum].pfIsr((UINT16)irqnum);
+	
+
+}
+INT32 x_uboot_reg_isr(UINT16             ui2_vec_id,
+                 x_os_drv_isr_fct   pf_isr,
+                 x_os_drv_isr_fct   *ppf_old_isr)
+{
+    UINT32 u4Flags;
+    INT32 i4Ret = OSR_DRV_FAIL;
+    x_os_drv_isr_fct pf_old_isr;
+
+   // ASSERT(ppf_old_isr != NULL);
+
+    if (ui2_vec_id > MAX_IRQ_VECTOR)
+    {
+        return OSR_DRV_FAIL;
+    }
+
+    u4Flags = HalCriticalStart();
+
+    pf_old_isr = _arIsrList[ui2_vec_id].pfIsr;
+
+    if (pf_isr != NULL)
+    {
+        if (_arIsrList[ui2_vec_id].pfIsr == NULL)
+        {
+        #if 0
+            // Register ISR for the first time
+            void (*pfnOldLisr)(INT);
+            void* pvStack;
+            CHAR szName[8];
+
+            // Allocate HISR stack
+            pvStack = DriverMemAlloc(HISR_STACK_SIZE);
+            if (pvStack == NULL)
+            {
+                goto _Done;
+            }
+            memset(pvStack, 0, HISR_STACK_SIZE);    // Zero stack
+            SPrintf(szName, "ISR_%u", ui2_vec_id);
+
+            // Create corresponding HISR
+            memset(&_arIsrList[ui2_vec_id].hisr, 0, sizeof(NU_HISR));
+            if (NU_Create_HISR(&_arIsrList[ui2_vec_id].hisr, (CHAR*)szName,
+                DriverCommonHISR, HISR_PRIORITY, pvStack, HISR_STACK_SIZE)
+                != NU_SUCCESS)
+            {
+                DriverMemFree(pvStack);
+                goto _Done;
+            }
+
+            // Register LISR
+            if (NU_Register_LISR((INT)ui2_vec_id, DriverCommonLISR,
+                &pfnOldLisr) != NU_SUCCESS)
+            {
+                DriverMemFree(pvStack);
+                goto _Done;
+            }
+    #endif
+            _arIsrList[ui2_vec_id].u2Vector = ui2_vec_id;
+           // _arIsrList[ui2_vec_id].pvStack = pvStack;
+            _arIsrList[ui2_vec_id].pfIsr = pf_isr;
+
+            // Turn on interrupt
+          //  (BIM_EnableIrq(ui2_vec_id));
+        }       
+        else
+        {
+            // Already installed for this vector, replace it
+            _arIsrList[ui2_vec_id].pfIsr = pf_isr;
+        }
+
+       // ASSERT(_arIsrList[ui2_vec_id].u2Vector == ui2_vec_id);
+    }
+    else
+    {
+        
+        if (_arIsrList[ui2_vec_id].pfIsr != NULL)
+        {
+            #ifdef CC_ARM_GIC
+            // Turn off interrupt
+            //VERIFY(BIM_DisableIrq(ui2_vec_id));
+          #if 0
+            // Delete HISR
+            VERIFY(NU_Delete_HISR(&_arIsrList[ui2_vec_id].hisr) == NU_SUCCESS);
+
+            // Free stack memory
+            DriverMemFree(_arIsrList[ui2_vec_id].pvStack);
+			#endif
+            #endif // CC_ARM_GIC
+
+            _arIsrList[ui2_vec_id].u2Vector = MAX_IRQ_VECTOR + 1;
+          //  _arIsrList[ui2_vec_id].pvStack = NULL;
+            _arIsrList[ui2_vec_id].pfIsr = pf_isr;
+        }
+    }
+
+    *ppf_old_isr = pf_old_isr;
+
+    i4Ret = OSR_DRV_OK;
+
+_Done:
+
+    HalCriticalEnd(u4Flags);
+
+    return i4Ret;
+}
+
+  void _TimerIsr(UINT16 u2Vector)
+ {
+ 
+	// printf("irq enable=0x%08x, irq status=0x%08x\n", BIM_READ32(REG_IRQEN), BIM_READ32(REG_IRQST));
+	 if (u2Vector==VECTOR_T1)
+	 {
+//		 printf("VECTOR_T1, 4 second timeout\n");
+	 }
+	 else if (u2Vector==VECTOR_T2)
+	 {
+//		 printf("VECTOR_T2, 2 second timeout\n");
+	 }
+	 BIM_ClearIrq(u2Vector);
+ }
+ 
+ //=====================================================================
+ // Board level initialization
+ 
+ 
+ typedef void ( *TimerCb ) (UINT32 u32StTimer, UINT32 u32TimerID);	///< Timer callback function  u32StTimer: not used; u32TimerID: Timer ID
+ //-----------------------------------------------------------------------------
+ /** _TimerInit() Initialize timer
+  */
+ //-----------------------------------------------------------------------------
+ UINT32 _TimerInit(void)
+ {
+	 UINT32 u4SysClock, u4TimerInterval, u4Val;
+	 void (* pfnOldIsr)(UINT16);
+	 // Reset timer 0 value
+	 BIM_WRITE32(REG_RW_TIMER0_LOW, 0);
+	 BIM_WRITE32(REG_RW_TIMER0_HIGH, 0);
+ 
+	 // Setup timer interrupt interval
+	 u4SysClock = 24000000;
+	 u4TimerInterval = u4SysClock / 10;
+	 BIM_WRITE32(REG_RW_TIMER0_LLMT, (u4TimerInterval - 1));
+	 BIM_WRITE32(REG_RW_TIMER0_LOW, (u4TimerInterval - 1));
+	 BIM_WRITE32(REG_RW_TIMER0_HLMT, 0);
+ 
+	 // Enable timer 0 with auto-load
+	 u4Val = BIM_READ32(REG_RW_TIMER_CTRL);
+	 u4Val |= (TMR0_CNTDWN_EN | TMR0_AUTOLD_EN);
+	 BIM_WRITE32(REG_RW_TIMER_CTRL, u4Val);
+ 
+	 // Enable timer interrupt
+	 //VERIFY(BIM_EnableIrq(VECTOR_T0));
+	 
+	 Interrupt_request(VECTOR_T0, _TimerIsr, NULL);
+	 return VECTOR_T0;
+	// while(_bstop);
+ }
+
+void _TimeReset(void)
+{
+	BIM_WRITE32(REG_RW_TIMER0_LOW, 0);
+	BIM_WRITE32(REG_RW_TIMER0_HIGH, 0);
+
+	
+}
 #ifndef CC_PROJECT_X
 // TODO: The following functions are locally defined, should find a better way to do this
 
@@ -984,6 +1201,55 @@ void HalCriticalEnd(UINT32 u4Flags)
     UNUSED(u4Flags);
 }
 
+#if 1//def CC_ARM_GIC
+static void GIC_EnableIrq(UINT32 u4Vector)
+{
+#ifdef CC_MT5882
+	UINT32 u4Irq = u4Vector + 64;
+#else
+    UINT32 u4Irq = u4Vector + 32;
+#endif
+	UINT32 u4Mask = 1 << (u4Irq % 32);
+
+	GICD_WRITE32(GIC_DIST_ENABLE_SET + (u4Irq / 32) * 4, u4Mask);
+}
+
+static void GIC_DisableIrq(UINT32 u4Vector)
+{
+#ifdef CC_MT5882
+	UINT32 u4Irq = u4Vector + 64;
+#else
+	UINT32 u4Irq = u4Vector + 32;
+#endif
+	UINT32 u4Mask = 1 << (u4Irq % 32);
+
+	GICD_WRITE32(GIC_DIST_ENABLE_CLEAR + (u4Irq / 32) * 4, u4Mask);
+}
+
+static void GIC_ClearIrq(UINT32 u4Vector)
+{
+#ifdef CC_MT5882
+	UINT32 u4Irq = u4Vector + 64;
+#else
+	UINT32 u4Irq = u4Vector + 32;
+#endif
+	UINT32 u4Mask = 1 << (u4Irq % 32);
+
+	GICC_WRITE32(GIC_CPU_EOI, u4Irq);
+}
+
+static BOOL GIC_IsIrqEnabled(UINT32 u4Vector)
+{
+#ifdef CC_MT5882
+	UINT32 u4Irq = u4Vector + 64;
+#else
+    UINT32 u4Irq = u4Vector + 32;
+#endif
+	UINT32 u4Mask = 1 << (u4Irq % 32);
+
+    return ((GICD_READ32(GIC_DIST_ENABLE_SET + (u4Irq / 32) * 4) & u4Mask) != 0)?TRUE:FALSE;
+}
+#endif /* CC_ARM_GIC */
 //-----------------------------------------------------------------------------
 /** _BimIsVectorValid() to check the vector value is valid.
  *  @param u4Vector the checking vector value.
@@ -993,16 +1259,66 @@ static BOOL _BimIsVectorValid(UINT32 u4Vector)
 {
     return (u4Vector <= MAX_IRQ_VECTOR);
 }
+#if 1//def CC_ARM_GIC
+void GIC_Init(void)
+{
+	UINT32 i;
+	// Disable and clear interrupt.
+    BIM_WRITE32(REG_IRQEN, 0);
+    BIM_WRITE32(REG_FIQEN, 0);
+    BIM_WRITE32(REG_IRQCL, 0xffffffff);
+    BIM_WRITE32(REG_FIQCL, 0xffffffff);
+	enable_interrupts();
+	//
+	// Init gic distributor
+	//
+	GICD_WRITE32(GIC_DIST_CTRL, 0);
 
-//-----------------------------------------------------------------------------
-/** BIM_EnableIrq() Enable the interrupt of a given vector
- *  @param u4Vector: The vector
- *  @retval TRUE: Succeed
- *  @retval FALSE: Fail
- */
-//-----------------------------------------------------------------------------
+	// Set all global interrupts to be level triggered, active low.
+	for (i = 32; i < GIC_IRQS; i += 16)
+	{
+		GICD_WRITE32(GIC_DIST_CONFIG + i * 4 / 16, 0);
+	}
+
+	// Set all global interrupts to CPU core 0 only.
+	for (i = 32; i < GIC_IRQS; i += 4)
+	{
+		GICD_WRITE32(GIC_DIST_TARGET + i * 4 / 4, 0x01010101);
+	}
+
+	// Set priority on all global interrupts.
+	for (i = 32; i < GIC_IRQS; i += 4)
+	{
+		GICD_WRITE32(GIC_DIST_PRI + i * 4 / 4, 0xa0a0a0a0);
+	}
+
+	// Disable all interrupts.  Leave the PPI and SGIs alone as these enables are banked registers.
+	for (i = 32; i < GIC_IRQS; i += 32)
+	{
+		GICD_WRITE32(GIC_DIST_ENABLE_CLEAR + i * 4 / 32, 0xffffffff);
+	}
+
+	GICD_WRITE32(GIC_DIST_CTRL, 1);
+
+	// Deal with the banked PPI and SGI interrupts - disable all PPI interrupts, ensure all SGI interrupts are enabled.
+	GICD_WRITE32(GIC_DIST_ENABLE_CLEAR, 0xffff0000);
+	GICD_WRITE32(GIC_DIST_ENABLE_SET, 0x0000ffff);
+
+	// Set priority on PPI and SGI interrupts
+	for (i = 0; i < 32; i += 4)
+	{
+		GICD_WRITE32(GIC_DIST_PRI + i * 4 / 4, 0xa0a0a0a0);
+	}
+
+	GICC_WRITE32(GIC_CPU_PRIMASK, 0xf0);
+	GICC_WRITE32(GIC_CPU_CTRL, 1);
+}
+#endif /* CC_ARM_GIC */
 BOOL BIM_EnableIrq(UINT32 u4Vector)
 {
+	#ifndef CC_UBOOT
+    UINT32 u4State;
+	#endif /* CC_UBOOT */
     UINT32 u4Irq;
 
     if (!_BimIsVectorValid(u4Vector))
@@ -1010,16 +1326,58 @@ BOOL BIM_EnableIrq(UINT32 u4Vector)
         return FALSE;
     }
 
-    if (u4Vector > VECTOR_MISC)
+    #ifdef CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC3_BASE)
+    {
+        u4Irq = _MISC3IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_REG32(REG_MISC3_IRQEN) |= u4Irq;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+    } else
+    #endif // CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC2_BASE)
+    {
+        u4Irq = _MISC2IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_REG32(REG_MISC2_IRQEN) |= u4Irq;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+    }
+    else if (u4Vector > VECTOR_MISC)
     {
         u4Irq = _MISCIRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
         BIM_REG32(REG_MISC_IRQEN) |= u4Irq;
-        return TRUE;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
     }
-    u4Irq = _IRQ(u4Vector);
+    else
+    {
+        u4Irq = _IRQ(u4Vector);
 
-    // Should be in critical section to avoid race condition
-    BIM_REG32(REG_IRQEN) |= u4Irq;
+        // Should be in critical section to avoid race condition
+    	#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+    	#endif /* CC_UBOOT */
+        BIM_REG32(REG_IRQEN) |= u4Irq;
+    	#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+    	#endif /* CC_UBOOT */
+    }
+
+	#ifdef CC_ARM_GIC
+	GIC_EnableIrq(u4Vector);
+	#endif
     return TRUE;
 }
 
@@ -1032,6 +1390,9 @@ BOOL BIM_EnableIrq(UINT32 u4Vector)
 //-----------------------------------------------------------------------------
 BOOL BIM_DisableIrq(UINT32 u4Vector)
 {
+	#ifndef CC_UBOOT
+    UINT32 u4State;
+	#endif /* CC_UBOOT */
     UINT32 u4Irq;
 
     if (!_BimIsVectorValid(u4Vector))
@@ -1039,21 +1400,136 @@ BOOL BIM_DisableIrq(UINT32 u4Vector)
         return FALSE;
     }
 
-    if (u4Vector > VECTOR_MISC)
+	#ifdef CC_ARM_GIC
+	GIC_DisableIrq(u4Vector);
+	#endif
+
+    #ifdef CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC3_BASE)
     {
-        u4Irq = _MISCIRQ(u4Vector);
-        BIM_REG32(REG_MISC_IRQEN) &= ~u4Irq;
+        u4Irq = _MISC3IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_REG32(REG_MISC3_IRQEN) &= ~u4Irq;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+
+        return TRUE;
+    } else
+    #endif // CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC2_BASE)
+    {
+        u4Irq = _MISC2IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_REG32(REG_MISC2_IRQEN) &= ~u4Irq;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+
         return TRUE;
     }
+    else if (u4Vector > VECTOR_MISC)
+    {
+        u4Irq = _MISCIRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_REG32(REG_MISC_IRQEN) &= ~u4Irq;
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
 
-    u4Irq = _IRQ(u4Vector);
+        return TRUE;
+    }
+    else
+    {
+        u4Irq = _IRQ(u4Vector);
 
-    // Should be in critical section to avoid race condition
-    BIM_REG32(REG_IRQEN) &= ~u4Irq;
+        // Should be in critical section to avoid race condition
+    	#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+    	#endif /* CC_UBOOT */
+        BIM_REG32(REG_IRQEN) &= ~u4Irq;
+    	#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+    	#endif /* CC_UBOOT */
+    }
     return TRUE;
 }
 
 //-----------------------------------------------------------------------------
+BOOL BIM_IsIrqEnabled(UINT32 u4Vector)
+{
+#ifdef CC_ARM_GIC
+    return GIC_IsIrqEnabled(u4Vector);
+#else
+    UINT32 u4State;
+
+    if (!_BimIsVectorValid(u4Vector))
+    {
+        return FALSE;
+    }
+
+    #ifdef CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC3_BASE)
+    {
+        u4State = BIM_READ32(REG_MISC3_IRQEN);
+        return (u4State & _MISC3IRQ(u4Vector)) != 0;
+    } else
+    #endif // CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC2_BASE)
+    {
+        u4State = BIM_READ32(REG_MISC2_IRQEN);
+        return (u4State & _MISC2IRQ(u4Vector)) != 0;
+    }
+    else if (u4Vector > VECTOR_MISC)
+    {
+        u4State = BIM_READ32(REG_MISC_IRQEN);
+
+        return (u4State & _MISCIRQ(u4Vector)) != 0;
+    }
+
+    u4State = BIM_READ32(REG_IRQEN);
+
+    return (u4State & _IRQ(u4Vector)) != 0;
+#endif // CC_ARM_GIC
+}
+BOOL BIM_IsIrqPending(UINT32 u4Vector)
+{
+    UINT32 u4State;
+
+    if (!_BimIsVectorValid(u4Vector))
+    {
+        return FALSE;
+    }
+
+    #ifdef CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC3_BASE)
+    {
+        u4State = BIM_READ32(REG_MISC3_IRQST);
+        return (u4State & _MISC3IRQ(u4Vector)) != 0;
+    } else
+    #endif // CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC2_BASE)
+    {
+        u4State = BIM_READ32(REG_MISC2_IRQST);
+        return (u4State & _MISC2IRQ(u4Vector)) != 0;
+    }
+    else if (u4Vector > VECTOR_MISC)
+    {
+        u4State = BIM_READ32(REG_MISC_IRQST);
+
+        return (u4State & _MISCIRQ(u4Vector)) != 0;
+    }
+
+    u4State = BIM_READ32(REG_IRQST);
+
+    return (u4State & _IRQ(u4Vector)) != 0;
+}
 /** BIM_ClearIrq() Clear the pending interrupt of a given vector
  *  @param u4Vector: The vector
  *  @retval TRUE: Succeed
@@ -1063,21 +1539,66 @@ BOOL BIM_DisableIrq(UINT32 u4Vector)
 BOOL BIM_ClearIrq(UINT32 u4Vector)
 {
     UINT32 u4Irq;
+	#ifndef CC_UBOOT
+    UINT32 u4State;
+	#endif /* CC_UBOOT */
 
     if (!_BimIsVectorValid(u4Vector))
     {
         return FALSE;
     }
 
-    if (u4Vector > VECTOR_MISC)
+    #ifdef CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC3_BASE)
+    {
+        u4Irq = _MISC3IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_WRITE32(REG_MISC3_IRQCLR, u4Irq);
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+    } else
+    #endif // CC_VECTOR_HAS_MISC3
+    if (u4Vector >= VECTOR_MISC2_BASE)
+    {
+        u4Irq = _MISC2IRQ(u4Vector);
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_WRITE32(REG_MISC2_IRQCLR, u4Irq);
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+    }
+    else if (u4Vector > VECTOR_MISC)
     {
         u4Irq = _MISCIRQ(u4Vector);
-        BIM_WRITE32(REG_MISC_IRQEN, u4Irq);
-        return TRUE;
+		#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+		#endif /* CC_UBOOT */
+        BIM_WRITE32(REG_MISC_IRQCLR, u4Irq);
+		#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+		#endif /* CC_UBOOT */
+    }
+    else
+    {
+        u4Irq = _IRQ(u4Vector);
+
+    	#ifndef CC_UBOOT
+        u4State = HalCriticalStart();
+    	#endif /* CC_UBOOT */
+        BIM_WRITE32(REG_IRQCL, u4Irq);
+    	#ifndef CC_UBOOT
+        HalCriticalEnd(u4State);
+    	#endif /* CC_UBOOT */
     }
 
-    u4Irq = _IRQ(u4Vector);
-    BIM_WRITE32(REG_IRQCL, u4Irq);
+	#ifdef CC_ARM_GIC
+	GIC_ClearIrq(u4Vector);
+	#endif
     return TRUE;
 }
 
@@ -1277,11 +1798,6 @@ PFN_IRQ_HANDLER RegisterIrqHandler(PFN_IRQ_HANDLER pfnNewHandler)
 void HalEnableIRQ(void) 
 {
     return;
-}
-
-BOOL BIM_IsIrqPending(UINT32 u4Vector) 
-{
-    return TRUE;
 }
 
 void vInternalEDIDInit(void)

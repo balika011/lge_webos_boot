@@ -299,7 +299,7 @@ LIBS += common/cmd_lg/libcmdlg.o
 LIBS += lib/libfdt/libfdt.o
 LIBS += api/libapi.o
 LIBS += post/libpost.o
-
+LIBS += smp/libsmp.o
 ifneq ($(CONFIG_AM335X)$(CONFIG_OMAP34XX)$(CONFIG_OMAP44XX)$(CONFIG_OMAP54XX),)
 LIBS += $(CPUDIR)/omap-common/libomap-common.o
 endif

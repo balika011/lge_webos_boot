@@ -4,7 +4,7 @@
  * MT53xx Secure Boot driver
  *
  * Copyright (c) 2008-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -1152,10 +1152,10 @@ static int getFlashPartFileSize(const char* szPartName, unsigned int* pu4Size)
     return 0;
 }
 
-unsigned int random(void)
-{
-    return BIM_READ32(REG_RW_TIMER2_LOW);
-}
+//unsigned int random(void)
+//{
+//    return BIM_READ32(REG_RW_TIMER2_LOW);
+//}
 
 int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char *pu1EncryptedSignature)
 {

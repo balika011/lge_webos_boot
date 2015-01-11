@@ -104,7 +104,7 @@ _end_ofs:
 /* IRQ stack memory (calculated at run-time) */
 .globl IRQ_STACK_START
 IRQ_STACK_START:
-	.word	0x0badc0de
+	.word	0x200000
 
 /* IRQ stack memory (calculated at run-time) */
 .globl FIQ_STACK_START
@@ -115,7 +115,7 @@ FIQ_STACK_START:
 /* IRQ stack memory (calculated at run-time) + 8 bytes */
 .globl IRQ_STACK_START_IN
 IRQ_STACK_START_IN:
-	.word	0x0badc0de
+	.word	0x100000
 
 /*
  * the actual reset code
@@ -511,10 +511,38 @@ not_used:
 
 	.align	5
 irq:
-	get_irq_stack
-	irq_save_user_regs
+	sub sp, sp, #S_FRAME_SIZE
+  stmia   sp, {r0 - r11}          @ Calling r0-r11
+  add r8, sp, #S_PC               @ !! R8 NEEDS to be saved !!
+  str lr, [r8, #0]                @ Save lr_irq
+  mrs r6, spsr                    @ Get SPSR
+  str r6, [r8, #4]                @ Save SPSR
+  str r12,[r8, #8]                @ Save r12 for temp usage    
 	bl	do_irq
-	irq_restore_user_regs
+  
+irq_handler_end:
+  bl    need_to_reschedule
+  cmp   r0, #0
+  bne  resched
+  ldmia sp, {r0 - r11}		    @ Calling r0 - lr
+  ldr	  lr, [sp, #S_PC]		    @ Get PC
+  ldr   r12,[sp, #S_PC+4]
+  msr   spsr, r12
+  ldr	  r12, [sp, #S_PC+8]		    @ Get PC
+  add   sp, sp, #S_FRAME_SIZE
+  subs  pc, lr, #4			    @ return & move spsr_svc into cpsr
+
+resched:
+    cpsid aif, #0x13               @ Into the SVC mode with irq disabled/fiq disabled/abort disabled
+    push   {lr}    
+    
+    @ Free to go on SVC mode.
+    bl    reschedule_irq
+    clrex
+    pop {lr}
+    cpsid aif, #18 
+   	b     irq_handler_end
+ 
 
 	.align	5
 fiq:
@@ -540,3 +568,92 @@ fiq:
 
 #endif /* CONFIG_USE_IRQ */
 #endif /* CONFIG_SPL_BUILD */
+#if 1 /*defined(CONFIG_MULTICORES_PLATFORM)*/
+/*
+ *************************************************************************
+ *
+ * For Snapshot project 
+ *
+ *************************************************************************
+*/
+
+#include <asm/smp_platform.h> 
+
+    .macro smp_wreg addr, reg, mask
+    ldr         r12, =\addr
+    ldr         r11, \reg
+    str         r11, [r12]
+    .endm
+
+    .macro smp_dbg_wd addr, value, cidr
+    ldr         r12, =\addr
+    mrc         p15, 0, \cidr, c0, c0, 5
+    and         \cidr, \cidr, #0x03
+    add         r12, r12, \cidr, lsl #2
+    ldr         r11, =\value
+    str         r11, [r12]
+    .endm
+
+    .macro smp_rreg cpu_reg, mstar_reg
+    ldr         r12, =\mstar_reg
+    ldr         \cpu_reg, [r12]
+    .endm
+
+    .globl secondary_setup_mmu
+    secondary_setup_mmu:
+    smp_rreg  r1, (CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_TTB0)   /* r1 = Address of TTB0*/
+
+    /* setup mmu*/
+    //mov r0, #(domain_val(DOMAIN_USER, DOMAIN_MANAGER) | \
+    //                  domain_val(DOMAIN_AP, DOMAIN_MANAGER) | \
+    //                  domain_val(DOMAIN_BOOT, DOMAIN_MANAGER))
+    mcr p15, 0, r0, c3, c0, 0           @ load domain access register
+    mcr p15, 0, r1, c2, c0, 0           @ load page table pointer
+
+    /* enable mmu*/
+    mrc p15, 0, r0, c1, c0, 0           @ read control reg
+    ldr      r1, =0x00001001
+    orr r0, r0, r1
+    mov r0, r0
+    mcr p15, 0, r0, c1, c0, 0           @ write control reg
+    mrc p15, 0, r3, c0, c0, 0           @ read id reg
+
+    mov   pc, lr
+
+    .globl get_cpu_id
+    get_cpu_id:
+    mrc   p15, 0, r0, c0, c0, 5    
+    and   r0, r0, #0x03
+    mov   pc, lr
+
+    .globl secondary_setup_stack
+    secondary_setup_stack:
+    smp_rreg  r0, (CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_SP)  /*r0 = stack pointer*/
+    mrc   p15, 0, r1, c0, c0, 5  
+    and   r1, r1, #0x03                                 /*r1 = cpu id*/
+    ldr   r2, =0x4000                                   /*STACK size*/
+    ldr   r3, =0x0
+    ldr   r4, =0x0
+1:
+    sub   r1, r1, #1  /* r1(cpuid) = r1(cpuid) - 1 */
+    cmp   r4, r1      /* r4(0) == r1 ? */
+    addne r3, r3, r2  /* r3 = r3 + stack size */
+    bne   1b          /* r3 = r1*stack size */
+    sub   r0, r0, r3
+    mov   sp, r0    /*r0 = stack pointer*/
+    mov   pc, lr
+
+    .globl init_secondary_cpu
+    init_secondary_cpu:
+    smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_SECOND_INIT, r0 
+    bl   secondary_setup_stack   
+    smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_STACK_READY, r0
+    bl   secondary_setup_mmu
+    smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_MMU_ON, r0
+
+    bl secondary_init_r
+/*We assume we will never been here*/    
+DIE_LOOP:
+    b DIE_LOOP
+
+#endif

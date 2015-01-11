@@ -207,6 +207,7 @@ ifeq ($(CONFIG_SPL_BUILD),y)
 CPPFLAGS += -DCONFIG_SPL_BUILD
 endif
 
+CPPFLAGS += -DCONFIG_USE_IRQ
 ifneq ($(RESET_VECTOR_ADDRESS),)
 CPPFLAGS += -DRESET_VECTOR_ADDRESS=$(RESET_VECTOR_ADDRESS)
 endif
@@ -235,7 +236,7 @@ CFLAGS += $(CFLAGS_SSP)
 CFLAGS_WARN := $(call cc-option,-Wno-format-nonliteral) \
 	       $(call cc-option,-Wno-format-security)
 CFLAGS += $(CFLAGS_WARN)
-
+CFLAGS += -DCONFIG_USE_IRQ
 # $(CPPFLAGS) sets -g, which causes gcc to pass a suitable -g<format>
 # option to the assembler.
 AFLAGS_DEBUG :=

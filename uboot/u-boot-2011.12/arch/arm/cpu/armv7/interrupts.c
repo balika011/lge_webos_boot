@@ -39,6 +39,7 @@
 #include <asm/proc-armv/ptrace.h>
 
 #define TIMER_LOAD_VAL 0xffffffff
+#define MAX_IRQ_VECTOR		200
 
 /* macro to read the 32 bit timer */
 #define READ_TIMER (*(volatile ulong *)(CFG_TIMERBASE+TCRR))
@@ -174,12 +175,19 @@ void do_fiq (struct pt_regs *pt_regs)
 	show_regs (pt_regs);
 	bad_mode ();
 }
+extern	void reschedule_irq();
+extern int need_to_reschedule(void);
+extern void Timecallback(void);
 
 void do_irq (struct pt_regs *pt_regs)
 {
-	printf ("interrupt request\n");
-	show_regs (pt_regs);
-	bad_mode ();
+	//printf ("interrupt request\n");
+	x_uboot_handle_isr();
+	//Timecallback();
+	//if(need_to_reschedule())
+	//_TimerIsr(irqnum);
+	//show_regs (pt_regs);
+	//bad_mode ();
 }
 
 #if defined(CONFIG_INTEGRATOR) || defined(CONFIG_ARCH_MT5399) || defined(CONFIG_ARCH_MT5396) || defined(CONFIG_ARCH_MT5398) || defined(CONFIG_ARCH_MT5880) || defined(CONFIG_ARCH_MT5890) || defined(CONFIG_ARCH_MT5882)|| defined(CONFIG_ARCH_MT5883) || defined(CONFIG_ARCH_MT5891)
