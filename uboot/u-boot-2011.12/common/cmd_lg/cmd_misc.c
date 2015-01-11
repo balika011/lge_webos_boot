@@ -1284,3 +1284,45 @@ U_BOOT_CMD(
 		"erase_hib\t- delete hibernation image from hib partition\n",
 		"erase_hib\n"
 		);
+
+int do_initfile_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char* argv[])
+{
+	char	*initfile = NULL;
+	char	strinit[50] = {0,};
+	int		changed = 0;
+
+	initfile = getenv("initfile");
+	if(initfile == NULL)
+	{
+		char *str_tmp = "init=/sbin/init";
+
+		setenv("initfile", str_tmp);
+		initfile = getenv(initfile);
+		changed = 1;
+	}
+	printf("current init file path : ");
+	if(argc < 2)
+		printf("%s\n", initfile);
+	else
+	{
+		sprintf(strinit, "init=%s", argv[1]);
+		if(!strcmp(initfile, strinit))
+			printf("%s\n", initfile);
+		else
+		{
+			printf("%s -> %s\n", initfile, strinit);
+			setenv("initfile", strinit);
+			changed = 1;
+		}
+	}
+	if(changed)
+		saveenv();
+
+	return 0;
+}
+
+U_BOOT_CMD(
+		initfile,	2,	0,	do_initfile_cmd,
+		"set initfile path\n",
+		"initfile initfile_path\n"
+		);

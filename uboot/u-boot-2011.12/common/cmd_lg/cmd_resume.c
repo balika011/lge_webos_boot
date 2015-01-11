@@ -449,7 +449,7 @@ int check_snapshot_mode(void)
 	char *snapshot;
 
 	bootmode = getenv("bootmode");
-	if(!strcmp(bootmode, "nfs") || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL) 
+	if(!strcmp(bootmode, "webos") || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL) 
 	   || DDI_NVM_GetSWUMode() || (DDI_NVM_GetSnapShot_Support() == 0) )
 		return LGSNAP_COLDBOOT;
 	else if( DDI_NVM_GetMakeHib() )

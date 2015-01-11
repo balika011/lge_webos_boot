@@ -96,10 +96,6 @@ const uchar default_environment[] = {
 #ifdef	CONFIG_SERVERIP
 	"serverip="	MK_STR(CONFIG_SERVERIP)		"\0"
 #endif
-#if defined(CFG_LG_CHG) && defined(CONFIG_LSERVERIP)
-    "lserverip="    MK_STR(CONFIG_LSERVERIP)        "\0"
-#endif
-
 #ifdef	CONFIG_SYS_AUTOLOAD
 	"autoload="	CONFIG_SYS_AUTOLOAD		"\0"
 #endif

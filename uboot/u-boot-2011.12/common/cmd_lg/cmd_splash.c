@@ -42,6 +42,7 @@
 #define 	_RETRY_URSA3_WRITE	3
 #define		SYS_ATSC	(0)
 #define 	SYS_DVB		(1)
+#define		NUM_TOOL_OPTION		(7)
 
 /*-------------------------------------------------------------
  * macro function definitions
@@ -70,6 +71,7 @@ typedef	struct
   Static 변수와 함수 prototype 선언
   (Static Variables & Function Prototypes Declarations)
  ******************************************************************************/
+UINT16 gToolOpt[NUM_TOOL_OPTION] = {0, };
 static UINT32	_gModelOptions;
 #ifndef NEW_BOOT_LOGO
 extern void	Splash_GetImageInfo(SPLASH_BMP_TYPE_T bmpType, SPLASH_BMP_INFO_T *pSplashBmpInfo, void *argv, unsigned char systype );
@@ -1109,8 +1111,6 @@ void BootSplash(void)
 
 	static unsigned int	_loadAddr;
 	static unsigned int _uncompAddr;
-
-
 	
 //return 0;
 //	_loadAddr  = Get_DrawAddr();
@@ -1127,69 +1127,27 @@ void BootSplash(void)
 	DDI_NVM_GetToolOpt6(&toolOpt6);
 	DDI_NVM_GetToolOpt7(&toolOpt7);
 
+	gToolOpt[0] = toolOpt1.all;
+	gToolOpt[1] = toolOpt2.all;
+	gToolOpt[2] = toolOpt3.all;
+	gToolOpt[3] = toolOpt4.all;
+	gToolOpt[4] = toolOpt5.all;
+	gToolOpt[5] = toolOpt6.all;
+	gToolOpt[6] = toolOpt7.all;
+
     //should be controlled by NVM
     //but I found that: tool1 could be controlled by luna command, but what we get in loader is a different loader. It seems we need to sync code from LG in order to have the same data base
-    printf ("force 10bit\n");  
-    toolOpt1.flags.nLVDSBit=1;//10bit
+//    printf ("force 10bit\n");
+//    toolOpt1.flags.nLVDSBit=1;//10bit
 
 	
-
-	//To define LED Bar type
-	if(toolOpt5.flags.bLoalDim_BLK_Type == LD_4_6_12_BLK)
-	{
-		switch(toolOpt7.flags.eLEDBarType)
-		{
-			case 0:
-				led_bar_type = LED_BAR_REV_BLK;
-				break;
-			case 1:
-				led_bar_type = LED_BAR_H_4BLK;
-				break;
-			case 2:
-				led_bar_type = LED_BAR_H_12BLK;
-				break;
-			case 3:
-				led_bar_type = LED_BAR_H_6BLK;
-				break;
-			default:
-				led_bar_type = LED_BAR_H_6BLK;
-				break;
-		}	
-	}
-	else
-	{
-		switch(toolOpt7.flags.eLEDBarType)
-		{
-			case 0:
-				led_bar_type = LED_BAR_D_10BLK;
-				break;
-			case 1:
-				led_bar_type = LED_BAR_REV1_BLK;
-				break;
-			case 2:
-				led_bar_type = LED_BAR_REV2_BLK;
-				break;
-			case 3:
-				led_bar_type = LED_BAR_REV3_BLK;
-				break;
-			default:
-				led_bar_type = LED_BAR_D_10BLK;
-				break;
-		}
-
-	}
-
-	printf("[LED BarType] LED_Bar= %d, %d\n", led_bar_type);
-
-	
-
 	switch(_mode)
 	{
 		case 0:
 
 			#define	OSA_MD_GetModuleMakerType()		(toolOpt1.flags.eModelModuleType)
 			#define	OSA_MD_IsSupportMirrorMode()	(toolOpt5.flags.bMirrorMode)
-			#define	OSA_MD_GetModuleInch()			(toolOpt1.flags.eModelInchType | (toolOpt1.flags.eModelInchType2 << 4))
+			#define	OSA_MD_GetModuleInch()			(toolOpt1.flags.eModelInchType)
 
 			inch = OSA_MD_GetModuleInch();
 			//#define OSA_MD_GetToolType()			(toolOpt1.flags.eModelToolType)
@@ -1292,12 +1250,6 @@ void BootSplash(void)
 /* LD SPI */
 			if(toolOpt3.flags.bLocalDimming == 0)
 				printf("[%d]:Not support Local dimming \n",readMsTicks());
-			else
-			{
-				printf("[%d]:SPI INIT[%d] \n",readMsTicks(),led_bar_type);
-//LOADER_WORKAROUND_FOR_BUILD_ERROR
-//				vDrvSPIVsyncInit((UINT32) led_bar_type,!(Get_modelOpt(FRC_OPT_SEL)));
-			}
 
 /* PWM	*/
 			// 60inch sharp module T2 spec max 20ms 이므로 delay 아래 조건에서 제외시킴 

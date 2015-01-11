@@ -5,7 +5,7 @@
  *	This file is based  ARM Realview platform
  *  Copyright (C) 2002 ARM Ltd.
  *  All Rights Reserved
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -311,7 +311,7 @@
  */
 #define CFG_LONGHELP    /* undef to save memory     */
 #ifdef LG_CHG
-#define CFG_PROMPT  "NC4_M13 # " /* Monitor Command Prompt   */
+#define CFG_PROMPT  "A5LR # " /* Monitor Command Prompt   */
 #else
 #define CFG_PROMPT  "mt5890 # " /* Monitor Command Prompt   */
 #endif //#ifdef LG_CHG
@@ -711,7 +711,6 @@
 #define CONFIG_IPADDR       192.168.0.10
 #define CONFIG_SERVERIP     192.168.0.1
 #define CONFIG_GATEWAYIP    192.168.0.1
-#define CONFIG_LSERVERIP    156.147.69.80
 #define CONFIG_NETMASK      255.255.255.0
 #else
 //#define CONFIG_IPADDR     172.22.61.71
@@ -823,7 +822,6 @@
 #define APPXIP_LOADADDR         		0x04000000              /* XIP 이미지 로드 주소 */
 
 #define CONFIG_ETHADDR                    00:02:3e:26:0a:55   /* Ethernet address */
-//#define CONFIG_LSERVERIP              165.186.175.92
 //#define CONFIG_SERVERIP                   192.168.0.1
 //#define CONFIG_IPADDR                 192.168.0.10
 //#define CONFIG_GATEWAYIP              192.168.0.1

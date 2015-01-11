@@ -348,9 +348,10 @@ static int fast_boot(void)
 	printf("[%4d] fast boot check \n", readMsTicks());
 	/* delay 10 * 1us */
 
-	
+#if 0 // temporary disable	
 #ifndef UNSECURE
 	if ((DDI_NVM_GetDebugStatus() != RELEASE_LEVEL))
+#endif
 #endif
 	{
 		for (i=0; i<20; ++i) {

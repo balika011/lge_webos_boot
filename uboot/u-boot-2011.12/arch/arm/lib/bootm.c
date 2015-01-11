@@ -38,6 +38,8 @@
 #include <cmd_resume.h>
 #include <mmc.h>
 #include "x_ldr_env.h"
+#include <cmd_micom.h>
+#include <cmnio_type.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -120,7 +122,10 @@ extern uint32_t appxip_len;				/* app xip length */
 extern uint32_t fontxip_len;			/* font xip length */
 
 extern char strModelOpt[];
+extern char strHWOption[];
 extern char bPortProtect;
+extern UINT16 gToolOpt[];
+extern MODEL_INFO_DB_T gModelInfoDB;
 
 
 extern char * get_blkdev_name(void);
@@ -132,10 +137,9 @@ extern int getFullVerifyOTP(void);
 
 void linux_param_set(char *kargs)
 {
-	char *cmdline = getenv ("bootargs");
 	char *lock_time;
-	char *bootmode;
-	char *lserverip, *serverip, *ipaddr, *gatewayip, *netmask;
+	char *bootmode = getenv("bootmode");
+	char *init_file = getenv("initfile");
 	uint32_t xip_size_mb = 0, appxip_addr = 0, fontxip_addr = 0;
 	char *mac, *print, *lpj;
 	//char *malimem, *umpmem;
@@ -146,10 +150,55 @@ void linux_param_set(char *kargs)
 #endif
 
 	//default bootargs : default no args. So you can add.
-     if (cmdline)
-     {
-         sprintf(arg_next(kargs), "%s ", cmdline);
-     }
+	if(!strcmp(bootmode, "user"))
+	{
+		char *cmdline = getenv ("bootargs");
+		if(cmdline != NULL) sprintf(arg_next(kargs), "%s ", cmdline);
+		return;
+	}
+
+	if(!strcmp(bootmode, "webos")) // nfs booting
+	{
+		char *nfsroot	= getenv("nfsroot");
+		char *nfsserver	= getenv("nfsserver");
+		char *serverip	= getenv("serverip");
+		char *ipaddr	= getenv("ipaddr");
+		char *gatewayip	= getenv("gatewayip");
+		char *netmask	= getenv("netmask");
+
+		sprintf(arg_next(kargs), "root=/dev/nfs rw nfsroot=%s:%s,%s ",
+				(nfsserver)?nfsserver:"nfsserver",
+				(nfsroot)?nfsroot:"root",
+				NFS_PARAMETER);
+
+		sprintf(arg_next(kargs), "ip=%s:%s:%s:%s::eth0:off ", ipaddr, serverip, gatewayip, netmask);
+	}
+	else	// bootmode == auto
+	{
+		char root_dev[32] = {0, };
+		struct partition_info *pi = NULL;
+
+		if(swumode)
+		{
+			pi = get_used_partition("swue");
+			sprintf(root_dev, "/dev/%s%d ", get_blkdev_name(), get_blkdev_idx("swue"));
+		}
+		else
+		{
+			pi = get_used_partition("rootfs");
+			sprintf(root_dev, "/dev/%s%d ", get_blkdev_name(), get_blkdev_idx("rootfs"));
+		}
+
+		if(!pi) {
+			printf("Invalid rootfs partition\n");
+			return;
+		}
+
+		sprintf(arg_next(kargs), "root=%s ro%s rootfstype=%s ",
+				root_dev,
+				(init_file)? init_file:"",
+				"squashfs");
+	}
 #ifdef WEBOS_DEVELOPMENT
 	//hongjun marked for only use manually set bootargs
 	//root
@@ -222,7 +271,6 @@ void linux_param_set(char *kargs)
 		printf("SILENT MODE!\n");
 		sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
 	}
-	sprintf(arg_next(kargs),"modelopt=%s ", strModelOpt);
 
 	if(bPortProtect)
 		sprintf(arg_next(kargs),"portProtection ");
@@ -311,16 +359,39 @@ extern	struct mmc emmc_info[];
 	sprintf(arg_next(kargs), "%s ", "tzsz=18m ");
 	sprintf(arg_next(kargs), "%s ", "vmalloc=700mb ");	
 //LG's 
-	sprintf(arg_next(kargs), "%s ", "sbkey=0x7f5e0000 ");
-	sprintf(arg_next(kargs), "%s ", "modelopt=01001100010 ");
-	sprintf(arg_next(kargs), "%s ", "hwopt=201100000002002000 ");
-	sprintf(arg_next(kargs), "%s ", "ToolOpt=32995:36882:26299:49970:11178:2730:53387 ");
-	sprintf(arg_next(kargs), "%s ", "serialNum=SKJY1107 ");
-	sprintf(arg_next(kargs), "%s ", "bver=3.03.78 ");
-	sprintf(arg_next(kargs), "%s ", "chip=M14B1 ");
-	sprintf(arg_next(kargs), "%s ", "countryGrp=1 ");
-	sprintf(arg_next(kargs), "%s ", "modelName=WEBOS1 ");
-	sprintf(arg_next(kargs), "%s ", "cmdEnd ");
+	if ((!(strncmp(getenv("print"),"off",3))) || (DDI_NVM_GetDebugStatus() != DEBUG_LEVEL))
+	{
+		printf("SILENT MODE!\n");
+		//sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
+	}
+	sprintf(arg_next(kargs), "%s ", "devtmpfs.mount=1");
+	sprintf(arg_next(kargs),"modelopt=%s ", strModelOpt);
+	sprintf(arg_next(kargs), "hwopt=%s ", strHWOption);
+
+	DDI_NVM_Read(MODEL_INFO_DB_BASE + (UINT32)&(gModelInfoDB.validMark) - (UINT32)&gModelInfoDB, \
+			sizeof(gModelInfoDB.validMark), (UINT8 *)&(gModelInfoDB.validMark));
+	if(gModelInfoDB.validMark != 0xffffffff)
+	{
+		DDI_NVM_Read(MODEL_INFO_DB_BASE + (UINT32)&(gModelInfoDB.aModelName) - (UINT32)&gModelInfoDB, \
+				sizeof(gModelInfoDB.aModelName), (UINT8 *)&(gModelInfoDB.aModelName));
+
+		DDI_NVM_Read(MODEL_INFO_DB_BASE + (UINT32)&(gModelInfoDB.aSerialNum) - (UINT32)&gModelInfoDB,   \
+				sizeof(gModelInfoDB.aSerialNum), (UINT8 *)&(gModelInfoDB.aSerialNum));
+
+		DDI_NVM_Read(MODEL_INFO_DB_BASE + (UINT32)&(gModelInfoDB.group_code) - (UINT32)&gModelInfoDB,   \
+				sizeof(gModelInfoDB.group_code), (UINT8 *)&(gModelInfoDB.group_code));
+	}
+
+	sprintf(arg_next(kargs), "ToolOpt=%d:%d:%d:%d:%d:%d:%d ", gToolOpt[0], gToolOpt[1], gToolOpt[2], gToolOpt[3], gToolOpt[4], gToolOpt[5], gToolOpt[6]);
+	sprintf(arg_next(kargs), "debugMode=%d ", DDI_NVM_GetDebugStatus());
+	sprintf(arg_next(kargs), "countryGrp=%d ", gModelInfoDB.group_code);
+	sprintf(arg_next(kargs), "modelName=%s ", gModelInfoDB.aModelName);
+	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
+	sprintf(arg_next(kargs), "%s ", "sver=3.00.00 bver=3.00.00");
+	sprintf(arg_next(kargs), "%s ", "chip=M14B1");
+	if(MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus())
+		sprintf(arg_next(kargs), "%s ", "factory");
+	sprintf(arg_next(kargs), "%s ", "cmdEnd");
 
 #endif 
 	

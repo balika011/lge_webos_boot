@@ -99,6 +99,8 @@
 #define GPIO_MODEL_OPT10	78
 
 #define NUM_MODEL_OPT		11
+#define NUM_HW_OPT			18
+#define NUM_MODELOPT_BITCOMB	16
 
 #define GPIO_PORT_WR_OTP_WR_CTRL	51
 #define GPIO_PORT_WR_LOCAL_DIM_OS_PANEL_CTRL	(0xffffffff)
@@ -110,11 +112,132 @@
 //---------------------------------------------------------------------------
 // Type definitions
 //---------------------------------------------------------------------------
+ /**
+  *  Type of PANEL (HW OPTION)
+  */
+ typedef enum
+{
+	MODELOPT_PANEL_V12          = 0,
+	MODELOPT_PANEL_V13          = 1,
+	MODELOPT_PANEL_V14          = 2,
+	MODELOPT_PANEL_V14_32inch   = 3,
+	MODELOPT_PANEL_TYPE_NONE    = 4,
+	MODELOPT_PANEL_MAX          = 5
+}MODELOPT_PANEL_T;
 
+ /**
+  *  Type of PANEL INTERFACE (HW OPTION)
+  */
+ typedef enum
+{
+	MODELOPT_PANEL_INTERFACE_EPI    = 0,
+	MODELOPT_PANEL_INTERFACE_LVDS   = 1,
+	MODELOPT_PANEL_INTERFACE_VBYONE = 2,
+	MODELOPT_PANEL_INTERFACE_MAX    = 3
+}MODELOPT_PANEL_INTERFACE_T;
 
+/**
+ *  Type of PANEL RESOLUTION (HW OPTION)
+ */
+typedef enum
+{
+	MODELOPT_PANEL_RESOLUTION_HD    = 0,
+	MODELOPT_PANEL_RESOLUTION_FHD   = 1,
+	MODELOPT_PANEL_RESOLUTION_UD    = 2,
+	MODELOPT_PANEL_RESOLUTION_MAX   = 3
+}MODELOPT_PANEL_RESOLUTION_T;
+
+/**
+ *  Type of DDR SIZE (HW OPTION)
+ */
+typedef enum
+{
+	DDR_SIZE_768M       = 0,
+	DDR_SIZE_1_25G      = 1,
+	DDR_SIZE_1_5G       = 2,
+	DDR_SIZE_2G         = 3,
+	DDR_SIZE_3G         = 4,
+	DDR_SIZE_2_5G       = 5,
+	DDR_SIZE_1G			= 6
+}MODELOPT_DDR_SIZE_T;
+
+typedef enum
+{
+	MODELOPT_DISPLAY_LCD	= 0,
+	MODELOPT_DISPLAY_OLED	= 1,
+	MODELOPT_DISPLAY_PDP    = 2,
+	MODELOPT_DISPLAY_MAX	= 3
+}MODELOPT_DISPLAY_T;
+
+typedef enum
+{
+	MODELOPT_FRC_URSA_NONE = 0,
+	MODELOPT_FRC_URSA7,
+	MODELOPT_FRC_URSA9,
+	MODELOPT_FRC_URSA9_P,
+	MODELOPT_FRC_URSA11,
+	MODELOPT_FRC_URSA11_P,
+	MODELOPT_FRC_MAX
+}MODELOPT_URSA_T;
+
+typedef enum
+{
+	MODELOPT_HDMI_DIRECTION_NONE = 0,
+	MODELOPT_HDMI_1SIDE_1COMMON,
+	MODELOPT_HDMI_1REAR_1COMMON,
+	MODELOPT_HDMI_DIRECTION_MAX
+}MODELOPT_HDMI_DIRECTION_T;
+
+typedef enum
+{
+	MODELOPT_GRAPHIC_1024X768   = 0,
+	MODELOPT_GRAPHIC_1366X768   = 1,    // panel resolution == HD
+	MODELOPT_GRAPHIC_1920X1080  = 2,    // panel resolution == FHD or panel resolution == UHD
+	MODELOPT_GRAPHIC_2560X1080  = 3,    // panel resolution == WUHD
+	MODELOPT_GRAPHIC_3840X2160  = 4,    // panel resolution == UHD
+	MODELOPT_GRAPHIC_5120X2160  = 5,    // panel resolution == WUHD
+	MODELOPT_GRAPHIC_1280X720   = 6
+}MODELOPT_GRAPHIC_RESOLUTION_T;
+
+typedef struct modelopt_bitcomb
+{
+	MODELOPT_PANEL_INTERFACE_T	panel_interface;
+	MODELOPT_PANEL_RESOLUTION_T	panel_resolution;
+	uint8_t						bSupport_frc;
+	MODELOPT_PANEL_T			panel_type;
+	uint8_t						bSupport_cp_box;
+	uint8_t						bSupport_small_smart;
+	uint8_t						bSupportOptic;
+}MODELOPT_BITCOMB_T;
+
+/**
+ *  HW OPTION
+ */
+typedef struct modelopt_t
+{
+	uint8_t                     country_type;
+	MODELOPT_PANEL_INTERFACE_T  panel_interface;
+	MODELOPT_PANEL_RESOLUTION_T panel_resolution;
+	uint8_t                     bSupport_frc;
+	MODELOPT_PANEL_T            panel_type;
+	uint8_t                     bSupport_cp_box;
+	uint8_t                     bSupport_small_smart;
+	uint8_t                     tuner_type;
+	MODELOPT_DDR_SIZE_T         ddr_size;
+	uint8_t                     bSupportOptic;
+	uint8_t                     graphic_resolution;
+	uint8_t                     bSupport_U14;
+	uint8_t                     bSupport_D9;
+	MODELOPT_URSA_T             type_URSA;
+	uint8_t                     reserved;
+	uint8_t                     bSupport_external_EDID;
+	uint8_t                     bSupport_URSA;
+	MODELOPT_HDMI_DIRECTION_T	direction_HDMI;
+}MODELOPT_T;
 
 extern char aHW_model_opt[];
 extern char strModelOpt[];
+extern char strHWOption[];
 
 //------------------------------------------------------------
 extern int DDI_CMNIO_I2C_Init();

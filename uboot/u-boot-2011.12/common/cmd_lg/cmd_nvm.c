@@ -31,14 +31,11 @@
 #include <partinfo.h>
 #include <nand.h>
 #include <lg_modeldef.h>
-
-#include <mt5882_lgcmnio.h>
-
 #include <linux/types.h>
 #include <linux/string.h>
 #include <linux/ctype.h>
 #include <cmnio_type.h>
-
+#include <mt5882_lgcmnio.h>
 
 /*---------------------------------------------------------
     Control 상수 정의
@@ -84,96 +81,92 @@
 /** System DB Default Value 설정 및 global 변수 선언 */
 const SYS_DB_T gSysNvmDB =
 {
-	1,
+	0x44eb4cca,
 	DEFAULT_PRINT_MASK,
 	0,		/* PDP panel use time */
-
-	0xFF,	/* internal micom: powerOnMode 	*/
-	0xFF,	/* internal micom: powerState 	*/
-	0,		/* internal micom: powerOnStatus(LST)  	*/
-	1,		/* internal micom: set id  	*/
-	0,		/* internal micom: key operating mode(key locked) */
-	0,		/* internal micom: irLocked 	(FALSE) */
-	0,		/* internal micom: localLocked	(FALSE) */
-	0,		/* internal micom: reserverd */
-	0,		/* internal micom: debug counter */
 	0,		/* FRC auto download or not */
-	{50, 33, 33, 50, 50, 25, 50, 50, 50, 50}, /* panel powerseq */
-	{ 0, 0x80, 0xff,  5, 99, 99,  5, 35, 96, 120, 100, 0x28, 200,  0x0C }, /* panel pwm */
+	{50, 57, 33, 50, 50, 50}, /* panel powerseq */
+	{ 0, 0, 80,  5, 99, 99,  5, 35, 96, 120, 100, 22, 200,  0x0C }, /* panel pwm */
+#if 0 //(SYS_ATSC)
 	0,      /*system type 0:atsc, 1: dvb*/
+#else
+	1,      /*system type 0:atsc, 1: dvb*/
+#endif
     1,      /**COLOR_DEPTH_T */
     1,      /**LVDS_PIXEL_T */
     0,		/*Vcom Pgamma value checksum */
-	RELEASE_LEVEL,		/* nDebugStatus - RELEASE */
-	{}, /* Uncomment and change name of member to reset values in NVRAM */
-/*	1,  FOR BCM BOARD have reversed LVDS MAP */
+	RELEASE_LEVEL,
 	0xFF,   /* SoftwareUpdate Mode */
-	TUNER_ENHANCED_GHOST,	/* Tuner Opton*/
-	0xFF, /* snap shot SWU */
-	0xFF, /* snap shot support */
-	2,		/* ADC Mode [MTK] OTP */
+	0xFF,   /* Make Hibernation Mode */
+	0xFF,	 /* Snap Shot Support or not */
+	1,		/* ADC Mode [L9] Internal */
 	0xFFFFFFFF, /* SWU Mode Magic Key */
 	0,	/* sound out mode  */
-	0xFFFFFFFF,	/* zram */	
+	0xFFFFFFFF,	/* zram */
+	0,			/* eMMCUsage */
+	0,			/* bDPortEnable */
+	0xff,		/* Secureboot full verify flag */
+	0,			/* PWM Mode */
+	0,			/* timeDifference */
+	0xFF,		/* Instant boot support or not */
+	0,		/* Snapshot boot ART support or not */
 };
 
-TOOLOPTION_DB_T gToolOptionDB ={
-	0x00000014,
-	{INCH_47|(TOOL_LA69<<4)|(MODULE_LGD<<11)|(0<<15)},		/* Tool Option 1 */
-	{0x101},		/* Tool Option 2 */
-	{0x4CFF},		/* Tool Option 3 */
-	{0x88B7},		/* Tool Option 4 */
-	{0x2B2B},		/* Tool Option 5 */
-	{0x15C6},		/* Tool Option 6 */
-	{0x3D},			/* Tool Option 7 */
-	{0x0400},		/* Analog Area Option */ /* daesuk.park I_II_Save 항목을 Default On 으로 설정함 - DQA 요청*/
-	{0x02},			/* EU Area Option */ /* Use HW option enable */
-	{1},			/* stExtVideoInputADJ */
+
+const TOOLOPTION_DB_T gToolOptionDB ={
+	0x20130002,
+	{INCH_47|(TOOL_LB67<<5)|(MODULE_LGD<<11)|(1<<15)},		/* Tool Option 1 */
+	{0},		/* Tool Option 2 */
+	{0},		/* Tool Option 3 */
+	{0},		/* Tool Option 4 */
+	{0},		/* Tool Option 5 */
+	{0},		/* Tool Option 6 */
+	{0},		/* Tool Option 7 */
+	{0},		/* Tool Option 8 */
+	{0},		/* Analog Area Option */
+	{0},		/* EU Area Option */
+	{2},		/* stExtVideoInputADJ */
 	{1},			/* stExtAudioInputADJ */
-	0xFF
 };
 
-PRESERVE_DB_T gPreserveDB = {
-	0x00000007,				/* validMark */
+
+MODEL_INFO_DB_T gModelInfoDB = {
+	0x20130002,				/* validMark */
+	{'W', 'E', 'B', 'O' ,'S' ,'2', '\0',},	/* aModelName[13] */
+	{'S','K','J','Y','1','1','0','7',},		/* aSerialNum[BAR_CODE_SIZE_MAX] */
+	0,		/* group_code */
+	0,		/* country_code */
+	0,		/* city_code */
+};
+
+
+const PRESERVE_DB_T gPreserveDB = {
+	0x20130001,				/* validMark */
 	0,						/* bInstopReserved */
 	0,						/* bInstopCompleted */
 	BAUDRATE_115200,		/* eBaudrate - 115200 */
 	0,						/* b1stBootAfterInstop */
+	0,						/* b1stBootAfterFactoryReset */
 };
 
+
 MAC_ADDRESS_T gMacAddress = {
-	0x0000000a,	/* validMark */
+	0x20130001,
 	{'F','F',':','F','F',':','F','F',':','F','F',':','F','F',':','F','F'}
 };
 
-#define EEPROM_NVM_TOTAL_SIZE		(32*1024)
-#define NAND_DVBS_NVM_TOTAL_SIZE	(1536*1024)
-#define NAND_NVM_TOTAL_SIZE			(512*1024)
-#define EEPROM_TOTAL_DB_SIZE		(BASIC_DB_SIZE)
-#define NAND_TOTAL_DB_SIZE			(EXTEND_DB_SIZE + NVM_HEADER_SIZE)
-#define NAND_DVBS_TOTAL_DB_SIZE		(EXTEND_DVBS_DB_SIZE + NVM_HEADER_SIZE)
-
-#define EEPROM_FREE_DB_SIZE			(EEPROM_NVM_TOTAL_SIZE	- EEPROM_TOTAL_DB_SIZE ) /** EEPROM Free DB, reserved */
-#define NAND_FREE_DB_SIZE			(NAND_NVM_TOTAL_SIZE	- NAND_TOTAL_DB_SIZE ) /** NAND   Free DB, reserved */
-#define NAND_DVBS_FREE_DB_SIZE		(NAND_DVBS_NVM_TOTAL_SIZE	- NAND_DVBS_TOTAL_DB_SIZE ) /** NAND   Free DB, reserved */
-
-
 #define NVM_PAGE_SIZE				32
-#define EEPROM_NVM_NPAGE			(EEPROM_NVM_TOTAL_SIZE/NVM_PAGE_SIZE)    /* No. of pages in EEPROM NVRAM        */
 
-/* Check Free DB size */
-#if (EEPROM_FREE_DB_SIZE < 0)
-#error "We need more EEPROM NVM size!! "
-#endif
 
 #define NVM_I2C_CH					0
-#define NVM_I2C_ADDR		0xA0
+#define MICOM_I2C_CH				1
+
+#define NVM_I2C_ADDR				0xA0
+
 extern int storage_erase(unsigned long long offset, unsigned long long len);
 
 UINT8 DDI_NVM_Write (UINT32 offset, UINT32 nData, UINT8 *pTxBuf)
 {
-//(uchar chNum, uchar transMode, uchar slaveAddr, uint subAddrMode, uchar *subAddr, ushort nBytes, uchar *txBuf, uint retry)
-
 	UINT8 subAddr[2];
 	int i = 0;
 	int tStartIndex, tLastIndex;
@@ -187,10 +180,7 @@ UINT8 DDI_NVM_Write (UINT32 offset, UINT32 nData, UINT8 *pTxBuf)
 
 	tStartIndex = offset / NVM_PAGE_SIZE;
 	tLastIndex = tLast / NVM_PAGE_SIZE;
-#ifdef CC_MTK_EEPROM
-	GPIO_SetOut(46, 0);
-	printf("david : disable eeprom wp\n");
-#endif
+
 	for(i=tStartIndex; i<= tLastIndex; i++ )
 	{
 		UINT8 stOfs[2];
@@ -209,15 +199,12 @@ UINT8 DDI_NVM_Write (UINT32 offset, UINT32 nData, UINT8 *pTxBuf)
 		udelay(5000);
 	}
 
-
 	return OK;
 }
 
 
 UINT8 DDI_NVM_Read (UINT32 offset, UINT32 nData, UINT8 *pTxBuf)
 {
-//(uchar chNum, uchar transMode, uchar slaveAddr, uint subAddrMode, uchar *subAddr, ushort nBytes, uchar *txBuf, uint retry)
-
 	UINT8 subAddr[2];
 	int tLength = nData;
 
@@ -232,8 +219,6 @@ UINT8 DDI_NVM_Read (UINT32 offset, UINT32 nData, UINT8 *pTxBuf)
 
 int	DDI_NVM_GetDebugStatus( void )
 {
-//2013/05/28, force debug mode, purplearrow
-#if 0
 	static UINT8	debugStatus = (UINT8) -1;
 	UINT32		validMark;
 	/*
@@ -269,10 +254,54 @@ int	DDI_NVM_GetDebugStatus( void )
 	rprint1n("*** Final debugStatus %d(%x)\n", debugStatus, validMark);
 
 	return	debugStatus;
-#else
-    return DEBUG_LEVEL;
-#endif
 }
+
+
+#if 0
+#define MAGIC_FULL_VERIFY 0X78
+int	DDI_NVM_GetOTPStatus( void )
+{
+	static UINT8	nvm_fullVerify = 0xff;
+	UINT32		validMark;
+	UINT8		nfullVerify = 0;
+
+
+	if( nvm_fullVerify == 0xff )
+	{
+		DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.validMark) - (UINT32)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.validMark), (UINT8 *)&(validMark));
+		if(validMark != 0xffffffff)
+		{
+	//		printf("*** valid mark is 0x%x\n",validMark);
+			DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.fullVerify) - (UINT32)&gSysNvmDB,	\
+					sizeof(gSysNvmDB.fullVerify), (UINT8 *)&(nfullVerify));
+			if((nfullVerify & 0xff) == MAGIC_FULL_VERIFY)
+				{
+					nvm_fullVerify=0xff;
+				}
+			else
+				{
+					nvm_fullVerify=0x0;
+				}
+		}
+		else
+		{
+	//		printf("*** valid mark is 0xffffffff\n");
+		}
+	}
+
+	rprint1n("*** Final fullVerify value %d(%x)\n", nvm_fullVerify, validMark);
+
+	return	nvm_fullVerify;
+}
+
+void DDI_NVM_SetOTPStatus( UINT8 nfullVerify )
+{
+	UINT32 nvm_support_snapshot = SYS_DB_BASE + (UINT32)&(gSysNvmDB.fullVerify) - (UINT32)&gSysNvmDB;
+	nfullVerify = (nfullVerify & 0xff) ? MAGIC_FULL_VERIFY : 0xff;
+	DDI_NVM_Write(nvm_support_snapshot, sizeof(gSysNvmDB.fullVerify), &nfullVerify);
+}
+#endif
 
 
 #define NVM_PRESERVE_DB_LOAD_ITEM(item, pValue)   \
@@ -303,10 +332,6 @@ int	DDI_NVM_GetInstopStatus( void )
 			instopStatus = nInstopStatus;
 		}
 	}
-	else
-	{
-		// There is no way to change instop status on boot unless clearing nvram.
-	}
 	rprint1n("*** Final instopStatus %d(%x)\n", instopStatus, _validMark);
 
 	return	instopStatus;
@@ -330,32 +355,22 @@ static void _NVM_PrintMap(void)
 		{ "NVM header"		, NVM_HEADER_BASE			, NVM_HEADER_SIZE			},
 		{ "TNVM_MAGIC"		, TNVM_MAGIC_BASE			, TNVM_MAGIC_SIZE			},
 		{ "System Data"		, SYS_DB_BASE				, SYS_DB_SIZE				},
-		{ "Analog"			, ANA_DB_BASE				, ANA_DB_SIZE				},
-		{ "Tool Option"		, TOOL_OPTION_DB_BASE		, TOOL_OPTION_DB_SIZE		},
 		{ "Factory DB" 		, FACTORY_DB_BASE			, FACTORY_DB_SIZE			},
+		{ "Tool Option" 		, TOOL_OPTION_DB_BASE		, TOOL_OPTION_DB_SIZE		},
+		{ "Analog"				, ANA_DB_BASE				, ANA_DB_SIZE				},
 		{ "SUMODE WB"		, SUMODE_10POINTWB_DB_BASE	, SUMODE_10POINTWB_DB_SIZE	},
 		{ "ModelInfo DB"	, MODEL_INFO_DB_BASE		, MODEL_INFO_DB_SIZE		},
 		{ "Preserve DB" 	, PRESERVE_DB_BASE			, PRESERVE_DB_SIZE			},
 		{ "EMP(For DRM)"	, EMP_DB_BASE				, EMP_DB_SIZE				},
 		{ "SWU,SSU,NSU"		, SWU_DB_BASE				, SWU_DB_SIZE				},
-		{ "MHP"				, MHP_DB_BASE				, MHP_DB_SIZE				},
 		{ "MICOM"			, MICOM_DB_BASE				, MICOM_DB_SIZE				},
 		{ "THX DB"			, THX_DB_BASE				, THX_DB_SIZE				},
 		{ "NEW_FACTORY_DB"	, NEW_FACTORY_DB_BASE		, NEW_FACTORY_DB_SIZE		},
-		{ "NETLOG_DB"		, NETLOG_DB_BASE			, NETLOG_DB_SIZE			},
-		{ "TMP_CPLIST_DB"	, TMP_CPLIST_DB_BASE		, TMP_CPLIST_DB_SIZE		},
 		{ "MAC ADDRESS DB"	, MAC_ADDRESS_BASE			, MAC_ADDRESS_SIZE			},
 		{ "PWRON_LASTINFO_DB" , LAST_INPUT_INFO_DB_BASE	, LAST_INPUT_INFO_DB_SIZE	},
+		{ "CONTINENT_OPTION_DB" , CONTINENT_OPTION_DB_BASE	, CONTINENT_OPTION_DB_SIZE	},
 		{ "TMP_UI_DB"		, TMP_UI_DB_BASE			, TMP_UI_DB_SIZE			},
 		{ "SOC VENDOR DB"	, SOC_VENDOR_BASE			, SOC_VENDOR_SIZE			},
-	};
-
-	struct DB_MAPS_T extendDbMaps[] =
-	{
-		{ "UI_Registry"		, UI_DB_BASE				, UI_DB_SIZE				},
-		{ "UI_Exp_Regs"		, UI_EXPERT_DB_BASE			, UI_EXPERT_DB_SIZE			},
-		{ "Channel DB"		, CH_DB_BASE				, CH_DB_SIZE				},
-		{ "DVB-S DB"        , DVBS_DB_BASE              , DVBS_DB_SIZE},
 	};
 
 	int	i;
@@ -367,15 +382,7 @@ static void _NVM_PrintMap(void)
 				basicDbMaps[i].db_name, basicDbMaps[i].db_base, basicDbMaps[i].db_size, basicDbMaps[i].db_size);
 	}
 
-	printf(" Extend DB size(%4d/0x%04x)\n", EXTEND_DB_SIZE, EXTEND_DB_SIZE);
-	for (i = 0; i < (sizeof(extendDbMaps)/sizeof(struct DB_MAPS_T)); i++)
-	{
-		printf("    %-12s: offset(0x%04x), size(%5d/0x%04x)\n",
-				extendDbMaps[i].db_name, extendDbMaps[i].db_base, extendDbMaps[i].db_size, extendDbMaps[i].db_size);
-	}
 	printf("==========================================\n");
-
-
 }
 
 
@@ -424,10 +431,7 @@ static SYS_DB_T * _NVM_GetSysDb(void)
 	}
 
 	return &_sysdb;
-
 }
-
-
 
 int DDI_NVM_GetToolOpt1(TOOL_OPTION1_T *pOpt1)
 {
@@ -521,7 +525,6 @@ extern int gets(char *s);
 #define ASCII_L_A	0x41
 #define ASCII_L_F	0x46
 
-
 UINT32  OSA_DBG_GetHexInput(const char *pStr, unsigned int *pVal)
 {
 	char rbuff[32] = {0,};
@@ -556,14 +559,12 @@ UINT32  OSA_DBG_GetHexInput(const char *pStr, unsigned int *pVal)
 		resultVal = resultVal*16 + chkVal;
 	}
 
-
 	*pVal = resultVal;
 
 	printf("\n");
 
     return 0;
 }
-
 
 void DDI_NVM_Debug(void)
 {
@@ -575,13 +576,14 @@ void DDI_NVM_Debug(void)
 	UINT32			db_size;
 	UINT32			nvm_size;
 	UINT8			tRetVal = OK;
-	
+
 	/* command processing */
 	do
 	{
 		OSA_DBG_PrintMenu ("\n\n");
 		OSA_DBG_PrintMenu ("==========	[NVM Debug Menu]  ============\n");
 		_NVM_PrintMap();
+		OSA_DBG_PrintMenu ("==========================================\n");
 		OSA_DBG_PrintMenu ("\n");
 		OSA_DBG_PrintMenu ("\t0x01: Read Byte\n");
 		OSA_DBG_PrintMenu ("\t0x02: Write Byte\n");
@@ -592,14 +594,18 @@ void DDI_NVM_Debug(void)
 		OSA_DBG_PrintMenu ("\t0xff: Exit from this menu\n");
 		OSA_DBG_PrintMenu ("\n");
 		OSA_DBG_PrintMenu ("------------------------------------------\n");
-		OSA_DBG_PrintMenu ("PWM DEBUG=> Freq(20), Duty(21), Enable(22), Align(23)\n");
-		OSA_DBG_PrintMenu ("==========================================\n");
+		OSA_DBG_PrintMenu ("\t0x20: PWM Debug Freq\n");
+		OSA_DBG_PrintMenu ("\t0x21: PWM Debug Duty\n");
+		OSA_DBG_PrintMenu ("\t0x22: PWM Debug Enable\n");
+		OSA_DBG_PrintMenu ("\t0x23: PWM Debug Align\n");
+		OSA_DBG_PrintMenu ("------------------------------------------\n");
 		OSA_DBG_PrintMenu ("\n");
 		OSA_DBG_PrintMenu ("------------------------------------------\n");
-		OSA_DBG_PrintMenu ("GPIO DEBUG=> Read(30), Write(31)\n");
-		OSA_DBG_PrintMenu ("==========================================\n");
+		OSA_DBG_PrintMenu ("\t0x30: GPIO Debug Read\n");
+		OSA_DBG_PrintMenu ("\t0x31: GPIO Debug Write\n");
+		OSA_DBG_PrintMenu ("------------------------------------------\n");
 		OSA_DBG_PrintMenu ("\n");
-
+		OSA_DBG_PrintMenu ("\t0x41: Inv-panel On\n");
 		OSA_DBG_GetHexInput ("Enter command", &command);
 		OSA_DBG_PrintMenu ("\n\n");
 
@@ -623,8 +629,6 @@ void DDI_NVM_Debug(void)
 				break;
 
 			case 0x10 :
-
-				//nvm_size = EEPROM_NVM_TOTAL_SIZE;
 				db_base  = 0;
 				db_size  = BASIC_DB_SIZE;
 
@@ -654,7 +658,6 @@ void DDI_NVM_Debug(void)
 
 					partition = GET_PART_INFO(i);
 
-					// erase nvm data (Extend DB)
 					if(strncmp("nvram", partition->name, 5) == 0)
 					{
 						printf(" nvram partition is %d \n",i);
@@ -669,7 +672,7 @@ void DDI_NVM_Debug(void)
 					printf("=== Fail to erase NVM-Storage!!!\n");
 				else
 					printf("=== Success to erase NVM-Storage!!!\n");
-				
+
 				break;
 
 			case 0x11 :
@@ -729,8 +732,8 @@ void DDI_NVM_Debug(void)
 			case 0x30 :
 			{
 				UINT32	portIndex = 0;
-				UINT8	val = 0;
-				
+				uchar	val = 0;
+
 				OSA_DBG_GetHexInput("Port Index", &portIndex);
 				CMNIO_GPIO_GetInputPort(portIndex,&val);
 				printf("Data : %d\n", val);
@@ -740,14 +743,57 @@ void DDI_NVM_Debug(void)
 			case 0x31 :
 			{
 				UINT32	portIndex = 0;
-				UINT8	val = 0;
-				
+				uchar	val = 0;
+
 				OSA_DBG_GetHexInput("Port Index", &portIndex);
 				OSA_DBG_GetHexInput("Data", &val);
 				CMNIO_GPIO_SetOutputPort(portIndex, val);
 			}
 				break;
-				
+
+				case 0x41 :
+			{
+				UINT8	i;
+				UINT8	panel_on = 0;
+
+				for( i = 0; i < 3; i ++ )
+				{
+					MICOM_TurnOnPanel();
+					udelay(1000);
+					MICOM_VerifyPanelOn( &panel_on );
+					if( panel_on == 1)	break;
+
+					udelay(10000);
+				}
+
+				if( ! panel_on )
+				{
+					printf("turn on PANEL: FAILED\n");
+				}
+
+				udelay(500*1000);
+
+				UINT8	inv_on = 0;
+
+				for( i = 0; i < 3; i ++ )
+				{
+					MICOM_TurnOnInv();
+					udelay(1000);
+					MICOM_VerifyInvertOn( &inv_on );
+
+					if( inv_on == 1)	break;
+
+					udelay(10000);
+				}
+
+				if( ! inv_on )
+				{
+					printf("turn on INV: FAILED\n");
+				}
+
+			}
+				break;
+
 			case 0xFF :
 				/* Exit this menu */
 				command = 0xff;
@@ -756,8 +802,6 @@ void DDI_NVM_Debug(void)
 			default :
 				break;
 		}
-
-//		OSA_SuspendTask(1000);
 
 		if (tRetVal != OK)
 			OSA_DBG_PrintMenu ("DDI_NVM_ Error!!! command[%d]: %d\n",command, tRetVal);
@@ -775,13 +819,14 @@ int do_nvm_dbg (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]) // should be
 }
 
 U_BOOT_CMD(
-	nvmdbg,	1,	0,	do_nvm_dbg,
-	"nvmdbg\t- eeprom test progrm\n",""
-);
+		nvmdbg,      1,      0,      do_nvm_dbg,
+		"nvmdbg\t- eeprom test progrm\n",
+		" - \n"
+		);
 
 #if 1	/* for swu mode by junorion */
 
-#define MAGIC_SWU_KEY		0x53	/* 'S' */
+#define MAGIC_SWU_KEY	0x53	/* 'S' */
 #define MAGIC_SWU_MODE	0x20121205
 
 UINT8 DDI_NVM_GetSWUMode( void )
@@ -826,7 +871,7 @@ UINT8 DDI_NVM_GetMakeHib( void )
 	DDI_NVM_Read(nvm_make_hib, sizeof(UINT8), &mode);
 
 	mode = ((mode & 0xff) != MAGIC_HIB) ? 0x0 : 0xff;
-printf("\n\n[[ debug point ]]\n\n\t %s return %d\n", __func__, mode);
+	printf("%s offset:%x, mode:%d\n", __FUNCTION__, nvm_make_hib, mode);
 	return mode;
 }
 
@@ -849,6 +894,7 @@ UINT8 DDI_NVM_GetSnapShot_Support( void )
 	DDI_NVM_Read(nvm_support_snapshot, sizeof(UINT8), &mode);
 
 	mode = ((mode & 0xff) != MAGIC_SNAP) ? 0x0 : 0xff;
+	printf("%s offset:%x, mode:%d\n", __FUNCTION__, nvm_support_snapshot, mode);
 	return mode;
 }
 
@@ -858,6 +904,21 @@ void DDI_NVM_SetSnapShot_Support( UINT8 mode )
 	mode = (mode & 0xff) ? MAGIC_SNAP : 0xff;
 	DDI_NVM_Write(nvm_support_snapshot, sizeof(gSysNvmDB.snapshot_onoff), &mode);
 }
+
+UINT8 DDI_NVM_GetSnapShotART( void )
+{
+	UINT32 nvm_art = SYS_DB_BASE + (UINT32)&(gSysNvmDB.snapshot_art) - (UINT32)&gSysNvmDB;
+	UINT8 mode;
+	DDI_NVM_Read(nvm_art , sizeof(UINT8), &mode);
+	return mode;
+}
+
+void DDI_NVM_SetSnapShotART( UINT8 mode )
+{
+	UINT32 nvm_art = SYS_DB_BASE + (UINT32)&(gSysNvmDB.snapshot_art) - (UINT32)&gSysNvmDB;
+	DDI_NVM_Write(nvm_art , sizeof(gSysNvmDB.snapshot_art), &mode);
+}
+
 #endif
 
 UINT8 DDI_NVM_GetSoundOutMode( void )
@@ -887,6 +948,51 @@ void DDI_NVM_SetZramValue( UINT32 nZram )
 	DDI_NVM_Write(nvm_zram, sizeof(gSysNvmDB.zram), &nZram);
 }
 
+UINT8 DDI_NVM_GetPWM_mode( void )
+{
+	UINT32	validMark;
+	UINT8	mode;
+
+	DDI_NVM_Read(SYS_DB_BASE + (ulong)&(gSysNvmDB.validMark) - (ulong)&gSysNvmDB,	\
+			sizeof(gSysNvmDB.validMark), (UINT8 *)&(validMark));
+
+	if(validMark != 0xffffffff)
+	{
+		DDI_NVM_Read(SYS_DB_BASE + (ulong)&(gSysNvmDB.pwm_mode) - (ulong)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.pwm_mode), (UINT8 *)&(mode));
+	}
+	else
+	{
+		mode = gSysNvmDB.pwm_mode;	// default value from DB table
+	}
+
+	return mode;
+}
+
+#define MAGIC_FULL_VERIFY 0x7a
+
+UINT8 DDI_NVM_GetFullVerifyFlag(void)
+{
+	UINT32 nvm_fullVerify = SYS_DB_BASE + (ulong)&(gSysNvmDB.fullVerify) - (ulong)&gSysNvmDB;
+	UINT32 value;
+
+	DDI_NVM_Read(nvm_fullVerify, sizeof(gSysNvmDB.fullVerify), (UINT8*)&value);
+	value = ( (value & 0xff) == MAGIC_FULL_VERIFY ) ? (0xff) : (0);
+	
+	rprint1n("^y^%s:get value = 0x%x",__FUNCTION__,value);
+	return value;
+}
+
+void DDI_NVM_SetFullVerifyFlag(UINT8 nfullVerify)
+{
+     UINT32 nvm_fullVerify = SYS_DB_BASE + (ulong)&(gSysNvmDB.fullVerify) - (ulong)&gSysNvmDB;
+
+	 nfullVerify = ( nfullVerify & 0xff	) ? ( MAGIC_FULL_VERIFY) : (0xff);
+ 	 rprint1n("^y^%s:set value = 0x%x",__FUNCTION__,nfullVerify);
+     DDI_NVM_Write(nvm_fullVerify, sizeof(gSysNvmDB.fullVerify), (UINT8*)&nfullVerify);
+}
+
+
 static int make_zram_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 #define ZRAM_MAGIC		(0x7a)
@@ -895,21 +1001,21 @@ static int make_zram_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 	dprintf("sys_db size = %d\n", sizeof(SYS_DB_T));
 	zram = DDI_NVM_GetZramValue();
-	
+
 	magic = (UINT8)(zram >> 24);
 	is_on = (UINT8)((zram & 0x00ff0000) >> 16);
 	size  = (UINT32)(zram & 0x0000ffff);
-	
+
 	dprintf("zram(%x), magic(%x), on/off(%x), size(%x)\n", zram, magic, is_on, size);
 
 	if(magic != ZRAM_MAGIC)
 		is_on = FALSE;
-	
+
 	if(size == 0xffff)
 		size = 0;
-	
+
 	printf("[make zram status]\n");
-	printf("current : %s (%d)MB\n", (is_on) ? "on" : "off", size); 
+	printf("current : %s (%d)MB\n", (is_on) ? "on" : "off", size);
 
 	if(argc == 1) {
 		printf("\n");
@@ -925,7 +1031,7 @@ static int make_zram_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			printf(" => done.\n");
 			return 0;
 		}
-		
+
 		if(strcmp(argv[1], "on") == 0)
 			is_on = TRUE;
 		else

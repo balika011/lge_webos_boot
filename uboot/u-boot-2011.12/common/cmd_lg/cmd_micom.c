@@ -85,7 +85,6 @@ static unsigned char *_gpImageBuf = NULL;
 #define	CP_WRITE_INVERT_OR_VAVS_ON		0x36
 #define	CP_WRITE_INVERT_OR_VAVS_OFF		0x37
 #define	CP_WRITE_PANEL_ONOFF				0x3A
-#define 	CP_SLAVRX_DELAYED_INV_OFF		0x3B
 #define	CP_READ_RTC_YMDHMS				0x80
 #define	CP_READ_RESERVE_TIME				0x87
 #define	CP_READ_MICOM_VERSION			0xA1
@@ -94,7 +93,8 @@ static unsigned char *_gpImageBuf = NULL;
 #define	CP_READ_MICOM_PANEL_ONOFF		0xD1
 #define	CP_WRITE_NAND_WRITE_PROTECT		0x54
 #define	CP_READ_MICOM_TYPE				0xB4
-
+#define CP_READ_POWERON_MODE			0x9A
+#define POWER_ON_BY_POWER_ONLY			0x25
 
 #define MICOM_ADDR_W					0x52
 #define MICOM_ADDR_R					0x53
@@ -117,7 +117,7 @@ static unsigned char *_gpImageBuf = NULL;
 #define MICOM_I2C_ADDR							0x52
 
 #ifndef MICOM_I2C_CLOCK
- #define MICOM_I2C_CLOCK		2
+#define MICOM_I2C_CLOCK		2
 #endif
 
 #define mdelay(n) ({unsigned long msec=(n); while (msec--) udelay(1000);})
@@ -301,6 +301,42 @@ unsigned char	MICOM_GetMicomType(void)
 	}
 }
 
+int _MICOM_GetPowerOnMode( uint8_t *data )
+{
+	uint8_t dataBuf = 0;
+
+	if(micom_read_command(CP_READ_POWERON_MODE, &dataBuf, 1) < 0)
+	{
+		printf("micom i2c read failed\n");
+		return -1;
+	}
+	else
+	{
+		*data = dataBuf;
+		printf("PowerOnMode: 0x%x\n", *data);
+		return 0;
+	}
+}
+
+int MICOM_IsPowerOnly(void)
+{
+	static uint8_t read_done = 0;
+	static uint8_t isPowerOnly = 0;
+	uint8_t data = 0;
+
+	if(read_done) return isPowerOnly;
+
+	if(_MICOM_GetPowerOnMode(&data) < 0)
+		isPowerOnly = 0;
+	else
+	{
+		isPowerOnly = (data == POWER_ON_BY_POWER_ONLY)? 1 : 0;
+		read_done = 1;
+	}
+
+	return isPowerOnly;
+}
+
 int MICOM_GetRTStime( TIME_T *pTime )
 {
 	uint8_t *rBuf;
@@ -370,43 +406,6 @@ int MICOM_GetHWoption (unsigned char *data)
 		printf("DisplayType :%x\n", *data);
 		return 0;
 	}
-
-#if 0
-	BREG_I2C_Handle i2cHandle;
-	uint8_t *rBuf;
-	uint8_t subaddr;
-	uint8_t data[1];
-	int  ret;
-	int	 devAddr;
-	int	 devchn;
-
-	if (!_devInit)
-	{
-		if (i2c_micom_init(&_devchn,&_devAddr) != 0)
-			return -1;
-		_devInit = 1;
-	}
-
-	devAddr = _devAddr;
-	devchn  = _devchn;
-
-	i2cHandle = micomI2cHandle;
-	subaddr = CP_READ_MICOM_HWOPTION;
-
-	ret = BREG_I2C_Read(i2cHandle, (devAddr|1) >> 1, (uint8_t *)&subaddr, 1, data, 1);
-
-	if(ret!=0)
-	{
-       	xprintf("micom i2c read failed \n");
-		return -1;
-	}
-	else
-	{
-		*pHWption = data[0];
-        printf("pHWption = 0x%x \n",*pHWption);
-		return 0;
-	}
-#endif
 }
 
 
@@ -571,7 +570,6 @@ int SWU_MICOM_ConvertHexToBin (char *pRecBuf, int *pLen, int *pDataSize)
 		s = DL_DONE;
 		micom_print ("\n\tData Size = %04x\n", *pDataSize);
 		micom_print ("\tTransfer Completed\n");
-
 	}
 	else if (_crcCheck)
 	{
@@ -602,9 +600,8 @@ int SWU_MICOM_ConvertHexToBin (char *pRecBuf, int *pLen, int *pDataSize)
  * @author Jung Dong Ho
  */
 
-//#define I2C_UPDATE_MICOM(a, b, c, d, e)				i2c_write(d,c)//MICOM_I2C_Write(c,d)
-//
 #define I2C_UPDATE_MICOM(a,b,c,d,e)		micom_write(d,c)
+
 u8 SWU_MICOM_UpdateNecMICOM (u32 pakOrgSize, u32 dataSize)
 {
 	#define I2C_MICOM_UPDATE_WRITE_BYTE_DELAY		4//ms

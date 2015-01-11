@@ -176,7 +176,7 @@ int do_bootmode (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
-	if( !strcmp(argv[1],"auto") || !strcmp(argv[1],"nfs"))
+	if( !strcmp(argv[1],"auto") || !strcmp(argv[1],"webos") || !strcmp(argv[1],"user"))
 	{
 		bootmode_old = getenv("bootmode");
 		printf ("bootmode is changed to %s from to %s \n",bootmode_old, argv[1]);
@@ -198,15 +198,14 @@ int do_bootmode (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 
 U_BOOT_CMD(
 	bootmode,	  2,	  0,	  do_bootmode,
-	"bootmode\t- set boot type( auto or nfs )\n",
-	"bootmode [auto|nfs]\n"
+	"bootmode\t- set boot type( auto or webos or user )\n",
+	"bootmode [auto|webos|user]\n"
 );
 
 int do_nset(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 //	extern int setenv (char *varname, char *varvalue);
-	char	*address[] = {"ipaddr",	"serverip", "lserverip",
-						  "gatewayip","netmask",
+	char	*address[] = {"ipaddr",	"serverip", "gatewayip","netmask",
 					#if 0
 						  "ethaddr",
 					#endif

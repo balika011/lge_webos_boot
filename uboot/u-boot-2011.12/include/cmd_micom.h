@@ -38,11 +38,12 @@ int micom_read_command(uint8_t cmd, uint8_t* data, int len);
 int micom_write_command(uint8_t cmd, uint8_t* data, int len);
 int micom_write(uint8_t* data, int len);
 
-extern int MICOM_GetHWoption (unsigned char *data);
-extern  int	MICOM_VerifyInvertOn( unsigned char *pOnoff );
-extern  int MICOM_TurnOnInv( void );
-extern  int	MICOM_VerifyPanelOn( unsigned char *pOnoff );
-extern  int	MICOM_TurnOnPanel(void);
+extern int MICOM_IsPowerOnly(void);
+extern int MICOM_GetHWoption(unsigned char *data);
+extern int MICOM_VerifyInvertOn(unsigned char *pOnoff);
+extern int MICOM_TurnOnInv(void);
+extern int MICOM_VerifyPanelOn(unsigned char *pOnoff);
+extern int MICOM_TurnOnPanel(void);
 
 /* 2011.09.04 zaewon.lee : add for MICOM image downloading */
 unsigned char SWU_MICOM_BinUpdate(char* pImg_start, u32 size);

@@ -307,9 +307,109 @@ int CMNIO_GPIO_GetInputPortArray(uint numArray, uint portArray[], uchar dataArra
 
 
 
-
 char aHW_model_opt[NUM_MODEL_OPT+1] = {0,};
 char strModelOpt[NUM_MODEL_OPT+1];
+MODELOPT_T  gModelOpt = {0,};
+char strHWOption[NUM_HW_OPT+1] = {0,};
+
+// panel_interface,	resolution,	panel_type,	cp_box, smalm smart, optic
+static MODELOPT_BITCOMB_T gmodelopt_bitcomb[NUM_MODELOPT_BITCOMB] =
+{
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_FHD,	0,	MODELOPT_PANEL_TYPE_NONE,	0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_EPI,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_V14_32inch,	0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_EPI,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_V13,			0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_EPI,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_V12,			0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_EPI,		MODELOPT_PANEL_RESOLUTION_FHD,	0,	MODELOPT_PANEL_V14_32inch,	0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_TYPE_NONE,	0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_EPI,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_V14,			0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_HD,	0,	MODELOPT_PANEL_TYPE_NONE,	0,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_FHD,	0,	MODELOPT_PANEL_TYPE_NONE,	1,	0,	0},
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_HD,	0,	MODELOPT_PANEL_TYPE_NONE,	0,	1,	0},
+	{MODELOPT_PANEL_INTERFACE_VBYONE,	MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_TYPE_NONE,	0,	0,	1},
+	{MODELOPT_PANEL_INTERFACE_LVDS,		MODELOPT_PANEL_RESOLUTION_FHD,	1,	MODELOPT_PANEL_TYPE_NONE,	0,	0,	1},
+	{0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0}
+};
+
+void _modelOpt_parsing(void)
+{
+	uint8_t bitcomb = ((aHW_model_opt[2]&0x1)<<0x3) | ((aHW_model_opt[3]&0x1)<<0x2) | ((aHW_model_opt[4]&0x1)<<0x1) | (aHW_model_opt[5]&0x1);
+
+	if(aHW_model_opt[0] == 0)
+		gModelOpt.country_type =        (!aHW_model_opt[1])? 0:1;   // Bit(0/1): 00->0, 01->1
+	else
+		gModelOpt.country_type =        (!aHW_model_opt[1])? 2:3;   // Bit(0/1): 10->2, 11->3
+
+	if(bitcomb < NUM_MODELOPT_BITCOMB)
+	{
+		gModelOpt.panel_interface		= gmodelopt_bitcomb[bitcomb].panel_interface;
+		gModelOpt.panel_resolution		= gmodelopt_bitcomb[bitcomb].panel_resolution;
+		gModelOpt.bSupport_frc			= gmodelopt_bitcomb[bitcomb].bSupport_frc;
+		gModelOpt.panel_type			= gmodelopt_bitcomb[bitcomb].panel_type;
+		gModelOpt.bSupport_cp_box		= gmodelopt_bitcomb[bitcomb].bSupport_cp_box;
+		gModelOpt.bSupport_small_smart	= gmodelopt_bitcomb[bitcomb].bSupport_small_smart;
+		gModelOpt.bSupportOptic			= gmodelopt_bitcomb[bitcomb].bSupportOptic;
+	}
+
+	if(aHW_model_opt[6] == 0)
+		gModelOpt.tuner_type =          (!aHW_model_opt[7])? 0:1;   // Bit(2/3): 00->0, 01->1
+	else
+		gModelOpt.tuner_type =          (!aHW_model_opt[7])? 2:3;   //  Bit(2/3): 10->2, 11->3
+
+	gModelOpt.ddr_size =				(aHW_model_opt[8])? DDR_SIZE_768M : DDR_SIZE_1G;
+	gModelOpt.direction_HDMI =			(aHW_model_opt[9])? MODELOPT_HDMI_1SIDE_1COMMON : MODELOPT_HDMI_1REAR_1COMMON;
+	gModelOpt.bSupport_external_EDID =	(aHW_model_opt[10])? TRUE : FALSE;
+
+	// Do not follow up the HW option. Default Setting
+	gModelOpt.type_URSA = MODELOPT_FRC_URSA_NONE;
+	gModelOpt.bSupport_URSA = FALSE;
+	gModelOpt.bSupport_U14 = FALSE;
+	gModelOpt.bSupport_D9 = FALSE;
+	gModelOpt.graphic_resolution = MODELOPT_GRAPHIC_1280X720;
+
+	sprintf(strHWOption, "%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",
+			gModelOpt.country_type,             // 1. HW_OPT_COUNTRY
+			gModelOpt.bSupport_external_EDID,   // 2. HW_OPT_EXTARNAL_EDID
+			gModelOpt.panel_interface,          // 3. HW_OPT_PANEL_INTERFACE
+			gModelOpt.panel_resolution,         // 4. HW_OPT_PANEL_RESOLUTION
+			gModelOpt.bSupport_frc,             // 5. HW_OPT_FRC
+			gModelOpt.panel_type,               // 6. HW_OPT_PANEL_TYPE
+			gModelOpt.bSupport_cp_box,          // 7. HW_OPT_CP_BOX
+			gModelOpt.bSupport_small_smart,     // 8. HW_OPT_SMALL_SMART
+			gModelOpt.tuner_type,               // 9. HW_OPT_TUNER
+			gModelOpt.direction_HDMI,           // 10. HW_OPT_HDMI_DIRECTION
+			gModelOpt.reserved,                 // 11. HW_OPT_RESERVED1 for sync tvservice
+			gModelOpt.ddr_size,                 // 12. HW_OPT_DDR_SIZE
+			gModelOpt.bSupportOptic,            // 13. HW_OPT_OPTIC
+			gModelOpt.bSupport_URSA,            // 14. HW_OPT_URSA_SUPPORT(LM15U + URSA / LM15U Only)
+			gModelOpt.graphic_resolution,       // 15. HW_OPT_GRAPHIC_RESOLUTION
+			gModelOpt.bSupport_U14,             // 16. HW_OPT_U14
+			gModelOpt.bSupport_D9,              // 17. HW_OPT_D9
+			gModelOpt.type_URSA                 // 18. HW_OPT_URSA_TYPE
+		   );
+
+	printf("HW_OPT_COUNTRY: %d\n", gModelOpt.country_type);// 1. HW_OPT_COUNTRY
+	printf("HW_OPT_EXTARNAL_EDID: %d\n", gModelOpt.bSupport_external_EDID);// 2. HW_OPT_EXTARNAL_EDID
+	printf("HW_OPT_PANEL_INTERFACE: %d\n", gModelOpt.panel_interface);// 3. HW_OPT_PANEL_INTERFACE
+	printf("HW_OPT_PANEL_RESOLUTION: %d\n", gModelOpt.panel_resolution);// 4. HW_OPT_PANEL_RESOLUTION
+	printf("HW_OPT_FRC: %d\n", gModelOpt.bSupport_frc);// 5. HW_OPT_FRC
+	printf("HW_OPT_PANEL_TYPE: %d\n", gModelOpt.panel_type);// 6. HW_OPT_PANEL_TYPE
+	printf("HW_OPT_CP_BOX: %d\n", gModelOpt.bSupport_cp_box);// 7. HW_OPT_CP_BOX
+	printf("HW_OPT_SMALL_SMART: %d\n", gModelOpt.bSupport_small_smart);// 8. HW_OPT_SMALL_SMART
+	printf("HW_OPT_TUNER: %d\n", gModelOpt.tuner_type);// 9. HW_OPT_TUNER
+	printf("HW_OPT_HDMI_DIRECTION: %d\n", gModelOpt.direction_HDMI);// 10. HW_OPT_HDMI_DIRECTION
+	printf("HW_OPT_RESERVED: %d\n", gModelOpt.reserved);// 11. HW_OPT_RESERVED3 for sync tvservice
+	printf("HW_OPT_DDR_SIZE: %d\n", gModelOpt.ddr_size);// 12. HW_OPT_DDR_SIZE
+	printf("HW_OPT_OPTIC: %d\n", gModelOpt.bSupportOptic);// 13. HW_OPT_OPTIC
+	printf("HW_OPT_MODEL: %d\n", gModelOpt.bSupport_URSA);// 14. HW_OPT_URSA_SUPPORT(LM15U + URSA / LM15U Only)
+	printf("HW_OPT_GRAPHIC_RESOLUTION: %d\n", gModelOpt.graphic_resolution);// 15. HW_OPT_GRAPHIC_RESOLUTION
+	printf("HW_OPT_U14: %d\n", gModelOpt.bSupport_U14);// 16. HW_OPT_U14
+	printf("HW_OPT_D9: %d\n", gModelOpt.bSupport_D9);// 17. HW_OPT_D9
+	printf("HW_OPT_URSA: %d\n", gModelOpt.type_URSA);// 18. HW_OPT_URSA
+}
+
 
 void initHW_model_option()
 {
@@ -341,6 +441,8 @@ void initHW_model_option()
 	// Set init OK
 	aHW_model_opt[NUM_MODEL_OPT] = 1;
 
+	// parsing model option
+	_modelOpt_parsing();
 
 	//make model option string for sending to lgapps through command line
 	for(i=0; i<NUM_MODEL_OPT; i++)
