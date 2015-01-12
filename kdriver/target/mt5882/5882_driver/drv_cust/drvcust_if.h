@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2145,14 +2145,14 @@ typedef UINT32 (* PFN_LDR_USB_UpgradeCheck_FUNC)(void);
 #define SERVO6                  (406)
 #define SERVO7                  (407)
 
-#define SERVO_GPIO0             (227)	//not real gpio, just for judge ather sevoad_gpio function
-#define SERVO_GPIO1             (259)
-#define SERVO_GPIO2             (245)
-#define SERVO_GPIO3             (246)
-#define SERVO_GPIO4             (233)
-#define SERVO_GPIO5             (234)
-#define SERVO_GPIO6             (235)
-#define SERVO_GPIO7             (236)
+//#define SERVO_GPIO0             (227)	//not real gpio, just for judge ather sevoad_gpio function
+#define SERVO_GPIO1             (228)
+#define SERVO_GPIO2             (229)
+#define SERVO_GPIO3             (230)
+#define SERVO_GPIO4             (231)
+#define SERVO_GPIO5             (232)
+#define SERVO_GPIO6             (233)
+#define SERVO_GPIO7             (234)
 
 #define ADIN0                   SERVO(0)        ///< define ADIN0
 #define ADIN1                   SERVO(1)        ///< define ADIN1

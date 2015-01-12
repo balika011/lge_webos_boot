@@ -420,7 +420,7 @@ static INT32 _GPIO_OwnerNumOffset(UINT32 u4Val, INT32 i4GpioNum)
                     return (SERVO_GPIO7 - OPCTRL(0));
             }
 #else
-            return (i4GpioNum - SERVO_0_ALIAS) + (SERVO_GPIO0 - OPCTRL(0))  ;
+            return (i4GpioNum - SERVO_0_ALIAS) + ((SERVO_GPIO1 - 1) - OPCTRL(0))  ;
 #endif
     }
     return i4GpioNum;

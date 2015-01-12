@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: x_pdwnc.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -394,7 +394,7 @@ LINT_EXT_HEADER_END
 #if defined(CC_MT5398)
 #define ADC2GPIO_CH_ID_MAX  7
 #define ADC2GPIO_CH_ID_MIN  2
-#elif defined(CC_MT5399) || defined(CC_MT53882)
+#elif defined(CC_MT5399) || defined(CC_MT5882)
 #define ADC2GPIO_CH_ID_MAX  7
 #define ADC2GPIO_CH_ID_MIN  1
 #elif defined(CC_MT5890)
