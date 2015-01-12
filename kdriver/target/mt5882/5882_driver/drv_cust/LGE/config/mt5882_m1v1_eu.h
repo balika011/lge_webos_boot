@@ -322,7 +322,7 @@
 #define LINUX_KERNEL_MEM_SIZE               ((TOTAL_MEM_SIZE > (FBM_MEM_CFG_SIZE + DIRECT_FB_MEM_SIZE + FB_MEM_SIZE + TRUSTZONE_MEM_SIZE)) ?\
                                             (TOTAL_MEM_SIZE - FBM_MEM_CFG_SIZE - DIRECT_FB_MEM_SIZE - FB_MEM_SIZE - TRUSTZONE_MEM_SIZE) : (54 * 1024 * 1024))
 
-#define DEFAULT_TARGET_COUNTRY              (COUNTRY_EU)  
+#define DEFAULT_TARGET_COUNTRY              (COUNTRY_US)  
 
 //----------------------------------------------------------------------------
 // Default Panel setting
