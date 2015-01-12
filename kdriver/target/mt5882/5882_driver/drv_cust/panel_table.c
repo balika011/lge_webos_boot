@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -122,6 +122,9 @@ LINT_EXT_HEADER_END
 
 #ifdef CC_ENABLE_MTK_MODEL_INDEX
 #include "modelIndex.h"
+#endif
+#ifdef CC_LGE_PROTO_PCBA
+#define NOT_USE_EEP;
 #endif
 //---------------------------------------------------------------------------
 // Type definitions
@@ -1578,6 +1581,7 @@ UINT32 GetModelIndexFromEEPROM(void)
     UINT32 u4Value, u4ValidCounter = 0, i, j;
     INT32 i4Ret;
 
+#ifdef NOT_USE_EEP
     if (!bIsmodelindex_init)
     {
         // read configuration from eeprom
@@ -1651,6 +1655,7 @@ UINT32 GetModelIndexFromEEPROM(void)
         return u4FinalIndex;
     }
     else  // init ok , return modelindex directly
+#endif
     {
         return u4FinalIndex;
     }
@@ -1745,6 +1750,7 @@ void LoadPanelIndex(void)
     GetModelIndexSetDriverTypes();  // Get table for model index from EEPROM before selecting Panel
 #endif
 
+#ifdef NOT_USE_EEP  //for a5lr remove eep function
     if ((DRVCUST_PanelQuery(ePanelIndexFromEeprom, &u4Value) == 0) &&
         (u4Value == 1))
     {
@@ -1919,7 +1925,9 @@ void LoadPanelIndex(void)
             _fgPanelIdInEeprom = TRUE;
         }
     }
-    else if ((u4Value = DRVCUST_PanelGet(ePanelIndexFromGpioNum)) > 0)
+    else
+ #endif 
+    if ((u4Value = DRVCUST_PanelGet(ePanelIndexFromGpioNum)) > 0)
     {
         UINT32* pu4Array = (UINT32*)DRVCUST_PanelGet(ePanelIndexFromGpioIdx);
         u4FinalIndex = 0;
