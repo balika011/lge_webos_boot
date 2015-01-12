@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3827,6 +3827,7 @@ void vDrvSetFixedFrameRate(UINT8 u1FrameRate)
     _bForceFrameRate = u1FrameRate;
 }
 
+extern UINT8 DRVCUST_GetRealCinema(void);
 void vDrvCalPanelFrameRate(UINT16 u2VdoVTotal, UINT32 u4VdoFrameRate)
 {
     UINT32 u4DCLKType;
@@ -3853,7 +3854,7 @@ void vDrvCalPanelFrameRate(UINT16 u2VdoVTotal, UINT32 u4VdoFrameRate)
             u4DCLKType = fgDrvIsSupport60To50() ? SV_DCLK_50HZ : SV_DCLK_60HZ;
             break;
         case 24:
-            u4DCLKType = (fgDrvIsSupport48() && !(fgIsSupportFixMode() || fgIsSupportFlickerLessMode())) ? SV_DCLK_48HZ : SV_DCLK_60HZ;
+            u4DCLKType = (fgDrvIsSupport48() && (!(fgIsSupportFixMode() || fgIsSupportFlickerLessMode()) || (DRVCUST_GetRealCinema() == SV_TRUE))) ? SV_DCLK_48HZ : SV_DCLK_60HZ;
             break;
         case 48:
             if (SUPPORT_PANEL_48HZ)

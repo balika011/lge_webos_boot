@@ -1331,3 +1331,16 @@ void DRVCUST_SendEvent(E_CUST_EVENT eCustEvent, UINT8 u1Option)
 
 }
 
+void DRVCUST_SetRealCinema(UINT8 bRealCinema)
+{
+    if(IO32ReadFldAlign(DRVCUST_REAL_CINEMA, REAL_CINEMA) != bRealCinema)
+    (
+        vIO32WriteFldAlign(DRVCUST_REAL_CINEMA, bRealCinema, REAL_CINEMA);
+        vDrvCalPanelFrameRate(wDrvVideoGetVTotal(SV_VP_MAIN), bDrvVideoGetRefreshRate(SV_VP_MAIN));
+    )
+}
+
+UINT8 DRVCUST_GetRealCinema(void)
+{
+    return bIsRealCinema;
+}

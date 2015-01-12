@@ -2170,6 +2170,8 @@ extern UINT32 SW_DRAM_BASE_PHY;
 #define PSCAN_FW_ADAPTIVE_IF_02       u4SWReg(0x30D8)
     #define DI_FORCE_MODE_DELAY             Fld(8, 0, AC_FULLB0) 
 
+#define DRVCUST_REAL_CINEMA           u4SWReg(0x30DC)
+    #define REAL_CINEMA                     Fld(8, 0, AC_FULLB0)
 //=============================================================
 // Addr : 0x3100 - 0x37FF
 // Name : Not Used
