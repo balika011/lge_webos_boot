@@ -87,11 +87,11 @@
 * 
 * Last changed: 
 * -------------  
-* $Author: dtvbm11 $  
+* $Author: p4admin $  
 * 
 * $Modtime: 2007/02/06 13:45$   
 * 
-* $Revision: #1 $
+* $Revision: #2 $
 *************************************************************************/
 
 #ifndef _MT5387ATD_PI_DEMOD_H_
@@ -379,6 +379,7 @@ UINT8  ATD_GetSignalLevel(ATD_CTX_T *psDemodCtx);
 #endif
 UINT16 ATD_GetRFAGC(ATD_CTX_T *psDemodCtx);
 UINT32 ATDPI_GetNoiseLevel(ATD_CTX_T *psDemodCtx);
+UINT32 ATDPI_GetTVDNoiseLevel(ATD_CTX_T *psDemodCtx);
 UINT16 ATDPI_GetIFAGC(ATD_CTX_T *psDemodCtx);
 BOOL   ATDPI_SetLNA(ATD_CTX_T *psDemodCtx, BOOL fgLNA);
 BOOL   ATDPI_SetAntIn(ATD_CTX_T *psDemodCtx, UINT8 fgAntIn);
