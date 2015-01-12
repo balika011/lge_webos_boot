@@ -33,10 +33,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: tz_tee.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -123,15 +123,12 @@
 #define TZCTL_TEE_PLAYREADY_SECURESTOP_UNLOADSECRETKEY                             ((UINT32)0x6371)
 
 
-
-
-
-
-
-
 #define TZCTL_TEE_DDI_BASE                          ((UINT32)0x6400)
 #define TZCTL_TEE_DDI_PREENC_A1_DEC                 ((UINT32)0x6401)
 #define TZCTL_TEE_DDI_PREENC_A2_DEC                 ((UINT32)0x6402)
+#define TZCTL_TEE_DDI_SESTORE_SIGN                  ((UINT32)0x6403)
+#define TZCTL_TEE_DDI_SESTORE_VERIFY                ((UINT32)0x6404)
+
 #define TZCTL_TEE_ULI_OBJECT_DECRYPT                ((UINT32)0x6500)
 #define TZCTL_TEE_ULI_CHK_POTK                      ((UINT32)0x6501)
 
@@ -163,7 +160,7 @@
 #define TZCTL_TEE_CIPLUS_DRM_UpdateAuthContext      ((UINT32)0x6618)
 #define TZCTL_TEE_CIPLUS_VERIFY_CRED                ((UINT32)0x6619)
 #define TZCTL_TEE_CIPLUS_CHECK_CRED_BY_CUSTOMER_CODE ((UINT32)0x661a)
-#define TZCTL_TEE_CIPLUS_DRM_Set_UTC_time         ((UINT32)0x661b)
+#define TZCTL_TEE_CIPLUS_DRM_Set_UTC_time           ((UINT32)0x661b)
 
 #define TZCTL_TEE_DTCP_HCI_ENCRYPT                  ((UINT32)0x6700)
 #define TZCTL_TEE_DTCP_HCI_DECRYPT                  ((UINT32)0x6701)
