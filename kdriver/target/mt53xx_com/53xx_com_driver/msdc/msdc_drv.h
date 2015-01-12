@@ -45,7 +45,26 @@
 //---------------------------------------------------------------------------
 // Configurations
 //---------------------------------------------------------------------------
-#if defined(CC_MT5396) || defined(CONFIG_ARCH_MT5396) || \
+#if defined(CC_MT5399) || defined(CONFIG_ARCH_MT5399)|| \
+       defined(CC_MT5882) || defined(CONFIG_ARCH_MT5882)
+#define MSDC_CLK_TARGET   200, 144, 120, 100, 80, 50, 50, 25, 12, 0
+#define MSDC_CLK_SRC_VAL  4, 5, 6, 11, 9, 8, 11, 11, 0, 0
+#define MSDC_CLK_MODE_VAL 1, 1, 1, 0, 1, 1, 2, 0, 0, 0
+#define MSDC_CLK_DIV_VAL  0, 0, 0, 0, 0, 0, 0, 2, 0, 16
+#define MSDC_CLK_DRV_VAL  60, 60, 60, 25, 23, 23, 16, 7, 7, 0
+#define MSDC_CLK_SAMP_VAL 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x0, 0x0, 0x0, 0x0
+#define MSDC_CLK_IDX_MAX  10
+#define MSDC_CLK_S_REG1   0xF000D380
+#define MSDC_CLK_S_REG0   0xF000D32C
+#define MSDC_CLK_H_REG1   0xF000D384
+#define MSDC_CLK_H_REG0   0xF000D3A0
+#define MSDC_CLK_GATE_BIT (0x1<<7)
+#define MSDC_CLK_SEL_MASK (0x0F<<0)
+#define MSDC_HIGH_CLK_IDX 6
+#define MSDC_NORM_CLK_IDX 7
+#define MSDC_INIT_CLK_IDX 9
+
+#elif defined(CC_MT5396) || defined(CONFIG_ARCH_MT5396) || \
     defined(CC_MT5368) || defined(CONFIG_ARCH_MT5368) || \
     defined(CC_MT5389) || defined(CONFIG_ARCH_MT5389)
 #define MSDC_CLK_TARGET   54, 48, 43, 40, 36, 30, 27, 24, 18, 13, 0
@@ -93,24 +112,6 @@
 #define MSDC_CLK_DIV_VAL    0,   0,   0,   0,  0,  0,  0,  2,  0, 16
 #define MSDC_CLK_DRV_VAL    1,   1,   1,   1 , 1,  1,  1,  1,  1, 0
 #define MSDC_CLK_SAMP_VAL 0x6, 0x6, 0x6, 0x6,0x6,0x6,0x6,0x0,0x0,0x0, 0x0
-#define MSDC_CLK_IDX_MAX  10
-#define MSDC_CLK_S_REG1   0xF000D380
-#define MSDC_CLK_S_REG0   0xF000D32C
-#define MSDC_CLK_H_REG1   0xF000D384
-#define MSDC_CLK_H_REG0   0xF000D3A0
-#define MSDC_CLK_GATE_BIT (0x1<<7)
-#define MSDC_CLK_SEL_MASK (0x0F<<0)
-#define MSDC_HIGH_CLK_IDX 6
-#define MSDC_NORM_CLK_IDX 7
-#define MSDC_INIT_CLK_IDX 9
-#elif defined(CC_MT5399) || defined(CONFIG_ARCH_MT5399)|| \
-       defined(CC_MT5882) || defined(CONFIG_ARCH_MT5882)
-#define MSDC_CLK_TARGET   200, 144, 120, 100, 80, 50, 50, 25, 12, 0
-#define MSDC_CLK_SRC_VAL  11, 5, 6, 11, 9, 8, 11, 11, 0, 0
-#define MSDC_CLK_MODE_VAL 1, 1, 1, 0, 1, 1, 2, 0, 0, 0
-#define MSDC_CLK_DIV_VAL  0, 0, 0, 0, 0, 0, 0, 2, 0, 16
-#define MSDC_CLK_DRV_VAL  60, 60, 60, 25, 23, 23, 16, 7, 7, 0
-#define MSDC_CLK_SAMP_VAL 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x6, 0x0, 0x0, 0x0, 0x0
 #define MSDC_CLK_IDX_MAX  10
 #define MSDC_CLK_S_REG1   0xF000D380
 #define MSDC_CLK_S_REG0   0xF000D32C

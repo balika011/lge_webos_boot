@@ -1892,13 +1892,13 @@ void MsdcDrivingStrength(uint driving)
       *   - when I test TF card, which is connected to main board by a SDIO daughter board,
       *      it will happen crc error in 48MHz, so I enhance pad drving strenght again.
       */
-    MSDC_CLRBIT(SD30_PAD_CTL0, (0x7<<15) | (0x7<<0));
-    MSDC_CLRBIT(SD30_PAD_CTL1, (0x7<<15) | (0x7<<0));
-    MSDC_CLRBIT(SD30_PAD_CTL2, (0x7<<15) | (0x7<<0));	
+	MSDC_CLRBIT(SD30_PAD_CTL0, (0x7<<4) |(0x7<<0));
+    MSDC_CLRBIT(SD30_PAD_CTL1, (0x7<<4) |(0x7<<0));
+    MSDC_CLRBIT(SD30_PAD_CTL2, (0x7<<4) |(0x7<<0));	
 
-    MSDC_SETBIT(SD30_PAD_CTL0, ((0x4)<<15) | ((driving&0x7)<<0));//CLK pull up 50k
-    MSDC_SETBIT(SD30_PAD_CTL1, ((0x4)<<15) | ((driving&0x7)<<0));//CMD pull up 10k
-    MSDC_SETBIT(SD30_PAD_CTL2, ((0x4)<<15) | ((driving&0x7)<<0));//DATA pull up 10k
+    MSDC_SETBIT(SD30_PAD_CTL0, ((((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
+    MSDC_SETBIT(SD30_PAD_CTL1, ((((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
+    MSDC_SETBIT(SD30_PAD_CTL2, ((((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
     MSDC_LOG(MSG_LVL_ERR, "msdc clock driving = %d!\n", driving);
 }
 

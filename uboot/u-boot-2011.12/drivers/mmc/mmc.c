@@ -343,6 +343,14 @@ int mmc_read_blocks(struct mmc *mmc, void *dst, ulong start, lbaint_t blkcnt)
 	return blkcnt;
 }
 
+typedef  int (*pemmc_user_callback)(int,int);
+pemmc_user_callback pemmc_user_callback_internal = NULL;;
+
+static void emmc_register_callback(pemmc_user_callback pemmc_user_callback_external)
+{
+	pemmc_user_callback_internal = pemmc_user_callback_external;
+}
+
 static ulong mmc_bread(int dev_num, ulong start, lbaint_t blkcnt, void *dst)
 {
 	lbaint_t cur, blocks_todo = blkcnt;
@@ -376,6 +384,20 @@ static ulong mmc_bread(int dev_num, ulong start, lbaint_t blkcnt, void *dst)
 		dst += cur * mmc->read_bl_len;
 	} while (blocks_todo > 0);
 
+	if(NULL != pemmc_user_callback_internal)
+	{ 
+		int err = 0;
+		if(blkcnt != 0)
+		{
+			err = 0;
+		}
+		else
+		{
+			err = -1;
+		}
+		pemmc_user_callback_internal(err,blkcnt*512);
+		//printf("+++++++++++++++++g_read_bytes(0x%x)+++++++++++++++\n",pemmc_user_callback_internal(err,blkcnt*512));
+	}
 	return blkcnt;
 }
 
