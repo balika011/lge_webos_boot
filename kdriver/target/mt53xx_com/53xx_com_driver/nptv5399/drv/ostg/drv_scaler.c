@@ -74,10 +74,10 @@
 *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3553,6 +3553,7 @@ void vScpipSetISR()
     #if defined(CC_MT5399) || defined (CC_MT5882)
     vScpipSetISREn(ISR_FSC_VSYNC_OUT_RISING, SV_TRUE);
     vScpipSetISREn(ISR_FSC_VSYNC_OUT_FALLING,SV_TRUE);
+	vScpipSetISREn(ISR_DRAM_GFX_WRITE,SV_TRUE);
 	#endif 
 }
 
