@@ -33,9 +33,9 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/12 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -75,7 +75,7 @@ LINT_EXT_HEADER_END
 #ifdef CC_SUPPORT_TV_STAGEFRIGHT
 #define VDEC_BUF_COUNT      (2)
 #else
-#define VDEC_BUF_COUNT      (3)
+#define VDEC_BUF_COUNT      (10)
 #endif
 #endif
 #endif

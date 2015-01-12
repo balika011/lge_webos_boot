@@ -1817,15 +1817,19 @@ BOOL _VPUSH_AllocFeeder(VOID* prdec)
     // DDI is 16 bytes buffer size alignment. (188 is better)
     prVdec->u4FifoStart=VIRTUAL(prVdec->u4FifoStart);
     prVdec->u4FifoEnd=prVdec->u4FifoStart+u4Size;
-    if(u4Size > VDEC_PUSH_BIG_FEEDER_SIZE)
+	/*
+	if(u4Size > VDEC_PUSH_BIG_FEEDER_SIZE)
     {
         prVdec->u4BufCnt = VDEC_BUF_COUNT;
     }
     else
     {       
         prVdec->u4BufCnt = VDEC_BUF_COUNT/2;
-    }   
+    } 
+	*/
 //    u4Size = u4Size/ VDEC_BUF_COUNT;
+	prVdec->u4BufCnt = VDEC_BUF_COUNT;
+
     u4Size = u4Size/ prVdec->u4BufCnt;
     u4Size -= (u4Size % 752);
     
