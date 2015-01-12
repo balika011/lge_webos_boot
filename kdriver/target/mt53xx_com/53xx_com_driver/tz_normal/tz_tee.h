@@ -36,7 +36,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/12 $
  * $RCSfile: tz_tee.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -171,6 +171,48 @@
 
 #define TZCTL_TEE_NFLX_MSL_BASE						((UINT32)0x6800)
 #define TZCTL_TEE_NFLX_MSL_STOREIDFILE				((UINT32)0x6801)	
+
+
+#define TZCTL_TEE_VUDU_OpenM2mKeySlot				((UINT32)0x6901)
+#define TZCTL_TEE_VUDU_CloseM2mKeySlot				((UINT32)0x6902)
+#define TZCTL_TEE_VUDU_SelectM2mKeyAlgorithm		((UINT32)0x6903)
+#define TZCTL_TEE_VUDU_LoadClearM2mKey				((UINT32)0x6904)
+#define TZCTL_TEE_VUDU_LoadWrappedM2mKey			((UINT32)0x6905)
+#define TZCTL_TEE_VUDU_LoadWrappedM2mKeyClearIv		((UINT32)0x6906)
+#define TZCTL_TEE_VUDU_RunM2mKey					((UINT32)0x6907)
+#define TZCTL_TEE_VUDU_OpenCAKeySlotHandle			((UINT32)0x6908)
+#define TZCTL_TEE_VUDU_CloseCAKeySlotHandle			((UINT32)0x6909)
+#define TZCTL_TEE_VUDU_GetCAKeySlotHandle			((UINT32)0x690a)
+#define TZCTL_TEE_VUDU_SetWrappedCAKey				((UINT32)0x690b)
+#define TZCTL_TEE_VUDU_SetWrappedAllCAKey			((UINT32)0x690c)
+#define TZCTL_TEE_VUDU_LoadCAClearKey				((UINT32)0x690d)
+#define TZCTL_TEE_VUDU_StartTSDecrypt				((UINT32)0x690e)
+#define TZCTL_TEE_VUDU_SetOddEvenCAKey				((UINT32)0x690f)
+#define TZCTL_TEE_VUDU_SVP_Init						((UINT32)0x6910)
+#define TZCTL_TEE_VUDU_SVP_TSDecrypt				((UINT32)0x6911)
+#define TZCTL_TEE_VUDU_SVP_GetAU					((UINT32)0x6912)
+#define TZCTL_TEE_VUDU_SVP_Flush				((UINT32)0x6913)
+#define TZCTL_TEE_VUDU_SVP_Release				((UINT32)0x6914)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #endif  // TZ_TEE_H
