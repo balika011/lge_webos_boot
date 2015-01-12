@@ -186,8 +186,8 @@ static const DMX_FRONTEND_CONFIG_T _arMtkFeCfgTable[] =
     // Frontend input path 0
     { TRUE, DMX_PINSET_EXT1, DMX_FRAMER_SERIAL, DMX_EDGE_NEGATIVE, DMX_SYNC_INTERNAL},
 #else
-    // Frontend input path 0
-    { TRUE, DMX_PINSET_EXT1, DMX_FRAMER_PARALLEL, DMX_EDGE_POSITIVE, DMX_SYNC_INTERNAL},
+    // Frontend input path 0/***L5L?***/
+    { TRUE, DMX_PINSET_EXT1, DMX_FRAMER_SERIAL, DMX_EDGE_POSITIVE, DMX_SYNC_INTERNAL},
 #endif
 #else
     // Frontend input path 0

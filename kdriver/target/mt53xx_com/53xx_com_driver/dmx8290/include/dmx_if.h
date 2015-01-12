@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/12 $
  * $RCSfile: dmx_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -268,7 +268,7 @@ CC_DMX_PID_CASE_4: MT5880 use mode
 #define DMX_FRAMER_COUNT                5       //increase to 5,add one dbm port
 #define DMX_FRAMER_TOTAL_INDEX          4       //extend index 3  to 4.
 #else  //MT5882
-#define DMX_FRAMER_COUNT                4       //in mt5882, note that framer2 is removed, so there are only 3 framers 
+#define DMX_FRAMER_COUNT                4       //in mt5882, note that framer2 is removed, so there are only 3 framers /***L5L, 4->3?***/
 #define DMX_FRAMER_TOTAL_INDEX          4       //framer index 0,1,3
 #define DMX_FRAMER_INDEX_2              2       //framer index = 2 is not available
 #endif
@@ -301,7 +301,7 @@ CC_DMX_PID_CASE_4: MT5880 use mode
 #if defined(CC_MT5890)
 #define DMX_DMEM_CA_KEY_NUM             (32)     ///Mustang  have 32 keys
 #else //MT5882
-#define DMX_DMEM_CA_KEY_NUM             (12)    
+#define DMX_DMEM_CA_KEY_NUM             (16)   /***L5L, 12->16***/ 
 #endif
 
 #define DMX_NUM_STC_NUM                 (2)
