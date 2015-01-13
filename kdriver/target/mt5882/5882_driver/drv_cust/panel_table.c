@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/01/13 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -124,7 +124,7 @@ LINT_EXT_HEADER_END
 #include "modelIndex.h"
 #endif
 #ifdef CC_LGE_PROTO_PCBA
-#define NOT_USE_EEP;
+#define NOT_USE_EEP
 #endif
 //---------------------------------------------------------------------------
 // Type definitions
