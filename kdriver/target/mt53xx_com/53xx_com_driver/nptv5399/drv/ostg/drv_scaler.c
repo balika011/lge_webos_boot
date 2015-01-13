@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/01/13 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3301,6 +3301,9 @@ extern UINT8 bVss420;
 void (*_pfVSS420Cb)(void) = NULL;
 void (*_pfVdoVSSCb)(void) = NULL;
 
+EXTERN UINT8 VssWriteFreeze ;
+EXTERN UINT8 VssWriteUnFreeze[GFX_SRC_SEL_MAX];
+
 static void _vDrvScpipISR(UINT16 u2Vector)
 {
     static UINT32 CRC_Min, CRC_Mout;
@@ -3316,6 +3319,11 @@ static void _vDrvScpipISR(UINT16 u2Vector)
     if(u4ScpipGetISRstatus(ISR_FSC_MAIN_VSYNC_IN_RISING)) // 0
     {
         LOG(7, "ISR_FSC_MAIN_VSYNC_IN_RISING %d\n", u4ScpipGetOutVCnt());
+		if(VssWriteUnFreeze[GFX_MAIN_SCL] == SV_TRUE)
+		{
+			u1Scpip_GFX_Write_Enable(SV_TRUE);
+			VssWriteUnFreeze[GFX_MAIN_SCL] = SV_FALSE;
+		}
         vScpipClearISRstatus(ISR_FSC_MAIN_VSYNC_IN_RISING);
     }
 
@@ -3495,6 +3503,12 @@ static void _vDrvScpipISR(UINT16 u2Vector)
         {
             _pfVdoVSSCb(); // trigger callback
         }
+
+		if(VssWriteFreeze == SV_TRUE)
+		{
+			u1Scpip_GFX_Write_Enable(SV_FALSE);
+			VssWriteFreeze = SV_FALSE;
+		}
         vScpipClearISRstatus(ISR_DRAM_GFX_WRITE);
     }
 
@@ -3553,6 +3567,7 @@ void vScpipSetISR()
     #if defined(CC_MT5399) || defined (CC_MT5882)
     vScpipSetISREn(ISR_FSC_VSYNC_OUT_RISING, SV_TRUE);
     vScpipSetISREn(ISR_FSC_VSYNC_OUT_FALLING,SV_TRUE);
+	vScpipSetISREn(ISR_FSC_MAIN_VSYNC_IN_RISING,SV_TRUE);
 	vScpipSetISREn(ISR_DRAM_GFX_WRITE,SV_TRUE);
 	#endif 
 }

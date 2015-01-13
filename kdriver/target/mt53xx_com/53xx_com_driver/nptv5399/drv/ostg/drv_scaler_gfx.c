@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/13 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -138,6 +138,10 @@ R3DGfxInf _arGfxInf=
 	2,		//	UINT8 u1MuxR;
 };
 
+UINT8 VssWriteFreeze = SV_FALSE;
+UINT8 VssWriteUnFreeze[GFX_SRC_SEL_MAX] = {SV_FALSE,SV_FALSE,SV_FALSE,SV_FALSE,SV_FALSE,SV_FALSE,SV_FALSE};
+
+
 static UINT8 VssInited=0;
 
 /**
@@ -147,7 +151,15 @@ static UINT8 VssInited=0;
 */
 void  vScpip_GFX_init(void)
 {
+	UINT8 bsrc = GFX_SRC_SEL_MAX;
     VssInited=1;
+	VssWriteFreeze = SV_FALSE;
+	    
+    for(bsrc = 0;bsrc < GFX_SRC_SEL_MAX; bsrc++)
+    {
+    	VssWriteUnFreeze[bsrc] = SV_FALSE;
+    }
+	
     LOG(4,"Vss Inited\n");
 }
 
@@ -506,6 +518,23 @@ UINT8 u1Scpip_GFX_Write_Enable(UINT8 u1Enable)
 	return TRUE;
 	
 }
+
+void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
+{
+	UINT8 u1PathIn ;
+	
+	u1PathIn = u1Scpip_GFX_GetSource();
+	
+	if(u1Freeze == SV_TRUE)
+	{
+		VssWriteFreeze = SV_TRUE;
+	}
+	else
+	{
+		VssWriteUnFreeze[u1PathIn] = SV_TRUE;
+	}
+}
+
 
 /**
  * @brief set  3d to 2d enable 
