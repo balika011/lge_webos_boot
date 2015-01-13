@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/13 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -775,10 +775,9 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_rMChannel.bDecType = bNewMainDec;
 
 		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
-		vClrMainFlg(MAIN_FLG_MODE_DET_DONE);
+
 		vSetMainFlg(MAIN_FLG_MODE_CHG);
-		// Luis060627, for delay mute
-		vApiVideoClrEvtFlg(VDO_FLG_MAIN_MODECHG_DONE);
+		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
 	}
 
 	if(fgPipCh)
@@ -787,20 +786,8 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 
 		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
 		
-	#ifdef CC_OSD_ENCODE
-		if(bGetICInputType(SV_VP_PIP)!=P_OSDENCODE &&
-		   bGetICInputType(SV_VP_PIP)!=P_OSTGENC)
-		{
-			vClrPipFlg(PIP_FLG_MODE_DET_DONE);
-			vSetPipFlg(PIP_FLG_MODE_CHG);
-		}
-	#else
-			vClrPipFlg(PIP_FLG_MODE_DET_DONE);
-			vSetPipFlg(PIP_FLG_MODE_CHG);
-	#endif
-
-		// Luis060627, for delay mute
-		vApiVideoClrEvtFlg(VDO_FLG_PIP_MODECHG_DONE);
+		vSetPipFlg(PIP_FLG_MODE_CHG);
+		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
 	}
 
 #ifdef CC_SRM_ON
@@ -810,7 +797,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	MainSubSrc_Biglock_Release();
 	return SV_SUCCESS;
 }
-
 #endif
 
 /**
