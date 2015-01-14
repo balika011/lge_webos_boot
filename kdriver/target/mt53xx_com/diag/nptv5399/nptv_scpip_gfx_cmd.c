@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/14 $
  * $RCSfile: nptv_scpip_gfx_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  * Description:
  *         This file contains CLI implementation of NPTV Video.
@@ -298,7 +298,7 @@ static INT32 _ScpipGfxWriteEnable(INT32 i4Argc, const CHAR **szArgv)
     }
 
     u1Enable = (UINT8)StrToInt(szArgv[1]);
-
+	u1Scpip_GFX_Set_3x3();
     u1Scpip_GFX_Write_Enable(u1Enable);
     printf("[SCPIP_GFX] Write enable(%d)\n", u1Enable);
 
@@ -418,6 +418,7 @@ static INT32 _ScpipGfxDumpSetting(INT32 i4Argc, const CHAR **szArgv)
 	u1Scpip_GFX_Set_Dram_Address(u4BaseAddr, u4FrameSize, u1FrameNum);
 	u1Scpip_GFX_Source_Sel(bPath);
 	u1Scpip_GFX_Set_Write_Mode(1);
+	u1Scpip_GFX_Set_3x3();
 	u1Scpip_GFX_Write_Enable(1);
 
 	return 1;

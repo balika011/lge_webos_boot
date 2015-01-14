@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/13 $
+ * $Date: 2015/01/14 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -441,83 +441,81 @@ UINT8 u1Scpip_GFX_Write_Trigger(void)
  */
 UINT8 u1Scpip_GFX_Write_Enable(UINT8 u1Enable)
 {
-	if(u1Enable == TRUE)
-	{
-		if(_arGfxInf.u1PathIn == GFX_MAIN_PDS)
-		{
-			_arGfxInf.u1Sel444 = 1;
-			_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
-		}
-		else if( _arGfxInf.u1PathIn == GFX_SUB_PDS || _arGfxInf.u1PathIn == GFX_SUB_SCL)
-		{
-			_arGfxInf.u1Sel444 = 1;
-			_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_PIP) == SV_TRUE)? 1 :0;
-		}
-		else if(_arGfxInf.u1PathIn == GFX_MAIN_SCL)
-		{
-			_arGfxInf.u1Sel444 = (bIsScalerInput444(SV_VP_MAIN) == SV_TRUE)? 1 :0;
-			_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
-		}
-		else if(_arGfxInf.u1PathIn == GFX_MAIN_DI)
-		{
-		   _arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
-		   if(_arGfxInf.u1Bypass3x3)
-		   {
-				_arGfxInf.u1Sel444 = 1;
-		   }
-		   else
-		   {
-				_arGfxInf.u1Sel444 = 0;
-		   }
-		}
-		else if(_arGfxInf.u1PathIn == GFX_SUB_DI)
-		{
-			_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_PIP) == SV_TRUE)? 1 :0;
-			if(_arGfxInf.u1Bypass3x3)
-			{
-				 _arGfxInf.u1Sel444 = 1;
-			}
-			else
-			{
-				 _arGfxInf.u1Sel444 = 0;
-			}
-		}
-		else		//if(_arGfxInf.u1PathIn == GFX_MON_OUT)
-		{
-			_arGfxInf.u1Sel444 = 1;//monitor out outout to vss point before 444to4222
-			_arGfxInf.u1Bypass3x3 = 0;//monitout out output always YUV
-		}
-	}
-	else
+
+	_arGfxInf.u1WriteEnable = u1Enable;
+	vScpipGfxWriteEn(u1Enable);
+
+	return TRUE;
+}
+
+UINT8 u1Scpip_GFX_Set_3x3(void)
+{
+	if(_arGfxInf.u1PathIn == GFX_MAIN_PDS)
 	{
 		_arGfxInf.u1Sel444 = 1;
-		_arGfxInf.u1Bypass3x3 = 0;
+		_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
 	}
+	else if( _arGfxInf.u1PathIn == GFX_SUB_PDS || _arGfxInf.u1PathIn == GFX_SUB_SCL)
+	{
+		_arGfxInf.u1Sel444 = 1;
+		_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_PIP) == SV_TRUE)? 1 :0;
+	}
+	else if(_arGfxInf.u1PathIn == GFX_MAIN_SCL)
+	{
+		_arGfxInf.u1Sel444 = (bIsScalerInput444(SV_VP_MAIN) == SV_TRUE)? 1 :0;
+		_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
+	}
+	else if(_arGfxInf.u1PathIn == GFX_MAIN_DI)
+	{
+	   _arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_MAIN) == SV_TRUE)? 1 :0;
+	   if(_arGfxInf.u1Bypass3x3)
+	   {
+			_arGfxInf.u1Sel444 = 1;
+	   }
+	   else
+	   {
+			_arGfxInf.u1Sel444 = 0;
+	   }
+	}
+	else if(_arGfxInf.u1PathIn == GFX_SUB_DI)
+	{
+		_arGfxInf.u1Bypass3x3 = (bIsScalerInputRGB(SV_VP_PIP) == SV_TRUE)? 1 :0;
+		if(_arGfxInf.u1Bypass3x3)
+		{
+			 _arGfxInf.u1Sel444 = 1;
+		}
+		else
+		{
+			 _arGfxInf.u1Sel444 = 0;
+		}
+	}
+	else		//if(_arGfxInf.u1PathIn == GFX_MON_OUT)
+	{
+		_arGfxInf.u1Sel444 = 1;//monitor out outout to vss point before 444to4222
+		_arGfxInf.u1Bypass3x3 = 0;//monitout out output always YUV
+	}
+	
 
 	if(_arGfxInf.Format == YUVA2101010)
 	{
-		_arGfxInf.u1WriteEnable = u1Enable;
 		 _arGfxInf.u1HBoundEn = !(_arGfxInf.u1Sel444);
 
 		//if input RGB444 how to dump YUV by VSS, change to video mode?
 		//vScpipGfx422To444Enable(_arGfxInf.u1Sel444);
 		//vScpipGfxBypass3x3(!(_arGfxInf.u1Bypass3x3));
-		vScpipGfxWriteEn(u1Enable);	
 	}
 	else
 	{
-		_arGfxInf.u1WriteEnable = u1Enable;
 		 _arGfxInf.u1HBoundEn = !(_arGfxInf.u1Sel444);
 			
 		vScpipGfx422To444Enable(!(_arGfxInf.u1Sel444));
-		vScpipGfxBypass3x3(_arGfxInf.u1Bypass3x3);
-		vScpipGfxWriteEn(u1Enable);
-		
+		vScpipGfxBypass3x3(_arGfxInf.u1Bypass3x3);	
 	}
 		
 	return TRUE;
 	
 }
+
 
 void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
 {
@@ -527,7 +525,8 @@ void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
 	
 	if(u1Freeze == SV_TRUE)
 	{
-		VssWriteFreeze = SV_TRUE;
+		//VssWriteFreeze = SV_TRUE;
+		u1Scpip_GFX_Write_Enable(SV_FALSE);//because LG will set freeze in gfx write end ,so direct disable write enable
 	}
 	else
 	{
