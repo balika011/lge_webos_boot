@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #5 $
-# $Date: 2015/01/13 $
+# $Revision: #6 $
+# $Date: 2015/01/14 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -142,7 +142,6 @@ endif
 
 ifndef LG_WEBOS_BUILD
 	export LG_WEBOS_BUILD :=true
-	export REDUCE_BUILDING_TIME := true
 endif
 ifeq "$(LG_WEBOS_BUILD)" "true"
 export L_DUAL_BOOT := true
