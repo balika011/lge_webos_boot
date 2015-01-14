@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/14 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3093,7 +3093,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL2;
     do {\
         if (u4VdpId == VDP_1)\
         {\
-            if (SRM_IsEpgMode())\
+            if (0)\
             {\
                 u4Width = MIN(width,u4Width);\
                 u4Height = MIN(height,u4Height);\
