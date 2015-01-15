@@ -101,8 +101,11 @@
 
 #ifdef CC_LGE_PROTO_PCBA
 #define HDMI_5V_DETECT0 (219)
+#define HDMI_5V_DETECT1 (OPCTRL(1))
 #define HDMI_5V_DETECT2 (OPCTRL(0))
 #endif
+
+
 extern E_HDMI_SWITCH_NUM eActiveHdmiPort;
 //====================//
 void vHDMIHPDHigh(E_HDMI_SWITCH_NUM eSwitch)
@@ -113,15 +116,25 @@ void vHDMIHPDHigh(E_HDMI_SWITCH_NUM eSwitch)
 	{
 #ifdef HDMI_GPIO_HPD0
 		case HDMI_SWITCH_1:
+#ifdef CC_LGE_PROTO_PCBA
+			GPIO_SetOut(HDMI_GPIO_HPD0, 0);
+#else
 			if(_bIsMhlDevice == 0)
 			{
 				GPIO_GetIn(HDMI_GPIO_HPD0);
-			}
+			}			
+#endif
 			break;
+
 #endif
 #ifdef HDMI_GPIO_HPD1			
 		case HDMI_SWITCH_2:
+#ifdef CC_LGE_PROTO_PCBA
+			GPIO_SetOut(HDMI_GPIO_HPD1, 0);
+#else
 			GPIO_GetIn(HDMI_GPIO_HPD1);
+#endif
+			
 			break;
 #endif
 #ifdef HDMI_GPIO_HPD2
@@ -146,26 +159,38 @@ void vHDMIHPDHigh(E_HDMI_SWITCH_NUM eSwitch)
 //====================//
 void vHDMIHPDLow(E_HDMI_SWITCH_NUM eSwitch)
 {
+
+#ifndef CC_LGE_PROTO_PCBA
 	INT32 i4Val = 0;
+#endif
     vHdmiSetHpdStatus(eSwitch, 1);
        
 	switch(eSwitch)
 	{
 #ifdef HDMI_GPIO_HPD0
 		case HDMI_SWITCH_1:			
+#ifdef CC_LGE_PROTO_PCBA
+            GPIO_SetOut(HDMI_GPIO_HPD0, 1);
+#else
 			if(_bIsMhlDevice == 0)
 			{
 				GPIO_SetOut(HDMI_GPIO_HPD0, i4Val);
-			}
-			break;
+			}			
+#endif
+            break;
 #endif			
 #ifdef HDMI_GPIO_HPD1
 		case HDMI_SWITCH_2:	
- 			GPIO_SetOut(HDMI_GPIO_HPD1, i4Val);
+#ifdef CC_LGE_PROTO_PCBA
+            GPIO_SetOut(HDMI_GPIO_HPD1, 1);
+#else
+            GPIO_SetOut(HDMI_GPIO_HPD1, i4Val);
+#endif
+
 			break;
-#endif			
+#endif				
 #ifdef HDMI_GPIO_HPD2
-		case HDMI_SWITCH_3:		
+		case HDMI_SWITCH_3:	
 #ifdef CC_LGE_PROTO_PCBA
  			GPIO_SetOut(HDMI_GPIO_HPD2, 1);
 #else
@@ -216,9 +241,15 @@ UINT8 bHDMIPort5VStatus(E_HDMI_SWITCH_NUM ePort)
 #endif
 #ifdef HDMI_GPIO_HPD1
         case HDMI_SWITCH_2: 
-	          input = GPIO_GetIn(HDMI_GPIO_HPD1);
-	         break;
+#ifdef CC_LGE_PROTO_PCBA
+			input = GPIO_GetIn(HDMI_5V_DETECT1);
+#else
+			input = GPIO_GetIn(HDMI_GPIO_HPD1);
 #endif
+			
+			break;
+#endif
+
 #ifdef HDMI_GPIO_HPD2
         case HDMI_SWITCH_3: 
 #ifdef CC_LGE_PROTO_PCBA
@@ -363,9 +394,15 @@ UINT8 u1GetHDMIPort5VStatus(E_HDMI_SWITCH_NUM ePort)
 #endif
 #ifdef HDMI_GPIO_HPD1
 	case HDMI_SWITCH_2: 
-		  input = GPIO_GetIn(HDMI_GPIO_HPD1);
+#ifdef CC_LGE_PROTO_PCBA
+			  input = GPIO_GetIn(HDMI_5V_DETECT1);
+#else
+			  input = GPIO_GetIn(HDMI_GPIO_HPD1);
+#endif
+		
 		 break;
 #endif
+
 #ifdef HDMI_GPIO_HPD2
 	case HDMI_SWITCH_3: 
 #ifdef CC_LGE_PROTO_PCBA
