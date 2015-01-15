@@ -260,11 +260,7 @@ void vHDMISetSwitch(E_HDMI_SWITCH_NUM eSwitch)
   		break;
   				
           case HDMI_SWITCH_2:
-		       #ifdef CC_LGE_PROTO_PCBA
-                   eHdmiRx = HDMI_SWITCH_3;
-			   #else
 			       eHdmiRx = HDMI_SWITCH_2;
-			   #endif
   	       break;
 
           case HDMI_SWITCH_3:
