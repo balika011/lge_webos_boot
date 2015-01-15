@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/01/15 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27123,7 +27123,7 @@ void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol,
         u4Idx = APROC_REG_INPUT2_BALANCE_L;
         break;               
     default:
-        LOG (5, "_vAproc_PostProcBalance_Set: wrong id = 0x%x!!!\n", u4Idx);
+        LOG (5, "_vAproc_PostProcBalance_Set: wrong id = 0x%x!!!\n", u1DecId);
         return;
     }
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/15 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6925,17 +6925,19 @@ void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
 #else
 void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
 {
-    if((u1DecId != AUD_DEC_MAIN) ||  (u1DecId != AUD_DEC_AUX))
+    UINT32 u4Reg;
+    if((u1DecId != AUD_DEC_MAIN) &&  (u1DecId != AUD_DEC_AUX))
     {
         return;
     }
 
+    u4Reg = (UINT32)u1DecId;
     switch (arMwCtrl->eCmd)
     {
     case AUD_CMD_PLAY:
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SP_IN, (UINT32 *)&u1DecId, 1);
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_HP_IN, (UINT32 *)&u1DecId, 1);
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SPDIF_IN, (UINT32 *)&u1DecId, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SP_IN, &u4Reg, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_HP_IN, &u4Reg, 1);
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_SPDIF_IN, &u4Reg, 1);
         break;
 
     case AUD_CMD_STOP:
@@ -7150,7 +7152,7 @@ void AUD_SetUiSpkOnOff(BOOL fgEnable)
 void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
             UINT32 u4Arg1, UINT32 u4Arg2, UINT32 u4Arg3, UINT32 u4Arg4)
 {
-    LOG(2, "%s, type = %d index = %d", __FUNCTION__, u4CmdType, u4Index);
+    LOG(2, "%s, type = %d index = %d \n", __FUNCTION__, u4CmdType, u4Index);
     switch (u4CmdType)
     {
 #ifdef CC_AUD_DDI 
