@@ -604,9 +604,16 @@ void get_kernel_size(ulong src)
 #endif
 #else
                      kmemsize = TCMGET_CHANNELA_SIZE() * 0x100000 - penv[i+1];
-                    chb_kmemstart = penv[i+2];
-                    chb_kmemsize = penv[i+3];
-                    fbdfbsize = penv[i+4];
+				     chb_kmemstart = penv[i+2];
+				     chb_kmemsize = penv[i+3];
+				     fbdfbsize = penv[i+4]; 
+
+				     if (TCMGET_CHANNELA_SIZE() == 0x300) /* 768M case */
+				     {
+					      kmemsize += 47 * 0x100000;     /* increase kmemsize by 47MB */
+					      chb_kmemsize -= 47 * 0x100000; /* decrease FBDFB size by 47MB */
+				     }
+
 #endif                    
 					printf("uboot memory debug %d, 0x%x 0x%x 0x%x 0x%x\n", i, penv[i+1], penv[i+2], penv[i+3], penv[i+4]);
 					printf("kernel dram1 size=0x%x\n", kmemsize);
