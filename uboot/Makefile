@@ -175,9 +175,9 @@ export DEFINES += -DCC_EMMC_BOOT
 ifeq "$(EMMC_4BIT)" "true"
 export DEFINES += -DCC_EMMC_4BIT
 endif
-ifeq "$(EMMC_HS200)" "true"
+
 export DEFINES += -DCC_EMMC_HS200
-endif
+
 ifeq "$(EMMC_DDR50)" "true"
 export DEFINES += -DCC_EMMC_DDR50
 endif
