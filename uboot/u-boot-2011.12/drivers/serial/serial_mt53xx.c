@@ -5,7 +5,7 @@
  *	This file is based  ARM Realview platform
  *  Copyright (C) 2002 ARM Ltd.
  *  All Rights Reserved
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -110,14 +110,21 @@ int serial_init (void)
 
 	return (0);
 }
+#include <../smp/include/spinlock.h>
+
+extern spin_lock_t g_print_lock;
+//#define readl(addr) (*(volatile unsigned int*)(addr))
+extern volatile int LogEnable ;
 
 void serial_putc (const char c)
 {
+
 #ifdef CONFIG_USB_PL2303
     if (pPL2303Dev)
     {
         PL2303_serial_putc(c);
-        return;
+		goto finish;
+      
     }
 #endif
 
@@ -125,6 +132,10 @@ void serial_putc (const char c)
 		mt53xx_putc (CONSOLE_PORT, '\r');
 
 	mt53xx_putc (CONSOLE_PORT, c);
+  finish:
+  	
+	return;
+
 }
 
 void serial_puts (const char *s)

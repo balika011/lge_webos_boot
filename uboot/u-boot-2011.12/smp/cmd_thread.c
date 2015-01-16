@@ -2,7 +2,7 @@
 #include <exports.h>
 #include <config.h>
 #include <x_typedef.h>
-#include "thread.h"
+#include <thread.h>
 #include <errno.h>
 
 #define get_cpu_id()	get_current_cpu()
@@ -53,6 +53,7 @@ void *main_init(void *arg)
 	//for (;;) 
 		{
 		//create_thread_test();
+		
 			fast_boot();
 		second_main();
 			//char c = 0;
@@ -76,8 +77,6 @@ void *main_init(void *arg)
 		    sprintf(name,"test-%d",1);
 			
 			t = thread_create_ex(name,thread_test1, NULL, 0,cpu_id,pri,0);
-			sprintf(name,"test-%d",2);
-			t = thread_create_ex(name,thread_test2, NULL, 0,cpu_id,pri,0);
 		}
 		#else
 		
@@ -151,7 +150,7 @@ static int *join_test2(void *arg)
 	thread_t *me = get_current_thread(get_cpu_id());
 	u32 wakeup_time;
 	me->start_sleep = arch_counter_get_ms();
-	lg_sleep(5);
+	mtk_sleep(5);
 	wakeup_time = arch_counter_get_ms() - me->start_sleep;
 	tlog("Join Test thread=%s,Time gap=%d,resource=%d\n",me->name,wakeup_time,mRes);
 
@@ -175,7 +174,7 @@ static int *cond_test2(void *arg)
 	thread_t *me = get_current_thread(get_cpu_id());
 	u32 wakeup_time;
 	me->start_sleep = arch_counter_get_ms();
-	lg_sleep(1);
+	mtk_sleep(1);
 	thread_cond_signal(&cond);
 	wakeup_time = arch_counter_get_ms() - me->start_sleep;
 	tlog("Condition Test thread=%s,Time gap=%d,resource=%d\n",me->name,wakeup_time,mRes);
@@ -188,7 +187,7 @@ static int *mutex_test(void *arg)
 	u32 wakeup_time;
 	me->start_sleep = arch_counter_get_ms();
 	mutex_lock(&mlock);
-	lg_sleep(2);
+	mtk_sleep(2);
 	mRes++;
 	mutex_unlock(&mlock);
 	wakeup_time = arch_counter_get_ms() - me->start_sleep;
@@ -228,16 +227,16 @@ static int *mutex_test2(void *arg)
 			rnd2 = random(1000000);
 		}
 		wakeup_time = arch_counter_get_ms() - me->start_sleep;
-		printf("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
+		tlog("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
 
 	} else {
 		while(1) {
-			rnd = 1;//random(9);
+			rnd = random(9);
 			me->start_sleep = arch_counter_get_ms();
-			lg_sleep(rnd);
+			//mtk_sleep(rnd);
 			wakeup_time = arch_counter_get_ms() - me->start_sleep;
 
-			printf("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
+			tlog("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
 			
 			//schedule();
 			
@@ -265,7 +264,7 @@ static int *mutex_test2(void *arg)
 		while(1) {
 			rnd = 2;//random(9);
 			me->start_sleep = arch_counter_get_ms();
-			lg_sleep(rnd);
+			//mtk_sleep(rnd);
 			wakeup_time = arch_counter_get_ms() - me->start_sleep;
 
 			printf("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
@@ -298,7 +297,7 @@ static int *mutex_test2(void *arg)
 			rnd = random(5);
 			
 			me->start_sleep = arch_counter_get_ms();
-			lg_sleep(rnd);
+			//mtk_sleep(rnd);
 			wakeup_time = arch_counter_get_ms() - me->start_sleep;
 
 			printf("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
@@ -369,7 +368,7 @@ int do_thread_test(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
        		arch_reset_timer(timer_id,2000,2);
 	} else if( !strcmp(argv[1],"sleep") ) {
 		int rnd = random(5);
-		lg_sleep(rnd);
+		mtk_sleep(rnd);
 	} else if( !strcmp(argv[1],"spinlock") ) {
 		int  x = 0;
 		int ret;
@@ -395,7 +394,7 @@ int do_thread_test(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	} else if( !strcmp(argv[1],"join") ) {
 		//join2 = thread_create("join2",join_test2, NULL);
 		thread_t *join = thread_create_ex("join",join_test, NULL,0,1,THREAD_DEFAULT_PRIORITY,1);
-		lg_sleep(2);
+		mtk_sleep(2);
 		thread_join(join,NULL);
 	} else if( !strcmp(argv[1],"ipi") ) {
 		ipi_send_self(IPI_NEED_RESCHEDULE);

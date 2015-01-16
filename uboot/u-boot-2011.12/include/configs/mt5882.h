@@ -64,7 +64,6 @@
 #define CONFIG_SYS_HZ CFG_HZ
 #define CONFIG_SYS_FLASH_BASE   CFG_FLASH_BASE
 #define CONFIG_ENV_OFFSET   CFG_ENV_OFFSET
-#define  CONFIG_MULTICORES_PLATFORM 1
 
 
 
@@ -687,7 +686,7 @@
  * Size of malloc() pool
  */
 #if !(CONFIG_NO_CONSOLE)
-#define CFG_MALLOC_LEN     (1*1024*1024)
+#define CFG_MALLOC_LEN     (5*1024*1024)
 #else
 #define CFG_MALLOC_LEN     (3 * CFG_ENV_SIZE) //(1*1024*1024)//(CFG_ENV_SIZE + 128*1024)
 #endif

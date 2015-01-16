@@ -78,13 +78,31 @@
 #include "x_dram.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+#define CONFIG_KERNEL_START_ADDRESS 0x20200000
+    #define SMP_RIU_BASE          0x1f000000
+    #define SMP_DUMMY_BANK             0xe9e
+    #define SMP_DUMMY_MAGIC           0x8000
+    #define SMP_DUMMY_PA_START        0x8004
+    #define SMP_DUMMY_SP              0x8008
+    #define SMP_DUMMY_TTB0            0x800c
+    #define SMP_DBG_CACHE_S           0xf001
+    #define SMP_DBG_CACHE_E           0xf002
+    #define SMP_DBG_RAM_INLOOP        0xf003
+    #define SMP_DBG_GET_MAGIC_NUM     0xf004
+    #define SMP_DBG_IN_SECOND_INIT    0xf005
+    #define SMP_DBG_IN_STACK_READY    0xf006
+    #define SMP_DBG_IN_MMU_ON         0xf007
+    #define SMP_DBG_IN_C_CODE         0xf008
 
+    #define MAGIC_NUMBER    (0x0000babe)
+    #define BOOT_CPU        (0)
 ulong monitor_flash_len;
 
 #ifdef CONFIG_HAS_DATAFLASH
 extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
+volatile int LogEnable = 1;
 
 #if defined(CONFIG_HARD_I2C) || \
     defined(CONFIG_SOFT_I2C)
@@ -124,87 +142,9 @@ inline void __blue_led_on(void) {}
 void blue_led_on(void) __attribute__((weak, alias("__blue_led_on")));
 inline void __blue_led_off(void) {}
 void blue_led_off(void) __attribute__((weak, alias("__blue_led_off")));
-typedef void (*CoreWakeupFunc ) (void);
-volatile unsigned int GlobalActive_Area[5] = {0, 0, 0, 0, 0};
-volatile CoreWakeupFunc ActiveFuncPointer[5] = {0, 0, 0, 0, 0};
-extern void init_secondary_cpu(void);
-void secondary_start_uboot(void)
-{
-	memset(IRQ_STACK_START,IRQ_STACK_START_IN,0);
-    printf("init_secondary_cpu = %x\n", init_secondary_cpu);
-   // writel(init_secondary_cpu, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_PA_START);
- //   writel(0xbabe, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC);
- //   flush_cache_all();
-    return;
-}
 
-void secondary_start_uboot_cleanup(void)
-{
-    printf("%s\n", __FUNCTION__);
-   // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_PA_START);
-   // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC);
-   // flush_cache_all();
-    return;
-}
+//#define mb()		do { dsb(); outer_sync(); } while (0)
 
-void secondary_init_r(unsigned int cpu_id)
-{
-
-    u32 cpuID;
-    //u64 prevous_time;    
-   // scu_enable((void *)(0x16004000)); // SCU PA = 0x16004000
-    //writel(SMP_DBG_IN_C_CODE, SMP_RIU_BASE + (SMP_DUMMY_BANK<<1) + cpu_id*4);
-
-    //__init_dic();
-   // __init_interrupts();
-
-   // mhal_interrupt_unmask(E_INTERRUPT_IRQ);
-    // enable Timer
-   // MAsm_CPU_TimerInit();
-   // MAsm_CPU_TimerStart();
-  //  flush_cache_all();
-
-   // cpuID = get_cpu_id();
-    if(cpuID >= 4)
-    {
-        printf("Error!!, Not correct CPUID %d\n", cpuID);
-        while(1);
-    }
-
-  //  extern void set_irq_sp(ulong);
-    unsigned int sp_addr =0;// *((unsigned int *)(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_SP));
-    sp_addr = sp_addr - (2+cpuID)*0x4000;
-    //set_irq_sp(sp_addr);
-
-    enable_interrupts();
-    while(1)
-    {
-        if((GlobalActive_Area[cpuID] == 1) && (ActiveFuncPointer[cpuID] != 0))
-            ActiveFuncPointer[cpuID]();
-    }
-
-}
-
-void Core_Wakeup(CoreWakeupFunc __Addr, u32 CoreID)
-{
-    if(CoreID >= 4)
-    {
-        printf("Error!! in Core_Wakeup, Not correct CPUID %d\n", CoreID);
-        while(1);
-    }
-
-    if(GlobalActive_Area[CoreID] == 1)
-    {
-        printf("Core %d is active\n", CoreID);
-        return;
-    }
-
-    //printf("Wake UP Core %d, PC %x\n", CoreID, (unsigned int)__Addr);
-    //delayms(100);  // Wait printf finish (Critical Section problem. Need multi core lock)
-    ActiveFuncPointer[CoreID] =  __Addr;
-    GlobalActive_Area[CoreID] = 1;    
-    //flush_cache_all();    
-}
 
 /*
  ************************************************************************
@@ -909,6 +849,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #if (CONFIG_ENABLE_MMU)
 		HalInitMMU(0x1F00000);
 #endif
+	LogEnable = 2;
 
 	gd = id;
 
@@ -934,11 +875,57 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #ifdef CONFIG_POST
 	post_output_backlog();
 #endif
-    secondary_start_uboot();
+
 
 	/* The Malloc area is immediately below the monitor copy in DRAM */
 	malloc_start = dest_addr - TOTAL_MALLOC_LEN;
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	mem_malloc_init (malloc_start, TOTAL_MALLOC_LEN-0x4000*6);
+#else
 	mem_malloc_init (malloc_start, TOTAL_MALLOC_LEN);
+#endif
+#if defined(CONFIG_MULTICORES_PLATFORM)
+//    printf("Reserve all cores stack by digging malloc: TOTAL_MALLOC_LEN after = %x\n", TOTAL_MALLOC_LEN-0x4000*6);
+//    printf("The end of the malloc addr = %x\n", malloc_start+TOTAL_MALLOC_LEN-0x4000*6);
+
+    ulong malloc_end;
+    unsigned int core_num=0;
+    malloc_end = malloc_start+TOTAL_MALLOC_LEN;
+    
+    /*Keep the stack address for other cores*/
+    writel(malloc_end, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_SP);
+
+   /*
+    Here we put a specific number to the end of the stack.
+    badbeef1: at the end of sp_svc for core1
+    badbeef2: at the end of sp_svc for core2
+    badbeef3: at the end of sp_svc for core3
+    badbeef4: at the end of sp_irq for core1
+    badbeef5: at the end of sp_irq for core2
+    badbeef6: at the end of sp_irq for core3
+   */
+
+    for (core_num=1;core_num<=6;core_num++)
+    {
+        malloc_end-=(0x4000);
+        *((unsigned int *)(malloc_end)) = 0xbadbeef0|core_num;
+//        printf("Put boundary badbeef to = %x\n", malloc_end);
+    }
+#if 0
+    unsigned int ttb_check;
+
+    asm volatile ("mrc p15, 0, %0, c2, c0, 0"
+                   : "=r" (ttb_check)
+                   :
+                   : "memory");
+    printf("check TLB %x gd TlB %x\n", ttb_check, gd->tlb_addr);
+#endif
+#endif
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+    //scu_enable((void *)(0x16004000));  // Core 0 : For A12 Only    
+    secondary_start_uboot();
+#endif
 
 #if !defined(CONFIG_SYS_NO_FLASH) && (!defined(CONFIG_NAND_BOOT) && !defined(CONFIG_EMMC_BOOT) && !defined(CONFIG_FAST_BOOT))
 	puts("Flash: ");
@@ -1178,7 +1165,6 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	}
 #endif
 
-	printf(" ###################normal uboot flow   ");
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {
 		main_loop();
@@ -1337,7 +1323,7 @@ void second_main(void)
 #endif
 	
 		
-		printf(" ###################normal uboot flow	");
+		printf(" \n ###################normal uboot flow \n	");
 		/* main_loop() can return to retry autoboot, if so just run it again. */
 		for (;;) {
 			main_loop();

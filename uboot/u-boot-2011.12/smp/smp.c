@@ -1,7 +1,7 @@
-#include "smp.h"
-#include "thread_info.h"
-#include "thread.h"
-#include "../../drv_lib/inc/x_bim.h"
+#include <smp.h>
+#include <thread_info.h>
+#include <thread.h>
+#include <x_bim.h>
 typedef unsigned long UINT32;
 typedef void (*x_os_drv_isr_fct) (unsigned long ui2_vector_id);
 
@@ -17,6 +17,7 @@ typedef void (*x_os_drv_isr_fct) (unsigned long ui2_vector_id);
 #define ARCH_TIMER_PHYS_ACCESS		0
 #define ARCH_TIMER_VIRT_ACCESS		1
 
+UINT32 timerid=0;
 static inline void arch_timer_reg_write(const int access, const int reg, u32 val)
 {
 	if (access == ARCH_TIMER_PHYS_ACCESS) {
@@ -132,31 +133,6 @@ void timer_interrupt_handler(void)
 
     return ((GICD_READ32(GIC_DIST_ENABLE_SET + (u4Vector / 32) * 4) & u4Mask) != 0)?TRUE:FALSE;
 }
-u32 MsOS_CreateTimer (TimerCb    pTimerCb,
-                         unsigned int     u32FirstTimeMs,
-                         unsigned int     u32PeriodTimeMs,
-                         unsigned int    bStartTimer,
-                         char       *pName)
-{
-	unsigned long ctrl;
-	UINT32 val;
-	ctrl = arch_timer_reg_read(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL);
-	if(bStartTimer)
-	{
-	ctrl |= ARCH_TIMER_CTRL_ENABLE;
-	ctrl &= ~ARCH_TIMER_CTRL_IT_MASK;
-	}
-	else
-		{
-	ctrl &= ~ARCH_TIMER_CTRL_ENABLE;
-	ctrl != ARCH_TIMER_CTRL_IT_MASK;
-		}
-    val = u32FirstTimeMs*6000;
-	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_TVAL, val);
-	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL, ctrl);
-	GIC_Uboot_EnableIrq(PHYS_NONSECURE_PPI);
-	_arIsrList[PHYS_NONSECURE_PPI].pfIsr = pTimerCb;
-}
 u32 MsOS_ResetTimer (unsigned int  u32FirstTimeMs)
 {
 	unsigned long ctrl;
@@ -170,7 +146,26 @@ u32 MsOS_ResetTimer (unsigned int  u32FirstTimeMs)
 	GIC_Uboot_EnableIrq(PHYS_NONSECURE_PPI);
 }
 
+u32 MsOS_ResetTimer_core (u32     s32TimerId,
+                         unsigned int     u32FirstTimeMs,
+                         unsigned int     u32PeriodTimeMs,
+                         unsigned int    bStartTimer, UINT32 u32CoreId)
+{
+    unsigned long ctrl;
+	UINT32 val;
+	ctrl = arch_timer_reg_read(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL);
+	ctrl |= ARCH_TIMER_CTRL_ENABLE;
+	ctrl &= ~ARCH_TIMER_CTRL_IT_MASK;
+    val = u32FirstTimeMs*6000;
+	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_TVAL, val);
+	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL, ctrl);
+	GIC_Uboot_EnableIrq(PHYS_NONSECURE_PPI);
+}
 
+u32 get_cpu_mask(u32 cpuid)
+{
+   return 1<<cpuid;
+}
 u32 MsOS_CreateTimer_core (TimerCb    pTimerCb,
                          unsigned int     u32FirstTimeMs,
                          unsigned int     u32PeriodTimeMs,
@@ -180,6 +175,7 @@ u32 MsOS_CreateTimer_core (TimerCb    pTimerCb,
 {
 	unsigned long ctrl;
 	UINT32 val;
+	timerid++;
 	ctrl = arch_timer_reg_read(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL);
 	if(bStartTimer)
 	{
@@ -191,11 +187,12 @@ u32 MsOS_CreateTimer_core (TimerCb    pTimerCb,
 	ctrl &= ~ARCH_TIMER_CTRL_ENABLE;
 	ctrl != ARCH_TIMER_CTRL_IT_MASK;
 		}
-	val = u32FirstTimeMs*6000;
+    val = u32FirstTimeMs*6000;
 	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_TVAL, val);
 	arch_timer_reg_write(ARCH_TIMER_PHYS_ACCESS, ARCH_TIMER_REG_CTRL, ctrl);
 	GIC_Uboot_EnableIrq(PHYS_NONSECURE_PPI);
 	_arIsrList[PHYS_NONSECURE_PPI].pfIsr = pTimerCb;
+	return (u32CoreId*100+timerid);
 }
  void mhal_ipi_attach(unsigned int ipi_num, x_os_drv_isr_fct   pf_isr,
                  x_os_drv_isr_fct   *ppf_old_isr)

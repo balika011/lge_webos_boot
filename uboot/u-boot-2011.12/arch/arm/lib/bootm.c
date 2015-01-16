@@ -127,6 +127,7 @@ extern char bPortProtect;
 extern UINT16 gToolOpt[];
 extern MODEL_INFO_DB_T gModelInfoDB;
 
+extern void release_non_boot_core(void);
 
 extern char * get_blkdev_name(void);
 extern int get_blkdev_idx(const char *name);
@@ -499,6 +500,7 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 
 	BIM_SetTimeLog(3);
 	BootSplash();
+    release_non_boot_core();
 
 	announce_and_cleanup();
 

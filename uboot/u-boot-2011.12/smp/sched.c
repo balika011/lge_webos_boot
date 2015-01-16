@@ -3,16 +3,19 @@
 #include <config.h>
 #include <errno.h>
 #include <x_typedef.h>
-#include "thread_info.h"
-#include "spinlock.h"
-#include "thread.h"
-#include "smp_platform.h"
-#include "smp.h"
+#include <thread_info.h>
+#include <spinlock.h>
+#include <thread.h>
+#include <smp_platform.h>
+#include <smp.h>
 
 #define get_cpu_id()	get_current_cpu()
 
-int init_done[NR_CPUS] = {0,};
-int smp_cpu_released[NR_CPUS];
+spin_lock_t init_done[NR_CPUS] ;
+spin_lock_t init_idle[NR_CPUS] ;
+
+spin_lock_t  smp_cpu_released[NR_CPUS];
+
 static unsigned int oneshot_timer_id[NR_CPUS];
 cond_t g_sub_cond[NR_CPUS];
 static spin_lock_t g_thread_lock = INIT_SPIN_LOCK;
@@ -43,13 +46,76 @@ const char* thread_state_str[] =
 	"suspended",
 	"done"
 };
+extern int *thread_test1(void *arg);
+extern int *thread_test0(void *arg);
+volatile int i;
+int __release_smp_cpu(void)
+{
+    if(BOOT_CPU == get_cpu_id())
+        return -1;
 
+    for(;;)
+    {
+        if (megic_number_cleaned)
+        {
+            smp_cpu_released[get_cpu_id()].lock= 1;
+            asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (0));
+            dsb();
+            wfi();
+            if(MAGIC_NUMBER == readl(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC));
+            {
+                return jump_to_secondary();
+            }
+        }
+    }
+}
 static void *sub_init(void *arg)
 {
-	dbg_print("Starting in sub thread main context\n");
-	thread_cond_timedwait(&g_sub_cond[get_current_cpu()],NO_TIMEOUT);
-	for(;;)
-		__release_smp_cpu();
+#if 1		
+		char name[16];
+		int pri;
+		
+		
+		thread_t *t;
+		static int cpu_id = 0;
+		//for( i=0; i < 3;i++ )
+			{
+			//pri = random(THREAD_MAX_PRIORITY-THREAD_MIN_PRIORITY);
+			pri = THREAD_DEFAULT_PRIORITY;
+			//cpu_id = (cpu_id+1) % NR_CPUS;
+		#if 0
+		
+		if(init_idle[1].lock == 1)
+			{
+				
+				sprintf(name,"test-%d",1);
+				t = thread_create_ex(name,thread_test0, NULL, 0,1,pri,0);
+			}
+		if(init_idle[2].lock == 1)
+			{
+				sprintf(name,"test-%d",2);
+				t = thread_create_ex(name,thread_test0, NULL, 0,2,pri,0);
+			}
+		if(init_idle[3].lock == 1)
+			{
+				
+				sprintf(name,"test-%d",3);
+				t = thread_create_ex(name,thread_test0, NULL, 0,3,pri,0);
+			}
+		#endif
+		
+
+		
+		}
+	#else
+		
+		//printf("\n#######main_init#########\n");
+	#endif
+
+	//printf("Starting in sub thread main context\n");
+//	thread_cond_timedwait(&g_sub_cond[get_current_cpu()],NO_TIMEOUT);
+//	for(;;)
+//		__release_smp_cpu();
 }
 
 static void _thread_main(int (*func)(void *),void *arg, thread_t *thread)
@@ -223,7 +289,7 @@ static void send_ipi(thread_t *new)
 {
 	int cpu_id = new->cpu_id;
 	thread_t *me = get_current_thread(cpu_id);
-	if( init_done[cpu_id] > 0 ) {
+	if( init_done[cpu_id].lock> 0 ) {
 		if( new->priority > me->priority ) {
 			dbg_print("Send IPI thread=%s,pri=%d,new=%s,pri=%d,target cpu=%d\n",me->name,me->priority,new->name,new->priority,cpu_id);
 			ipi_send_target(cpu_id,IPI_NEED_RESCHEDULE);
@@ -295,28 +361,6 @@ int jump_to_secondary(void)
     return -1;
 }
 
-// this means the non-boot CPU x have already finished all their jobs!!!
-// be use this function carefully!!!
-int __release_smp_cpu(void)
-{
-    if(BOOT_CPU == get_cpu_id())
-        return -1;
-
-    for(;;)
-    {
-        if (megic_number_cleaned)
-        {
-            smp_cpu_released[get_cpu_id()] = 1;
-            asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (0));
-            dsb();
-            wfi();
-            if(MAGIC_NUMBER == readl(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC));
-            {
-                return jump_to_secondary();
-            }
-        }
-    }
-}
 
 //extern void display_all_threads(void);
 
@@ -325,46 +369,11 @@ static void *_idle_thread_start(void *arg)
 	//thread_t *me = get_current_thread(0);
 	while( 1 ) {
         // prepare for Kernel SMP pen_releases
-        if (!megic_number_cleaned)
-        {
-        #if 0
-            if(!init_done[1] && (get_cpu_id() == 1)) printf("1");
-            if(!init_done[2] && (get_cpu_id() == 1)) printf("2");
-            if(!init_done[3] && (get_cpu_id() == 1)) printf("3");
-            if(!init_done[1] && (get_cpu_id() == 2)) printf("4");
-            if(!init_done[2] && (get_cpu_id() == 2)) printf("5");
-            if(!init_done[3] && (get_cpu_id() == 2)) printf("6");
-            if(!init_done[1] && (get_cpu_id() == 3)) printf("7");
-            if(!init_done[2] && (get_cpu_id() == 3)) printf("8");
-            if(!init_done[3] && (get_cpu_id() == 3)) printf("9");
-            if(!init_done[1] && (get_cpu_id() == 0)) printf("a");
-            if(!init_done[2] && (get_cpu_id() == 0)) printf("b");
-            if(!init_done[3] && (get_cpu_id() == 0)) printf("c");
-        #endif
-
-            if (init_done[1] && init_done[2] && init_done[3])
-            {
-                secondary_start_uboot_cleanup();
-                megic_number_cleaned=1;
-            }
-			
-		//	printf ("\n_idle_thread_start\n");
-			 //display_all_threads();
-			//thread_exit(me->retval);
-        }
-        else
-        {
-        //add_sleep_q(me,50);
-	    	dsb();
-    		//tlog("CPU %d entering wif mode\n", get_cpu_id());
-    		wfi();
-            if(MAGIC_NUMBER == readl(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC));
-            {
-                if(BOOT_CPU != get_cpu_id())
+                if(BOOT_CPU != get_cpu_id() && megic_number_cleaned==1 && smp_cpu_released[get_cpu_id()].lock== 0)
                 {
-                    jump_to_secondary();
-                }
-            }
+                	
+					tlog("_idle_thread_start smp_cpu_released =%x,cpu id =%d \n", smp_cpu_released[get_cpu_id()].lock,get_cpu_id());
+					secondary_start_uboot_cleanup();
         }
 
 	}
@@ -603,7 +612,7 @@ thread_t *thread_init_per_cpu(void)
 	int cpu_id = get_cpu_id();
 	char tmp[16];
 
-	if( init_done[cpu_id] > 0 ) {
+	if( init_done[cpu_id].lock > 0 ) {
 		dbg_print("XXX already init\n");
 		return NULL;
 	}
@@ -621,6 +630,7 @@ thread_t *thread_init_per_cpu(void)
 	get_idle_thread(cpu_id)->state = STATE_IDLE;
 	active_count--;
 	DEL_RUNQ(get_idle_thread(cpu_id));
+	init_idle[cpu_id].lock = 1;
 
 	sprintf(tmp,"sub_init[%d]",cpu_id);
 	thread = thread_create_ex(tmp,sub_init,NULL,0,cpu_id,THREAD_DEFAULT_PRIORITY-1,0);
@@ -635,7 +645,7 @@ thread_t *thread_init_per_cpu(void)
     oneshot_timer_id[cpu_id] = arch_create_timer(oneshot_timer_callback,1,2,"oneshot", cpu_id);
 	dbg_print("LG thread per cpu init done,current cpu=%d\n",cpu_id);
 
-	init_done[cpu_id] = 1;
+	init_done[cpu_id].lock= 1;
 	return thread;
 }
 
@@ -663,7 +673,7 @@ thread_t *thread_init(void)
 	int cpu_id = get_cpu_id();
 	char tmp[16];
 
-	if( init_done[cpu_id] > 0 ) {
+	if( init_done[cpu_id].lock > 0 ) {
 		dbg_print("XXX already init\n");
 		return 0;
 	}
@@ -691,21 +701,21 @@ thread_t *thread_init(void)
 	thread->flags = FLAG_PRIMORDIAL;
 	set_current_thread(thread,cpu_id);
 	DEL_RUNQ(thread);
-#if defined(CONFIG_MULTICORES_PLATFORM)
     Interrupt_request(IPI_NEED_RESCHEDULE, ipi_handler, NULL);
     //Interrupt_request(IPI_TEST_2, ipi_handler, NULL);
-    arch_counter_calibration();
+   // arch_counter_calibration();
     oneshot_timer_id[0] = arch_create_timer(oneshot_timer_callback,1,2,"oneshot", 0);
     //arch_create_timer(arch_period_timer_callback, 1, 1, "PERIOD TIMER",0);
-#endif
-	
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+
 #ifdef ENABLE_SMP
 	Core_Wakeup(smp_thread, 1);
 	Core_Wakeup(smp_thread, 2);
 	Core_Wakeup(smp_thread, 3);
 #endif
-
-	init_done[cpu_id] = 1;
+#endif
+	init_done[cpu_id].lock= 1;
 	return thread;
 }
 
@@ -838,14 +848,14 @@ void del_sleep_q(thread_t *thread)
 	heap_delete(thread);
 }
 
-int lg_msleep(unsigned int msecs)
+int mtk_msleep(unsigned int msecs)
 {
 	int cpu_id = get_cpu_id();
 	thread_t *me = get_current_thread(cpu_id);
 
 	if( msecs == 0 ) return 0;
 
-	if( !init_done[cpu_id] || !is_irq_on() ) {
+	if( !init_done[cpu_id].lock || !is_irq_on() ) {
 		udelay(msecs*1000);
 		return -EINTR;
 	}
@@ -870,7 +880,7 @@ int need_to_reschedule(void)
 	return g_scheduler.need_schedule[get_cpu_id()];
 }
 
-int lg_sleep(int secs)
+int mtk_sleep(int secs)
 {
-	return lg_msleep((secs >= 0)?secs*(utime_t)MILLISECOND:NO_TIMEOUT);
+	return mtk_msleep((secs >= 0)?secs*(utime_t)MILLISECOND:NO_TIMEOUT);
 }

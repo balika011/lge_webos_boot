@@ -76,7 +76,7 @@ enum PAGE_TABLE_ENTRY_TYPE
 // Macro definition for single level 1 entry of page table
 #define L1Entry(type, addr, tex, ucb, acc) \
     ((type == SECTION) \
-        ? (((addr) & 0xfff00000) | ((acc) << 10) | ((tex) << 12) | (ucb) | (type)) \
+        ? (((addr) & 0xfff00000) |(1<<16) | ((acc) << 10) | ((tex) << 12) | (ucb) | (type)) \
         : ((type == COARSE_PAGE) ? (((addr) &0xfffffc00) | (type)) : 0))
 
 // for small page (0x2)

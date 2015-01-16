@@ -2,9 +2,9 @@
 #include <exports.h>
 #include <config.h>
 #include <x_typedef.h>
-#include "thread.h"
+#include <thread.h>
 #include <errno.h>
-#include "thread_info.h"
+#include <thread_info.h>
 
 #define get_cpu_id()	get_current_cpu()
 
@@ -12,41 +12,53 @@ extern spin_lock_t g_sched_lock;
 extern void add_run_queue(thread_t *thread);
 extern void add_sleep_q(thread_t *thread, utime_t timeout);
 #define NR_CPUS 4
-extern int init_done[NR_CPUS];
+extern spin_lock_t init_done[NR_CPUS];
 extern int megic_number_cleaned ;
-extern int smp_cpu_released[NR_CPUS];
+extern spin_lock_t smp_cpu_released[NR_CPUS];
+volatile unsigned int waitCount=0;
+#if defined(CONFIG_MULTICORES_PLATFORM)
 
 void release_non_boot_core(void)
 {
-	unsigned int waitCount=0;
-	if(init_done[1] && init_done[2] && init_done[3])
+	if(init_done[1].lock && init_done[2].lock && init_done[3].lock)
 	{
-		secondary_start_uboot_cleanup();
+	
 		megic_number_cleaned=1;
-		thread_cond_signal(&g_sub_cond[1]);
-		thread_cond_signal(&g_sub_cond[2]);
-		thread_cond_signal(&g_sub_cond[3]);
+		//thread_cond_signal(&g_sub_cond[1]);
+		//thread_cond_signal(&g_sub_cond[2]);
+		//thread_cond_signal(&g_sub_cond[3]);
+		
+		//secondary_start_uboot_cleanup();
 	}
 	else
 	{
-		printf("Should not be here!!!\n");
+		tlog("Should not be here!!!\n");
 	}
 
-	while((!smp_cpu_released[1]) || (!smp_cpu_released[2]) || (!smp_cpu_released[3]))
+	while((!smp_cpu_released[1].lock) || (!smp_cpu_released[2].lock) || (!smp_cpu_released[3].lock))
 	{
 		++waitCount;
-		
-		if (!smp_cpu_released[1]) 
-			printf("smp_cpu_not_released_1???!\n");
-		if (!smp_cpu_released[2]) 
-			printf("smp_cpu_not_released_2???!\n");
-		if (!smp_cpu_released[3]) 
-			printf("smp_cpu_not_released_3???!\n");
+		//if (!smp_cpu_released[1]) 
+		//	tlog("smp_cpu_not_released_1!\n");
 
-		//if (SMP_WAIT_NON_BOOT_CPU_RELEASE_COUNT < waitCount)
-		//	do_reset(NULL, 0, 0, NULL);  //just in case, should never be here!
+		//if (!smp_cpu_released[2]) 
+		//	tlog("smp_cpu_not_released_2???!\n");
+		//if (!smp_cpu_released[3]) 
+		//	tlog("smp_cpu_not_released_3???!\n");
+
+		if (2000<waitCount)
+			{
+				//tlog("release_non_boot_core smp_cpu_released =%x\n", smp_cpu_released[get_cpu_id()].lock);
+			}
 	}
 }
+#else
+void release_non_boot_core(void)
+{
+}
+
+#endif
+
 
 int thread_cond_new(cond_t *cvar)
 {

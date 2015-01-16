@@ -23,10 +23,10 @@
 
 include $(TOPDIR)/config.mk
 
-CFLAGS += -DCC_UBOOT 
+CFLAGS += -I$(TOPDIR)/smp/include -I$(COMMON_INC) -I$(OSAI_INC)
 LIB	= $(obj)libsmp.o
-
-COBJS	:= smp.o sched.o System.o sync.o cmd_thread.o
+COBJS-$(CONFIG_USE_IRQ)= smp.o sched.o System.o sync.o cmd_thread.o
+COBJS	:= $(COBJS-y)
 SRCS	:= $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS))
 

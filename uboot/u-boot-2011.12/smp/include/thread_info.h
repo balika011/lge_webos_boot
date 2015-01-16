@@ -14,7 +14,6 @@
 #define MILLISECOND 1000
 
 extern spin_lock_t g_print_lock;
-
 //#define THREAD_DEBUG
 
 #ifdef THREAD_DEBUG
@@ -58,7 +57,10 @@ enum {
 
 };
 #define get_cpu_id()	get_current_cpu()
-#define tlog(fmt,...) printf(fmt,##__VA_ARGS__);
+#define tlog(fmt,...) { \
+	spin_lock(&g_print_lock);\
+	printf(fmt,##__VA_ARGS__); \
+	spin_unlock(&g_print_lock); }
 
 #endif
 
@@ -199,9 +201,9 @@ extern scheduler_t g_scheduler ;
 extern thread_t *current_thread[NR_CPUS];
 extern const char* thread_state_str[];
 extern int active_count;
-extern int init_done[NR_CPUS];
+extern spin_lock_t init_done[NR_CPUS];
 extern cond_t g_sub_cond[NR_CPUS];
-extern int smp_cpu_released[NR_CPUS];
+extern spin_lock_t smp_cpu_released[NR_CPUS];
 
 /*****************************************
  * Thread states and flags

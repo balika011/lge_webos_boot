@@ -568,7 +568,137 @@ fiq:
 
 #endif /* CONFIG_USE_IRQ */
 #endif /* CONFIG_SPL_BUILD */
-#if 1 /*defined(CONFIG_MULTICORES_PLATFORM)*/
+#define dic_pa    0xF1001000
+#define cpu_if_pa 0xF1002000
+#define cpu_if_va 0xF1002000
+
+/*************************************************************************
+ *
+ * Init  GIC
+ *
+ *************************************************************************/
+.global __init_dic
+__init_dic:
+
+    @ disable interrupts in DIC
+    ldr   r0, =dic_pa
+    ldr   r1, =0x0 @ DICControl offset
+    mov   r2, #0
+    str   r2, [r0, r1]
+ 
+    @ disable all interrupt sources ID0-ID63
+    ldr   r1, =0x180 @ Interrupt Clear-enable Register ID0-ID31 offset
+    ldr   r2, =0xFFFFFFFF @ Disable All Interrupts. Does not affect SW interrupts (ID0-ID15)
+    str   r2, [r0, r1]
+    ldr   r1, =0x184 @ Interrupt Clear-enable Register ID32-ID63 offset
+    str   r2, [r0, r1]
+ 
+    @ clear all pending interrupts
+    ldr   r1, =0x280 @ Interrupt Clear-pending Register ID0-ID31 offset
+    ldr   r2, =0xFFFFFFFF @ Clear All Pending Interrupts
+    str   r2, [r0, r1]
+    ldr   r1, =0x284 @ Interrupt Clear-pending Register ID32-ID63 offset
+    str   r2, [r0, r1]
+ 
+    @ enable interrupts in DIC
+    ldr   r0, =dic_pa
+    ldr   r1, =0x0 @ DICControl offset
+    ldr   r2, [r0, r1]
+    orr   r2, r2, #0x1
+    str   r2, [r0, r1]
+ 
+    bx    lr
+
+
+/*
+ * Init CPU Interrupt Interface
+ */
+.global __init_interrupts
+__init_interrupts:
+
+    @ disable interrupts in CPU Interface
+    ldr   r0, =cpu_if_pa
+    ldr   r1, =0x0 @ CPUControl offset
+    mov   r2, #0
+    str   r2, [r0, r1]
+    
+    @ enable interrupt sources in DIC we care about
+    @ ID29 = Timer counter wrap interrupt
+    ldr   r0, =dic_pa
+    ldr   r1, =0x100 @ Interrupt Set-enable Register ID0-ID31 offset
+    ldr   r2, [r0, r1]
+    orr   r2, r2, #1 << 29
+    orr   r2, r2, #1 << 31
+    str   r2, [r0, r1]
+    @ set ID29 interrupt priority to highest
+    ldr   r1, =0x41C @ Priority level Register ID28-ID31 offset
+    ldr   r2, [r0, r1]
+    bic   r2, r2, #0xFF00 @ Set ID29 priority to 0 (highest priority)
+    str   r2, [r0, r1]
+ 
+    @ set priority mask to 1 (allowing interrupts with priority of 0 through)
+    @ i.e. ID29 Timer Interrupt
+    ldr   r0, =cpu_if_pa
+    ldr   r1, =0x4 @ Priority Mask Register offset
+    ldr   r2, =1 << 3
+    str   r2, [r0, r1]
+ 
+    @ enable interrupts in CPU interface
+    ldr   r1, =0x0 @ CPUControl offset
+    ldr   r2, [r0, r1]
+    orr   r2, r2, #1
+    str   r2, [r0, r1]
+ 
+    bx    lr
+
+DIE_LOOP:
+    b DIE_LOOP
+
+@-------------------------------------------------
+@Macro: SET_SVC32_MODE
+@-------------------------------------------------
+.macro set_svc32_mode
+    mrs r1, cpsr
+    bic r1, r1, #0x1f
+    orr r1, r1, #0xd3
+    msr cpsr,r1
+.endm
+
+@-------------------------------------------------
+@Macro: SET_IRQ_MODE
+@-------------------------------------------------
+.macro set_irq_mode
+    mrs r1, cpsr
+    bic r1, r1, #0x1f
+    orr r1, r1, #0xd2
+    msr cpsr,r1
+.endm
+
+@-------------------------------------------------
+@Macro: SET_FIQ_MODE
+@-------------------------------------------------
+.macro set_fiq_mode
+    mrs r1, cpsr
+    bic r1, r1, #0x1f
+    orr r1, r1, #0xd1
+    msr cpsr,r1
+.endm
+/*************************************************************************
+ * 
+ * setup irq stack pointer
+ *
+ *************************************************************************/
+.globl set_irq_sp
+set_irq_sp:
+    /* r0=irq stack pointer */
+    set_irq_mode            @ change to IRQ mode
+    mov sp, r0                  @ set IRQ_SP
+    set_svc32_mode       @ change back to SVC mode
+     
+    mov pc, lr
+    
+    
+#if defined(CONFIG_MULTICORES_PLATFORM)
 /*
  *************************************************************************
  *
@@ -577,7 +707,7 @@ fiq:
  *************************************************************************
 */
 
-#include <asm/smp_platform.h> 
+#include "../../../../smp/include/smp_platform.h"
 
     .macro smp_wreg addr, reg, mask
     ldr         r12, =\addr
@@ -599,20 +729,45 @@ fiq:
     ldr         \cpu_reg, [r12]
     .endm
 
+    .globl setup_vector
+    setup_vector:
+	/* Set V=0 in CP15 SCTRL register - for VBAR to point to vector */
+	mrc	p15, 0, r0, c1, c0, 0	@ Read CP15 SCTRL Register
+  bic	r0, #CR_V		@ V = 0
+	mcr	p15, 0, r0, c1, c0, 0	@ Write CP15 SCTRL Register
+
+	/* Set vector address in CP15 VBAR register */
+	mov	r0, #0x1000000
+	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR
+	 mov   pc, lr
+	 
+	   .globl setup_timer_frq
+    setup_timer_frq:
+	ldr		r12, =(0x5b8d80) @6MHz
+	MCR     p15, 0, r12, c14, c0, 0
+	 mov   pc, lr
+	 
     .globl secondary_setup_mmu
     secondary_setup_mmu:
-    smp_rreg  r1, (CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_TTB0)   /* r1 = Address of TTB0*/
+    mov  r1, #0x1f00000   /* r1 = Address of TTB0*/
 
     /* setup mmu*/
-    //mov r0, #(domain_val(DOMAIN_USER, DOMAIN_MANAGER) | \
-    //                  domain_val(DOMAIN_AP, DOMAIN_MANAGER) | \
-    //                  domain_val(DOMAIN_BOOT, DOMAIN_MANAGER))
+    mov r0, #1 //domain 0 set 1
+    
     mcr p15, 0, r0, c3, c0, 0           @ load domain access register
     mcr p15, 0, r1, c2, c0, 0           @ load page table pointer
-
+    
+    /*enable smp*/
+    mrc p15, 0, r0, c1, c0, 1           @ read control reg
+    ldr      r1, =0x00000040
+    orr r0, r0, r1
+    mov r0, r0
+    isb
+    mcr p15, 0, r0, c1, c0, 1           @ write control reg
+    
     /* enable mmu*/
     mrc p15, 0, r0, c1, c0, 0           @ read control reg
-    ldr      r1, =0x00001001
+    ldr      r1, =0x00001005
     orr r0, r0, r1
     mov r0, r0
     mcr p15, 0, r0, c1, c0, 0           @ write control reg
@@ -626,6 +781,17 @@ fiq:
     and   r0, r0, #0x03
     mov   pc, lr
 
+   .globl cpu_lock
+    cpu_lock:
+    mrc   p15, 0, r0, c0, c0, 5    
+    and   r0, r0, #0x03
+    cmp   r0,#0x3
+    beq DIE_LOOP
+    cmp   r0,#0x2
+    beq DIE_LOOP
+    cmp   r0,#0x1
+    beq DIE_LOOP
+    mov   pc, lr
     .globl secondary_setup_stack
     secondary_setup_stack:
     smp_rreg  r0, (CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_SP)  /*r0 = stack pointer*/
@@ -645,6 +811,9 @@ fiq:
 
     .globl init_secondary_cpu
     init_secondary_cpu:
+    //bl cpu_lock
+    bl   setup_vector
+    bl   setup_timer_frq
     smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_SECOND_INIT, r0 
     bl   secondary_setup_stack   
     smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_STACK_READY, r0
@@ -653,7 +822,5 @@ fiq:
 
     bl secondary_init_r
 /*We assume we will never been here*/    
-DIE_LOOP:
-    b DIE_LOOP
 
 #endif
