@@ -845,6 +845,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 #ifdef CFG_LG_CHG
 	ulong src;
+    init_fnc_t **init_fnc_ptr;
 #endif
 #if (CONFIG_ENABLE_MMU)
 		HalInitMMU(0x1F00000);
@@ -977,6 +978,16 @@ void board_init_r(gd_t *id, ulong dest_addr)
 
 	/* initialize environment */
 	env_relocate();
+
+#ifdef CFG_LG_CHG
+    for(init_fnc_ptr = init_sequence_post; *init_fnc_ptr; ++init_fnc_ptr)
+    {
+        if((*init_fnc_ptr)() != 0)
+        {
+            hang();
+        }
+    }
+#endif
 
 #if defined(CONFIG_CMD_PCI) || defined(CONFIG_PCI)
 	arm_pci_init();

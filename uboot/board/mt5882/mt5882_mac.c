@@ -659,7 +659,7 @@ int StarDmaTxSet(Mmac *dev, u32 buffer, u32 length, u32 extBuf)
 	//wmb();
 	txDesc->ctrlLen &= ~TX_COWN;     /* Set HW own */
 	
-	TR(  "." );
+//	TR(  "." );
 	 
     dev->txWrIdx = DescTxLast(txDesc) ? 0 : descIdx + 1;
 	return descIdx;
@@ -699,7 +699,7 @@ int StarDmaRxGet(Mmac *dev /*, u32 *buffer, u32 *ctrlLen, u32 *extBuf */)
 	if (StarDmaRxValid(rxDesc->ctrlLen)) /* process good packets only */
     {
         u32 len = StarDmaRxLength(rxDesc->ctrlLen); /* ignore Ethernet CRC bytes */
-        TR(  ".");
+//        TR(  ".");
 		NetReceive((uchar*)rxDesc->buffer, len);
     }
 	
