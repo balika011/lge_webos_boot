@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/16 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4002,8 +4002,12 @@ UINT32 OSD_BASE_GetDisplayWidth(VOID)
     #endif
     }
 #endif
-    //Printf("[mtk70854]1 PANEL_GetPanelWidth=%d \n", PANEL_GetPanelWidth());
+
+#if 0
     return PANEL_GetPanelWidth();
+#else
+	return 1920;
+#endif
 }
 
 UINT32 OSD_BASE_GetDisplayHeight(VOID)
@@ -4017,5 +4021,9 @@ UINT32 OSD_BASE_GetDisplayHeight(VOID)
     }
 #endif
 
+#if 0
     return PANEL_GetPanelHeight();
+#else
+	return 1080;
+#endif
 }
