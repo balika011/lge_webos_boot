@@ -86,5 +86,7 @@ EXTERN void vScposGfxDumpStart(UINT8 u1Path);
 EXTERN void vScposGfxDumpEnd(UINT8 u1Path);
 EXTERN void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze);
 EXTERN UINT8 u1Scpip_GFX_Set_3x3(void);
+EXTERN void u1Scpip_GFX_Copy_Buffer(void);
+
 
 

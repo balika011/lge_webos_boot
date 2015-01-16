@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/14 $
+ * $Date: 2015/01/16 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -97,6 +97,7 @@
 #include "drv_scaler_drvif.h"
 #include "drv_scaler.h"
 #include "drv_display.h"
+
 
 
 #if defined(CC_MT5399)||defined(CC_MT5882)
@@ -369,7 +370,7 @@ UINT8 u1Scpip_GFX_Set_Dram_Address(UINT32 u4BaseAddr, UINT32 u4FrameSize, UINT8 
 	_arGfxInf.u4WAddrLow = u4BaseAddr;
 	_arGfxInf.u4WAddrHigh = u4BaseAddr + (u1FrameNum * u4FrameSize);
 
-	vScpipGfxSetFrameNum(u1FrameNum-1);
+	//vScpipGfxSetFrameNum(u1FrameNum-1);
 
 	// update frame addresses
 	for(u1Idx=0; u1Idx<u1FrameNum; u1Idx++)
@@ -516,6 +517,34 @@ UINT8 u1Scpip_GFX_Set_3x3(void)
 	
 }
 
+void u1Scpip_GFX_Copy_Buffer(void)
+{
+	FBM_POOL_T* prPoolVss;
+	UINT8 *pvss = NULL;
+	UINT8 *pvss2 = NULL;
+    int i = 0;
+    int j = 0;
+    int k = 0;
+
+	UINT32 u4width = ((u4Scpip_GFX_GetWidth()+3)>>2)<<2;
+	UINT32 u4height = u4Scpip_GFX_GetHeight();
+
+    prPoolVss = FBM_GetPoolInfoAuto((UCHAR)FBM_POOL_TYPE_VSS, NULL);
+	pvss= (UINT8 *)(VIRTUAL((UINT32)(prPoolVss->u4Addr)));
+	pvss2 = (UINT8 *)(VIRTUAL((UINT32)(vScpipGfxGetAddrBase(1)<<4)));
+	HalFlushInvalidateDCacheMultipleLine((VIRTUAL(vScpipGfxGetAddrBase(1) << 4)),_arGfxInf.u4BassAddrOffset << 4);
+	LOG(2,"======= u1Scpip_GFX_Copy_Buffer %d %d 0x%x 0x%x\n",u4width,u4height,(vScpipGfxGetAddrBase(1)<<4),pvss2);
+   for(i=0;i<u4height;i++)
+   {
+   		for(j=0;j<u4width *4;j++)
+   		{
+   			if((j+1)%4 == 0 && j!= 0)continue;
+			pvss2[k]=pvss[i*u4width*4 +j];	
+			k++;
+   		}
+   }	
+   HalFlushInvalidateDCacheMultipleLine((VIRTUAL(vScpipGfxGetAddrBase(1) << 4)),_arGfxInf.u4BassAddrOffset << 4);
+}
 
 void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
 {
@@ -525,8 +554,9 @@ void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
 	
 	if(u1Freeze == SV_TRUE)
 	{
-		//VssWriteFreeze = SV_TRUE;
-		u1Scpip_GFX_Write_Enable(SV_FALSE);//because LG will set freeze in gfx write end ,so direct disable write enable
+		VssWriteFreeze = SV_TRUE;
+		//u1Scpip_GFX_Write_Enable(SV_FALSE);//because LG will set freeze in gfx write end ,so direct disable write enable
+		u1Scpip_GFX_Copy_Buffer();
 	}
 	else
 	{

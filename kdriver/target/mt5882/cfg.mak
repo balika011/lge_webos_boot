@@ -20,10 +20,8 @@ ifeq "$(SUPPORT_VSS_FLINGO)" "true"
     export CC_SUPPORT_VSS = true
 endif
 
-ifeq "$(WIDEVINE_L1_SUPPORT)" "true"
 DEFINES += -DCC_WIDEVINE_L1_SUPPORT
-DEFINES += -DCC_FBM_SECURE_FEEDER
-endif
+#DEFINES += -DCC_FBM_SECURE_FEEDER
 
 #
 # Seamless Support Option: DivX Cert, Netflix, Dash, Live_stream, YouTube HTML5 are seamless applications and need to enable CC_ENABLE_SEAMLESS_FOR_2D

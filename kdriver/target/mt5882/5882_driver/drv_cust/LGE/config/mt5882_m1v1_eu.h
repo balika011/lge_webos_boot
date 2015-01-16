@@ -421,7 +421,7 @@
 //----------------------------------------------------------------------------
 // EEPROM customization
 //----------------------------------------------------------------------------
-#define SYSTEM_EEPROM_SIZE                  (16384) //16KBytes
+#define SYSTEM_EEPROM_SIZE                  (32768)//(16384)  //16KBytes
 #ifndef CC_LGE_PROTO_PCBA
 #define SYSTEM_EEPROM_WP_GPIO               (GPIO(79)) // OPWM0
 #define SYSTEM_EEPROM_WP_ENABLE_POLARITY    (1)
@@ -820,6 +820,10 @@
 /*
  * default quality table
 */
+#define QTYTBL_INCLUDE_FILE           "LGE/QTY_mt5882_eu_linux/LGE_QtyTbl.h"
+#define COLOR_PARAM_INCLUDE_FILE      "LGE/PANEL_DEFAULT/color_param.h"
+#define CUSTOM_VIDEO_DRV_BODY_FILE    "LGE/LGE_video_drv.c"
+
 #ifndef QTYTBL_INCLUDE_FILE
 //#define QTYTBL_INCLUDE_FILE               "mtk/QTY_DEFAULT/mtk_QtyTbl.h"
 #endif
