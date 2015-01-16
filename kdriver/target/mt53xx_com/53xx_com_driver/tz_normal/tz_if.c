@@ -33,10 +33,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/16 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2449,3 +2449,12 @@ BOOL TZ_FBM_Initialization(void *prKernParam  , UINT32 u4Size)
 	return ret;
 }
 #endif
+BOOL TZ_RPMB_LOAD_MAC_KEY(void *prKernParam         , UINT32 u4Size) {
+    return TZ_CTL(TZCTL_RPMB_LOAD_MAC_KEY          , PHYSICAL((UINT32)prKernParam) , TZ_CACHE_ALIGN(u4Size));
+}
+BOOL TZ_RPMB_GET_WCNT_REQ(void *prKernParam , UINT32 u4Size) {
+    return TZ_CTL(TZCTL_RPMB_GET_WCNT_REQ   , PHYSICAL((UINT32)prKernParam) , TZ_CACHE_ALIGN(u4Size));
+}
+BOOL TZ_RPMB_SET_WCNT_RESP(void *prKernParam  , UINT32 u4Size) {
+	return TZ_CTL(TZCTL_RPMB_SET_WCNT_RESP    , PHYSICAL((UINT32)prKernParam) , TZ_CACHE_ALIGN(u4Size));
+}   

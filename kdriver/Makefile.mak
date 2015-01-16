@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #6 $
-# $Date: 2015/01/14 $
+# $Revision: #7 $
+# $Date: 2015/01/16 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -380,6 +380,13 @@ ifeq "$(TRUSTZONE)" "true"
 else
 	export TVP_SUPPORT := false
 	export SVP_SUPPORT := false
+endif
+
+
+ifeq "$(TRUSTZONE)" "true"
+ifndef WIDEVINE_L1_SUPPORT
+export WIDEVINE_L1_SUPPORT := false
+endif
 endif
 
 # DM verity for security enhancement

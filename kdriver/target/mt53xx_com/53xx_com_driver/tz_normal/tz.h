@@ -33,10 +33,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/16 $
  * $RCSfile: dmx.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -255,6 +255,12 @@
 #define TZCTL_SEC_BUF_FLUSH                         ((UINT32)0x1804)
 #define TZCTL_SEC_BUF_FRAGMENT_ALLOC				((UINT32)0x1805)
 #define TZCTL_SEC_BUF_FRAGMENT_FREE                 ((UINT32)0x1806)
+
+#define TZCTL_RPMB_LOAD_MAC_KEY                     ((UINT32)0x1880)
+#define TZCTL_RPMB_GET_WCNT_REQ				        ((UINT32)0x1881)
+#define TZCTL_RPMB_SET_WCNT_RESP                    ((UINT32)0x1882)
+
+
 
 
 

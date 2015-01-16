@@ -33,10 +33,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/16 $
  * $RCSfile: dmx.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -318,8 +318,9 @@ EXTERN BOOL TZ_SEC_BUF_FLUSH(void *prKernParam         , UINT32 u4Size);
 EXTERN BOOL TZ_SEC_BUF_FRAGMENT_ALLOC(void *prKernParam , UINT32 u4Size);
 EXTERN BOOL TZ_SEC_BUF_FRAGMENT_FREE(void *prKernParam  , UINT32 u4Size);
 
-
-
+EXTERN BOOL TZ_RPMB_LOAD_MAC_KEY(void *prKernParam         , UINT32 u4Size);
+EXTERN BOOL TZ_RPMB_GET_WCNT_REQ(void *prKernParam , UINT32 u4Size);
+EXTERN BOOL TZ_RPMB_SET_WCNT_RESP(void *prKernParam  , UINT32 u4Size);
 
 /* SONY IPTVES */
 
