@@ -17,10 +17,7 @@ extern spin_lock_t g_print_lock;
 //#define THREAD_DEBUG
 
 #ifdef THREAD_DEBUG
-#define dbg_print(fmt,...) { \
-	spin_lock(&g_print_lock);\
-	printf(fmt,##__VA_ARGS__); \
-	spin_unlock(&g_print_lock); }
+#define dbg_print(fmt,...)	printf(fmt,##__VA_ARGS__); 
 #else
 #define dbg_print(fmt,...) do{;}while(0)
 #endif
@@ -35,10 +32,7 @@ enum {
 
 };
 
-#define tlog(fmt,...) { \
-	spin_lock(&g_print_lock);\
-	printf(fmt,##__VA_ARGS__); \
-	spin_unlock(&g_print_lock); }
+#define tlog(fmt,...) 	printf(fmt,##__VA_ARGS__); 
 
 #else
 
@@ -57,10 +51,7 @@ enum {
 
 };
 #define get_cpu_id()	get_current_cpu()
-#define tlog(fmt,...) { \
-	spin_lock(&g_print_lock);\
-	printf(fmt,##__VA_ARGS__); \
-	spin_unlock(&g_print_lock); }
+#define tlog(fmt,...) 	printf(fmt,##__VA_ARGS__); 
 
 #endif
 
