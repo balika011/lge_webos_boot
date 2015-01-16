@@ -215,7 +215,7 @@ int serial_printf(const char *fmt, ...)
 	i = vsprintf(printbuffer, fmt, args);
 	va_end(args);
 
-	serial_puts(printbuffer);
+	//serial_puts(printbuffer);
 	return i;
 }
 
@@ -444,16 +444,25 @@ void puts(const char *s)
 		fputs(stdout, s);
 	} else {
 		/* Send directly to the handler */
-		serial_puts(s);
+		//serial_puts(s);
 	}
 }
+#include <../smp/include/spinlock.h>
+
+extern spin_lock_t g_print_lock;
+//#define readl(addr) (*(volatile unsigned int*)(addr))
+extern volatile int LogEnable ;
 
 int printf(const char *fmt, ...)
 {
 	va_list args;
 	uint i;
 	char printbuffer[CONFIG_SYS_PBSIZE];
-
+	
+#if defined(CONFIG_MULTICORES_PLATFORM)
+if(LogEnable == 2)
+	spin_lock(&g_print_lock);
+#endif
 #ifndef CONFIG_PRE_CONSOLE_BUFFER
 	if (!gd->have_console)
 		return 0;
@@ -468,7 +477,13 @@ int printf(const char *fmt, ...)
 	va_end(args);
 
 	/* Print the string */
-	puts(printbuffer);
+	serial_puts(printbuffer);
+	
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	if(LogEnable == 2)
+	spin_unlock(&g_print_lock);
+#endif
+
 	return i;
 }
 
