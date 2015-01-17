@@ -325,6 +325,16 @@ UINT8 bGetSignalType(UINT8 bPath)
         return SrcInternalMap[VSS_MAJOR(src)].signaltype;
     else	return SV_ST_MAX;
 }
+#ifdef CC_SUPPORT_PIPELINE
+UINT8 bGetSignalTypeAVD(UINT8 bPath)
+{
+    UINT8 src=(bPath?_fVFEAVDSourceSubNew:_fVFEAVDSourceMainNew);
+
+    if(VSS_MAJOR(src)<VSS_RESERVE)
+        return SrcInternalMap[VSS_MAJOR(src)].signaltype;
+    else	return SV_ST_MAX;
+}
+#endif
 
 UINT8 bGetSignalTypeNew(UINT8 bPath)
 {

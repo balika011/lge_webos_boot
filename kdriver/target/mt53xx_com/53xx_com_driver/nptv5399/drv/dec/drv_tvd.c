@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #2 $
+* $Revision: #3 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -1117,15 +1117,23 @@ static void _svDrvTvdSVPresDetCount(void)
 {
     UINT8 fgSVPres;
 #ifdef  SUPPORT_AV_COMP_AUTO
-
-    if((VSS_MAJOR(_bMonMainNew) != VSS_SV) && (VSS_MAJOR(_bMonSubNew) != VSS_SV))
+#ifdef CC_SUPPORT_PIPELINE
+   if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_SV) && (VSS_MAJOR(_fVFEAVDSourceSubNew) != VSS_SV))
+#else
+   if((VSS_MAJOR(_bMonMainNew) != VSS_SV) && (VSS_MAJOR(_bMonSubNew) != VSS_SV))
+#endif
     {
         return;
     }
 
 #else
 
+#ifdef CC_SUPPORT_PIPELINE
+    if((_fVFEAVDMainICPin == P_FA) && (_fVFEAVDSubICPin == P_FA))
+#else
     if((_bMainMonICIn == P_FA) && (_bSubMonICIn == P_FA))
+#endif
+
     {
         return;
     }
@@ -4789,7 +4797,7 @@ static void _svDrvTvdModeChg(void)
 		{
                #ifndef CC_SUPPORT_RECORD_AV
                #if SUPPORT_SCART
-	  		   if(fgIsMainScart())
+	  		   if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
 	  			{
 	  				vDrvScartRGBFreeRun(SV_ON);
 	  			}
@@ -4888,11 +4896,19 @@ static void _svDrvTvdModeChg(void)
 #if SUPPORT_SCART  //Gene Chang For the SCART Auto to remove the S first function 2006.05.12
 static void _svDrvTvdScartSet(UINT8 bUIScartMode,UINT8 *PbSFisSV,UINT8 *PbTrigScartAuto,RTvdStatus *pTvd3dStatus)
 {
-    if(_bMainICIn == P_FB0 || _bMainICIn == P_FB1
+#ifdef CC_SUPPORT_PIPELINE
+		if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+	
+#else
+		if(!(_bMainICIn==(UINT8)P_FB0 || _bMainICIn==(UINT8)P_FB1
 #if SUPPORT_POP
-       || _bSubICIn == P_FB0 || _bSubICIn == P_FB1
+		   || _bSubICIn==(UINT8)P_FB0 || _bSubICIn==(UINT8)P_FB1
 #endif
-      )
+		   )
+    )
+	
+#endif
+
     {
         if(bUIScartMode == SV_SCART_AUTO)
         {
@@ -6634,7 +6650,11 @@ void vTvd3dBHModeDone(void)
         return;
     }
     #if SUPPORT_SCART	
+	#ifdef CC_SUPPORT_PIPELINE
+    if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+    #else
     if(fgIsMainScart() || fgIsPipScart())
+    #endif
     {
         vDrvScartRGBFreeRun(SV_OFF);
     }
@@ -6811,7 +6831,12 @@ void vTvd3dBHModeChg(void)
         return;
     }
     #if SUPPORT_SCART
+#ifdef CC_SUPPORT_PIPELINE
+    if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+#else
     if(fgIsMainScart() || fgIsPipScart())
+#endif
+
     {
         vDrvScartRGBFreeRun(SV_ON);
     }
@@ -6877,8 +6902,11 @@ void vTvd3dMainLoop(void)
 #endif
         //For Y/C signal at scart color abnormal(TDC need)	by wensheng
 #if SUPPORT_SCART
-
+#ifdef CC_SUPPORT_PIPELINE
+        if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+#else
         if(fgIsSrcScart(_rTvd3dStat.bIsPip))
+#endif
         {
             if(fgDrvGetScartModeIsSv())
             {
@@ -7780,13 +7808,20 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     LOG(1,"======================================\n");
     LOG(1,"[TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d \n", bPath, bOnOff);
     LOG(1,"======================================\n");	
-
+    #ifdef CC_SUPPORT_PIPELINE
+    if(bGetSignalTypeAVD(bPath)==SV_ST_TV)
+	#else
     if(bGetSignalType(bPath)==SV_ST_TV)
+	#endif
     {
         vTvd3dFastChannelChange(SV_ON);
     }
 #if TVD_ADAP_VPRES_SETTING
+#ifdef CC_SUPPORT_PIPELINE
+    if(bPath==SV_VP_MAIN && bGetSignalTypeAVD(bPath)==SV_ST_TV && _sbTvdConnected==FALSE)
+#else
     if(bPath==SV_VP_MAIN && bGetSignalType(bPath)==SV_ST_TV && _sbTvdConnected==FALSE)
+#endif
     {
         _sbTvdConnected = TRUE;
         _sbAdapVpresStart = TRUE;
@@ -7804,7 +7839,12 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         _sbConnectedByMain = bOnOff;
         if(bOnOff==SV_ON)
         {
+			
+#ifdef CC_SUPPORT_PIPELINE
+            _su1MainSourceType = bGetSignalTypeAVD(bPath);
+#else
             _su1MainSourceType = bGetSignalType(bPath);
+#endif
         }
         else
         {
@@ -7817,7 +7857,11 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         _sbConnectedBySub = bOnOff;    
         if(bOnOff==SV_ON)
         {
+#ifdef CC_SUPPORT_PIPELINE
+            _su1SubSourceType = bGetSignalTypeAVD(bPath);
+#else
             _su1SubSourceType = bGetSignalType(bPath);
+#endif
         }
         else
         {
@@ -7907,8 +7951,13 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         _bAgcPedEn = 0;
     }
 
+#ifdef CC_SUPPORT_PIPELINE
+    _rTvd3dStatus.eSourceType = bTvdCtrl(TCTL_INPUTTYPE,TC_GETEN,0)?
+                                bTvdCtrl(TCTL_INPUTTYPE,TC_GETVAL,0):bGetSignalTypeAVD(bPath);
+#else
     _rTvd3dStatus.eSourceType = bTvdCtrl(TCTL_INPUTTYPE,TC_GETEN,0)?
                                 bTvdCtrl(TCTL_INPUTTYPE,TC_GETVAL,0):bGetSignalType(bPath);
+#endif
 #if TVD_FRS_FOR_NONSTDSIGNAL
     _svDrvTvdRstNSTStatus(_rTvd3dStatus.fgIs525, &_rTvd3dNSTDStatus);
 #endif
@@ -8098,13 +8147,19 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     vIO32WriteFldAlign(CTG_07, SV_ON, FIXBLV);    // Set Fix Blv. Target blank level will be set at adcset_int.c
 #endif
 #if SUPPORT_SCART
+#ifdef CC_SUPPORT_PIPELINE
+	if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
 
-    if(!(_bMainICIn==(UINT8)P_FB0 || _bMainICIn==(UINT8)P_FB1
+#else
+	if(!(_bMainICIn==(UINT8)P_FB0 || _bMainICIn==(UINT8)P_FB1
 #if SUPPORT_POP
-         || _bSubICIn==(UINT8)P_FB0 || _bSubICIn==(UINT8)P_FB1
+				 || _bSubICIn==(UINT8)P_FB0 || _bSubICIn==(UINT8)P_FB1
 #endif
-        )
-      )
+	   )
+	   )
+
+#endif
+
 #endif
     {
         //vTvd3dSetYCDelay(0);
@@ -8281,8 +8336,12 @@ UINT8 bTvd3dSignalStatus(void)
 {
 #if TVD_ATV_SNOWSCREEN_BY_DRV
 //#if 0//SUPPORT_ATV_SNOWSCREEN
-
+#ifdef CC_SUPPORT_PIPELINE
+    if(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)
+#else
     if(fgIsSrcAtv(SV_VP_MAIN)|| fgIsSrcAtv(SV_VP_PIP))
+#endif
+
     {
         return SV_VDO_STABLE;
     }
@@ -8408,16 +8467,35 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
     }
 
     vTvd3dTrigModeDet();
-
-    if(fgIsMainTvd3d())
+#ifdef CC_SUPPORT_PIPELINE
+	if(_fVSCConnectAVD)
     {
-        vSetMainFlg(MAIN_FLG_MODE_CHG);
-    }
+		if(fgIsMainTvd3d())
+		{
+			vSetMainFlg(MAIN_FLG_MODE_CHG);       
+		}
+		
+		if(fgIsPipTvd3d())
+		{
+			vSetPipFlg(PIP_FLG_MODE_CHG);
+		}
 
-    if(fgIsPipTvd3d())
-    {
-        vSetPipFlg(PIP_FLG_MODE_CHG);
-    }
+	}
+	else
+	{
+       //to do           need set the video path patch again?
+	}
+#else
+	if(fgIsMainTvd3d())
+	{
+		vSetMainFlg(MAIN_FLG_MODE_CHG);
+	}
+
+	if(fgIsPipTvd3d())
+	{
+		vSetPipFlg(PIP_FLG_MODE_CHG);
+	}
+#endif
 }
 
 /**
@@ -9102,7 +9180,11 @@ void vDrvSetTVDOffset(UINT16 value)
  */
 UINT8 wDrvGetTVDADCMAX(void)
 {
-    if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#ifdef CC_SUPPORT_PIPELINE
+		if((bGetSignalTypeAVD(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalTypeAVD(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#else
+		if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#endif
     {
         return bApiEepromReadByte(EEP_VIDEO_AUTO_CALIB_TV_MAX);
     }
@@ -9122,7 +9204,12 @@ UINT8 wDrvGetTVDADCMAX(void)
  */
 void  vCust_TVD_ADC_MAX_Update(UINT8 value)
 {
+	
+#ifdef CC_SUPPORT_PIPELINE
+    if((bGetSignalTypeAVD(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalTypeAVD(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#else
     if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#endif
     {
         UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_MAX,value));
     }
@@ -9134,7 +9221,12 @@ void  vCust_TVD_ADC_MAX_Update(UINT8 value)
 
 void vCust_TVD_Gain_Update(UINT8 value)
 {
-    if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#ifdef CC_SUPPORT_PIPELINE
+	if((bGetSignalTypeAVD(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalTypeAVD(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#else
+	if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#endif
+
     {
         UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_GAIN0, value));
         //UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_DONE, 0xAA));
@@ -9172,7 +9264,12 @@ void vCust_TVD_Offset_Update(UINT16 value)
 {
     value = value - 200;//only store the value - 200
 
-    if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#ifdef CC_SUPPORT_PIPELINE
+	if((bGetSignalTypeAVD(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalTypeAVD(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#else
+	if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#endif
+
     {
         UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_OFFSET, (UINT8)value));
     }
@@ -9443,7 +9540,12 @@ BOOL bDrvTVDAdcCalib(void)
 
         LOG(0, "TVD MAX=%d\n",_swY_Avg_Lvl);
 
-        if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+		
+#ifdef CC_SUPPORT_PIPELINE
+		if((bGetSignalTypeAVD(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalTypeAVD(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#else
+		if((bGetSignalType(SV_VP_MAIN) == (UINT8)SV_ST_TV) || (bGetSignalType(SV_VP_PIP) == (UINT8)SV_ST_TV))
+#endif
         {
             UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_GAIN0, MANUAL_ACODE));
             UNUSED(fgApiEepromWriteByte(EEP_VIDEO_AUTO_CALIB_TV_GAIN1, (UINT8)MANUAL_DCODE));
@@ -9635,7 +9737,12 @@ void vSVPresDet(void)
 #ifdef  SUPPORT_AV_COMP_AUTO
 void vAVCompAutoDet(void)
 {
+#ifdef CC_SUPPORT_PIPELINE
+    if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR) && (VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR))  //the function can not use
+#else
     if((VSS_MAJOR(_bMonMainNew) != VSS_YPBPR) && (VSS_MAJOR(_bMonSubNew) != VSS_YPBPR))
+#endif
+
     {
         return;
     }
@@ -10085,11 +10192,21 @@ UINT8 bTvdCtrl(UINT8 bItem,UINT8 bCmd,UINT32 bArg) reentrant
         case TCTL_INPUTTYPE:
             if(bCmd==TC_ENABLE)
             {
+				
+#ifdef CC_SUPPORT_PIPELINE
+                _srTvdCtrl[bItem].val=_rTvd3dStatus.eSourceType=(bArg<=SV_ST_SV)?bArg:bGetSignalTypeAVD(_rTvd3dStat.bIsPip);
+#else
                 _srTvdCtrl[bItem].val=_rTvd3dStatus.eSourceType=(bArg<=SV_ST_SV)?bArg:bGetSignalType(_rTvd3dStat.bIsPip);
+#endif
             }
             else
             {
+#ifdef CC_SUPPORT_PIPELINE
+                _rTvd3dStatus.eSourceType=bGetSignalTypeAVD(_rTvd3dStat.bIsPip);
+#else
                 _rTvd3dStatus.eSourceType=bGetSignalType(_rTvd3dStat.bIsPip);
+#endif
+
             }
 
             break;
@@ -10574,7 +10691,7 @@ void vTvd3dInit(void)
                       );
 #ifdef CC_MT5396
 
-    if(_rTvd3dStatus.eSourceType==SV_ST_SV)
+    if(_rTvd3dStatus.eSourceType==SV_ST_SV)  //may be have isse because init may be before connect TVD?
     {
         vIO32WriteFldAlign(SECAM_02, SCM_MATCH_PAL_DELAY_SV_FOR_C, MATCH_PAL_DELAY_FOR_C);
         vIO32WriteFldAlign(SECAM_02, SCM_MATCH_PAL_DELAY_SV_FOR_Y, MATCH_PAL_DELAY_FOR_Y);

@@ -89,7 +89,7 @@
  * Last changed:
  * -------------
  * $Author: p4admin $
- * $Revision: #2 $
+ * $Revision: #3 $
  * $Date: 2015/01/17 $
  ****************************************************************************/
 
@@ -123,6 +123,9 @@ extern BOOL fgIsSrcVGA(UINT8 bPath);
 extern BOOL fgIsSrcYPBPR(UINT8 bPath);
 extern UINT8 bGetICInputType(UINT8 bPath) reentrant;
 extern UINT8 bGetSignalType(UINT8 bPath) ;
+#ifdef CC_SUPPORT_PIPELINE
+extern UINT8 bGetSignalTypeAVD(UINT8 bPath) ;
+#endif
 extern void vDrvSetTVMux(UINT8 bSrc,UINT8 bMonSrc);
 extern UINT32 dAvMuxMask(UINT8 bAvMux,UINT8 bCh);
 
