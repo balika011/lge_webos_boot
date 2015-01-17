@@ -88,9 +88,9 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
- * $Revision: #1 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Revision: #2 $
+ * $Date: 2015/01/17 $
  ****************************************************************************/
 
 #ifndef _SOURCE_SELECT_H_
@@ -139,6 +139,9 @@ extern void initSCARTRGB(UINT8 bVSrc, UINT8 ic);
 extern void vSetMOutMux(UINT8 dec);
 extern void vSetSOutMux(UINT8 dec);
 extern void vDrvSetInternalMux(UINT8 path,UINT8 src);
+#ifdef CC_SUPPORT_PIPELINE
+extern void vDrvSetInternalMuxVFE_AVD(UINT8 path,UINT8 src);
+#endif
 extern void vMuxCleanup(void);
 #ifdef CC_SOURCE_AUTO_DETECT
 extern void vDrvDetectSourceState(void);

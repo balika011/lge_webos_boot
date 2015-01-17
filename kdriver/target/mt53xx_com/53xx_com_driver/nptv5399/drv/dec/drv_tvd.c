@@ -93,11 +93,11 @@
 *
 * Last changed:
 * -------------
-* $Author: dtvbm11 $
+* $Author: p4admin $
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #1 $
+* $Revision: #2 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -155,6 +155,8 @@
 #endif
 
 #include "tvd_debug.h"
+#include "tve_if.h"
+
 
 /**************************************************************************
  * Local Constant/Configure Definitions
@@ -358,6 +360,8 @@ enum ePALM50_DET_STATE
 extern UINT16 _wTargetBlk;
 extern UINT8  RF_level;
 extern UINT32 _u4BypassNptvMloop;
+
+
 /**************************************************************************
  * Static/Local variables
  *************************************************************************/
@@ -4302,16 +4306,80 @@ static void _svDrvTvdModeChgDone(void)
 
 #endif
     _svDrvTvdUpdateActiveWH();
-
-    if(fgIsMainTvd3d())
+    
+#ifdef CC_SUPPORT_PIPELINE
+	if(_fVSCConnectAVD)
+	{
+		if(fgIsMainTvd3d())
+		{
+			vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+		}
+		
+		if(fgIsPipTvd3d())
+		{
+			vSetPipFlg(PIP_FLG_MODE_DET_DONE);
+		}
+	}
+	//VSC do not connect the AVD it need to something
+    else
     {
-        vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
-    }
+       
+	   vTvd3dBHModeDone();
+	   if(_rTvd3dStatus.bSigStatus == (UINT8)SV_VDO_NOSIGNAL)  //need to check DTV scart out case, need?
+	   {
+#if defined(CC_SUPPORT_TVE) ||defined(CC_SUPPORT_TVE_82xx)
+		vApiTVEVideoStatusNotify(SV_VP_MAIN,SV_TVE_NOTIFY_VIDEO_NO_SIGNAL);
+#endif
+	   }
 
-    if(fgIsPipTvd3d())
-    {
-        vSetPipFlg(PIP_FLG_MODE_DET_DONE);
-    }
+	   if((VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART))
+	   {
+		   vDrvEnableBlankLevelAdjust();
+	   }
+
+	   
+#if SUPPORT_VBI
+	   {
+		   VBI_ResetSrc(0x0);
+	   }
+#endif
+#ifndef CC_SUPPORT_RECORD_AV
+		if((bDrvVideoSignalStatus(0x0) == SV_VDO_STABLE))
+		{
+#if SUPPORT_SCART
+	
+			if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+			{
+				vDrvScartRGBFreeRun(SV_OFF);
+			}
+	
+#endif
+		}
+#endif
+
+#ifdef CC_UP8032_ATV
+#if SUPPORT_VBI
+#if SUPPORT_MM_INPUT
+		//if(!fgIsExtSrcMM())
+#endif
+		{
+			ApiVBIServiceResetSrc(bGetVideoDecType(0x0),bDrvVideoGetType(0x0),fgIsOversampleTiming());
+		}
+#endif
+#endif
+
+	}
+#else
+	if(fgIsMainTvd3d())
+	{
+		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+	}
+
+	if(fgIsPipTvd3d())
+	{
+		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
+	}
+#endif
 }
 
 /**
@@ -4700,6 +4768,56 @@ static void _svDrvTvdModeChg(void)
     if(_sbBypassModeChg == FALSE)
     {
 #endif
+        
+		#ifdef CC_SUPPORT_PIPELINE
+		if(_fVSCConnectAVD)
+		{
+			if(fgIsMainTvd3d())
+			{
+				vSetMainFlg(MAIN_FLG_MODE_CHG);
+				vClrMainFlg(MAIN_FLG_MODE_DET_DONE);	// Clear this flag!
+			}
+			
+			if(fgIsPipTvd3d())
+			{
+				vSetPipFlg(PIP_FLG_MODE_CHG);
+				vClrPipFlg(PIP_FLG_MODE_DET_DONE);	// Clear this flag!
+			}
+		}
+		//when VSC do not connect the AVD it need to do something  
+		else
+		{
+               #ifndef CC_SUPPORT_RECORD_AV
+               #if SUPPORT_SCART
+	  		   if(fgIsMainScart())
+	  			{
+	  				vDrvScartRGBFreeRun(SV_ON);
+	  			}
+               #endif
+               #endif
+
+			   {
+                vDrvVideoTrigModeDetect(SV_VP_MAIN);
+
+                if(fgIsMainTvd3d())
+                {
+                    vTvd3dBHModeChg();
+                }
+
+                #if SUPPORT_VBI
+                {
+                    VBI_ResetSrc(SV_VP_MAIN);
+                }
+                #endif
+                _bMainState = VDO_STATE_WAIT_MODE_DET;
+                LOG(1, "Change to VDO_STATE_WAIT_MODE_DET\n");
+                }
+                
+#if defined(CC_SUPPORT_TVE) || defined(CC_SUPPORT_TVE_82xx)
+	            vApiTVEVideoStatusNotify(SV_VP_MAIN, SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
+#endif
+		}
+		#else
         if(fgIsMainTvd3d())
         {
             vSetMainFlg(MAIN_FLG_MODE_CHG);
@@ -4711,6 +4829,7 @@ static void _svDrvTvdModeChg(void)
             vSetPipFlg(PIP_FLG_MODE_CHG);
             vClrPipFlg(PIP_FLG_MODE_DET_DONE);	// Clear this flag!
         }
+		#endif
 #if TVD_BP_ATV_MODECHG
     }
 #endif

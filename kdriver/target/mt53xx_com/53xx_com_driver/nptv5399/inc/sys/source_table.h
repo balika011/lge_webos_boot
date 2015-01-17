@@ -88,9 +88,9 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
- * $Revision: #1 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Revision: #2 $
+ * $Date: 2015/01/17 $
  ****************************************************************************/
 #ifndef _SOURCE_TABLE_H_
 #define _SOURCE_TABLE_H_
@@ -115,9 +115,24 @@ typedef struct
 	UINT8 MonICIn; // to replace _bMonMainNew  _bMonSubNew
 } RVideoSrcSelect;
 
+#ifdef CC_SUPPORT_PIPELINE
+typedef struct
+{
+	UINT8 SrcNewAVD; // to replace _bSrcMainNew _bSrcSubNew
+	UINT8 SrcOldAVD;// to replace _bSrcMainOld _bSrcSubOld
+	UINT8 ICInAVD; // to replace _bMainICIn _bSubICIn
 
+	/* For Combi Component, we should keep monitored information */
+	UINT8 MonSrcNewAVD; // to replace _bMonMainNew  _bMonSubNew
+	UINT8 MonSrcOldAVD; // to replace _bMonMainNew  _bMonSubNew
+	UINT8 MonICInAVD; // to replace _bMonMainNew  _bMonSubNew
+} RVideoSrcSelectVFEAVD;
+extern RVideoSrcSelectVFEAVD	_rVdoSrcVFEAVD[2];
+extern UINT8 _fVSCConnectVFEAVD;
+#endif
 
 extern RVideoSrcSelect  _rVdoSrc[2];
+
 
 #ifdef CC_SOURCE_AUTO_DETECT
 typedef struct _source_detect_t
@@ -159,6 +174,16 @@ typedef struct _source_detect_t
 #define _bMainMonICIn _rVdoSrc[0].MonICIn
 #define _bSubMonICIn _rVdoSrc[1].MonICIn
 
+#ifdef CC_SUPPORT_PIPELINE
+#define _fVFEAVDSourceMainNew  _rVdoSrcVFEAVD[0].SrcNewAVD	
+#define _fVFEAVDSourceSubNew  _rVdoSrcVFEAVD[1].SrcNewAVD	
+#define _fVFEAVDSourceMainOld _rVdoSrcVFEAVD[0].SrcOldAVD
+#define _fVFEAVDSourceSubOld _rVdoSrcVFEAVD[1].SrcOldAVD
+#define _fVFEAVDMainICPin _rVdoSrcVFEAVD[0].ICInAVD
+#define _fVFEAVDSubICPin _rVdoSrcVFEAVD[1].ICInAVD
+
+#define _fVSCConnectAVD _fVSCConnectVFEAVD
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // UI Related define

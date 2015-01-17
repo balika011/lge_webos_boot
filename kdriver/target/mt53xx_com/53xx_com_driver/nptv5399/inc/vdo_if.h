@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/17 $
  * $RCSfile: vdo_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -124,6 +124,12 @@ EXTERN void bSubSrcCloneMode(UINT8 fgOnOff);
  * @retval SV_SUCCESS
  */
 EXTERN UINT8 bApiVideoSetVideoSrc(UINT8 bPath, UINT8 bSrc);
+
+#ifdef CC_SUPPORT_PIPELINE
+EXTERN UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc);
+#endif
+
+
 
 /**
  * Set the video sources of main and sub.

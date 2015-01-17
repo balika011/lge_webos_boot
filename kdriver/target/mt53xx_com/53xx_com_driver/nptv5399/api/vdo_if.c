@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/15 $
+ * $Date: 2015/01/17 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -168,6 +168,13 @@
 
 extern  HANDLE_T _hMainSubSrcSemaphore; /* from mloop_video_if.c */
 extern UINT8 _bHDMIColorSpace;
+
+
+#if 1 // defined(CC_FAST_INIT)
+/* boot up measurement in release version, record once.*/
+static BOOL b_boot_rec_once = FALSE;
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Imported functions
@@ -499,20 +506,44 @@ void bSubSrcCloneMode(UINT8 fgOnOff)
 #ifdef CC_SUPPORT_PIPELINE
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
+	UINT8 bVFEAVDSrc;
+	UINT8 bAVDConnect;
 	 switch(bSrc)
-    {
-        case SV_VD_TVD3D:
+	{ 
+		case SV_VD_TVD3D:
+			if(u4Port==0x0)
+			{
+			  bVFEAVDSrc= SV_VS_ATD1;
+			}
+			else if(u4Port==0x1)
+			{
+			  bVFEAVDSrc= SV_VS_CVBS4;
+			}
+			else if(u4Port==0x2)
+			{
+			  bVFEAVDSrc= SV_VS_SCART1;
+			}
+			else if(u4Port==0x3)
+			{
+			  bVFEAVDSrc= SV_VS_SCART1;   //VFE_ADC scart will be done at the TVD3D
+			}
+			else
+			{
+			  // to do 
+			}
+			_fVSCConnectAVD=bEnable;
+			bAVDConnect=bType;
+			bApiVFEAVDConnect(bAVDConnect,bVFEAVDSrc,SV_VS_NO_CHANGE);
+			break;
 
-            break;
+		case SV_VD_YPBPR:
+			break;
 
-        case SV_VD_YPBPR:
-            break;
-
-        case SV_VD_VGA:
-            break;
+		case SV_VD_VGA:
+			break;
 #if SUPPORT_DVI
 
-        case SV_VD_DVI:
+		case SV_VD_DVI:
 			if(1)
 			{
 			
@@ -525,23 +556,24 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 
 #endif
 			}
-            break;
+			break;
 #endif
 
 #ifndef COPLAT_EXCLUDE_DTV
-        case SV_VD_MPEGHD:
-            break;
+		case SV_VD_MPEGHD:
+			break;
 			
-        case SV_VD_MPEGSD:
-            break;
+		case SV_VD_MPEGSD:
+			break;
 #endif
-        default:
-            break;
-    }
+		default:
+			break;
+	}
 	 
 	return SV_SUCCESS;
 
 }
+
 
 UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Type)
 {
@@ -834,7 +866,7 @@ UINT8 bApiVideoSetVideoSrc(UINT8 bPath, UINT8 bSrc)
     return bStatus;
 }
 
-#if 1 // defined(CC_FAST_INIT)
+#if 0 // defined(CC_FAST_INIT)
 /* boot up measurement in release version, record once.*/
 static BOOL b_boot_rec_once = FALSE;
 #endif
@@ -1336,6 +1368,79 @@ UINT8 bApiVideoMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc)
     MainSubSrc_Biglock_Release();
     return SV_SUCCESS;
 }
+
+#ifdef CC_SUPPORT_PIPELINE
+
+UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
+{
+    BOOL fgMainCh = FALSE;
+    ExtInputTable NewExtInput;
+	// connect AVD is from here
+	if(bOnOff==0x1)
+		
+{
+    if(bMainSrc ==SV_VS_NO_CHANGE)
+    {
+        bMainSrc = _fVFEAVDSourceMainOld;
+    }
+
+    if(bSubSrc ==SV_VS_NO_CHANGE)
+    {
+        bSubSrc = _fVFEAVDSourceSubOld;
+    }
+	
+    NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
+
+    /*AVD source is changed ? */
+    {
+
+        if(_fVFEAVDSourceMainOld != bMainSrc)
+        {
+            fgMainCh = TRUE;
+        }
+        _fVFEAVDSourceMainNew = bMainSrc;
+        _fVFEAVDSourceMainOld = bMainSrc;
+        _fVFEAVDSourceSubNew = bSubSrc;
+        _fVFEAVDSourceSubOld = bSubSrc;
+	    _fVFEAVDMainICPin = NewExtInput.MapIntMode >> 8;
+	    _fVFEAVDSubICPin = NewExtInput.MapIntMode & 0xff;
+       
+    }
+
+    if(fgMainCh)
+    {
+            vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
+       // vSetMOutMux(bNewMainDec);  need video path to set it
+    }
+
+    if(fgMainCh)
+    {
+			
+#if SUPPORT_SCART
+			/* considering SCART-RGB */
+			//if(_bMainICIn == P_FB0)
+			if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+			{
+				vDrvSetPorchTune(0x0, SV_PORCHTUNE_SCPOS);   // need to do ?
+			}
+
+#endif
+		vTvd3dConnect(0x0, SV_ON);//just  connect TVD
+
+     }
+
+}
+// disconnet  from here	
+else
+{   
+	vDrvAvMux(0);     // tuner off the AVMUX 
+	vDrvCvbsVfePD();  //power down cvbs ADC  and Scart RGB will not get the information
+	vTvd3dConnect(0x0, SV_OFF);// disconnect TVD
+}
+    return SV_SUCCESS;
+}
+#endif
+
 
 /**
  * Set color systrem.

@@ -123,6 +123,12 @@
 
 RVideoSrcSelect  _rVdoSrc[2];
 
+#ifdef CC_SUPPORT_PIPELINE
+RVideoSrcSelectVFEAVD  _rVdoSrcVFEAVD[2];
+UINT8 _fVSCConnectVFEAVD;
+#endif
+
+
 UINT8 _VSS_Support_Mask[VSS_MAJORNR];
 void VSS_Support_Initial(void)
 {
@@ -684,6 +690,54 @@ void vDrvSetInternalMux(UINT8 path,UINT8 src)
     }
 }
 
+#ifdef CC_SUPPORT_PIPELINE
+void vDrvSetInternalMuxVFE_AVD(UINT8 path,UINT8 src)
+{
+    enum IC_Input icin;
+    UINT8 mon_src;
+	if(path)
+	{
+		icin=(enum IC_Input)_fVFEAVDSubICPin;   //need to check this
+		mon_src=SV_VS_MAX;
+	}
+	else
+	{
+		icin=(enum IC_Input)_fVFEAVDMainICPin;
+		mon_src=SV_VS_MAX;
+	}
+	// CVBS/ATV/ need to set this 
+    if((icin <= P_SV2))
+    {
+#if SUPPORT_SCART
+        vSCARTDisable();
+#endif
+        vDrvTVADCDefaultSetting();//5381
+        initAVSV(src,mon_src);
+    }
+	//CVBS/ATV/ need to set this?
+    else if((icin <= P_VGA) || (icin == P_VGACOMP))
+    {
+#if SUPPORT_SCART
+        vSCARTDisable();
+#endif
+        initYPbPrVGA((UINT8)icin);
+    }
+    //Scart need to set this
+#if SUPPORT_SCART
+    else if(icin == P_FB0 || icin == P_FB1)
+    {
+        initSCARTRGB(src, (UINT8)icin);
+        vSCARTInit(src);
+        vScartChangeMode();
+    }
+
+#endif
+    else
+    {
+        assert(SV_FALSE);
+    }
+}
+#endif
 
 void vMuxCleanup(void)
 {

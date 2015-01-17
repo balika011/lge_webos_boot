@@ -93,11 +93,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -513,6 +513,17 @@ void vDrvVideoSwInit(void)
     _bPipState = VDO_STATE_IDLE;
     // TVD
     _bSetChannelCnt = 0x40;
+	//AVD setting
+	
+#ifdef CC_SUPPORT_PIPELINE
+	_fVFEAVDSourceMainNew=(UINT8)SV_VS_MAX;
+    _fVFEAVDSourceMainOld=(UINT8)SV_VS_MAX;
+    _fVFEAVDSourceSubNew=(UINT8)SV_VS_MAX;
+    _fVFEAVDSourceSubOld=(UINT8)SV_VS_MAX;
+	_fVFEAVDMainICPin=(UINT8)P_FA;
+	_fVFEAVDSubICPin=(UINT8)P_FA;
+	_fVSCConnectAVD=0x0;  // init set VSC do not  connect the AVD
+#endif
     // source_select.c
     _bSrcMainOld = (UINT8)SV_VS_MAX;
     _bSrcSubOld = (UINT8)SV_VS_MAX;
