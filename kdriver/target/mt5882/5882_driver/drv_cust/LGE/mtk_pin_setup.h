@@ -224,6 +224,8 @@ UINT32 _gu4SysPinmuxInit[][2] =
     {PIN_HDMI_1_SDA, PINMUX_FUNCTION1 },    // ice_jtdo
     {PIN_HDMI_1_HPD, PINMUX_FUNCTION1 },    // ice_jtck
 #endif
+    {PIN_ADIN4, PINMUX_FUNCTION1},
+    {PIN_ADIN5, PINMUX_FUNCTION1},
     {PIN_LAST_PINMUX, 0}//always put last!
 
 };
