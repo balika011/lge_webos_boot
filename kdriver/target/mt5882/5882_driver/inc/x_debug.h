@@ -142,6 +142,17 @@
 
 /******************************************************************************/
 #ifdef NDEBUG
+#ifdef CC_SHOW_MORE_CLI_LOG
+//lint -emacro({717}, LOG)  to disable "do {...} while (0)" lint warning
+#define LOG(level, fmt...)			(DEFINE_IS_LOG(level, fmt))
+#define VLOG(level, fmt, valist)	(DEFINE_VLOG(level, fmt, valist))
+#define LOG_E(fmt...)               LOG(1, fmt)
+#define LOG_W(fmt...)               LOG(3, fmt)
+#define LOG_I(fmt...)               LOG(5, fmt)
+#define LOG_N(fmt...)               LOG(7, fmt)
+#define LOG_D(fmt...)               LOG(9, fmt)
+#define LOG_V(fmt...)               LOG(11, fmt)
+#else
 
 #ifndef CC_DRV_LOG_LVL
 #define CC_DRV_LOG_LVL 2
@@ -239,7 +250,7 @@
 #define LOG_LOG_INFO(fmt...)
 #define LOG_LOG_NOTE(fmt...)
 #define LOG_LOG_DEBUG(fmt...)
-
+#endif
 #else
 
 //lint -emacro({717}, LOG)  to disable "do {...} while (0)" lint warning

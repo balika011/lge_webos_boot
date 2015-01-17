@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #7 $
-# $Date: 2015/01/16 $
+# $Revision: #8 $
+# $Date: 2015/01/17 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -149,6 +149,11 @@ export 	PACK_TZBIN_INDIVIDUAL_PARTITION :=true
 export LG_TOOLCHAIN = true
 export LGE_PROTO_PCBA := true
 endif 
+
+ifndef CLI_LOG
+export CLI_LOG := false
+endif
+
 ifndef LGE_PROTO_PCBA
 export LGE_PROTO_PCBA := false
 endif

@@ -571,4 +571,8 @@ endif
 ifeq "$(SECURE_BOOT_SCRAMBLE)" "true"
 DEFINES += -DCC_SECURE_BOOT_SCRAMBLE
 endif
+ifeq "$(CLI_LOG)" "true"
+DEFINES += -DCC_SHOW_MORE_CLI_LOG
+endif
+
 
