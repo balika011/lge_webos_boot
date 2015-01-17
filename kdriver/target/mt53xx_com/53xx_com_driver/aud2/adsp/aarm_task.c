@@ -78,6 +78,10 @@ extern void vA2MMixSound2UpdateRp(void);
 extern void vA2MMixSound3UpdateRp(void);
 extern void vA2MMixSound4UpdateRp(void);
 extern void vA2MMixSound5UpdateRp(void);
+extern void vA2MMixSound6UpdateRp(void);
+extern void vA2MMixSound7UpdateRp(void);
+extern void vA2MMixSound8UpdateRp(void);
+extern void vA2MMixSound9UpdateRp(void);
 extern void vA2MUploadUpdateWp(void);
 extern void vA2MUpload2UpdateWp(void);
 extern void vA2MRiscPostUpdateWp(void); //parson riscpost
@@ -174,8 +178,12 @@ _AUD_APROC_COMM_SIG_T _gu4AudAprocA2MSigInfo[] = {
  {APROC_SIG_IDX_MIXSND1, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound1UpdateRp},
  {APROC_SIG_IDX_MIXSND2, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound2UpdateRp},  //parson mixsnd
  {APROC_SIG_IDX_MIXSND3, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound3UpdateRp},
- {APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound4UpdateRp},
- {APROC_SIG_IDX_HW_MIXSND1, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound5UpdateRp},
+ {APROC_SIG_IDX_MIXSND4, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound4UpdateRp},  //parson mixsnd
+ {APROC_SIG_IDX_MIXSND5, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound5UpdateRp},
+ {APROC_SIG_IDX_MIXSND6, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound6UpdateRp},  //parson mixsnd
+ {APROC_SIG_IDX_MIXSND7, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound7UpdateRp},
+ {APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound8UpdateRp},
+ {APROC_SIG_IDX_HW_MIXSND1, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_RP, 0, (AUD_APROC_FUNC_T) &vA2MMixSound9UpdateRp},
  {APROC_SIG_IDX_UPLOAD0, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_WP, 0, (AUD_APROC_FUNC_T) &vA2MUploadUpdateWp}, 
  {APROC_SIG_IDX_UPLOAD2, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_UPDATE_WP, 0, (AUD_APROC_FUNC_T) &vA2MUpload2UpdateWp},  
  {APROC_SIG_IDX_SRC, APROC_SIG_CMD_NOTIFY, APROC_SIG_NOTIFY_SRC, 0, (AUD_APROC_FUNC_T) &vA2MNotifySRC},
@@ -466,6 +474,42 @@ void vA2MMixSound5UpdateRp(void)//parson mixsnd
     LOG (9, "====> vA2MMixSound5UpdateRp  %d\n", u4Rp);    
     AUD_AprocMixSndUpdateRp(5, u4Rp); //Wait MixSnd OK
 }
+
+void vA2MMixSound6UpdateRp(void)//parson mixsnd
+{
+    UINT32 u4Rp;
+
+    u4Rp = u4AprocBIM_read (APROC_A2M_DATA1_REG);
+    LOG (9, "====> vA2MMixSound6UpdateRp  %d\n", u4Rp);    
+    AUD_AprocMixSndUpdateRp(6, u4Rp); //Wait MixSnd OK
+}
+
+void vA2MMixSound7UpdateRp(void)//parson mixsnd
+{
+    UINT32 u4Rp;
+
+    u4Rp = u4AprocBIM_read (APROC_A2M_DATA1_REG);
+    LOG (9, "====> vA2MMixSound7UpdateRp  %d\n", u4Rp);    
+    AUD_AprocMixSndUpdateRp(7, u4Rp); //Wait MixSnd OK
+}
+
+void vA2MMixSound8UpdateRp(void)//parson mixsnd
+{
+    UINT32 u4Rp;
+
+    u4Rp = u4AprocBIM_read (APROC_A2M_DATA1_REG);
+    LOG (9, "====> vA2MMixSound8UpdateRp  %d\n", u4Rp);    
+    AUD_AprocMixSndUpdateRp(8, u4Rp); //Wait MixSnd OK
+}
+void vA2MMixSound9UpdateRp(void)//parson mixsnd
+{
+    UINT32 u4Rp;
+
+    u4Rp = u4AprocBIM_read (APROC_A2M_DATA1_REG);
+    LOG (9, "====> vA2MMixSound9UpdateRp  %d\n", u4Rp);    
+    AUD_AprocMixSndUpdateRp(9, u4Rp); //Wait MixSnd OK
+}
+
 void vA2MUploadUpdateWp(void)
 {
     UINT32 u4Wp;

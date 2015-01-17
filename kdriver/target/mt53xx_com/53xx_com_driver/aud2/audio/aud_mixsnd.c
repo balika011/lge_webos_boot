@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -136,12 +136,16 @@ char *upload2_fileName = "/mnt/usb/sda1/upload2.pcm";
 #endif
 #endif //CC_AUD_ARM_SUPPORT && CC_AUD_ARM_RENDER
 
-#ifdef CC_AUD_ARM_RENDER
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
 //#define ALSA_AMIXER_PATH
 #define ALSA_APROC_PATH
 #define ALSA_MIXSND_ID	AUD_MIXSND_0 //0-1: SW mixsnd 2-3: HW mixsnd (Aout1,Aout2)
 #define ALSA_SWDEC_ID	AUD_SWDEC_0 //
 #define KEY_MIXSND_ID	AUD_MIXSND_1 //
+static void AUD_AprocMixSndInfoInit(AUD_MIXSND_ID_T eMixSndId);
+static void AUD_AprocMixSndReset(AUD_MIXSND_ID_T eMixSndId);
+static void AUD_AprocMixSndEnable(AUD_MIXSND_ID_T eMixSndId, BOOL fgEnable);
+static void AUD_AprocMixSndUpdateWp(AUD_MIXSND_ID_T eMixSndId, UINT32 u4Wp); 
 #endif
 LINT_EXT_HEADER_END
 
@@ -163,7 +167,6 @@ extern BOOL skip_create_feed_stream;
 #endif
 extern UINT16 AUD_DrvSwapWord(UINT16 u2swap);
 extern UINT32 u4GetAprocMemoryMap (UINT32 u4Type);
-extern void AUD_AprocMixSndInfoInit(UINT8 u1ID);
 
 //#define CC_AUD_APROC_HWMIX 
 
@@ -215,9 +218,9 @@ UINT32 u4AudMixSndDbgMsk = 0;
 #define MIXSND_768  768
 #define MIXSND_256  256
 
-static BOOL _fgForceStopMixSndDma_1[6] = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
-static HANDLE_T _hAudFeedMixSndThread_1[6] = {NULL_HANDLE, NULL_HANDLE, NULL_HANDLE, NULL_HANDLE, NULL_HANDLE, NULL_HANDLE};
-BOOL fgAudFeedMixSndThreadEnable_1[6] = {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
+static BOOL _fgForceStopMixSndDma_1[AUD_MIXSND_NUM] = {FALSE};
+static HANDLE_T _hAudFeedMixSndThread_1[AUD_MIXSND_NUM] = {NULL_HANDLE};
+BOOL fgAudFeedMixSndThreadEnable_1[AUD_MIXSND_NUM] = {FALSE};
 INT32 i4TestTone[MIXSND_768*2];        // 768 samples , 2 ch
 // upload
 static HANDLE_T _hAudUploadThread = NULL_HANDLE;
@@ -325,7 +328,20 @@ typedef struct {
 } _IO_BUFFER_T;
 
 _IO_BUFFER_T _gsAprocMixSndBufInfo[AUD_MIXSND_NUM]; // There are 2 mixsound modules...
-static UINT8 _u1AlsaAprocMixsndId[8] = {AUD_MIXSND_0, AUD_MIXSND_1, AUD_MIXSND_2, AUD_MIXSND_3, 0xff, 0xff, 0xff, 0xff};
+static UINT8 _u1AlsaAprocMixsndId[AUD_MIXSND_NUM] = {
+    AUD_MIXSND_0, 
+    AUD_MIXSND_1, 
+    AUD_MIXSND_2, 
+    AUD_MIXSND_3, 
+    AUD_MIXSND_4, 
+    AUD_MIXSND_5, 
+    AUD_MIXSND_6, 
+    AUD_MIXSND_7,
+#ifdef CC_AUD_APROC_HWMIX
+    AUD_HW_MIXSND_0,
+    AUD_HW_MIXSND_1, 
+#endif
+};
 
 typedef enum
 {
@@ -1173,31 +1189,7 @@ void vSoftTransfer(UINT32 u4SrcAddr, UINT32 u4Size,
 	{
         if (((u4LoopCnt123[u1AlsaStreamID]) % SAMPLE_UNIT)==0)
         {
-			switch (_u1AlsaAprocMixsndId[u1AlsaStreamID])
-			{
-			case AUD_MIXSND_0:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-			case AUD_MIXSND_1:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND1, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-			case AUD_MIXSND_2:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND2, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-			case AUD_MIXSND_3:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND3, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-#ifdef CC_AUD_APROC_HWMIX 
-			case AUD_HW_MIXSND_0:
-				vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-			case AUD_HW_MIXSND_1:
-				vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-				break;
-#endif
-			default:
-				break;
-			}
+            AUD_AprocMixSndUpdateWp(_u1AlsaAprocMixsndId[u1AlsaStreamID], u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
             _rAudMixSndStream[u1StreamID].u4Wp = u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT;
         }
         u4LoopCnt123[u1AlsaStreamID] ++;
@@ -1932,7 +1924,6 @@ void AUD_EnableMixSndClip(void)
 {
     if (_hAudFeedMixSndThread)
     {
-        //LOG(5, "[AUD_EnableMixSndClip] !!!! _AudFeedMixSndThread already created !!!!\n");
         return;
     }
 
@@ -1955,36 +1946,6 @@ void AUD_EnableMixSndClip(void)
         }
     }
 }
-
-#if 0
-void AUD_EnableAlsaMixSnd(void)
-{
-	if (_hAudFeedAlsaMixSndThread)
-    {
-        LOG(5, "[AUD_EnableAlsaMixSnd] !!!! _hAudFeedAlsaMixSndThread already created !!!!\n");
-        return;
-    }
-
-    if (OSR_OK != x_thread_create(&_hAudFeedAlsaMixSndThread,
-                                   AUD_DRV_ALSA_FEEDMIXSND_THREAD_NAME,
-                                   AUD_DRV_THREAD_STACK_SIZE,
-                                   50, //AUD_DRV_THREAD_PRIORITY, // 2011/3/29, by Daniel, Zink said for Skype integration, it needs to set _AudFeedMixSndThread priority to 50 to prevent from data copy delay
-                                   (x_os_thread_main_fct) _AudFeedAlsaMixSndThread,
-                                   0,
-                                   NULL))
-    {
-        LOG(5, "[AUD_EnableAlsaMixSnd] !!!!Create _hAudFeedAlsaMixSndThread Fail!!!!\n");
-    }
-    else
-    {
-        LOG(5, "[AUD_EnableAlsaMixSnd] !!!!Create _hAudFeedAlsaMixSndThread Succ!!!!\n");
-        while (!fgAudFeedMixSndThreadEnable) //for CMPB integration
-        {
-            x_thread_delay(1);
-        }
-    }
-}
-#endif
 
 //-----------------------------------------------------------------------------
 /** AUD_DisableMixSndClip
@@ -2495,7 +2456,6 @@ void AUD_SetDSPDecoderType(AUD_FMT_T u4DspDecType)
 static UINT8 u1InitALSAPlayback_MixSnd_flag = 0;
 void AUD_InitALSAPlayback_MixSnd(UINT8 u1StreamId)
 {
-#if 1
 	if (u1InitALSAPlayback_MixSnd_flag == 0)
 	{
 	    AUD_Init();
@@ -2504,12 +2464,9 @@ void AUD_InitALSAPlayback_MixSnd(UINT8 u1StreamId)
 	    ADAC_Mute(FALSE);
 		u1InitALSAPlayback_MixSnd_flag = 1;
 	}
-#endif
 
 #ifdef ALSA_MIXSND_PATH
     AUD_EnableMixSndClip();
-    //AUD_EnableAlsaMixSnd();
-    //AUD_PlayMixSndRingFifo(u1StreamId, 48000,1,16, u4GetMixSoundBufSize3()/MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA); //init value
 #else
     AUD_EnableMixSndClip();
     AUD_PlayMixSndClip(0);
@@ -2573,64 +2530,13 @@ void AUD_InitALSAPlayback_MixSnd(UINT8 u1StreamId)
         u4LoopCnt456[u1StreamId]  = 0;
         
         // Request ARM9 to reset mixsound buffer info.
-        switch (_u1AlsaAprocMixsndId[u1StreamId])
-        {
-			case AUD_MIXSND_0:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_RESET, 0);	
-			break;
-			case AUD_MIXSND_1:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND1, APROC_SIG_SET_RESET, 0);	
-			break;
-			case AUD_MIXSND_2:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND2, APROC_SIG_SET_RESET, 0);	
-			break;
-			case AUD_MIXSND_3:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND3, APROC_SIG_SET_RESET, 0);	
-			break;
-#ifdef CC_AUD_APROC_HWMIX 
-			case AUD_HW_MIXSND_0:
-			vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_RESET, 0);	
-			break;
-			case AUD_HW_MIXSND_1:
-			vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND1, APROC_SIG_SET_RESET, 0);	
-			break;
-#endif			
-			default:
-				break;
-        }
+        AUD_AprocMixSndReset(_u1AlsaAprocMixsndId[u1StreamId]);
         // Send MixSound Enable Command to ARM9    
         x_thread_delay(20);
-		
-        switch (_u1AlsaAprocMixsndId[u1StreamId])
-        {
-			case AUD_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 1);
-			break;
-			case AUD_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_ENABLE), 1);
-			break;
-			case AUD_MIXSND_2:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_ENABLE), 1);
-			break;
-			case AUD_MIXSND_3:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_ENABLE), 1);
-			break;
-#ifdef CC_AUD_APROC_HWMIX 
-			case AUD_HW_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 1);
-			break;
-			case AUD_HW_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT1_ENABLE), 1);
-			break;
-#endif			
-			default:
-				break;
-		}
-        //LOG(0, "AUD_MIXSND_1 : pAprocMixSndBuf=(V)0x%x, BlkSize=%d, u4End=%d, Cur=%d, ChNum=%d\n", 
-          //  VIRTUAL(pAprocMixSndBuf123), uAproc4BlockSize, u4AprocEnd, u4AprocCur, u4AprocChNum);
+		AUD_AprocMixSndEnable(_u1AlsaAprocMixsndId[u1StreamId], TRUE); 
     }
 #ifdef ALSA_PCMDEC_PATH
-    	}
+	}
 #endif	
 #endif  
 }
@@ -2675,32 +2581,7 @@ void AUD_DeInitALSAPlayback_MixSnd(UINT8 u1StreamId)
 			Printf("No available Mixsnd Path for play !!!!");
 			return;	
 		}
-
-		switch (_u1AlsaAprocMixsndId[u1StreamId])
-		{
-			case AUD_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 0);
-			break;
-			case AUD_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_ENABLE), 0);
-			break;
-			case AUD_MIXSND_2:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_ENABLE), 0);
-			break;
-			case AUD_MIXSND_3:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_ENABLE), 0);
-			break;
-#ifdef CC_AUD_APROC_HWMIX 
-			case AUD_HW_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 0);
-			break;
-			case AUD_HW_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT1_ENABLE), 0);
-			break;
-#endif			
-			default:
-				break;
-		}
+        AUD_AprocMixSndEnable(_u1AlsaAprocMixsndId[u1StreamId], FALSE);
     }    
 #endif
 #ifdef ALSA_PCMDEC_PATH
@@ -2806,7 +2687,7 @@ void AUD_AprocMixSndUpdateRp(UINT8 u1ID, UINT32 u4Rp) //parson mixsnd
     _gsAprocMixSndBufInfo[u1ID].u4Rp = u4Rp;
 }
 
-void AUD_AprocMixSndInfoInit(UINT8 u1ID)
+static void AUD_AprocMixSndInfoInit(AUD_MIXSND_ID_T u1ID)
 {
     UINT16 jj;
     INT32* TestPnt;
@@ -2820,35 +2701,67 @@ void AUD_AprocMixSndInfoInit(UINT8 u1ID)
 
     if (u1ID == AUD_MIXSND_0)
     {
-        _gsAprocMixSndBufInfo[0].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
             u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_START));
-        _gsAprocMixSndBufInfo[0].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_END));
-        _gsAprocMixSndBufInfo[0].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_SIZE));
-        _gsAprocMixSndBufInfo[0].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_CH));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_CH));
     }
     else if (u1ID == AUD_MIXSND_1)
     {
-        _gsAprocMixSndBufInfo[1].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
             u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_START));
-        _gsAprocMixSndBufInfo[1].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_END));
-        _gsAprocMixSndBufInfo[1].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_SIZE));
-        _gsAprocMixSndBufInfo[1].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_CH));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_CH));
     }
     else if (u1ID == AUD_MIXSND_2)
     {
-        _gsAprocMixSndBufInfo[2].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
             u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_START));
-        _gsAprocMixSndBufInfo[2].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_END));
-        _gsAprocMixSndBufInfo[2].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_SIZE));
-        _gsAprocMixSndBufInfo[2].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_CH));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_CH));
     }
     else if (u1ID == AUD_MIXSND_3)
     {
-        _gsAprocMixSndBufInfo[3].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
             u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_START));
-        _gsAprocMixSndBufInfo[3].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_END));
-        _gsAprocMixSndBufInfo[3].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_SIZE));
-        _gsAprocMixSndBufInfo[3].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_CH));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_CH));
+    }
+    else if (u1ID == AUD_MIXSND_4)
+    {
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+            u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT4_START));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT4_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT4_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT4_CH));
+    }
+    else if (u1ID == AUD_MIXSND_5)
+    {
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+            u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT5_START));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT5_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT5_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_2, APROC_REG_IOBUF_MIXSND_INPUT5_CH));
+    }
+    else if (u1ID == AUD_MIXSND_6)
+    {
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+            u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT6_START));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT6_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT6_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT6_CH));
+    }
+    else if (u1ID == AUD_MIXSND_7)
+    {
+        _gsAprocMixSndBufInfo[u1ID].u4Str = _u4DspCmptBuf[AUD_DSP0][TYPE_APROC_IDX] + 
+            u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT7_START));
+        _gsAprocMixSndBufInfo[u1ID].u4End = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT7_END));
+        _gsAprocMixSndBufInfo[u1ID].u4Size = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT7_SIZE));
+        _gsAprocMixSndBufInfo[u1ID].u4Ch = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_3, APROC_REG_IOBUF_MIXSND_INPUT7_CH));
     }
 #ifdef CC_AUD_APROC_HWMIX
 	else if (u1ID == AUD_HW_MIXSND_0)
@@ -2945,32 +2858,185 @@ void AUD_AprocMixSndInfoInit(UINT8 u1ID)
     
 }
 
-static void _AudAprocFeedMixSndThread_1(const void* pvArg)  // For APROC MixSound 0
+static void AUD_AprocMixSndEnable(AUD_MIXSND_ID_T eMixSndId, BOOL fgEnable)
+{
+    UINT32 u4Idx, u4Addr;
+    switch (eMixSndId)
+    {
+	case AUD_MIXSND_0:
+        u4Idx = APROC_ASM_ID_MIXSND_0;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE;
+		break;
+	case AUD_MIXSND_1:
+        u4Idx = APROC_ASM_ID_MIXSND_0;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT1_ENABLE;
+		break;
+	case AUD_MIXSND_2:
+        u4Idx = APROC_ASM_ID_MIXSND_1;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT2_ENABLE;        
+		break;
+	case AUD_MIXSND_3:
+        u4Idx = APROC_ASM_ID_MIXSND_1;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT3_ENABLE;
+		break;
+	case AUD_MIXSND_4:
+        u4Idx = APROC_ASM_ID_MIXSND_2;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT4_ENABLE;
+		break;
+	case AUD_MIXSND_5:
+        u4Idx = APROC_ASM_ID_MIXSND_2;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT5_ENABLE;
+		break;
+	case AUD_MIXSND_6:
+        u4Idx = APROC_ASM_ID_MIXSND_3;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT6_ENABLE;
+		break;
+	case AUD_MIXSND_7:
+        u4Idx = APROC_ASM_ID_MIXSND_3;
+        u4Addr = APROC_REG_IOBUF_MIXSND_INPUT7_ENABLE;
+        break;
+#ifdef CC_AUD_APROC_HWMIX 
+	case AUD_HW_MIXSND_0:
+        u4Idx = APROC_ASM_ID_HW_MIXSND_0;
+        u4Addr = APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE;        
+		break;
+	case AUD_HW_MIXSND_1:
+        u4Idx = APROC_ASM_ID_HW_MIXSND_0;
+        u4Addr = APROC_REG_IOBUF_HW_MIXSND_INPUT1_ENABLE;        
+		break;
+#endif			
+	default:
+		return;
+    }
+
+    LOG(2, "%s %d : %#x : %d", __FUNCTION__, eMixSndId, u4Idx, fgEnable);
+
+    vAprocReg_Write(APROC_ASM_ADDR (u4Idx, u4Addr), fgEnable); 
+}
+
+static void AUD_AprocMixSndReset(AUD_MIXSND_ID_T eMixSndId)
+{
+    UINT32 u4Idx;
+    switch (eMixSndId)
+    {
+	case AUD_MIXSND_0:
+        u4Idx = APROC_SIG_IDX_MIXSND0;
+		break;
+	case AUD_MIXSND_1:
+        u4Idx = APROC_SIG_IDX_MIXSND1;
+		break;
+	case AUD_MIXSND_2:
+        u4Idx = APROC_SIG_IDX_MIXSND2;
+		break;
+	case AUD_MIXSND_3:
+        u4Idx = APROC_SIG_IDX_MIXSND3;
+		break;
+	case AUD_MIXSND_4:
+        u4Idx = APROC_SIG_IDX_MIXSND4;
+		break;
+	case AUD_MIXSND_5:
+        u4Idx = APROC_SIG_IDX_MIXSND5;
+		break;
+	case AUD_MIXSND_6:
+        u4Idx = APROC_SIG_IDX_MIXSND6;
+		break;
+	case AUD_MIXSND_7:
+        u4Idx = APROC_SIG_IDX_MIXSND7;
+        break;
+#ifdef CC_AUD_APROC_HWMIX 
+	case AUD_HW_MIXSND_0:
+        u4Idx = APROC_SIG_IDX_HW_MIXSND0;
+		break;
+	case AUD_HW_MIXSND_1:
+        u4Idx = APROC_SIG_IDX_HW_MIXSND1;
+		break;
+#endif			
+	default:
+		return;
+    }
+
+    LOG(2, "%s %d : %#x ",__FUNCTION__,  eMixSndId, u4Idx);
+
+    vAprocCmdSet(u4Idx, APROC_SIG_SET_RESET, 0);    
+}
+
+static void AUD_AprocMixSndUpdateWp(AUD_MIXSND_ID_T eMixSndId, UINT32 u4Wp) 
+{
+    UINT32 u4Idx;
+    switch (eMixSndId)
+    {
+	case AUD_MIXSND_0:
+        u4Idx = APROC_SIG_IDX_MIXSND0;
+		break;
+	case AUD_MIXSND_1:
+        u4Idx = APROC_SIG_IDX_MIXSND1;
+		break;
+	case AUD_MIXSND_2:
+        u4Idx = APROC_SIG_IDX_MIXSND2;
+		break;
+	case AUD_MIXSND_3:
+        u4Idx = APROC_SIG_IDX_MIXSND3;
+		break;
+	case AUD_MIXSND_4:
+        u4Idx = APROC_SIG_IDX_MIXSND4;
+		break;
+	case AUD_MIXSND_5:
+        u4Idx = APROC_SIG_IDX_MIXSND5;
+		break;
+	case AUD_MIXSND_6:
+        u4Idx = APROC_SIG_IDX_MIXSND6;
+		break;
+	case AUD_MIXSND_7:
+        u4Idx = APROC_SIG_IDX_MIXSND7;
+        break;
+#ifdef CC_AUD_APROC_HWMIX 
+	case AUD_HW_MIXSND_0:
+        u4Idx = APROC_SIG_IDX_HW_MIXSND0;
+		break;
+	case AUD_HW_MIXSND_1:
+        u4Idx = APROC_SIG_IDX_HW_MIXSND1;
+		break;
+#endif			
+	default:
+		return;
+    }
+
+    LOG(2, "%s, %d : %#x : %#x", __FUNCTION__, eMixSndId, u4Idx,  u4Wp);
+    vAprocCmdSet(u4Idx, APROC_SIG_SET_UPDATE_WP, u4Wp);    
+}
+static void _AudAprocFeedMixSndThread(const void* pvArg)
 {
     UINT8 *pAprocMixSndBuf;
     UINT32 u4Loop = 1024*512;
     UINT16 i;
     UINT32 u4BlockSize,u4End,u4Cur,u4Rp,u4ChNum=0;
     UINT8 *u1Dst, *u1Src;
+    AUD_MIXSND_ID_T eMixSndId = AUD_MIXSND_0;
 
-    fgAudFeedMixSndThreadEnable_1[AUD_MIXSND_0] = TRUE;
+    eMixSndId = *(AUD_MIXSND_ID_T *)pvArg;
+    if (eMixSndId  >= AUD_MIXSND_NUM)
+    {
+        eMixSndId = AUD_MIXSND_0;
+    }
+    
+    fgAudFeedMixSndThreadEnable_1[eMixSndId] = TRUE;
 
     // Init Mixsound for CA9
-    AUD_AprocMixSndInfoInit(AUD_MIXSND_0);
+    AUD_AprocMixSndInfoInit(eMixSndId);
     // Request ARM9 to reset mixsound buffer info.
-    vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_RESET, 0);    
+    AUD_AprocMixSndReset(eMixSndId);    
 
     // Send MixSound Enable Command to ARM9    
     x_thread_delay(20);
-    vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 1);
+    AUD_AprocMixSndEnable(eMixSndId, TRUE);
     
     // Buffer Address
-    pAprocMixSndBuf = (UINT8 *) _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Str;
-    u4BlockSize = _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Size; 
-    u4End = _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4End ;
-    u4Cur =  _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Wcurp;
+    pAprocMixSndBuf = (UINT8 *) _gsAprocMixSndBufInfo[eMixSndId].u4Str;
+    u4BlockSize = _gsAprocMixSndBufInfo[eMixSndId].u4Size; 
+    u4End = _gsAprocMixSndBufInfo[eMixSndId].u4End ;
+    u4Cur =  _gsAprocMixSndBufInfo[eMixSndId].u4Wcurp;
 
-    LOG(0, "AUD_MIXSND_0 : pAprocMixSndBuf=0x%x, BlkSize=%d, u4End=%d, Cur=%d, ChNum=%d\n", pAprocMixSndBuf, u4BlockSize, u4End, u4Cur, u4ChNum);
+    LOG(0, "AUD_MIXSND_%d : pAprocMixSndBuf=0x%x, BlkSize=%d, u4End=%d, Cur=%d, ChNum=%d\n",eMixSndId, pAprocMixSndBuf, u4BlockSize, u4End, u4Cur, u4ChNum);
 
     u1Dst =(UINT8*)VIRTUAL((UINT32)pAprocMixSndBuf);  // to fix unintialized build error
                 
@@ -2978,12 +3044,12 @@ static void _AudAprocFeedMixSndThread_1(const void* pvArg)  // For APROC MixSoun
     {
         for (i=0; i<u4Loop; i++)
         {
-            if (_fgForceStopMixSndDma_1[AUD_MIXSND_0]==TRUE)
+            if (_fgForceStopMixSndDma_1[eMixSndId] == TRUE)
             {
                 break;
             }
-            u4Rp = _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Rp;
-            u4ChNum = _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Ch;             
+            u4Rp = _gsAprocMixSndBufInfo[eMixSndId].u4Rp;
+            u4ChNum = _gsAprocMixSndBufInfo[eMixSndId].u4Ch;             
             // check if ready to write
             if (u4Cur != u4Rp) 
             {
@@ -3000,14 +3066,9 @@ static void _AudAprocFeedMixSndThread_1(const void* pvArg)  // For APROC MixSoun
                 }
             
                 // update write pointer
-                _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Wp = u4Cur;
+                _gsAprocMixSndBufInfo[eMixSndId].u4Wp = u4Cur;
                 // Send a notify to ARM9 for updating Wp
-                vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4Cur);
-#if 0
-                HAL_TIME_T dt;
-                HAL_GetTime(&dt);
-                LOG(6, " %u.%06u s \n", dt.u4Seconds, dt.u4Micros);
-#endif                   
+                AUD_AprocMixSndUpdateWp(eMixSndId, u4Cur);
                 // upadte current pointer
                 u4Cur ++;
                 if (u4Cur >= u4End)
@@ -3015,7 +3076,7 @@ static void _AudAprocFeedMixSndThread_1(const void* pvArg)  // For APROC MixSoun
                     u4Cur -= u4End;
                 }
                 // Update Write Current Pointer
-                _gsAprocMixSndBufInfo[AUD_MIXSND_0].u4Wcurp = u4Cur;
+                _gsAprocMixSndBufInfo[eMixSndId].u4Wcurp = u4Cur;
             }
             else
             {
@@ -3027,16 +3088,16 @@ static void _AudAprocFeedMixSndThread_1(const void* pvArg)  // For APROC MixSoun
         break;        
     }
 
-    LOG(0, "AUD_MIXSND_0 : pAprocMixSndBuf=0x%x, 0x%x. 0x%x\n", pAprocMixSndBuf,(UINT8*)VIRTUAL((UINT32)pAprocMixSndBuf), (UINT8*)VIRTUAL((UINT32)(pAprocMixSndBuf+2*3072)));
-    LOG(0, "AUD_MIXSND_0 : u4Cur=%d, u1Dst=0x%x\n", u4Cur, (UINT32)u1Dst);
+    LOG(0, "AUD_MIXSND_%d : pAprocMixSndBuf=0x%x, 0x%x. 0x%x\n", eMixSndId, pAprocMixSndBuf,(UINT8*)VIRTUAL((UINT32)pAprocMixSndBuf), (UINT8*)VIRTUAL((UINT32)(pAprocMixSndBuf+2*3072)));
+    LOG(0, "AUD_MIXSND_%d : u4Cur=%d, u1Dst=0x%x\n", eMixSndId, u4Cur, (UINT32)u1Dst);
     
-    _hAudFeedMixSndThread_1[AUD_MIXSND_0] = NULL_HANDLE;    
-    fgAudFeedMixSndThreadEnable_1[AUD_MIXSND_0] = FALSE;
-    _fgForceStopMixSndDma_1[AUD_MIXSND_0] = FALSE;
+    _hAudFeedMixSndThread_1[eMixSndId] = NULL_HANDLE;    
+    fgAudFeedMixSndThreadEnable_1[eMixSndId] = FALSE;
+    _fgForceStopMixSndDma_1[eMixSndId] = FALSE;
     //Send MixSound Disable Command to ARM9    
-    vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 0); 
+    AUD_AprocMixSndEnable(eMixSndId, FALSE);
     
-    LOG(0, "[FeedMixSndThread] (AUD_MIXSND_0) OK Exit\n");
+    LOG(0, "[FeedMixSndThread] (AUD_MIXSND%d) OK Exit\n", eMixSndId);
 }
 
 static void _AudAprocFeedMixSndThread_2(const void* pvArg)  // For APROC MixSound 1
@@ -3216,101 +3277,6 @@ _ERROR:
     LOG(0, "[FeedMixSndThread] (AUD_MIXSND_1) OK Exit\n");
 #endif
 }
-#ifdef CC_AUD_APROC_HWMIX
-static void _AudAprocFeedMixSndThread_3(const void* pvArg)  // For APROC HW mixsnd0
-{
-    UINT8 *pAprocMixSndBuf;
-    UINT32 u4Loop = 1024*512;
-    UINT16 i;
-    UINT32 u4BlockSize,u4End,u4Cur,u4Rp,u4ChNum = 0;
-    UINT8 *u1Dst, *u1Src;
-
-    fgAudFeedMixSndThreadEnable_1[AUD_HW_MIXSND_0] = TRUE;
-
-    // Init Mixsound for CA9
-    AUD_AprocMixSndInfoInit(AUD_HW_MIXSND_0);
-    // Request ARM9 to reset mixsound buffer info.
-    vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_RESET, 0);    
-
-    // Send MixSound Enable Command to ARM9    
-    x_thread_delay(20);
-    //vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 1);
-
-    // Buffer Address
-    pAprocMixSndBuf = (UINT8 *) _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Str;
-    u4BlockSize = _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Size; 
-    u4End = _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4End ;
-    u4Cur =  _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Wcurp;
-
-    LOG(0, "AUD_HW_MIXSND_0 : pAprocMixSndBuf=0x%x, BlkSize=%d, u4End=%d, Cur=%d, ChNum=%d\n", pAprocMixSndBuf, u4BlockSize, u4End, u4Cur, u4ChNum);
-    u1Dst =(UINT8*)VIRTUAL((UINT32)pAprocMixSndBuf);  // to fix unintialized build error
-                
-    while (1)
-    {
-        for (i=0; i<u4Loop; i++)
-        {
-            if (_fgForceStopMixSndDma_1[AUD_HW_MIXSND_0]==TRUE)
-            {
-                break;
-            }
-            u4Rp = _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Rp;
-            u4ChNum = _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Ch;             
-            // check if ready to write
-            if (u4Cur != u4Rp) 
-            {
-                // fill data
-                u1Src = (UINT8*)&i4TestTone[0];
-                u1Dst =(UINT8*)VIRTUAL((UINT32)(pAprocMixSndBuf + (u4Cur * u4BlockSize)));
-
-                for (; u4ChNum != 0; u4ChNum --)
-                {
-                    x_memcpy (u1Dst, (UINT8*)VIRTUAL((UINT32)u1Src), u4BlockSize);                 
-                    DSP_FlushInvalidateDCacheFree((UINT32) u1Dst, u4BlockSize);                    
-                    u1Dst = (UINT8 *) ((UINT32) u1Dst + (u4BlockSize * u4End));
-                    u1Src = (UINT8 *) ((UINT32) u1Src + u4BlockSize);
-                }
-            
-                // update write pointer
-                _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Wp = u4Cur;
-                // Send a notify to ARM9 for updating Wp
-                vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4Cur);
-#if 0
-                HAL_TIME_T dt;
-                HAL_GetTime(&dt);
-                LOG(6, " %u.%06u s \n", dt.u4Seconds, dt.u4Micros);
-#endif                
-                // upadte current pointer
-                u4Cur ++;
-                if (u4Cur >= u4End)
-                {
-                    u4Cur -= u4End;
-                }
-                // Update Write Current Pointer
-                _gsAprocMixSndBufInfo[AUD_HW_MIXSND_0].u4Wcurp = u4Cur;
-            }
-            else
-            {
-                x_thread_delay(1);
-            }
-
-        }            
-
-        break;        
-    }
-
-    LOG(0, "AUD_HW_MIXSND_0 : pAprocMixSndBuf=0x%x, 0x%x. 0x%x\n", pAprocMixSndBuf,(UINT8*)VIRTUAL((UINT32)pAprocMixSndBuf), (UINT8*)VIRTUAL((UINT32)(pAprocMixSndBuf+2*3072)));
-    LOG(0, "AUD_HW_MIXSND_0 : u4Cur=%d, u1Dst=0x%x\n", u4Cur, (UINT32)u1Dst);
-    
-    _hAudFeedMixSndThread_1[AUD_HW_MIXSND_0] = NULL_HANDLE;    
-    fgAudFeedMixSndThreadEnable_1[AUD_HW_MIXSND_0] = FALSE;
-    _fgForceStopMixSndDma_1[AUD_HW_MIXSND_0] = FALSE;
-    //Send MixSound Disable Command to ARM9    
-    vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 0); 
-    
-    LOG(0, "[FeedMixSndThread] (AUD_HW_MIXSND_0) OK Exit\n");
-}
-
-#endif
 
 #ifdef CC_AUD_APROC_KEYSOUND
 extern UINT8 _u1MixSndClipIdx;
@@ -3327,43 +3293,7 @@ static void _AudAprocFeedKeySndThread(const void* pvArg)  // For APROC MixSound 
     // Init Mixsound for CA9
     AUD_AprocMixSndInfoInit(KEY_MIXSND_ID);
     // Request ARM9 to reset mixsound buffer info.
-	switch (KEY_MIXSND_ID)
-	{
-		case AUD_MIXSND_0:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_RESET, 0);	
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 1);
-		break;
-		case AUD_MIXSND_1:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND1, APROC_SIG_SET_RESET, 0);	
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_ENABLE), 1);
-		break;
-		case AUD_MIXSND_2:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND2, APROC_SIG_SET_RESET, 0);	
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_ENABLE), 1);
-		break;
-		case AUD_MIXSND_3:
-			vAprocCmdSet(APROC_SIG_IDX_MIXSND3, APROC_SIG_SET_RESET, 0);	
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_ENABLE), 1);
-		break;
-#ifdef CC_AUD_APROC_HWMIX 
-		case AUD_HW_MIXSND_0:
-			vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_RESET, 0); 
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 1);
-		break;
-		case AUD_HW_MIXSND_1:
-			vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND1, APROC_SIG_SET_RESET, 0); 
-			x_thread_delay(20);
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 1);
-		break;
-#endif			
-		default:
-			break;
-	}
+    AUD_AprocMixSndReset(KEY_MIXSND_ID);	
 	
 	// Buffer Address
     pAprocMixSndBuf = (UINT8 *) _gsAprocMixSndBufInfo[KEY_MIXSND_ID].u4Str;
@@ -3422,31 +3352,7 @@ static void _AudAprocFeedKeySndThread(const void* pvArg)  // For APROC MixSound 
                 // update write pointer
                 _gsAprocMixSndBufInfo[KEY_MIXSND_ID].u4Wp = u4Cur;
                 // Send a notify to ARM9 for updating Wp
-			switch (KEY_MIXSND_ID)
-			{
-				case AUD_MIXSND_0:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4Cur);	
-				break;
-				case AUD_MIXSND_1:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND1, APROC_SIG_SET_UPDATE_WP, u4Cur);
-				break;
-				case AUD_MIXSND_2:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND2, APROC_SIG_SET_UPDATE_WP, u4Cur);	
-				break;
-				case AUD_MIXSND_3:
-				vAprocCmdSet(APROC_SIG_IDX_MIXSND3, APROC_SIG_SET_UPDATE_WP, u4Cur);
-				break;
-#ifdef CC_AUD_APROC_HWMIX 
-				case AUD_HW_MIXSND_0:
-				vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND0, APROC_SIG_SET_UPDATE_WP, u4Cur);
-				break;
-				case AUD_HW_MIXSND_1:
-				vAprocCmdSet(APROC_SIG_IDX_HW_MIXSND1, APROC_SIG_SET_UPDATE_WP, u4Cur);
-				break;
-#endif			
-				default:
-					break;
-			}
+                AUD_AprocMixSndUpdateWp(AUD_MIXSND_ID_T KEY_MIXSND_ID, u4Cur);			
 #if 0
                 HAL_TIME_T dt;
                 HAL_GetTime(&dt);
@@ -3477,32 +3383,8 @@ static void _AudAprocFeedKeySndThread(const void* pvArg)  // For APROC MixSound 
     _hAudFeedMixSndThread_1[KEY_MIXSND_ID] = NULL_HANDLE;    
     fgAudFeedMixSndThreadEnable_1[KEY_MIXSND_ID] = FALSE;
     _fgForceStopMixSndDma_1[KEY_MIXSND_ID] = FALSE;
-    //Send MixSound Disable Command to ARM9    
-	switch (KEY_MIXSND_ID)
-	{
-		case AUD_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT0_ENABLE), 0); 
-		break;
-		case AUD_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_0, APROC_REG_IOBUF_MIXSND_INPUT1_ENABLE), 0); 
-		break;
-		case AUD_MIXSND_2:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT2_ENABLE), 0); 
-		break;
-		case AUD_MIXSND_3:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_MIXSND_1, APROC_REG_IOBUF_MIXSND_INPUT3_ENABLE), 0); 
-		break;
-#ifdef CC_AUD_APROC_HWMIX 
-		case AUD_HW_MIXSND_0:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT0_ENABLE), 0); 
-		break;
-		case AUD_HW_MIXSND_1:
-			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_HW_MIXSND_0, APROC_REG_IOBUF_HW_MIXSND_INPUT1_ENABLE), 0); 
-		break;
-#endif			
-		default:
-			break;
-	}
+    //Send MixSound Disable Command to ARM9
+    AUD_AprocMixSndEnable(KEY_MIXSND_ID, FALSE);	
     LOG(0, "[FeedKeySndThread] (%d) OK Exit\n", KEY_MIXSND_ID);
 }
 
@@ -3551,6 +3433,7 @@ void AUD_AprocDisableKeySnd(void)
 void AUD_AprocEnableMixSnd(UINT8 u1MixID) //parson mixsnd
 {
     INT32 i4Ret = -1;
+    CHAR szThreadName[64];
 
     if (u1MixID >= AUD_MIXSND_NUM)
     {
@@ -3560,20 +3443,21 @@ void AUD_AprocEnableMixSnd(UINT8 u1MixID) //parson mixsnd
 
     if (_hAudFeedMixSndThread_1[u1MixID])
     {
-        LOG(0, "!!!! _AudFeedMixSndThread already created !!!!\n");
+        LOG(0, "!!!! _AudAprocFeedMixSndThread already created !!!!\n");
         return;
     }
 
-    if (u1MixID == AUD_MIXSND_0)
-    {        
-        i4Ret = x_thread_create(&_hAudFeedMixSndThread_1[u1MixID],
-                                   "AprocMixSnd_1_1" ,
-                                   AUD_DRV_THREAD_STACK_SIZE,
-                                   u1MixSndThread_Priority, 
-                                   (x_os_thread_main_fct) _AudAprocFeedMixSndThread_1,
-                                   0,
-                                   NULL);
-    }
+    if (u1MixID < AUD_MIXSND_NUM)
+    {
+    sprintf(szThreadName, "AprocMixSnd_%d", u1MixID);
+    i4Ret = x_thread_create(&_hAudFeedMixSndThread_1[u1MixID],
+                           szThreadName,
+                           AUD_DRV_THREAD_STACK_SIZE,
+                           u1MixSndThread_Priority, 
+                           (x_os_thread_main_fct) _AudAprocFeedMixSndThread,
+                           sizeof(UINT8),
+                           &u1MixID);
+    } 
     else if (u1MixID == AUD_MIXSND_1)
     {
         i4Ret = x_thread_create(&_hAudFeedMixSndThread_1[u1MixID],
@@ -3584,36 +3468,13 @@ void AUD_AprocEnableMixSnd(UINT8 u1MixID) //parson mixsnd
                                    0,
                                    NULL);    
     }
-#ifdef CC_AUD_APROC_HWMIX
-	else if (u1MixID == AUD_HW_MIXSND_0)
-	{
-		i4Ret = x_thread_create(&_hAudFeedMixSndThread_1[u1MixID],
-								   "AprocHWMixSnd_1_1" ,
-								   AUD_DRV_THREAD_STACK_SIZE,
-								   u1MixSndThread_Priority, 
-								   (x_os_thread_main_fct) _AudAprocFeedMixSndThread_3,
-								   0,
-								   NULL);	 
-	}
-	else if (u1MixID == AUD_HW_MIXSND_1)
-	{
-		i4Ret = x_thread_create(&_hAudFeedMixSndThread_1[u1MixID],
-								   "AprocHWMixSnd_1_2" ,
-								   AUD_DRV_THREAD_STACK_SIZE,
-								   u1MixSndThread_Priority, 
-								   (x_os_thread_main_fct) _AudAprocFeedMixSndThread_3, ///// NOTE!! FIX ME
-								   0,
-								   NULL);	 
-	}
-#endif
-
     if (OSR_OK != i4Ret)
     {
-        LOG(0, "Create _AudFeedMixSndThread %d Fail!!!!\n", u1MixID);
+        LOG(0, "Create _AudAprocFeedMixSndThread %d Fail!!!!\n", u1MixID);
     }
     else
     {
-        LOG(0, "Create _AudFeedMixSndThread %d Succ!!!!\n", u1MixID);
+        LOG(0, "Create _AudAprocFeedMixSndThread %d Succ!!!!\n", u1MixID);
     }
 }
 

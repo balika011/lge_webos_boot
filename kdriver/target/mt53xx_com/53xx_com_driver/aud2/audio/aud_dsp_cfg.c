@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/15 $
+ * $Date: 2015/01/18 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -26679,7 +26679,6 @@ static void _vAproc_PostMixsndTrim (UINT32 *pu4Value)
     case AUD_MIXSND_3:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_1, APROC_REG_INPUT_MIX3_TRIM);
         break;
-#if 0        
     case AUD_MIXSND_4:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_2, APROC_REG_INPUT_MIX4_TRIM);
         break;
@@ -26692,7 +26691,6 @@ static void _vAproc_PostMixsndTrim (UINT32 *pu4Value)
     case AUD_MIXSND_7:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_3, APROC_REG_INPUT_MIX7_TRIM);
         break;
-#endif
     default:
         return;
     }
@@ -26723,7 +26721,6 @@ static void _vAproc_PostMixsndInTrim (UINT32 *pu4Value)
     case AUD_MIXSND_3:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_1, APROC_REG_MIXSND3_IN_TRIM1);
         break;
-#if 0        
     case AUD_MIXSND_4:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_2, APROC_REG_MIXSND4_IN_TRIM1);
         break;
@@ -26736,7 +26733,6 @@ static void _vAproc_PostMixsndInTrim (UINT32 *pu4Value)
     case AUD_MIXSND_7:
         u4Addr = APROC_ASM_ADDR(APROC_ASM_ID_MIXSND_3, APROC_REG_MIXSND7_IN_TRIM1);
         break;
-#endif
     default:
         return;
     }
