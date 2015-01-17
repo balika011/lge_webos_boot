@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: aud_dsp_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2772,7 +2772,7 @@ void AUD_DspSetSoundBarOnOff(BOOL fgOnOff)
 }
 
 
-void AUD_DspSetSoundBarIDData(UINT8 Id, UINT8 data, UINT8 volumeInfo)
+void AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo)
 {
     _AUD_DspSetSoundBarIDData(Id, data, volumeInfo);
 }

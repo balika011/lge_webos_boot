@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/18 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -12785,8 +12785,32 @@ void _AUD_DspSetSoundBarOnOff(BOOL fgOnOff)
 }
 
 
-void _AUD_DspSetSoundBarIDData(UINT8 Id, UINT8 data, UINT8 volumeInfo)
+void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo)
 {
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+    UINT32 u4ChCfg2, u4ChCfg3, u4ChCfg4, u4ChCfg5, u4ChCfg6, u4ChCfg7;
+    UINT32 u4Temp;
+    UINT32 u4Data = (UINT32)data;
+    UINT32 u4Volome = (UINT32)volumeInfo;
+    
+    u4Temp = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2));
+    u4ChCfg2 = (u4Temp & 0xFFF) | ((Id & 0xF) << 12); //ID[3:0]
+    u4ChCfg3 = (Id >> 4) & 0xFFFF; //ID[19:4]
+    u4ChCfg4 = ((Id >> 20) & 0xF) | //ID[23:20]
+               ((u4Volome & 0xff) << 4) | //volume[7:0]
+               ((u4Data & 0xF) << 12); //cmd[3:0]
+    u4ChCfg5 = (u4Data>>4) & 0xF;
+    
+    u4ChCfg6 = 0; //checksum
+    u4ChCfg7 = 0; //checksum
+
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2), u4ChCfg2);
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG3), u4ChCfg3);
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG4), u4ChCfg4);
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG5), u4ChCfg5);
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG6), u4ChCfg6);
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG7), u4ChCfg7);
+#else
     SpdifSoundBarId = Id;
     SpdifSoundBarData = data;
 
@@ -12794,6 +12818,7 @@ void _AUD_DspSetSoundBarIDData(UINT8 Id, UINT8 data, UINT8 volumeInfo)
     vWriteShmUINT8(AUD_DSP0, B_IEC_SOUNDBAR_DATA, data);
 #ifdef CC_AUD_DDI
     AUD_SendSoundBarCmd((UINT32)volumeInfo);
+#endif
 #endif
 }
 
@@ -26456,7 +26481,7 @@ static void _vAproc_PostProcIecChannelStatusSetFunction (UINT32 *pu4Value)
 {    
     UINT32 u4ChCfg0, u4ChCfg1, u4ChCfg2;
     APROC_IEC_CHANNELSTATUS_T *eInfo;
-    UINT32 u4Data;
+    UINT32 u4Data = 0;
 
     eInfo = (APROC_IEC_CHANNELSTATUS_T *) pu4Value;
 
@@ -26468,9 +26493,12 @@ static void _vAproc_PostProcIecChannelStatusSetFunction (UINT32 *pu4Value)
         ((eInfo->u4CopyRight & 0x1) << 7) |
         ((eInfo->u4DigitalInfo & 0x1) << 8);
 
-    u4ChCfg2 = (eInfo->u4SourceNum & 0xF) |
+    u4Data = (eInfo->u4SourceNum & 0xF) |
         ((eInfo->u4ChannelNum0 & 0xF) << 4) |
         ((eInfo->u4ChannelNum1 & 0xF) << 8);
+
+    u4ChCfg2 = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2));
+    u4ChCfg2 = (u4Data & 0xFFF) | (u4ChCfg2 & 0xF000);
 
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG0), u4ChCfg0);
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG1), u4ChCfg1);
@@ -27047,6 +27075,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
         u4Idx = APROC_IOCTR_TRIM_AMIXER2;
     } 
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MUTE, (UINT32 *)&fgMute, 1); 
     
 }
 
