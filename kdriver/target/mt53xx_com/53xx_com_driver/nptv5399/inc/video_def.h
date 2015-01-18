@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: video_def.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -526,6 +526,9 @@ extern  MonOutPicInfo   _rMonitorOutInfo;
 #define bGetVideoDecType(bPath) (((bPath)<=SV_VP_PIP) ? _rMChannel.bDecType : SV_VD_MAX)
 #endif
 
+#ifdef CC_SUPPORT_PIPELINE
+#define bGetVideoDecTypeAVD(bPath) (((bPath)==SV_VP_MAIN) ? SV_VD_TVD3D : SV_VD_TVD3D)
+#endif
 // Display related information
 extern RDispInfo _rMDispInfo;
 extern RDispInfo _rPDispInfo;

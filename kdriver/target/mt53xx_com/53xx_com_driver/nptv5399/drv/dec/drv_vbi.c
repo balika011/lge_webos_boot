@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: drv_vbi.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -233,7 +233,12 @@ typedef enum
 /**************************************************************************
  * Macro definitions
  *************************************************************************/
+ 
+#ifdef CC_SUPPORT_PIPELINE
+#define fgIsVdoStable(bPath) (bTvd3dSignalStatus() == (UINT8)SV_VDO_STABLE)  //just for main path and TVD3D  YPBPR no need
+#else
 #define fgIsVdoStable(bPath) (bDrvVideoSignalStatus(bPath) == (UINT8)SV_VDO_STABLE)
+#endif
 
 /**************************************************************************
  * Local/Static variables
@@ -1111,8 +1116,12 @@ static WSS_CHK_RST _VBI_WSSValidityCheck(UINT8 u1VbiPath,
                                          UINT8 u1WSSSuccCnt)
 {
     WSS_CHK_RST  WssChkRst = WSS_Error;// u4Result = FALSE;
+    
+#ifdef CC_SUPPORT_PIPELINE
+    UINT8 u1VideoType = bDrvVideoGetTypeAVD(u1VbiPath);
+#else
     UINT8 u1VideoType = bDrvVideoGetType(u1VbiPath);
-
+#endif
     // Check Source is stable and CB Notify is enabled
     if(((u1WssMainNoftiyOnOff == SV_ON) &&
         (u1VbiPath == SV_VP_MAIN))
@@ -1177,7 +1186,11 @@ static WSS_CHK_RST _VBI_WSSValidityCheck(UINT8 u1VbiPath,
 static UINT32 _VBI_GetWSSData(UINT8 u1VbiPath, UINT8 bVBISuite)
 {
     UINT32 u4WssData;
+#ifdef CC_SUPPORT_PIPELINE
+    UINT8 u1VideoType = bDrvVideoGetTypeAVD(u1VbiPath);
+#else
     UINT8 u1VideoType = bDrvVideoGetType(u1VbiPath);
+#endif
     u4WssData = (bVBISuite == VBI0) ? u4GetWSS(): u4GetWSS2();
 
     if(u1VideoType == VDOTYPE_PAL)
@@ -1590,8 +1603,13 @@ static void VBIAutoCCResetSrc(UINT8 u1Path)
     UINT8 u1MatchVBISuite = VBI2; /* u1Path is matched with which VBI slicer. VBI0 or VBI2 */
     UINT8 u1i = 0;
     /* Check Video Type and reset VBI setting. */
+#ifdef CC_SUPPORT_PIPELINE
+    u1VideoType = bDrvVideoGetTypeAVD(u1Path);
+    u1Src = bGetVideoDecTypeAVD(SV_VP_PIP);
+#else
     u1VideoType = bDrvVideoGetType(u1Path);
     u1Src = bGetVideoDecType(SV_VP_PIP);
+#endif
     LOG(5, "VBIAutoCCResetSrc: %d %d\n", u1Path, u1MatchVBISuite);
 
     if(u1MatchVBISuite == VBI2)
@@ -1662,7 +1680,12 @@ static void VBIAutoCCResetSrc(UINT8 u1Path)
         }
 
 #endif
-        u1Src = bGetVideoDecType(_u1VBI2Path);
+#ifdef CC_SUPPORT_PIPELINE
+		u1Src = bGetVideoDecTypeAVD(_u1VBI2Path);
+#else
+		u1Src = bGetVideoDecType(_u1VBI2Path);
+#endif
+
         /* Line Selection & Setting */
         _VBI_SetVBILines(&_VbiLineInfo, VBI2, u1Src, u1VideoType, _VBIAvInfo.E_AVFieldType);
         /* Set Initial Zero-Crossing threshold */
@@ -1790,8 +1813,12 @@ static void VBIInitCCScan(void)
     x_memset(ui1Scanline_Field1_RdyCnt, 0, sizeof(UINT8)*(SCANLINE_CC_NUM));
     ui1Scanline_TestCnt = 0;
     ui1CCLineIndex=0;
-
+#ifdef CC_SUPPORT_PIPELINE
+    if(bDrvVideoGetTypeAVD(SV_VP_MAIN)==VDOTYPE_PAL)
+#else
     if(bDrvVideoGetType(SV_VP_MAIN)==VDOTYPE_PAL)
+#endif
+
     {
         rScanlineSeq_Normal[0].u1F0_SET = 18;
         rScanlineSeq_Normal[0].u1F1_SET = 19;//Field
@@ -1939,27 +1966,53 @@ static void VBIAutoCCScan(UINT32 u4CurVbi2Field)
         LOG(3, "[VBIAutoCCScan] CC Line %d/%d Found\n", rCurrScanCCLine.u1F0_SET, rCurrScanCCLine.u1F1_SET);
         ui4ScanlineCCState = SCANLINE_IDLE;
 
+#ifdef CC_SUPPORT_PIPELINE
+        if(bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#else
         if(bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#endif
+
         {
             if(_VBIAvInfo.E_AVFieldType == E_FIELD_INVERSED)
             {
+#ifdef CC_SUPPORT_PIPELINE
+                if(bDrvVideoGetTypeAVD(_u1VBI0Path)==VDOTYPE_NTSC)
+#else
                 if(bDrvVideoGetType(_u1VBI0Path)==VDOTYPE_NTSC)
+#endif
+
+				
                 {
                     rCurrScanCCLine.u1F0_SET  -= (AV_IVS_NTSC_CC_SEL0  - AV_NML_NTSC_CC_SEL0);
                     rCurrScanCCLine.u1F1_SET  -= (AV_IVS_NTSC_CC_SEL1  - AV_NML_NTSC_CC_SEL1);
                 }
+#ifdef CC_SUPPORT_PIPELINE
+                else if(bDrvVideoGetTypeAVD(_u1VBI0Path)==VDOTYPE_PAL)
+#else
                 else if(bDrvVideoGetType(_u1VBI0Path)==VDOTYPE_PAL)
+#endif
+
                 {
                     rCurrScanCCLine.u1F0_SET   -= (AV_IVS_PAL_CC_SEL0   - AV_NML_PAL_CC_SEL0);
                     rCurrScanCCLine.u1F1_SET   -= (AV_IVS_PAL_CC_SEL1   - AV_NML_PAL_CC_SEL1);
                 }
             }
 
+#ifdef CC_SUPPORT_PIPELINE
+            if(bDrvVideoGetTypeAVD(_u1VBI0Path)==VDOTYPE_NTSC)
+#else
             if(bDrvVideoGetType(_u1VBI0Path)==VDOTYPE_NTSC)
+#endif
+
             {
                 _VbiLineInfo.AV_NTSC_CC = rCurrScanCCLine;
             }
+#ifdef CC_SUPPORT_PIPELINE
+            else if(bDrvVideoGetTypeAVD(_u1VBI0Path)==VDOTYPE_PAL)
+#else
             else if(bDrvVideoGetType(_u1VBI0Path)==VDOTYPE_PAL)
+#endif
+
             {
                 _VbiLineInfo.AV_PAL_CC = rCurrScanCCLine;
             }
@@ -1994,7 +2047,12 @@ static void VBIAutoCCScan(UINT32 u4CurVbi2Field)
             LOG(3, "[VBIAutoCCScan] CC Line Not Found !!\n");
             ui4ScanlineCCState = SCANLINE_IDLE;
 
+#ifdef CC_SUPPORT_PIPELINE
+            if(bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#else
             if(bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#endif
+
             {
                 VBIAutoCCResetSrc(SV_VP_PIP);
             }
@@ -2287,11 +2345,20 @@ void VBI_ISR(void)
     {
         return;
     }
+#ifdef CC_SUPPORT_PIPELINE
+	
+	if(!(_rTvd3dStat.bIsMain)||! (_rTvd3dStat.bIsMain))     //only connect AVD can work
+	{
+		return;
+	}
+#else
 	if ((!fgIsSrcAtv(SV_VP_MAIN)) && (!fgIsSrcAV(SV_VP_MAIN)) && (!fgIsSrcSV(SV_VP_MAIN)) && (!fgIsSrcScart(SV_VP_MAIN)) && (!fgIsSrcYPBPR(SV_VP_MAIN))
 		&& (!fgIsSrcAtv(SV_VP_PIP)) && (!fgIsSrcAV(SV_VP_PIP)) && (!fgIsSrcSV(SV_VP_PIP)) && (!fgIsSrcScart(SV_VP_PIP)) && (!fgIsSrcYPBPR(SV_VP_PIP)))
 	{
-	    return;
+		return;
 	}
+#endif
+
 	
     if(_fgVbiFifoRstDone == FALSE)
     {
@@ -2604,7 +2671,12 @@ void VBI_ISR(void)
         /* VBI0: WSS */
 #if SUPPORT_WSS
 #if WSS_DUAL_SLICER
+#ifdef CC_SUPPORT_PIPELINE
+        _u1VideoType[0] = bDrvVideoGetTypeAVD(_u1VBI0Path);
+#else
         _u1VideoType[0] = bDrvVideoGetType(_u1VBI0Path);
+#endif
+
 #endif
 
         if(IsWSSEnable() && IsWSSRdy())
@@ -2691,7 +2763,12 @@ void VBI_ISR(void)
         }
         else
         {
-            if(fgHwTvdVPresTVD3D() && (!fgIsSrcScart(_u1VBI0Path)))
+#ifdef CC_SUPPORT_PIPELINE
+			if(fgHwTvdVPresTVD3D() && (!fgIsSrcScartAVD(_u1VBI0Path)))
+#else
+			if(fgHwTvdVPresTVD3D() && (!fgIsSrcScart(_u1VBI0Path)))
+#endif
+
             {
                 UINT8 u1Thres;
                 u1Thres = ((_t_VbiMode == VBI_TTX_MODE)||(_t_VbiMode == VBI_ANAS_MODE)) ? WSS625_FAIL_THRES : WSS525_FAIL_THRES;
@@ -2986,7 +3063,12 @@ void VBI_ISR(void)
         /* VBI2: WSS */
 #if SUPPORT_WSS
 #if WSS_DUAL_SLICER
+#ifdef CC_SUPPORT_PIPELINE
+        _u1VideoType[1] = bDrvVideoGetTypeAVD(_u1VBI2Path);
+#else
         _u1VideoType[1] = bDrvVideoGetType(_u1VBI2Path);
+#endif
+
 #endif
 
         if(IsWSS2Enable() && IsWSS2Rdy())
@@ -3092,7 +3174,12 @@ void VBI_ISR(void)
         }
         else
         {
+#ifdef CC_SUPPORT_PIPELINE
+		    if(!fgIsSrcScartAVD(_u1VBI2Path))
+#else
 		    if(!fgIsSrcScart(_u1VBI2Path))
+#endif
+
             {
                 UINT8 u1Thres;
                 u1Thres = ((_t_VbiMode == VBI_TTX_MODE) || (_t_VbiMode == VBI_ANAS_MODE)) ? WSS625_FAIL_THRES : WSS525_FAIL_THRES;
@@ -3433,7 +3520,12 @@ void VBI_ResetSrc(UINT8 u1Path)
     VERIFY(x_sema_lock(_hVbiMutex, X_SEMA_OPTION_WAIT) == OSR_OK);
     _VBI_ISRDisable();
     /* Check Video Type and reset VBI setting. */
+#ifdef CC_SUPPORT_PIPELINE
+    u1VideoType = bDrvVideoGetTypeAVD(u1Path);
+#else
     u1VideoType = bDrvVideoGetType(u1Path);
+#endif
+
     _u1VBI0Path = SV_VP_MAIN;
     _u1VBI2Path = SV_VP_PIP;
 
@@ -3460,14 +3552,24 @@ void VBI_ResetSrc(UINT8 u1Path)
     //VBI0 deal with TVD3D Input
     //VBI2 deal with Component Input
 #if MAIN_SUB_VBI_NOTIFY
-    if(bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR)
+#ifdef CC_SUPPORT_PIPELINE
+	if(bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR)
 #else
-    if((bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR) ||
-       ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecType(SV_VP_MAIN) != (UINT8)SV_VD_TVD3D)))
+	if(bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR)
+#endif
+#else
+#ifdef CC_SUPPORT_PIPELINE
+	if((bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR) ||
+	   ((bGetVideoDecTypeAVD(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecTypeAVD(SV_VP_MAIN) != (UINT8)SV_VD_TVD3D)))
+#else
+	if((bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR) ||
+	   ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecType(SV_VP_MAIN) != (UINT8)SV_VD_TVD3D)))
+#endif
+
 #endif
     {
         /* VBI Slicer and Src remapping */
-        _u1VBI0Path = SV_VP_PIP;
+        _u1VBI0Path = SV_VP_PIP;                        //fix VBI0 for TVD3D  YPBPR will not notify VBI infotmation
         _u1VBI2Path = SV_VP_MAIN;
 
         if(u1Path == SV_VP_MAIN)
@@ -3480,7 +3582,12 @@ void VBI_ResetSrc(UINT8 u1Path)
         }
     }
 #if MAIN_SUB_VBI_NOTIFY
+#ifdef CC_SUPPORT_PIPELINE
+	else if((bGetVideoDecTypeAVD(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecTypeAVD(SV_VP_MAIN) != (UINT8)SV_VD_TVD3D))
+#else
 	else if((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecType(SV_VP_MAIN) != (UINT8)SV_VD_TVD3D))
+#endif
+
 	{
 		/* VBI Slicer and Src remapping */
 		_u1VBI0Path = SV_VP_PIP;
@@ -3514,7 +3621,11 @@ void VBI_ResetSrc(UINT8 u1Path)
 			_u1VbiUSWSSSubNotify = TRUE;
 		}		
 	}
-	else if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecType(SV_VP_MAIN) != (UINT8)SV_VD_YPBPR))
+#ifdef CC_SUPPORT_PIPELINE
+	   else if ((bGetVideoDecTypeAVD(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecTypeAVD(SV_VP_MAIN) != (UINT8)SV_VD_YPBPR))
+#else
+	   else if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecType(SV_VP_MAIN) != (UINT8)SV_VD_YPBPR))
+#endif
 	{
 		//set sub notify on
 		if (_t_VbiMode == VBI_CC_VCHIP_MODE)
@@ -3563,7 +3674,12 @@ void VBI_ResetSrc(UINT8 u1Path)
 
 	if (u1Path == SV_VP_MAIN)
 	{
+#ifdef CC_SUPPORT_PIPELINE
+		if ((_u1VideoSrcPre[SV_VP_MAIN] == _fVFEAVDSourceMainNew) && (_u1VideoTypePre[SV_VP_MAIN] != u1VideoType))
+#else
 		if ((_u1VideoSrcPre[SV_VP_MAIN] == _bSrcMainNew) && (_u1VideoTypePre[SV_VP_MAIN] != u1VideoType))
+#endif
+
 		{
 			_sbTimingChg = TRUE;
 		}
@@ -3571,12 +3687,22 @@ void VBI_ResetSrc(UINT8 u1Path)
 		{
 			_sbTimingChg = FALSE;
 		}
+#ifdef CC_SUPPORT_PIPELINE
+		_u1VideoSrcPre[SV_VP_MAIN] = _fVFEAVDSourceMainNew;
+#else
 		_u1VideoSrcPre[SV_VP_MAIN] = _bSrcMainNew;
+#endif
+
 		_u1VideoTypePre[SV_VP_MAIN] = u1VideoType;
 	}
 	else if (u1Path == SV_VP_PIP)
 	{		
+#ifdef CC_SUPPORT_PIPELINE
+		if ((_u1VideoSrcPre[SV_VP_PIP] == _fVFEAVDSourceSubNew) && (_u1VideoTypePre[SV_VP_PIP] != u1VideoType))
+#else
 		if ((_u1VideoSrcPre[SV_VP_PIP] == _bSrcSubNew) && (_u1VideoTypePre[SV_VP_PIP] != u1VideoType))
+#endif
+
 		{
 			_sbTimingChg = TRUE;
 		}
@@ -3584,7 +3710,12 @@ void VBI_ResetSrc(UINT8 u1Path)
 		{
 			_sbTimingChg = FALSE;
 		}
+#ifdef CC_SUPPORT_PIPELINE
+		_u1VideoSrcPre[SV_VP_PIP] = _fVFEAVDSourceSubNew;
+#else
 		_u1VideoSrcPre[SV_VP_PIP] = _bSrcSubNew;
+#endif
+
 		_u1VideoTypePre[SV_VP_PIP] = u1VideoType;
 	}
 
@@ -3595,7 +3726,12 @@ void VBI_ResetSrc(UINT8 u1Path)
 			goto EXIT;
 		}
 	}
-	if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D))
+#ifdef CC_SUPPORT_PIPELINE
+	   if ((bGetVideoDecTypeAVD(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D))
+#else
+	   if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_TVD3D) && (bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D))
+#endif
+
 	{
 		_sbMainSubSrcTvd = TRUE;
 	    if(_sbTimingChg == FALSE && _sbVbiModeChg == FALSE)
@@ -3607,7 +3743,12 @@ void VBI_ResetSrc(UINT8 u1Path)
 	{
 		_sbMainSubSrcTvd = FALSE;
 	}
-	if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR))
+#ifdef CC_SUPPORT_PIPELINE
+		 if ((bGetVideoDecTypeAVD(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR))
+#else
+		 if ((bGetVideoDecType(SV_VP_PIP) == (UINT8)SV_VD_YPBPR) && (bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_YPBPR))
+#endif
+
 	{
 		_sbMainSubSrcYpbpr = TRUE;
 	    if(_sbTimingChg == FALSE && _sbVbiModeChg == FALSE)
@@ -3696,7 +3837,12 @@ void VBI_ResetSrc(UINT8 u1Path)
             VBI_SetLineInfo(&_VbiLineInfo);
         }
 
+#ifdef CC_SUPPORT_PIPELINE
+        if(bGetVideoDecTypeAVD(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#else
         if(bGetVideoDecType(SV_VP_MAIN) == (UINT8)SV_VD_TVD3D)
+#endif
+
         {
             if(u1MatchVBISuite == VBI0)
             {
@@ -3777,7 +3923,12 @@ void VBI_ResetSrc(UINT8 u1Path)
         _u1Vps2FailNo = VPS_FAIL_THRES;
         _u1Vps2SuccNo = 0;
 #endif
-        u1Src = bGetVideoDecType(_u1VBI0Path);
+#ifdef CC_SUPPORT_PIPELINE
+		u1Src = bGetVideoDecTypeAVD(_u1VBI0Path);
+#else
+		u1Src = bGetVideoDecType(_u1VBI0Path);
+#endif
+
         /* Line Selection & Setting */
         _VBI_SetVBILines(&_VbiLineInfo, VBI0, u1Src, u1VideoType, _VBIAvInfo.E_AVFieldType);
         /* Set Initial VBI Gain */
@@ -3895,7 +4046,12 @@ void VBI_ResetSrc(UINT8 u1Path)
         }
 
 #endif
-        u1Src = bGetVideoDecType(_u1VBI2Path);
+#ifdef CC_SUPPORT_PIPELINE
+		u1Src = bGetVideoDecTypeAVD(_u1VBI2Path);
+#else
+		u1Src = bGetVideoDecType(_u1VBI2Path);
+#endif
+
         /* Line Selection & Setting */
         _VBI_SetVBILines(&_VbiLineInfo, VBI2, u1Src, u1VideoType, _VBIAvInfo.E_AVFieldType);
         /* Set Initial Zero-Crossing threshold */
@@ -4674,7 +4830,12 @@ BOOL VBI_AdjVBIGain(UINT8 u1Gain)
 {
     UINT8 u1Src;
     UINT8 u1AV_ZC_Th = AV_ZC_TH;
-    u1Src = bGetVideoDecType(_u1VBI0Path);
+#ifdef CC_SUPPORT_PIPELINE
+	u1Src = bGetVideoDecTypeAVD(_u1VBI0Path);
+#else
+	u1Src = bGetVideoDecType(_u1VBI0Path);
+#endif
+
 
     if(u1Src == (UINT8)SV_VD_TVD3D)
     {
@@ -4728,7 +4889,12 @@ UINT8 VBI_GetCGMSA(UINT8 u1Path)
 void VBI_GetAnalogCopyProtect(UINT8 u1Path, UINT32 *pu4PAL_wss, UINT32 *pu4NTSC_wss)
 {
 #if SUPPORT_WSS
-    if(SV_VD_TVD3D == bGetVideoDecType(u1Path))
+#ifdef CC_SUPPORT_PIPELINE
+	if(SV_VD_TVD3D == bGetVideoDecTypeAVD(u1Path))
+#else
+	if(SV_VD_TVD3D == bGetVideoDecType(u1Path))
+#endif
+
     {
 		*pu4PAL_wss = _u4PAL_wss;
 		*pu4NTSC_wss = _u4NTSC_wss;

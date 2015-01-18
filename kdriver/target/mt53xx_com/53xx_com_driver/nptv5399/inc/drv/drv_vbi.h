@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_vbi.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_VBI_H_
@@ -318,7 +318,12 @@ typedef void (*VBI_PFN_CLI_NFY) (void *pInput);
 #define BYPASS_VBI_VALIDATION    1
 #define INIT_VBI_BY_NOTIFY_ONOFF 1
 #define DEFAULT_4_3_EUWSS        1
+#ifdef CC_SUPPORT_PIPELINE
+#define MAIN_SUB_VBI_NOTIFY      0
+#else
 #define MAIN_SUB_VBI_NOTIFY      1
+#endif
+
 #else
 #define FORCE_ENABLE_ANAS        0
 #define BYPASS_VBI_VALIDATION    0

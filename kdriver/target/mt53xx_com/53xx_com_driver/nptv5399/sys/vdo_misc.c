@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #2 $
+ * $Revision: #3 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -964,6 +964,63 @@ UINT8 bDrvVideoGetType(UINT8 bPath)
     return (u1Ret);
 }
 
+#ifdef CC_SUPPORT_PIPELINE
+UINT8 bDrvVideoGetTypeAVD(UINT8 bPath)
+{
+    UINT8 bDecType;
+    UINT8 u1Ret;
+    // 1. Check Channel Decoder
+    bDecType = SV_VD_TVD3D;
+
+    // 2. Check VDOSRC and Timing
+    switch(bDecType)
+    {
+        case SV_VD_TVD3D:
+            if(_rTvd3dStatus.fgIs525)
+            {
+                u1Ret = VDOTYPE_NTSC;
+            }
+            else
+            {
+                u1Ret = VDOTYPE_PAL;
+            }
+
+            break;
+
+        case SV_VD_YPBPR:
+            if((_bHdtvTiming==MODE_525I) || (_bHdtvTiming==MODE_525I_OVERSAMPLE) ||
+               (_bHdtvTiming==MODE_480P) || (_bHdtvTiming==MODE_480P_OVERSAMPLE))
+            {
+                u1Ret = VDOTYPE_NTSC;
+            }
+            else if((_bHdtvTiming==MODE_625I) || (_bHdtvTiming==MODE_625I_OVERSAMPLE) ||
+                    (_bHdtvTiming==MODE_576P) || (_bHdtvTiming==MODE_576P_OVERSAMPLE))
+            {
+                u1Ret = VDOTYPE_PAL;
+            }
+			else if(_bHdtvTiming==MODE_720p_60)
+			{
+                u1Ret = VDOTYPE_720P;
+            }
+			else if(_bHdtvTiming==MODE_1080i)
+			{
+                u1Ret = VDOTYPE_1080I;
+            }
+            else
+            {
+                u1Ret = VDOTYPE_OTHER;
+            }
+
+            break;
+
+        default:
+            u1Ret = VDOTYPE_OTHER;
+            break;
+    }
+
+    return (u1Ret);
+}
+#endif
 // *********************************************************************
 // Function : void vDrvVideoAllocateDram(void)
 // Description :

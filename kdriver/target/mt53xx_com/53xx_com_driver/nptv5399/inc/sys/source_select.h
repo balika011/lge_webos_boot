@@ -89,8 +89,8 @@
  * Last changed:
  * -------------
  * $Author: p4admin $
- * $Revision: #3 $
- * $Date: 2015/01/17 $
+ * $Revision: #4 $
+ * $Date: 2015/01/18 $
  ****************************************************************************/
 
 #ifndef _SOURCE_SELECT_H_
@@ -116,6 +116,9 @@ typedef struct _SOURCE_DETECT_STATUS_T
 UINT8 bGetInternalDec(UINT8 bPath) ;
 extern BOOL fgIsSrcAtv(UINT8 bPath);
 extern BOOL fgIsSrcScart(UINT8 bPath);
+#ifdef CC_SUPPORT_PIPELINE
+extern BOOL fgIsSrcScartAVD(UINT8 bPath);
+#endif
 extern BOOL fgIsSrcDtv(UINT8 bPath);
 extern BOOL fgIsSrcAV(UINT8 bPath);
 extern BOOL fgIsSrcSV(UINT8 bPath);

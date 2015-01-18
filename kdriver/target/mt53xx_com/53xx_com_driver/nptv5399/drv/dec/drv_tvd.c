@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #4 $
+* $Revision: #5 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4348,7 +4348,7 @@ static void _svDrvTvdModeChgDone(void)
 	   
 #if SUPPORT_VBI
 	   {
-		   VBI_ResetSrc(0x0);
+		   VBI_ResetSrc(SV_VP_MAIN);
 	   }
 #endif
 #ifndef CC_SUPPORT_RECORD_AV

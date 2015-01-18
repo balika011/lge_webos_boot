@@ -93,11 +93,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 *************************************************************************/
 
 #ifndef _VDO_MISC_H_
@@ -132,6 +132,9 @@ extern UINT8 bIsScalerInputRGB(UINT8 bPath) reentrant;
 
 
 extern UINT8 bDrvVideoGetType(UINT8 bPath) ;
+#ifdef CC_SUPPORT_PIPELINE
+extern UINT8 bDrvVideoGetTypeAVD(UINT8 bPath) ;
+#endif
 #ifdef CC_SUPPORT_PREPROC_TIMING
 void vPreProcConnect(UINT8 u1Path, UINT8 fgIsOn);
 #endif

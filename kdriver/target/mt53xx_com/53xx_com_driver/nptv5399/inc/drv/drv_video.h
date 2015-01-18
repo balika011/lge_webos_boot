@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: drv_video.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -260,6 +260,10 @@ extern void vDrvVideoHwInit(void) ;
 extern void vDrvLcdimProc(void);
 
 extern UINT8 bDrvVideoGetType(UINT8 bPath) ;
+#ifdef CC_SUPPORT_PIPELINE
+extern UINT8 bDrvVideoGetTypeAVD(UINT8 bPath) ;
+#endif
+
 #define VDOTYPE_NTSC 0
 #define VDOTYPE_PAL 1
 #define VDOTYPE_720P 2

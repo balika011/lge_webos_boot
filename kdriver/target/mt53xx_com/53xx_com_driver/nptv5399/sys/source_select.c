@@ -184,7 +184,18 @@ BOOL fgIsSrcScart(UINT8 bPath)
 
     return FALSE;
 }
+#ifdef CC_SUPPORT_PIPELINE
+BOOL fgIsSrcScartAVD(UINT8 bPath)
+{
+    if(((!bPath) && (VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)) ||
+       ((bPath) && (VSS_MAJOR(_fVFEAVDSourceSubNew) == VSS_SCART)))
+    {
+        return TRUE;
+    }
 
+    return FALSE;
+}
+#endif
 BOOL fgIsSrcDtv(UINT8 bPath)
 {
     if(((bPath == SV_VP_MAIN) && (_bSrcMainNew == SV_VS_DT1)) ||
@@ -707,7 +718,7 @@ void vDrvSetInternalMuxVFE_AVD(UINT8 path,UINT8 src)
     UINT8 mon_src;
 	if(path)
 	{
-		icin=(enum IC_Input)_fVFEAVDSubICPin;   //need to check this
+		icin=(enum IC_Input)_fVFEAVDSubICPin;   //need to check this!!!
 		mon_src=SV_VS_MAX;
 	}
 	else
@@ -725,6 +736,7 @@ void vDrvSetInternalMuxVFE_AVD(UINT8 path,UINT8 src)
         initAVSV(src,mon_src);
     }
 	//CVBS/ATV/ need to set this?
+	/*
     else if((icin <= P_VGA) || (icin == P_VGACOMP))
     {
 #if SUPPORT_SCART
@@ -732,6 +744,7 @@ void vDrvSetInternalMuxVFE_AVD(UINT8 path,UINT8 src)
 #endif
         initYPbPrVGA((UINT8)icin);
     }
+	*/
     //Scart need to set this
 #if SUPPORT_SCART
     else if(icin == P_FB0 || icin == P_FB1)
