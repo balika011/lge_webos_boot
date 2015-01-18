@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #3 $
+ * $Revision: #4 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -523,6 +523,10 @@ void vDrvVideoSwInit(void)
 	_fVFEAVDMainICPin=(UINT8)P_FA;
 	_fVFEAVDSubICPin=(UINT8)P_FA;
 	_fVSCConnectAVD=0x0;  // init set VSC do not  connect the AVD
+	 u1ADCConnentSrc=SV_VS_MAX;
+	 u1ADCConnentSrcType=VSS_MAX;
+	 u1ADCConnentSrcPort=P_FA;
+	 u1VSCConnectADC=0;
 #endif
     // source_select.c
     _bSrcMainOld = (UINT8)SV_VS_MAX;
