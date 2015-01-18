@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1194,7 +1194,11 @@ void vHdtvConnect(UINT8 bchannel, UINT8 fgIsOn)
     if(bchannel == SV_VP_PIP)
     {
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_PIP_DET | MSK_SP0_MD_CHG));
+		#ifdef CC_SUPPORT_PIPELINE
+		_rYPBPRStat.bIsPip = 0;
+		#else
         _rYPBPRStat.bIsPip = fgIsOn;
+		#endif
     }
 
     if(fgIsOn == SV_ON)
