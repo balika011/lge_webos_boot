@@ -140,6 +140,60 @@ void BIM_CpuCA17Up(unsigned int cpu)
    cpu=cpu+1;
 }
 
+void BIM_CpuCA17Down(unsigned int cpu)
+{
+	unsigned int regval32;
+    cpu=cpu-1;
+	printf("BIM_CpuCA17Down %d \n",cpu);
+    //set pd to "1" //ok
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 |= MEM_PD;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+    do {
+        regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    }while(!(regval32 & MEM_PD_ACK));
+
+     // Set clamp bit to "1" //ng
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 |= CLAMP;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+    udelay(20);
+
+    // Set pwr clk_dis bit to "1"
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 |= PWR_CLK_DIS;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+    udelay(20);
+
+    // Set reset enable bit to "1"
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 |= PWR_RST_EN;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+    udelay(20);
+
+    //set pwr on to "0" //ok
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 &= ~PWR_ON;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+
+    do {
+        regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    }while( regval32 & PWR_ON_ACK);
+    udelay(20);
+
+    //set pwr on 2nd to "0" //ng
+    regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    regval32 &= ~PWR_ON_2ND;
+    __bim_writel(regval32,REG_CPU1_PWR_CTL + 4 * cpu);
+
+    do {
+        regval32 = __bim_readl(REG_CPU1_PWR_CTL + 4 * cpu);
+    }while( regval32 & PWR_ON_2ND_ACK);
+    udelay(20);
+
+    cpu =cpu+1;
+
+}
 void secondary_start_uboot(void)
 {
 #if defined(CONFIG_MULTICORES_PLATFORM)
@@ -185,11 +239,16 @@ void secondary_start_uboot_cleanup(void)
 		 0xf0008068);
 	__raw_writel(0,
 		 0xf0008188);
+	__raw_writel((0xffffffff),
+		 0xf000806c);
 	local_irq_disable();
 	
 	smp_cpu_released[get_cpu_id()].lock = 1;
     pfnImage = (PFN_IMAGE)(mp_start_addr);
 	flush_cache_all();
+	HalDisableCaches();
+    HalDisableMMU();	
+	asm volatile("dsb");
     pfnImage();
    // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_PA_START);
    // writel(0x0, CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC);
@@ -260,6 +319,8 @@ void Core_Wakeup(CoreWakeupFunc __Addr, u32 CoreID)
 	{
 		__raw_writel(0xffffb007,
 			 0xf0008068);
+		__raw_writel((0x10101010),
+		 0xf000806c);
 		//memcpy((void *)0, mt53xx_Core1StubSimple, 0x100);
 		/* make sure write buffer is drained */
 			

@@ -75,12 +75,12 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
-* $Author: dtvbm11 $
-* $Date: 2015/01/09 $
+* $Author: p4admin $
+* $Date: 2015/01/18 $
 
  * $RCSfile:  $
 
- * $Revision: #1 $
+ * $Revision: #2 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -145,6 +145,11 @@ void BIM_Core1Stub(void)
     __asm__ ("cmp     r2, r1");
     __asm__ ("bne     LOOP");
 
+    __asm__ ("ldr     r0, =0xf000806c");
+    __asm__ ("ldr     r1, =0x10101010");
+    __asm__ ("ldr     r2, [r0]");
+    __asm__ ("cmp     r2, r1");
+    __asm__ ("beq     go_to_boot");
 #ifdef CC_TRUSTZONE_SUPPORT
 #if defined(CC_TRUSTZONE_IN_CHB)
 	reg = TCMGET_CHANNELA_SIZE()*0x100000+TCMGET_CHANNELB_SIZE()*0x100000-TRUSTZONE_MEM_SIZE+TRUSTZONE_CODE_BASE;
@@ -157,11 +162,16 @@ void BIM_Core1Stub(void)
     __asm__ ("mov     r3, pc");
     __asm__ ("blx     r1");
     __asm__ ("bl      inv_cache");
-#endif // CC_TRUSTZONE_SUPPORT
 
     __asm__ ("ldr     r0, =0xf0008188");
     __asm__ ("ldr     r1, [r0]");
     __asm__ ("blx     r1");
+#endif // CC_TRUSTZONE_SUPPORT
+	__asm__ volatile (
+        	"go_to_boot:               \n"
+        	"ldr     r0, =0xf0008188 \n"
+            "ldr     r1, [r0] \n"
+            "blx     r1 \n");
 
     __asm__ volatile (
              "inv_cache:                              \n"
