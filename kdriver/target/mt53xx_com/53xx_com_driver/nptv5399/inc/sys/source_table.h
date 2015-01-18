@@ -89,8 +89,8 @@
  * Last changed:
  * -------------
  * $Author: p4admin $
- * $Revision: #2 $
- * $Date: 2015/01/17 $
+ * $Revision: #3 $
+ * $Date: 2015/01/18 $
  ****************************************************************************/
 #ifndef _SOURCE_TABLE_H_
 #define _SOURCE_TABLE_H_
@@ -183,6 +183,12 @@ typedef struct _source_detect_t
 #define _fVFEAVDSubICPin _rVdoSrcVFEAVD[1].ICInAVD
 
 #define _fVSCConnectAVD _fVSCConnectVFEAVD
+
+UINT8 u1ADCConnentSrc=SV_VS_MAX;
+UINT8 u1ADCConnentSrcType=VSS_MAX;
+UINT8 u1ADCConnentSrcPort=P_FA;
+
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

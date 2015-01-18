@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/17 $
+ * $Date: 2015/01/18 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -526,6 +526,9 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			else if(u4Port==0x3)
 			{
 			  bVFEAVDSrc= SV_VS_SCART1;   //VFE_ADC scart will be done at the TVD3D
+			u1ADCConnentSrc=SV_VS_SCART1;
+			u1ADCConnentSrcType=VSS_SCART;
+			u1ADCConnentSrcPort=P_FB0;
 			}
 			else
 			{
@@ -540,6 +543,27 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			break;
 
 		case SV_VD_VGA:
+			break;
+		case SV_VS_YPbPr1:
+			vDrvAllHDADCPow(TRUE);
+			vDrvSOY0EN(1);
+			//vDrvSetInternalMux(0,_bSrcMainNew);// replaced by following code
+			{
+#if SUPPORT_SCART
+        	vSCARTDisable();
+#endif
+        	initYPbPrVGA(P_YP0);
+    		}
+
+
+			//vSetMOutMux(bNewMainDec);//remove omux connent
+			//vDrvVideoConnect(SV_VP_MAIN, SV_ON);//replaced by following code
+			vHdtvConnect(0, 1);
+			u1ADCConnentSrc=SV_VS_YPbPr1;
+			u1ADCConnentSrcType=VSS_YPBPR;
+			u1ADCConnentSrcPort=P_YP0;
+			
+			
 			break;
 #if SUPPORT_DVI
 
