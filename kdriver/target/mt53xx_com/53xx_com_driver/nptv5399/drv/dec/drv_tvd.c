@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #3 $
+* $Revision: #4 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -1118,7 +1118,7 @@ static void _svDrvTvdSVPresDetCount(void)
     UINT8 fgSVPres;
 #ifdef  SUPPORT_AV_COMP_AUTO
 #ifdef CC_SUPPORT_PIPELINE
-   if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_SV) && (VSS_MAJOR(_fVFEAVDSourceSubNew) != VSS_SV))
+   if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_SV) && (VSS_MAJOR(_fVFEAVDSourceSubNew) != VSS_SV))  //need to check this S video maybe has problem
 #else
    if((VSS_MAJOR(_bMonMainNew) != VSS_SV) && (VSS_MAJOR(_bMonSubNew) != VSS_SV))
 #endif
@@ -1129,7 +1129,7 @@ static void _svDrvTvdSVPresDetCount(void)
 #else
 
 #ifdef CC_SUPPORT_PIPELINE
-    if((_fVFEAVDMainICPin == P_FA) && (_fVFEAVDSubICPin == P_FA))
+    if((_fVFEAVDMainICPin == P_FA) && (_fVFEAVDSubICPin == P_FA))//need to check this S video maybe has problem
 #else
     if((_bMainMonICIn == P_FA) && (_bSubMonICIn == P_FA))
 #endif
@@ -4371,7 +4371,7 @@ static void _svDrvTvdModeChgDone(void)
 		//if(!fgIsExtSrcMM())
 #endif
 		{
-			ApiVBIServiceResetSrc(bGetVideoDecType(0x0),bDrvVideoGetType(0x0),fgIsOversampleTiming());
+			ApiVBIServiceResetSrc(bGetVideoDecType(0x0),bDrvVideoGetType(0x0),fgIsOversampleTiming());  // not use
 		}
 #endif
 #endif
@@ -6903,7 +6903,7 @@ void vTvd3dMainLoop(void)
         //For Y/C signal at scart color abnormal(TDC need)	by wensheng
 #if SUPPORT_SCART
 #ifdef CC_SUPPORT_PIPELINE
-        if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+        if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)    // main path is Scart  need to check this
 #else
         if(fgIsSrcScart(_rTvd3dStat.bIsPip))
 #endif
@@ -9738,7 +9738,7 @@ void vSVPresDet(void)
 void vAVCompAutoDet(void)
 {
 #ifdef CC_SUPPORT_PIPELINE
-    if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR) && (VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR))  //the function can not use
+    if((VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR) && (VSS_MAJOR(_fVFEAVDSourceMainNew) != VSS_YPBPR))  //the function can not use  may be have problem
 #else
     if((VSS_MAJOR(_bMonMainNew) != VSS_YPBPR) && (VSS_MAJOR(_bMonSubNew) != VSS_YPBPR))
 #endif

@@ -74,8 +74,8 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/18 $
  * $RCSfile: drv_scart.c,v $
  * $Revision:
  *
@@ -190,15 +190,24 @@ PRIVATE void vScartAVSVTransit(UINT8 bAvSv)
         vScartMix();
         vTvd3dSVInit(SV_OFF);
         DBG_Printf(SCART_LOG,"SCART Type: %d  %d\n", DRVCUST_OptGet(eScart1Type),DRVCUST_OptGet(eScart2Type));
-
-
-        if((DRVCUST_OptGet(eScart1Type) == SCART_HALF_TYPE)
-           && ((_bSrcMainNew == SV_VS_SCART1) || (_bSrcSubNew== SV_VS_SCART1)))
+#ifdef CC_SUPPORT_PIPELINE
+if((DRVCUST_OptGet(eScart1Type) == SCART_HALF_TYPE)
+   && ((_fVFEAVDMainICPin == P_FB0) ||(_fVFEAVDSubICPin == P_FB0)))
+#else
+if((DRVCUST_OptGet(eScart1Type) == SCART_HALF_TYPE)
+   && ((_bSrcMainNew == SV_VS_SCART1) || (_bSrcSubNew== SV_VS_SCART1)))
+#endif
         {
             vIO32WriteFldAlign(SCART_01, 1, FLD_FB_FORCE_OFF);   // set the force Off
         }
+#ifdef CC_SUPPORT_PIPELINE
+        else  if((DRVCUST_OptGet(eScart2Type) == SCART_HALF_TYPE)
+                 && ((_fVFEAVDMainICPin == P_FB1) ||(_fVFEAVDSubICPin == P_FB1)))
+#else
         else  if((DRVCUST_OptGet(eScart2Type) == SCART_HALF_TYPE)
                  && ((_bSrcMainNew == SV_VS_SCART2) || (_bSrcSubNew== SV_VS_SCART2)))
+#endif
+
         {
             vIO32WriteFldAlign(SCART_01, 1, FLD_FB_FORCE_OFF);   // set the force Off
         }
@@ -374,8 +383,12 @@ void vScartChangeMode(void)
     DBG_Printf(SCART_LOG,"vScartChangeMode %d\n", _bUIScartMode);
 
     _bTrigScartAuto = SV_FALSE;
-
+#ifdef CC_SUPPORT_PIPELINE
+	if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART) //set gain of CHB from TVD when SCART
+#else
     if(fgIsMainScart() || fgIsPipScart())
+#endif
+
     {
         vIO32WriteFldAlign(SCART_01, 0, FLD_FB_FORCE_ON);    // clear the force On
         vIO32WriteFldAlign(SCART_01, 0, FLD_FB_FORCE_OFF);   // clear the force Off
@@ -449,9 +462,12 @@ void vScartChangeMode(void)
 void vScartUIChangeInputMode(UINT8 bScartMode)
 {
     DBG_Printf(SCART_LOG,"vScartUIChangeInputMode: %d\n", bScartMode);
-
-
+#ifdef CC_SUPPORT_PIPELINE
+    if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+#else
     if(fgIsMainScart())
+#endif
+
     {
         if(bScartMode != _bUIScartMode)
         {
@@ -460,7 +476,12 @@ void vScartUIChangeInputMode(UINT8 bScartMode)
             vScartChangeMode();
         }
     }
+#ifdef CC_SUPPORT_PIPELINE
+    else if(VSS_MAJOR(_fVFEAVDSourceSubNew) == VSS_SCART)
+#else
     else if(fgIsPipScart())
+#endif
+
     {
         if(bScartMode != _bUIScartMode)
         {
