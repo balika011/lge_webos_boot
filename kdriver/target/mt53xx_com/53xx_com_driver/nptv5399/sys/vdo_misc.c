@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #4 $
+ * $Revision: #5 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -258,7 +258,16 @@ UINT32 xdata u4SWRegArea[1]  _at_   0xdf00;
 #endif
 
 UINT32 u4VdoDramStatusMonCount = 0;
- 
+
+#ifdef CC_SUPPORT_PIPELINE
+ UINT8 u1ADCConnentSrc;
+ UINT8 u1ADCConnentSrcType;
+ UINT8 u1ADCConnentSrcPort;
+ UINT8 u1VSCConnectADC_main;
+ UINT8 u1VSCConnectADC_sub;
+#endif
+
+
 void vSetVGAColorMode(UINT8 bMode)
 {
     if(bMode != u1VgaColorMode)
@@ -523,10 +532,11 @@ void vDrvVideoSwInit(void)
 	_fVFEAVDMainICPin=(UINT8)P_FA;
 	_fVFEAVDSubICPin=(UINT8)P_FA;
 	_fVSCConnectAVD=0x0;  // init set VSC do not  connect the AVD
-	 u1ADCConnentSrc=SV_VS_MAX;
-	 u1ADCConnentSrcType=VSS_MAX;
-	 u1ADCConnentSrcPort=P_FA;
-	 u1VSCConnectADC=0;
+	 u1ADCConnentSrc=(UINT8)SV_VS_MAX;
+	 u1ADCConnentSrcType=(UINT8)VSS_MAX;
+	 u1ADCConnentSrcPort=(UINT8)P_FA;
+	 u1VSCConnectADC_main=(UINT8)VSS_MAX;
+	 u1VSCConnectADC_sub=(UINT8)VSS_MAX;
 #endif
     // source_select.c
     _bSrcMainOld = (UINT8)SV_VS_MAX;
