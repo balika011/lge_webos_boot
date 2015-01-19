@@ -4046,7 +4046,7 @@ static const UINT32 _au4PanelLvds8bitPinMap[12] =
     #define XVYCC_CLIP_ENABLE            (1)
 #endif
 #ifndef MATRIX_HD_YCBCR709
-    #define MATRIX_HD_YCBCR709          (0)
+    #define MATRIX_HD_YCBCR709          (1)
 #endif
 #ifndef SUPPORT_HDMI_YCBCR444
     #define SUPPORT_HDMI_YCBCR444       (0)
