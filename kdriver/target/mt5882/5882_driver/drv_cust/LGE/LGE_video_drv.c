@@ -956,7 +956,7 @@ void DRVCUST_PANEL_GAMMA_REMAP(UINT32 u4GammaSel)
 
 void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
 {    
-#if 0 // Below is SAMPLE CODE for function customization.
+#if 1 // Below is SAMPLE CODE for function customization.
     UINT8 bLevel = GET_BLK_LVL(bPath);
     if (bPath == SV_VP_MAIN)
     {

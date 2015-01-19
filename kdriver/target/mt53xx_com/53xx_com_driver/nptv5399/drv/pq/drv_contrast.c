@@ -107,7 +107,7 @@ extern UINT8 bIIRStrength;
 UINT16 waLumaArray[LUMA_CURVE_NUM]; //luma curve
 UINT16 waSecondLumaArray[LUMA_CURVE_SKIN_NUM];	//Second luma curve
 
-UINT8 bManualLumaCurve = SV_OFF;
+UINT8 bManualLumaCurve = SV_ON;
 
 static void vDrvADLSetLumaCurveHw(const UINT16 * waLArray)
 {
