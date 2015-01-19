@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -878,7 +878,12 @@ UINT8 _bCurrentInputMS = SV_VS_ATV1;
 UINT8 bApiVideoSetVideoSrc(UINT8 bPath, UINT8 bSrc)
 {
     UINT8 bStatus;
-	return 1;
+	
+    #ifdef CC_SUPPORT_PIPELINE
+	return 1;  //for new pipeline test
+	#else
+	//to do
+	#endif
     LOG(0, "00000ApiVideoSetVideoSrc(%d, %d)\n", (UINT32)bPath, (UINT32)bSrc);
 
     if(bPath == SV_VP_MAIN)	//check the real source
