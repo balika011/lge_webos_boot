@@ -74,7 +74,7 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #9 $
+# $Revision: #10 $
 # $Date: 2015/01/19 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
@@ -449,7 +449,7 @@ ifeq "$(3D_SUPPORT)" "true"
         export 3D_MM_DS_SUPPORT := true
     endif
     ifndef 3D_PHOTO_ON_VDP
-        export 3D_PHOTO_ON_VDP := false
+        export 3D_PHOTO_ON_VDP := true
     endif
 endif
 
