@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -877,8 +877,8 @@ static BOOL _DmxSetPidBuffer(UINT8 u1Pidx, const DMX_PID_T* prPid,
     /* We need to flush cache to avoid CPU overwriting the buffers 
      * handled by ftup when cache replacement happens
      */
-    if (prPidStruct->ePidType == DMX_PID_TYPE_ES_VIDEO)
-    {
+    if (prPidStruct->ePidType == DMX_PID_TYPE_ES_VIDEO || prPidStruct->ePidType == DMX_PID_TYPE_PES)
+    {/***L5L***/
         //The size of these buffers is large enough. 
         //Using HalFlushInvalidateDCacheMultipleLine can't improve the perfermence
         HalFlushInvalidateDCache();
