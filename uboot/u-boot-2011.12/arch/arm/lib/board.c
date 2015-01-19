@@ -1334,7 +1334,7 @@ void second_main(void)
 #endif
 	
 		
-		printf(" \n ###################normal uboot flow \n	");
+		printf("\n[Snapshot debug] normal uboot flow\n");
 		/* main_loop() can return to retry autoboot, if so just run it again. */
 		for (;;) {
 			main_loop();
