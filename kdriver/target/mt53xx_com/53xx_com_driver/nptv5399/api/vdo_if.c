@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -536,16 +536,18 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
-/*
+
 	 switch(bSrc)
 	{ 
-		case SV_VD_TVD3D:
-			break;
-
-		case SV_VD_YPBPR:
-			break;
-
-		case SV_VD_VGA:
+		case SV_VS_SCART1:
+			
+			u1ADCConnentSrc=SV_VS_SCART1;
+			u1ADCConnentSrcType=VSS_SCART;
+			u1ADCConnentSrcPort=P_FB0;
+			if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+				u1VSCConnectADC_main=VSS_SCART;
+			if(bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
+				u1VSCConnectADC_sub=VSS_SCART;
 			break;
 		case SV_VS_YPbPr1:
 			vDrvAllHDADCPow(TRUE);
@@ -565,38 +567,18 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			u1ADCConnentSrc=SV_VS_YPbPr1;
 			u1ADCConnentSrcType=VSS_YPBPR;
 			u1ADCConnentSrcPort=P_YP0;
+			if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+			u1VSCConnectADC_main=VSS_YPBPR;
+			if(bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
+			u1VSCConnectADC_sub=VSS_YPBPR;
 			
 			
 			break;
-#if SUPPORT_DVI
 
-		case SV_VD_DVI:
-			if(1)
-			{
-			
-			}
-			else
-			{
-#ifdef CC_OSD_ENCODE
-
-#else
-
-#endif
-			}
-			break;
-#endif
-
-#ifndef COPLAT_EXCLUDE_DTV
-		case SV_VD_MPEGHD:
-			break;
-			
-		case SV_VD_MPEGSD:
-			break;
-#endif
 		default:
 			break;
 	}
-	*/
+	
 	return SV_SUCCESS;
 
 	
