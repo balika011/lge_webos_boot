@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/16 $
+ * $Date: 2015/01/19 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2422,6 +2422,9 @@ BOOL TZ_SEC_BUF_FRAGMENT_ALLOC(void *prKernParam , UINT32 u4Size) {
 }
 BOOL TZ_SEC_BUF_FRAGMENT_FREE(void *prKernParam  , UINT32 u4Size) {
 	return TZ_CTL(TZCTL_SEC_BUF_FRAGMENT_FREE    , PHYSICAL((UINT32)prKernParam) , TZ_CACHE_ALIGN(u4Size));
+}
+BOOL TZ_SEC_BUF_CPB_MOVEDATA(void *prKernParam  , UINT32 u4Size) {
+	return TZ_CTL(TZCTL_SEC_BUF_CPB_MOVEDATA, PHYSICAL((UINT32)prKernParam) , TZ_CACHE_ALIGN(u4Size));
 }
 
 int TZ_QUERY_TVP_ENABLED(void)

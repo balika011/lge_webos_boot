@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/16 $
+ * $Date: 2015/01/19 $
  * $RCSfile: dmx.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -255,6 +255,7 @@
 #define TZCTL_SEC_BUF_FLUSH                         ((UINT32)0x1804)
 #define TZCTL_SEC_BUF_FRAGMENT_ALLOC				((UINT32)0x1805)
 #define TZCTL_SEC_BUF_FRAGMENT_FREE                 ((UINT32)0x1806)
+#define TZCTL_SEC_BUF_CPB_MOVEDATA                  ((UINT32)0x1807)
 
 #define TZCTL_RPMB_LOAD_MAC_KEY                     ((UINT32)0x1880)
 #define TZCTL_RPMB_GET_WCNT_REQ				        ((UINT32)0x1881)
@@ -544,6 +545,14 @@ typedef struct
 	UINT32 u4Fragment;	
 	UINT32 u4Size;
 } TZ_DRM_SEC_BUF_FRAGMENT_FREE_T;
+
+typedef struct
+{
+    UINT32 *pu4Des;
+    UINT32 u4Src;        
+    UINT32 *pu4Size;         
+	UINT32 u4RDP;        //Read Point
+} TZ_DRM_SEC_BUF_CPB_MOVEDATA_T;
 
 #define DECRYPT_SECURE_KEY_LEN 16
 
