@@ -92,11 +92,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/17 6:55p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 ****************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -564,6 +564,9 @@ void vVdoInISR(void)
     }
 
     // VBI Interrupt Service Routine
+#ifdef CC_SUPPORT_PIPELINE
+    vTvd3dVSyncISR();
+#endif
 #if SUPPORT_VBI
     VBI_ISR();
 #endif

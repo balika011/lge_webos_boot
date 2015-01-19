@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/19 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -511,39 +511,33 @@ UINT8 bApiQuearyVSCConnectStatus(UINT8 bPath)
 	return u1VSCConnectStatus[bPath];
 }
 
+//only for AVD connet and disconnect
+UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
+{
+  UINT8 bAVDConnect;
+  bAVDConnect=bType;
+  LOG(0, "11111bApiVFEAVDConnect(bSrc=%d, u4Port=%d,bEnable=%d,bType=%d)\n",bSrc,u4Port,bEnable,bType);
+  switch(bSrc)
+	{ 
+	case SV_VS_ATD1:
+	case SV_VS_CVBS4:
+	case SV_VS_SCART1:
+		bApiVFEAVDConnect(bAVDConnect,bSrc,SV_VS_NO_CHANGE);
+		break;
+	case SV_VS_MAX:
+		break;
+	default:
+		break;
+	}
+   return SV_SUCCESS;
+
+}
+
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
-	UINT8 bVFEAVDSrc;
-	UINT8 bAVDConnect;
 	 switch(bSrc)
 	{ 
 		case SV_VD_TVD3D:
-			if(u4Port==0x0)
-			{
-			  bVFEAVDSrc= SV_VS_ATD1;
-			}
-			else if(u4Port==0x1)
-			{
-			  bVFEAVDSrc= SV_VS_CVBS4;
-			}
-			else if(u4Port==0x2)
-			{
-			  bVFEAVDSrc= SV_VS_SCART1;
-			}
-			else if(u4Port==0x3)
-			{
-			  bVFEAVDSrc= SV_VS_SCART1;   //VFE_ADC scart will be done at the TVD3D
-			u1ADCConnentSrc=SV_VS_SCART1;
-			u1ADCConnentSrcType=VSS_SCART;
-			u1ADCConnentSrcPort=P_FB0;
-			}
-			else
-			{
-			  // to do 
-			}
-			_fVSCConnectAVD=bEnable;
-			bAVDConnect=bType;
-			bApiVFEAVDConnect(bAVDConnect,bVFEAVDSrc,SV_VS_NO_CHANGE);
 			break;
 
 		case SV_VD_YPBPR:
@@ -1440,14 +1434,15 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 	    _fVFEAVDSubICPin = NewExtInput.MapIntMode & 0xff;
        
     }
-
-    if(fgMainCh)
+	LOG(0, "11111bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
+     _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
+    //if(fgMainCh)
     {
             vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
        // vSetMOutMux(bNewMainDec);  need video path to set it
     }
 
-    if(fgMainCh)
+    //if(fgMainCh)
     {
 			
 #if SUPPORT_SCART

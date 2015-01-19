@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #5 $
+* $Revision: #6 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -156,7 +156,7 @@
 
 #include "tvd_debug.h"
 #include "tve_if.h"
-
+#include "vdo_if.h"
 
 /**************************************************************************
  * Local Constant/Configure Definitions
@@ -4316,6 +4316,7 @@ static void _svDrvTvdModeChgDone(void)
     _svDrvTvdUpdateActiveWH();
     
 #ifdef CC_SUPPORT_PIPELINE
+	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 	if(_fVSCConnectAVD)
 	{
 		if(fgIsMainTvd3d())
@@ -4778,6 +4779,7 @@ static void _svDrvTvdModeChg(void)
 #endif
         
 		#ifdef CC_SUPPORT_PIPELINE
+		_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 		if(_fVSCConnectAVD)
 		{
 			if(fgIsMainTvd3d())
@@ -8468,6 +8470,7 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
 
     vTvd3dTrigModeDet();
 #ifdef CC_SUPPORT_PIPELINE
+	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 	if(_fVSCConnectAVD)
     {
 		if(fgIsMainTvd3d())
