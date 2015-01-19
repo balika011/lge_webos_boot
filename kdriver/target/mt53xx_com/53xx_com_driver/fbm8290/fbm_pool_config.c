@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/14 $
+ * $Date: 2015/01/19 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -820,10 +820,16 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP_BIN].ePool1 = u4AheadType;
 	u4AheadType = FBM_POOL_TYPE_DSP_BIN;
 #endif		 
-		
+
+    // vbi
+    prPoolList[FBM_POOL_TYPE_VBI].u4Inherit = FBM_POOL_ROOT;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_VBI;		
+	
 	//-----DSP-----
 	prPoolList[FBM_POOL_TYPE_DSP].u4Inherit = FBM_POOL_ROOT;
-	prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
+	//prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].eMode = FBM_POOL_ARRANGE_AFTER;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].ePool1 = u4AheadType;
 #if defined(CC_SUPPORT_5_SEC_PTS_PCR_OFFSET)
@@ -855,12 +861,6 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
     prPoolArrangeInfo[FBM_POOL_TYPE_FACEDET].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_FACEDET;
 #endif
-
-    // vbi
-    prPoolList[FBM_POOL_TYPE_VBI].u4Inherit = FBM_POOL_ROOT;
-    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].eMode = FBM_POOL_ARRANGE_AFTER;
-    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].ePool1 = u4AheadType;
-    u4AheadType = FBM_POOL_TYPE_VBI;
 
 #if defined(CC_FBM_SUPPORT_SWDMX)||defined(CC_FBM_SUPPORT_LITE_SWDMX)
     prPoolList[FBM_POOL_TYPE_SWDMX].u4Inherit = FBM_POOL_ROOT;
@@ -1008,7 +1008,6 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 	prPoolList[FBM_POOL_TYPE_FEEDER].u4PoolSize = FBM_FEEDER1_SIZE;
 	prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER].eMode = FBM_POOL_ARRANGE_AFTER;
 	prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER].ePool1 = u4AheadType;
-	u4AheadType = FBM_POOL_TYPE_FEEDER;
 
 	
 	// handle Image Viewer Pool
@@ -1020,7 +1019,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 		prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize = prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize * 2;
 #endif
 		prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER_MMP].eMode = FBM_POOL_ARRANGE_AFTER;
-		prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER_MMP].ePool1 = FBM_POOL_TYPE_PQ_3DC;
+		prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER_MMP].ePool1 = u4AheadType;
 
 		if(prPoolList[FBM_POOL_TYPE_FEEDER].u4PoolSize >= prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize)
 			u4AheadType = FBM_POOL_TYPE_FEEDER;
@@ -1134,39 +1133,6 @@ u4AheadType = FBM_POOL_TYPE_FEEDER4;
     u4AheadType = FBM_POOL_TYPE_MPEG4;
 #endif
 
-
-#if defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) 
-    if (u4VdoBehindType == FBM_POOL_TYPE_NS)
-    {
-        u4VdoBehindType = FBM_POOL_TYPE_DMX2;
-    }
-    prPoolList[FBM_POOL_TYPE_DMX2].u4Inherit = FBM_POOL_ROOT;
-    {
-        prPoolList[FBM_POOL_TYPE_DMX2].u4PoolSize = FBM_ALIGN_MASK((FBM_DMX2_SIZE), FBM_DMX_SIZE_ALIGMENT);
-
-#if defined(CC_TRUSTZONE_SUPPORT)&& defined(CC_SVP_SUPPORT)
-		prPoolList[FBM_POOL_TYPE_DMX2].u4PoolSize = 0;
-#endif
-    }
-    prPoolArrangeInfo[FBM_POOL_TYPE_DMX2].eMode = FBM_POOL_ARRANGE_AFTER;
-    prPoolArrangeInfo[FBM_POOL_TYPE_DMX2].ePool1 = u4AheadType;
-    u4AheadType = FBM_POOL_TYPE_DMX2;
-
-    prPoolList[FBM_POOL_TYPE_MPEG2].u4Inherit = FBM_POOL_ROOT;
-    //prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK | FBM_POOL_MODE_SHARE);
-    #if defined(CC_VOMX_TV_COEXIST)
-    prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK);
-    //prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = 0x2F00000; // 23.5Mx2
-    prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = FBM_MPEG_2_SIZE; // Jason rewrite
-    #else
-    prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK | FBM_POOL_MODE_SHARE);
-    prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = FBM_MPEG_2_SIZE; // Jason rewrite
-    #endif
-    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].eMode = FBM_POOL_ARRANGE_AFTER;
-    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].ePool1 = u4AheadType;
-    u4AheadType = FBM_POOL_TYPE_MPEG2;
-#endif
-
 	
 #ifndef CC_OSD_USE_FBM
 	// B2R
@@ -1202,6 +1168,38 @@ u4AheadType = FBM_POOL_TYPE_FEEDER4;
     prPoolArrangeInfo[FBM_POOL_TYPE_MPEG].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_MPEG].ePool1 = u4AheadType;
 	u4AheadType = FBM_POOL_TYPE_MPEG;
+
+#if defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) 
+		if (u4VdoBehindType == FBM_POOL_TYPE_NS)
+		{
+			u4VdoBehindType = FBM_POOL_TYPE_DMX2;
+		}
+		prPoolList[FBM_POOL_TYPE_DMX2].u4Inherit = FBM_POOL_ROOT;
+		{
+			prPoolList[FBM_POOL_TYPE_DMX2].u4PoolSize = FBM_ALIGN_MASK((FBM_DMX2_SIZE), FBM_DMX_SIZE_ALIGMENT);
+	
+#if defined(CC_TRUSTZONE_SUPPORT)&& defined(CC_SVP_SUPPORT)
+			prPoolList[FBM_POOL_TYPE_DMX2].u4PoolSize = 0;
+#endif
+		}
+		prPoolArrangeInfo[FBM_POOL_TYPE_DMX2].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_DMX2].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_DMX2;
+	
+		prPoolList[FBM_POOL_TYPE_MPEG2].u4Inherit = FBM_POOL_ROOT;
+		//prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK | FBM_POOL_MODE_SHARE);
+    #if defined(CC_VOMX_TV_COEXIST)
+		prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK);
+		//prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = 0x2F00000; // 23.5Mx2
+		prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = FBM_MPEG_2_SIZE; // Jason rewrite
+    #else
+		prPoolList[FBM_POOL_TYPE_MPEG2].u4Mode = (FBM_POOL_MODE_MPEG_DBK | FBM_POOL_MODE_SHARE);
+		prPoolList[FBM_POOL_TYPE_MPEG2].u4PoolSize = FBM_MPEG_2_SIZE; // Jason rewrite
+    #endif
+		prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_MPEG2;
+#endif
 
     //----- SCPOS MAIN-----
     prPoolList[FBM_POOL_TYPE_SCPOS_MAIN].u4Inherit = FBM_POOL_ROOT;

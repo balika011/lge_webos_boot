@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #8 $
-# $Date: 2015/01/17 $
+# $Revision: #9 $
+# $Date: 2015/01/19 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -380,7 +380,7 @@ ifeq "$(TRUSTZONE)" "true"
 		export SVP_SUPPORT := true
 	endif
 	ifndef TVP_SUPPORT
-		export TVP_SUPPORT := false
+		export TVP_SUPPORT := true
 	endif
 else
 	export TVP_SUPPORT := false
