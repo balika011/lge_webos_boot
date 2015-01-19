@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -540,37 +540,58 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 	 switch(bSrc)
 	{ 
 		case SV_VS_SCART1:
+			if(bType)
+				{u1ADCConnentSrc=SV_VS_SCART1;
+				u1ADCConnentSrcType=VSS_SCART;
+				u1ADCConnentSrcPort=P_FB0;
+				if(bApiQuearyVSCConnectStatus(0)==SV_VD_TVD3D)
+					u1VSCConnectADC_main=VSS_SCART;
+				if(bApiQuearyVSCConnectStatus(1)==SV_VD_TVD3D)
+					u1VSCConnectADC_sub=VSS_SCART;
+			}
+			else
+			{ 
+			 u1ADCConnentSrc=SV_VS_MAX;
+			 u1ADCConnentSrcType=VSS_MAX;
+			 u1ADCConnentSrcPort=P_FA;
+		 	}
 			
-			u1ADCConnentSrc=SV_VS_SCART1;
-			u1ADCConnentSrcType=VSS_SCART;
-			u1ADCConnentSrcPort=P_FB0;
-			if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
-				u1VSCConnectADC_main=VSS_SCART;
-			if(bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
-				u1VSCConnectADC_sub=VSS_SCART;
+
 			break;
 		case SV_VS_YPbPr1:
-			vDrvAllHDADCPow(TRUE);
-			vDrvSOY0EN(1);
-			//vDrvSetInternalMux(0,_bSrcMainNew);// replaced by following code
-			{
+			if(bType)
+			{   vDrvAllHDADCPow(TRUE);
+				vDrvSOY0EN(1);
+				//vDrvSetInternalMux(0,_bSrcMainNew);// replaced by following code
+				{
 #if SUPPORT_SCART
-        	vSCARTDisable();
+	        	vSCARTDisable();
 #endif
-        	initYPbPrVGA(P_YP0);
-    		}
+	        	initYPbPrVGA(P_YP0);
+	    		}
 
 
-			//vSetMOutMux(bNewMainDec);//remove omux connent
-			//vDrvVideoConnect(SV_VP_MAIN, SV_ON);//replaced by following code
-			vHdtvConnect(0, 1);
-			u1ADCConnentSrc=SV_VS_YPbPr1;
-			u1ADCConnentSrcType=VSS_YPBPR;
-			u1ADCConnentSrcPort=P_YP0;
-			if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
-			u1VSCConnectADC_main=VSS_YPBPR;
-			if(bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
-			u1VSCConnectADC_sub=VSS_YPBPR;
+				//vSetMOutMux(bNewMainDec);//remove omux connent
+				//vDrvVideoConnect(SV_VP_MAIN, SV_ON);//replaced by following code
+				vHdtvConnect(0, 1);
+				u1ADCConnentSrc=SV_VS_YPbPr1;
+				u1ADCConnentSrcType=VSS_YPBPR;
+				u1ADCConnentSrcPort=P_YP0;
+				if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+				u1VSCConnectADC_main=VSS_YPBPR;
+				if(bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
+				u1VSCConnectADC_sub=VSS_YPBPR;
+			}
+			else
+			{
+				vDrvAllHDADCPow(FALSE);
+				vDrvSOY0EN(0);
+				vHdtvConnect(0, 0);
+			u1ADCConnentSrc=SV_VS_MAX;
+		 	u1ADCConnentSrcType=VSS_MAX;
+		 	u1ADCConnentSrcPort=P_FA;
+
+			}
 			
 			
 			break;
@@ -578,6 +599,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 		default:
 			break;
 	}
+
 	
 	return SV_SUCCESS;
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/01/20 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -917,7 +917,14 @@ void vHdtvSetInputCapature(UINT8 bmode, UINT8 bIsHdtv) 	//set input start and le
 #endif
 #if HDTV_MV_DETECT_SUPPORT
     _bHdtvMvOn =  bDrvAsyncMvStatus();
-    vApiNotifyMVChg(((fgIsMainYPbPr())?SV_VP_MAIN:SV_VP_PIP),_bHdtvMvOn);
+#ifdef CC_SUPPORT_PIPELINE
+	if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+		vApiNotifyMVChg(SV_VP_MAIN,_bHdtvMvOn);
+	else
+		vApiNotifyMVChg(SV_VP_PIP,_bHdtvMvOn);
+#else	
+	    vApiNotifyMVChg(((fgIsMainYPbPr())?SV_VP_MAIN:SV_VP_PIP),_bHdtvMvOn);
+#endif
     _bHdtvMvChgCnt = 0 ;
 #endif
 
@@ -1203,7 +1210,11 @@ void vHdtvConnect(UINT8 bchannel, UINT8 fgIsOn)
 
     if(fgIsOn == SV_ON)
     {
+    	#ifdef CC_SUPPORT_PIPELINE
+		if(fgIsMainYPbPr() && (bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR) && (bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)  )
+		#else
 		if(bchannel == SV_VP_PIP && fgIsMainYPbPr() && fgIsPipYPbPr() && (_bMainState == VDO_STATE_IDLE) && !fgIsMainFlgSet(MAIN_FLG_MODE_CHG) )
+		#endif
 		{
 			  _bHdtvModeChged_pip = 1 ;
 			   {
@@ -1791,8 +1802,11 @@ void vHdtvSetModeCHG(void)
 #ifndef CC_UP8032_ATV
     HAL_GetTime(&_rHdtvModeChgTime);
 #endif
-
+	#ifdef CC_SUPPORT_PIPELINE
+	if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+	#else
     if(fgIsMainYPbPr())
+	#endif
     {
 #ifdef CC_COPLAT_MT5387_TODO
         _vDrvVideoSetMute(MUTE_MODULE_MODECHG, SV_VP_MAIN, FOREVER_MUTE, FALSE);
@@ -1801,8 +1815,11 @@ void vHdtvSetModeCHG(void)
         vSetMainFlg(MAIN_FLG_MODE_CHG);
         DBG_Printf(DBG_MDET, "Main Mode Chg #1 in vHdtvInitial\n");
     }
-
+#ifdef CC_SUPPORT_PIPELINE
+	if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
+#else
     if(fgIsPipYPbPr())
+#endif
     {
 #ifdef CC_COPLAT_MT5387_TODO
         _vDrvVideoSetMute(MUTE_MODULE_MODECHG, SV_VP_PIP, FOREVER_MUTE, FALSE);
@@ -1819,14 +1836,20 @@ void vHdtvSetModeDone(void)
     {
         return ;
     }
-
+	#ifdef CC_SUPPORT_PIPELINE
+		if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+	#else
     if(fgIsMainYPbPr())
+	#endif
     {
         vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
         DBG_Printf(DBG_MDET, "Main Mode Done\n");
     }
-
+	#ifdef CC_SUPPORT_PIPELINE
+		if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(1)==SV_VD_YPBPR)
+	#else
     if(fgIsPipYPbPr())
+	#endif
     {
         vSetPipFlg(PIP_FLG_MODE_DET_DONE);
         DBG_Printf(DBG_MDET, "Pip Mode Donel\n");
@@ -2340,7 +2363,14 @@ vSetDefaultSlicer();
                         {
                             _bHdtvMvOn = bDrvAsyncMvStatus();
                             DBG_Printf(DBG_MCHG, "_bHdtvMvOn %d\n", _bHdtvMvOn);
+#ifdef CC_SUPPORT_PIPELINE
+if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
+	vApiNotifyMVChg(SV_VP_MAIN,_bHdtvMvOn);
+else
+	vApiNotifyMVChg(SV_VP_PIP,_bHdtvMvOn);
+#else
                             vApiNotifyMVChg(((fgIsMainYPbPr())?SV_VP_MAIN:SV_VP_PIP),_bHdtvMvOn);
+#endif
                             _bHdtvMvChgCnt = 0 ;
                         }
                     }

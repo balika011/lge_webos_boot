@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: nptv_vdec_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -177,7 +177,7 @@ UINT8 fgApiVideoVgaSetClock(UINT16 wValue)
  * @retval void
  * @example fgApiVideoGeoHPosition(SV_VP_MAIN, 100);
  */
-UINT8 fgApiVideoGeoHPosition(UINT8 bPath, UINT16 wValue) 
+UINT8 fgApiVideoGeoHPosition(UINT8 bPath, UINT16 wValue) //not used
 {
 #if 0
     //for 5371 mw if
@@ -214,7 +214,7 @@ UINT8 fgApiVideoGeoHPosition(UINT8 bPath, UINT16 wValue)
  * @retval void
  * @example fgApiVideoGeoVPosition(SV_VP_MAIN, 30);
  */
-UINT8 fgApiVideoGeoVPosition(UINT8 bPath, UINT16 wValue) 
+UINT8 fgApiVideoGeoVPosition(UINT8 bPath, UINT16 wValue) //not used
 {
 
 #if 0

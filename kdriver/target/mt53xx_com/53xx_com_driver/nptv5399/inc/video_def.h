@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: video_def.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -507,8 +507,8 @@ extern  MonOutPicInfo   _rMonitorOutInfo;
 #define fgIsPipTvd3d() (_rTvd3dStat.bIsPip)
 #define fgIsMainVga() (_rVGAStat.bIsMain)
 #define fgIsPipVga() (_rVGAStat.bIsPip)
-#define fgIsMainYPbPr() (_rYPBPRStat.bIsMain)
-#define fgIsPipYPbPr() (_rYPBPRStat.bIsPip)
+#define fgIsMainYPbPr() (_rYPBPRStat.bIsMain) //in pipline only stand for adc ypbpr connent or disconnent  not diff main sub
+#define fgIsPipYPbPr() (_rYPBPRStat.bIsPip)//in pipline ,always set 0
 #define fgIsMainDVI() (_rDVIStat.bIsMain)
 #define fgIsPipDVI() (_rDVIStat.bIsPip)
 
@@ -516,8 +516,15 @@ extern  MonOutPicInfo   _rMonitorOutInfo;
 #define fgIsPipDTV() ((_rMpegHDStat.bIsPip) || (_rMpegSDStat.bIsPip))
 #define fgIsSrcDTV(bPath) ((bPath == SV_VP_MAIN) ? fgIsMainDTV() : fgIsPipDTV())
 
+
+#ifdef CC_SUPPORT_PIPELINE
+	#define fgIsMainScart() (u1ADCConnentSrcType==VSS_SCART)//in pipline only stand for adc/avdscart connent or disconnent  not diff main sub
+	#define fgIsPipScart() 0//in pipline ,always set 0
+#else
+
 #define fgIsMainScart() (VSS_MAJOR(_bSrcMainNew) == VSS_SCART)
 #define fgIsPipScart() (VSS_MAJOR(_bSrcSubNew) == VSS_SCART)
+#endif
 
 
 #if SUPPORT_POP
