@@ -103,6 +103,9 @@ extern struct partmap_info			partinfo;
 #define DEFAULT_SWUE__2_BASE        (DEFAULT_SWUE__1_BASE + DEFAULT_SWUE__1_SIZE)
 #define DEFAULT_SWUE__2_SIZE        (DEFAULT_SWUE__1_SIZE)
 #define DEFAULT_CRC32___BASE        (DEFAULT_SWUE__2_BASE + DEFAULT_SWUE__2_SIZE)
+#define DEFAULT_EMERG___BASE        (DEFAULT_SWUE__2_BASE + DEFAULT_SWUE__2_SIZE)
+#define DEFAULT_EMERG___SIZE        (0x40000)
+#define DEFAULT_CRC32___BASE        (DEFAULT_EMERG___BASE + DEFAULT_EMERG___SIZE)
 #define DEFAULT_CRC32___SIZE        (0x40000)
 #define DEFAULT_MACADR__BASE        (DEFAULT_CRC32___BASE + DEFAULT_CRC32___SIZE)
 #define DEFAULT_MACADR__SIZE        (0x40000)
@@ -153,7 +156,7 @@ extern struct partmap_info			partinfo;
     .offset      = SWAP32(DEFAULT_MAPBAK__BASE),    .size        = SWAP32(DEFAULT_MAPBAK__SIZE), \
     .filename    = "PART.INFO",                     .filesize    = 0x0,                          \
     .sw_ver      = SWAP32(PARTINFO_VER),                                                        \
-    .used        = YES,                             .valid       = YES,                          \
+    .used        = NO,                             .valid       = YES,                          \
     .mask_flags  = (PART_FLG_MASTER | PART_FLG_FIXED)                                           \
 }
 #define DEFAULT_PTT_BOOT_2        {                                                            \
@@ -259,14 +262,13 @@ extern struct partmap_info			partinfo;
 #define DEFAULT_NUM_OF_PARTITION                 9
 
 
-
-
-
 #define DEFAULT_PARTMAP_INFO			{		\
 	.magic			= SWAP32(PARTMAP_MAGIC),	\
 	.cur_epk_ver		= 0, 				\
 	.old_epk_ver		= 0, 				\
 	.npartition		= DEFAULT_NUM_OF_PARTITION,	\
+	.dev			= DEFAULT_DEVICE, \
+	.partition		= DEFAULT_PARTITION, \
 }
 
 #define GET_PARTMAP_INFO()		((struct partmap_info *)&(partinfo))

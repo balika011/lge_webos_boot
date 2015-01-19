@@ -22,6 +22,7 @@
 #define println()				printf("\n")
 #define ENTER()	DEBUGF("%s() enter\n", __FUNCTION__);
 #define LEAVE()	DEBUGF("%s() leave\n", __FUNCTION__);
+#define DEFAULT_REMAIN_INDEX	(8)
 
 /* storage func */
 extern int storage_read(uint32_t offset, size_t len, void* buf);
@@ -629,10 +630,6 @@ unsigned int load_default_partinfo(void)
 #endif
 	//initialize a default partmap_info
 	struct partmap_info default_partinfo = DEFAULT_PARTMAP_INFO;
-	struct device_info default_deviceinfo = DEFAULT_DEVICE;
-	struct partition_info default_partitioninfo[PARTITION_MAX] = DEFAULT_PARTITION;
-	memcpy((void*)(&(default_partinfo.dev)), (void*)(&default_deviceinfo), sizeof(default_deviceinfo));
-	memcpy((void*)(default_partinfo.partition), (void*)(default_partitioninfo), sizeof(default_partitioninfo));
 
 	#ifdef CC_EMMC_BOOT
 	if(emmc_info[0].capacity > CONFIG_EMMC_HYNIX_SIZE)
@@ -651,8 +648,8 @@ unsigned int load_default_partinfo(void)
 	partinfo.dev.size = sto_size;
 
 	cnt = partinfo.npartition;
-	partinfo.partition[5].size += floffset;
-	for (i = 6; i < cnt; i++) {
+	partinfo.partition[DEFAULT_REMAIN_INDEX-1].size += floffset;
+	for (i = DEFAULT_REMAIN_INDEX; i < cnt; i++) {
 		partinfo.partition[i].offset += floffset;
 	}
 	save_partinfo();
