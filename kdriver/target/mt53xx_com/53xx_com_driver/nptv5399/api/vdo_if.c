@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -522,6 +522,7 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 	case SV_VS_ATD1:
 	case SV_VS_CVBS4:
 	case SV_VS_SCART1:
+		bSrc=SV_VS_CVBS4;
 		bApiVFEAVDConnect(bAVDConnect,bSrc,SV_VS_NO_CHANGE);
 		break;
 	case SV_VS_MAX:
@@ -535,6 +536,7 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
+/*
 	 switch(bSrc)
 	{ 
 		case SV_VD_TVD3D:
@@ -594,8 +596,10 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 		default:
 			break;
 	}
-	 
+	*/
 	return SV_SUCCESS;
+
+	
 
 }
 
@@ -874,7 +878,8 @@ UINT8 _bCurrentInputMS = SV_VS_ATV1;
 UINT8 bApiVideoSetVideoSrc(UINT8 bPath, UINT8 bSrc)
 {
     UINT8 bStatus;
-    LOG(3, "ApiVideoSetVideoSrc(%d, %d)\n", (UINT32)bPath, (UINT32)bSrc);
+	return 1;
+    LOG(0, "00000ApiVideoSetVideoSrc(%d, %d)\n", (UINT32)bPath, (UINT32)bSrc);
 
     if(bPath == SV_VP_MAIN)	//check the real source
     {

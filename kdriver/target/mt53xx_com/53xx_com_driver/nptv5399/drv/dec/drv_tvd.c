@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #6 $
+* $Revision: #7 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4119,7 +4119,7 @@ static void _svDrvTvdSetCAgcUVPeak(UINT8 bMode)
  */
 static void _svDrvTvdModeChgDone(void)
 {
-    LOG(1,"[TVD_DBG_MSG] _svDrvTvdModeChgDone fgVPres=%d mcnt(%d)\n",_rTvd3dStatus.fgVPres, _sbTvdModeCnt);
+    LOG(0,"[11111TVD_DBG_MSG] _svDrvTvdModeChgDone fgVPres=%d mcnt(%d)\n",_rTvd3dStatus.fgVPres, _sbTvdModeCnt);
 
 #ifdef CC_SUPPORT_RECORD_AV
     if(_sbATVPVRBypassModeChg==TRUE)
@@ -4316,7 +4316,8 @@ static void _svDrvTvdModeChgDone(void)
     _svDrvTvdUpdateActiveWH();
     
 #ifdef CC_SUPPORT_PIPELINE
-	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	_fVSCConnectAVD=0x1;
 	if(_fVSCConnectAVD)
 	{
 		if(fgIsMainTvd3d())
@@ -4606,7 +4607,7 @@ static void _svDrvTvdNAStop(void)
  */
 static void _svDrvTvdModeChg(void)
 {
-    LOG(1, "[TVD_DBG_MSG] _svDrvTvdModeChg\n");
+    LOG(0, "[11111TVD_DBG_MSG] _svDrvTvdModeChg\n");
 
     #if TVD_BP_ATV_MODECHG
     LOG(1, "[TVD_DBG_MSG] BypassModeChg = %d\n", _sbBypassModeChg);
@@ -4779,7 +4780,8 @@ static void _svDrvTvdModeChg(void)
 #endif
         
 		#ifdef CC_SUPPORT_PIPELINE
-		_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+		//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+		_fVSCConnectAVD=0x1;
 		if(_fVSCConnectAVD)
 		{
 			if(fgIsMainTvd3d())
@@ -7226,7 +7228,7 @@ void vTvd3dVSyncISR(void)
     //-------------------Check Vpress Changed status----------------------
     if(_rTvd3dStatus.fgVPres != fgVPres)
     {
-        LOG(1,"[TVD_DBG_MSG] tvd vpres mode change %d->%d\n",_rTvd3dStatus.fgVPres,fgVPres);
+        LOG(0,"[11111TVD_DBG_MSG] tvd vpres mode change %d->%d\n",_rTvd3dStatus.fgVPres,fgVPres);
         #if ENABLE_PRBS_BY_DRIVER
         LOG(1,"[TVD_DBG_MSG] _bEnablePrbsByAPMute is %d\n", _bEnablePrbsByAPMute);
         if(_bEnablePrbsByAPMute==TRUE) //channel change 		    
@@ -7808,7 +7810,7 @@ void vTvd3dVSyncISR(void)
 void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 {
     LOG(1,"======================================\n");
-    LOG(1,"[TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d \n", bPath, bOnOff);
+    LOG(0,"[11111TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d \n", bPath, bOnOff);
     LOG(1,"======================================\n");	
     #ifdef CC_SUPPORT_PIPELINE
     if(bGetSignalTypeAVD(bPath)==SV_ST_TV)
@@ -8470,7 +8472,8 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
 
     vTvd3dTrigModeDet();
 #ifdef CC_SUPPORT_PIPELINE
-	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	_fVSCConnectAVD=0x1;
 	if(_fVSCConnectAVD)
     {
 		if(fgIsMainTvd3d())
@@ -10010,7 +10013,7 @@ void vTvdSetPorch(UINT8 bPorchType, UINT16 wValue)
  */
 void vDrvTvdQueryStatus(void)
 {
-    LOG(0, "VPRES(%d) Mode(%ld) 525(%ld) 443(%ld) PHA(%ld) MMode(%d) NA(%ld) NA_Lvl(%ld) RF_Lvl(%d) \n",
+    LOG(0, "VPRES(%d) Mode(%ld) 525(%ld) 443(%ld) PHA(%ld) MMode(%d) NA(%ld) NA_Lvl(%ld) RF_Lvl(%d) vpres(%d)\n",
            fgHwTvdVPres(),
            bHwTvdMode(),
            fgHwTvd525(),
@@ -10019,7 +10022,8 @@ void vDrvTvdQueryStatus(void)
            fgHwTvdIsMMode(),
            bHwTvdNAState(),
            bHwTvdNRLevel(),
-           _svDrvTvdGetNRLevel()
+           _svDrvTvdGetNRLevel(),
+           _rTvd3dStatus.fgVPres
           );
     LOG(0, "MV(%d,%ld,%ld) CoCh(%ld) Scan(%d) VLock(%ld) VLen(%ld) HLock(%d) HsyncLock(%d) VCR_BV(%d)\n",
            fgHwTvdIsMacroVision(),fgHwTvdIsPSync(),fgHwTvdIsCSTRIPE(),
