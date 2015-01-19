@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/01/19 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -504,6 +504,13 @@ void bSubSrcCloneMode(UINT8 fgOnOff)
 }
 
 #ifdef CC_SUPPORT_PIPELINE
+UINT8 u1VSCConnectStatus[2]={SV_VD_NA,SV_VD_NA};
+
+UINT8 bApiQuearyVSCConnectStatus(UINT8 bPath)
+{
+	return u1VSCConnectStatus[bPath];
+}
+
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
 	UINT8 bVFEAVDSrc;
@@ -728,6 +735,9 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_bSubICIn = NewExtInput.MapIntMode & 0xff;
 		bNewMainDec = bGetInternalDec(SV_VP_MAIN);
 		bNewSubDec = bGetInternalDec(SV_VP_PIP);
+
+		u1VSCConnectStatus[SV_VP_MAIN] = bNewMainDec;
+		u1VSCConnectStatus[SV_VP_PIP] = bNewSubDec;
 
 		if(bNewMainDec != bOldMainDec)
 		{
