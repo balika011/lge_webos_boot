@@ -7829,9 +7829,13 @@ UINT8 bHDMIRefreshRate(void)
     {
         rate = 60;
     }
-    else if((rate <= 68) && (rate >= 65))
+    else if((rate <= 67) && (rate >= 65))
     {
-        rate = 67;
+        rate = 66;
+    }
+	else if((rate <= 68) && (rate >= 67))
+    {
+        rate = 68;
     }
     else if((rate <= 71) && (rate >= 69))
     {
@@ -10506,5 +10510,17 @@ UINT8 HDMI_3D_Get_InfoFrameByPort(UINT8 u1Port)
          HDMI_3D_Structure = u1IO32Read1B(UNRECRX2_0 + u4HdmiBasebyPort) >> 4;
     }
     return HDMI_3D_Structure;
-}	
+}
+BOOL fgHDMIIsPixelRepeate(void)
+{
+
+    if((u1IO32Read1B(AVIRX0_0 + u4ActiveHdmiRegBase) != 0x82) || (!_bHdmiModeActive))
+    {
+	    return 0;
+    }
+    else
+    {
+	    return ((u1IO32Read1B(AVIRX2_0 + u4ActiveHdmiRegBase)  & 0xf));
+    }
+}
 
