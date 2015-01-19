@@ -40,6 +40,7 @@
 #include "x_ldr_env.h"
 #include <cmd_micom.h>
 #include <cmnio_type.h>
+#include "x_dram.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -358,7 +359,17 @@ extern	struct mmc emmc_info[];
 	sprintf(arg_next(kargs), "%s ", "usbpwrgpio=406:1,407:1,-1:-1,-1:-1 ");
 	sprintf(arg_next(kargs), "%s ", "usbocgpio=405:0,404:0,-1:-1,-1:-1 ");
 	sprintf(arg_next(kargs), "%s ", "tzsz=18m ");
-	sprintf(arg_next(kargs), "%s ", "vmalloc=700mb ");	
+	
+	/* change vmalloc memory for increase low memory size ,  700M-->650M (1G) ,  700M--> 600M(768M) marked by   hongjun.chu*/	
+	if (TCMGET_CHANNELA_SIZE() == 0x300) /* 768M case */
+	{
+		sprintf(arg_next(kargs), "%s ", "vmalloc=600mb");
+	}
+	else
+	{
+		sprintf(arg_next(kargs), "%s ", "vmalloc=650mb");
+	}
+	
 //LG's 
 	if ((!(strncmp(getenv("print"),"off",3))) || (DDI_NVM_GetDebugStatus() != DEBUG_LEVEL))
 	{
