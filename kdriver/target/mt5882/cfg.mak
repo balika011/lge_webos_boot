@@ -111,6 +111,7 @@ ifeq "$(TRUSTZONE)" "true"
 DEFINES += -DCC_TRUSTZONE_SUPPORT
     ifeq "$(SVP_SUPPORT)" "true"
         DEFINES += -DCC_SVP_SUPPORT
+        DEFINES += -DCC_FBM_SECURE_FEEDER
     endif
      ifeq "$(TVP_SUPPORT)" "true"
         DEFINES += -DCC_TVP_SUPPORT
