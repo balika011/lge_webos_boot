@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -600,10 +600,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			break;
 	}
 
-	
 	return SV_SUCCESS;
-
-	
 
 }
 
@@ -613,7 +610,59 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	UINT8 bStatus;
 	
 	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
-	
+	if(bPath == SV_VP_MAIN)
+	{
+		if(bSrc == VSC_DEC_AVD)
+		{
+		   bSrc = _fVFEAVDSourceMainNew;
+		}
+		else if(bSrc == VSC_DEC_ADC)
+		{
+			
+		}
+		else if(bSrc == VSC_DEC_HDMI)
+		{
+		}
+		else if(bSrc == VSC_DEC_VDEC)
+		{
+		
+		}
+		else if(bSrc == VSC_DEC_JPEG)
+		{
+			
+		}
+		else
+		{
+			
+		}
+	}
+	else
+	{
+		if(bSrc == VSC_DEC_AVD)
+		{
+		   bSrc = _fVFEAVDSourceSubNew;
+		}
+		else if(bSrc == VSC_DEC_ADC)
+		{
+			
+		}
+		else if(bSrc == VSC_DEC_HDMI)
+		{
+		}
+		else if(bSrc == VSC_DEC_VDEC)
+		{
+		
+		}
+		else if(bSrc == VSC_DEC_JPEG)
+		{
+			
+		}
+		else
+		{
+			
+		}	
+	}
+
 	if(u4Type == 1)//connect source
 	{
 		if(bPath == SV_VP_MAIN)	//check the real source
@@ -728,7 +777,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 			fgPipCh = TRUE;
 			vApiVideoSetFixColorSpaceMode(SV_VP_PIP,SV_FIXCOLORSPACE_OFF);
 		}
-
+         
 		_bSrcMainNew = bMainSrc;
 		_bSrcMainOld = bMainSrc;
 		_bSrcSubNew = bSubSrc;

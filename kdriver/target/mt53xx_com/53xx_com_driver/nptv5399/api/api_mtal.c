@@ -1038,7 +1038,7 @@ static INT32 _PE_GetVdoPqMotionLevel(UCHAR ucVdpId, UINT32* prData, UINT32 u4Siz
     if (ucVdpId != VDP_1)
         return PQ_NOT_SUPPORTED;
  
-    #if defined(CC_MT5399)
+    #if (defined(CC_MT5399) || defined(CC_MT5882))
     *prData = u4DrvDIGetMotionLevel();    
     return PQ_OK;
     #else

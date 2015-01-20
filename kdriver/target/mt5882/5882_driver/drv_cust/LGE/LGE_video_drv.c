@@ -843,6 +843,22 @@ void DRVCUST_VdoModeChgDone(UINT8 bPath)
     UNUSED(bPath);
 }
 
+#include "drv_display.h"
+static UINT8 bIsRealCinema = SV_FALSE;
+void DRVCUST_SetRealCinema(void)
+{
+	if(IO32ReadFldAlign(DRVCUST_REAL_CINEMA, REAL_CINEMA) != bIsRealCinema)
+	{
+
+		bIsRealCinema = IO32ReadFldAlign(DRVCUST_REAL_CINEMA, REAL_CINEMA);
+		vDrvCalPanelFrameRate(wDrvVideoGetVTotal(SV_VP_MAIN), bDrvVideoGetRefreshRate(SV_VP_MAIN));
+	}
+}
+
+UINT8 DRVCUST_GetRealCinema(void)
+{
+    return bIsRealCinema;
+}
 void DRVCUST_VideoMainloop()
 {
     DRVCUST_AdaptiveBacklightProc();
@@ -853,6 +869,7 @@ void DRVCUST_VideoMainloop()
 		vDrvUpdateLcDimBlockContentInfo();
 	}
 #endif
+	DRVCUST_SetRealCinema();
 }
 
 void DRVCUST_OutVSyncISR()
@@ -1331,18 +1348,3 @@ void DRVCUST_SendEvent(E_CUST_EVENT eCustEvent, UINT8 u1Option)
 
 }
 
-void DRVCUST_SetRealCinema(UINT8 bRealCinema)
-{
-#if 0
-    if(IO32ReadFldAlign(DRVCUST_REAL_CINEMA, REAL_CINEMA) != bRealCinema)
-    (
-        vIO32WriteFldAlign(DRVCUST_REAL_CINEMA, bRealCinema, REAL_CINEMA);
-        vDrvCalPanelFrameRate(wDrvVideoGetVTotal(SV_VP_MAIN), bDrvVideoGetRefreshRate(SV_VP_MAIN));
-    )
-#endif
-}
-
-UINT8 DRVCUST_GetRealCinema(void)
-{
-    return 1;//bIsRealCinema;
-}

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/20 $
  * $RCSfile: vdo_if.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -286,6 +286,17 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType);
 UINT8 bApiQuearyVSCConnectStatus(UINT8 bPath);
 UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Type);
 UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable);
+typedef enum VSC_DEC_TYPE
+{
+	VSC_DEC_AVD = 0,
+	VSC_DEC_ADC,
+	VSC_DEC_HDMI,
+	VSC_DEC_VDEC,
+	VSC_DEC_JPEG,
+	VSC_DEC_MAX = VSC_DEC_JPEG,
+	VSC_DEC_MAXN,
+} VSC_DEC_TYPE_T;
+
 #endif
 
 
