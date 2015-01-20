@@ -827,6 +827,18 @@
 /*
  * default quality table
 */
+#define BIRGHT_INTERVAL               (2)  // SCE Register Value = 0x400 + (Dummy - 0x80) << (BIRGHT_INTERVAL)
+#define HUE_INTERVAL                  (1)  // SCE Register Value = 0x200 + (Dummy - 0x80) << (HUE_INTERVAL)
+#define BIND_CONTRAST_SATURATION      (1)
+#define USE_MATRIX_PQ_ADJ             (0)
+		
+#define OS_OPTION_POS                 (2)  // 1:before OSD2/3; 3:between OSD2/3; 2:after OSD2/3
+//#define XVYCC_CLIP_ENABLE 			(1)
+		
+#define MATRIX_HD_YCBCR709            (1)
+#define SUPPORT_HDMI_YCBCR444         (1)
+#define SUPPORT_VGA_YCBCR444          (1)
+
 #define QTYTBL_INCLUDE_FILE           "LGE/QTY_mt5882_eu_linux/LGE_QtyTbl.h"
 #define COLOR_PARAM_INCLUDE_FILE      "LGE/PANEL_DEFAULT/color_param.h"
 #define CUSTOM_VIDEO_DRV_BODY_FILE    "LGE/LGE_video_drv.c"
