@@ -672,10 +672,9 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
     #ifdef CC_VDEC_FMT_DETECT
     rPesInfo.u4DmxFrameType = prPes->u4FrameType;
     #endif
-    rPesInfo.fgMoveComplete = prPes->fgMoveComplete;
-
+   // rPesInfo.fgMoveComplete = prPes->fgMoveComplete;
     //LOG(3, "%s: u4FrameAddr%x MoveComplete:%d\n", __FUNCTION__,prPes->u4FrameAddr, prPes->fgMoveComplete);
-
+#if 0
     if (rPesInfo.fgMoveComplete)
     {
         if(prVdecEsInfoKeep->fgLowLatency)
@@ -743,6 +742,7 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
         VERIFY(x_sema_unlock(prVdec->hMoveEsmQSema) == OSR_OK);
         return TRUE;
     }
+#endif
 
     if(!rPesInfo.fgEos)
     {
@@ -4088,7 +4088,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
     rDmxMMData.u4StartAddr = prBytesInfo->u4BytesAddr;
     rDmxMMData.u4FrameSize = prBytesInfo->u4BytesSize;
     rDmxMMData.fgEOS = prBytesInfo->fgEos;
-    rDmxMMData.fgMoveComplete = TRUE;
+    //rDmxMMData.fgMoveComplete = TRUE;
     #ifdef VDEC_PUSH_PTS_64_BITS
     rDmxMMData.u4Pts = (UINT32)(prBytesInfo->u8BytesPTS & (UINT64)0xFFFFFFFF);
     rDmxMMData.u4Dts = (UINT32)((prBytesInfo->u8BytesPTS >> 32) & (UINT64)0xFFFFFFFF);
@@ -4890,10 +4890,9 @@ BOOL _VPUSH_PutData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     {
     	i4Ret = x_sema_lock(prVdec->hPutDataSema, X_SEMA_OPTION_NOWAIT);
         VERIFY(i4Ret == OSR_WOULD_BLOCK);
+        i4Ret = x_sema_lock(prVdec->hMoveEsmQSema, X_SEMA_OPTION_NOWAIT);
+        VERIFY(i4Ret == OSR_WOULD_BLOCK);
     }
-
-    i4Ret = x_sema_lock(prVdec->hMoveEsmQSema, X_SEMA_OPTION_NOWAIT);
-    VERIFY(i4Ret == OSR_WOULD_BLOCK);
 
     x_memset(&rMsg, 0, sizeof(VDEC_MSG_INTO_T));
     rMsg.eMsgType = VPUSH_MSG_DATA;
@@ -4930,16 +4929,18 @@ BOOL _VPUSH_PutData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
 	        prVdec->fgFifoFull = FALSE;
 	        return FALSE;
 	    }
+
+        i4Ret = x_sema_lock_timeout(prVdec->hMoveEsmQSema, DMX_MOVE_DATA_TIMEOUT);
+        if (i4Ret != OSR_OK)
+        {
+            LOG(0, "[VPUSH] move esmq fail.\n");
+            return VDEC_DEC_ERROR_INTERNAL_ERROR;
+        }
+
 	}
 	
 
 
-    i4Ret = x_sema_lock_timeout(prVdec->hMoveEsmQSema, DMX_MOVE_DATA_TIMEOUT);
-    if (i4Ret != OSR_OK)
-    {
-        LOG(0, "[VPUSH] move esmq fail.\n");
-        return VDEC_DEC_ERROR_INTERNAL_ERROR;
-    }
 
     return  VDEC_DEC_ERROR_NONE;
 }
@@ -4957,7 +4958,7 @@ BOOL _VPUSH_PutDataDone(VOID* prdec, UINT32 u4Tag)
     UNUSED(u4Tag);//not used currently
     prVdec = (VDEC_T*)prdec;
 
-    if(prVdec->hPutDataSema)
+	if(prVdec->fgGstPlay==FALSE &&prVdec->hPutDataSema)
     {
         VERIFY(x_sema_unlock(prVdec->hPutDataSema) == OSR_OK);
     }
@@ -5711,7 +5712,8 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
             {
                 UINT16 u2QueueSize, u2MaxQueueSize;                
                 VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep = NULL;
-             
+                u4DmxAvailSize = DMX_MUL_GetEmptySize(
+                    prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);                
                 prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(prVdec->ucVdecId);
                 if(!prVdecEsInfoKeep)
                 {
@@ -5719,15 +5721,19 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
                     ASSERT(0);
                 }
                 VDEC_GetQueueInfo(prVdec->ucVdecId, &u2QueueSize, &u2MaxQueueSize);                
-                fgEsmQFull = (prVdecEsInfoKeep->eVPushPlayMode == VDEC_PUSH_MODE_ASYNC) ? (u2QueueSize > 20) : (u2QueueSize > 500);
+                if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL)
+                {
+                    if(u2QueueSize > (u2MaxQueueSize - 100))
+                    {
+                        fgEsmQFull = TRUE;
+                    }
+                }
+                
                 if (u2QueueSize == 0)
                 {
                     fgEsmQEmpty = TRUE;
                 }
             }
-
-            u4DmxAvailSize = DMX_MUL_GetEmptySize(
-                    prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);
             if((u4DmxAvailSize < prVdec->rMsg.u.rBytesInfo.u4BytesSize + 32) ||
                (fgEsmQFull))
             {
@@ -5772,7 +5778,10 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
             if(!_VPUSH_MoveData(prVdec, &prVdec->rMsg.u.rBytesInfo))
             {
                 LOG(3, "%s(%d): _VPUSH_MoveData fail\n", __FUNCTION__, __LINE__);
-                VERIFY(x_sema_unlock(prVdec->hMoveEsmQSema) == OSR_OK);
+                if(prVdec->fgGstPlay==FALSE)
+                {
+                    VERIFY(x_sema_unlock(prVdec->hMoveEsmQSema) == OSR_OK);
+                }
             }
 
             if(prVdec->rMsg.u.rBytesInfo.fgMoveBufDone)
@@ -5894,6 +5903,13 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
 
     FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
     FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
+#ifdef CC_VDEC_RM_SUPPORT
+    LOG(0,"Define Enable CC_VDEC_RM_SUPPORT");
+#endif
+
+#ifdef CC_SUPPORT_VDEC_PREPARSE
+    LOG(0,"Define Enable CC_SUPPORT_VDEC_PREPARSE");
+#endif
 
     prVdec->fgNonFirst = FALSE;
     prVdec->fgInputBufReady = FALSE;
@@ -5916,7 +5932,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->u4AllocBufCnt=0;
     prVdec->fgIsSecureInput = FALSE;    
     prVdec->fgLowLatencyMode = FALSE;
-    prVdec->fgGstPlay=FALSE;
+    prVdec->fgGstPlay=TRUE;
 	x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
 #if defined(CC_USE_DDI)
     if (!VPUSH_IS_PIC(eFmt))
