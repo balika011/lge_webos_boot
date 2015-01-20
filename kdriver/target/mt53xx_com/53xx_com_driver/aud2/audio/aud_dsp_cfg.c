@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/01/20 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27099,7 +27099,7 @@ void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     {
         u4Idx = APROC_IOCTRL_VOL_AMIXER2;
     } 
-    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_VOL, u4Idx, &i4Vol, 1);
     
 }
 
