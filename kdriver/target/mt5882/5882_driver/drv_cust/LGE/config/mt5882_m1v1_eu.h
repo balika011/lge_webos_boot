@@ -91,8 +91,15 @@
 //----------------------------------------------------------------------------
 // FBM setup
 //----------------------------------------------------------------------------
+#ifndef CC_ONE_PKG_MULTI_DRAM_SIZE_SUPPORT
+
 #define TOTAL_MEM_SIZE                      (1024 * 1024 * 1024)
 #define DEFAULT_CHANNEL_A_SIZE					(1024 * 1024 * 1024)
+
+#else
+#define TOTAL_MEM_SIZE                      TCMGET_CHANNELA_SIZE() * 0x100000
+#define DEFAULT_CHANNEL_A_SIZE					TCMGET_CHANNELA_SIZE() * 0x100000
+#endif
 #ifdef CC_LGE_PROTO_PCBA
 //for PDWNC I2C 
 #define SIF_ENABLE_PDWNC_MASTER      (1)
