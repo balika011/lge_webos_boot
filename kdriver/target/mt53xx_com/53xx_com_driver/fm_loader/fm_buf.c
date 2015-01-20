@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $RCSfile: fm_buf.c,v $
- * $Revision: #1 $
- * $Date: 2015/01/09 $
- * $Author: dtvbm11 $
+ * $Revision: #2 $
+ * $Date: 2015/01/20 $
+ * $Author: p4admin $
  * $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/2 $
  * $SWAuthor: Yuchien Chen $
  * $MD5HEX: 9136bddef0a6437bdc61af581c31d9d8 $
@@ -2101,14 +2101,17 @@ FAIL:
     return FMR_CORE;
 #else
 
-    pui1_fm_buffer = x_mem_alloc(128 * 1024 + 32);
+    // modify 32 to 64 for DCache alignment, please modify FM_MSDC_Get() pu4Data at the same time.
+    //pui1_fm_buffer = x_mem_alloc(128 * 1024 + 32);
+    pui1_fm_buffer = x_mem_alloc(128 * 1024 + 64);
 
     if (pui1_fm_buffer == NULL)
     {
         return FMR_CORE;
     }
 
-    pui1_fm_buffer = (UINT8 *)((((UINT32)pui1_fm_buffer / 32) + 1) * 32);
+    //pui1_fm_buffer = (UINT8 *)((((UINT32)pui1_fm_buffer / 32) + 1) * 32);
+    pui1_fm_buffer = (UINT8 *)((((UINT32)pui1_fm_buffer / 64) + 1) * 64);
 
     return FMR_OK;
 

@@ -75,7 +75,7 @@
 
 /*
  * DMA implementation for high-speed controllers.
- * $Revision: #1 $
+ * $Revision: #2 $
  */
 
 #include "mu_impl.h"
@@ -142,7 +142,7 @@ extern int printk(const char *format, ...);
 #define MGC_HSDMA_BURSTMODE_INCR16  3
 
 #if !defined (CONFIG_ARCH_MT85XX)
-#define MGC_HSDMA_MIN_DMA_LEN        64
+#define MGC_HSDMA_MIN_DMA_LEN        512
 #define MGC_HSDMA_MAX_DMA_LEN        100000
 #else
 /* Note: Fixed by Ben 2009/07/20 
@@ -159,9 +159,7 @@ extern int printk(const char *format, ...);
 #ifdef MUSB_QMU
 uint8_t bADataEnable = 0;
 #endif
-#ifdef MUSB_DATA_COMPARE
-uint8_t bMgcDmaEnable = 1;
-#endif
+
 #if defined(MUSB_DMA) && defined(MUSB_HSDMA) && (MUSB_HSDMA_CHANNELS > 0)
 
 struct _MGC_HsDmaController;
@@ -418,10 +416,6 @@ static uint8_t MGC_HsDmaProgramChannel(MUSB_DmaChannel *pChannel, uint16_t wPack
 	uint32_t dwPhyAddr = 0;
 #endif
    
-#ifdef MUSB_DATA_COMPARE
-	if(!bMgcDmaEnable)
-		return FALSE;
-#endif
     /* reject below threshold (packet size) */
 	#if !defined (CONFIG_ARCH_MT85XX)
     if (dwLength < MGC_HSDMA_MIN_DMA_LEN)

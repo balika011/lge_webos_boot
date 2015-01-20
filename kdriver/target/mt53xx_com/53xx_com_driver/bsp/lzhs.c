@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: lzhs.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -290,6 +290,7 @@ INT32 LZHS_Dec(UINT32 u4SrcAddr, UINT32 u4DestAddr, UINT32 u4Len, UINT8 *pu1Chec
 
 #ifndef CC_UBOOT
     //------------------------------------------------------------
+    #if 0
     #if !defined(CC_MT5890)
     // Sync instruction and data caches
     HalInstructionMemoryBarrier();
@@ -301,7 +302,8 @@ INT32 LZHS_Dec(UINT32 u4SrcAddr, UINT32 u4DestAddr, UINT32 u4Len, UINT8 *pu1Chec
     HalDisableDCache();
     HalDisableMMU();
     #endif
-
+    #endif
+    HalFlushInvalidateDCache();
     // Wait until com data flush.
     SerWaitTxBufClear();
 

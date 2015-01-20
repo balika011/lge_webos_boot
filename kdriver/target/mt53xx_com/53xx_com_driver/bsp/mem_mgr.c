@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: mem_mgr.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -92,7 +92,7 @@
 #include "x_timer.h"
 #include "loader_imghdr.h"
 #include <string.h>
-
+#include "x_hal_arm.h"
 static UINT32 g_u4MemPtr = (CC_LOADER_MEM_OFFSET + LOADER_MAX_SIZE*16); // for the loader at 0xd00000.
 
 void *x_mem_alloc(UINT32 z_size)
@@ -103,7 +103,8 @@ void *x_mem_alloc(UINT32 z_size)
     void *p;
 
     p = (void *)g_u4MemPtr;
-    g_u4MemPtr += (z_size + 3) & 0xfffffffc;  // for 4-bytes alignment
+    g_u4MemPtr += (z_size + g_u4Dcachelinesize-1) & (0x100000000-g_u4Dcachelinesize);  // for dcacheline-bytes alignment
+    //Printf("g_u4MemPtr z_size 0x%x 0x%x \n",g_u4MemPtr,z_size);
     return p;
 #endif /* CC_UBOOT */
 }

@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: loader_upgrade.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3396,7 +3396,9 @@ func_exit:
 
 static INT32 _LdrUsbUpgrade(LDR_DATA_T *prLdrData, char *szFileName, UINT32 u4Upgrade)
 {
-    static UINT8 u1USBBlock[4096];
+    UINT8 *u1USBBlock;
+    u1USBBlock = x_mem_alloc(4096);
+    Printf("u1USBBlock = 0x%08x\n",(UINT32)u1USBBlock);
     HAL_TIME_T t0, t1, dt;
     INT32 i4Result;
 #ifdef SSUSB_LOADER
@@ -3750,6 +3752,8 @@ while(1)
         }
     }
 #endif
+
+    x_mem_free(u1USBBlock);
 
     if (fm_init() != FMR_OK)
     {

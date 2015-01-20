@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: fm_musb.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -235,7 +235,7 @@ INT32 FM_MUSB_Get(HANDLE_T hHandle, UINT32 u4GetType, VOID* pvData, UINT32 *pu4S
               break;        	
         case (BLKDEV_GET_TYPE_ALIGNMENT):
               pu4Data = (UINT32*)pvData;        
-              *pu4Data = (UINT32)32;        	
+              *pu4Data = (UINT32)64;        	
         	*pu4Size = sizeof(UINT32);        	              
               break;               
         default:
@@ -285,7 +285,7 @@ INT32 FM_MSDC_Get(HANDLE_T hHandle, UINT32 u4GetType, VOID* pvData, UINT32 *pu4S
               break;        	
         case (BLKDEV_GET_TYPE_ALIGNMENT):
               pu4Data = (UINT32*)pvData;        
-              *pu4Data = (UINT32)32;        	
+              *pu4Data = (UINT32)64;      
         	*pu4Size = sizeof(UINT32); 
               break;               
         default:

@@ -145,6 +145,7 @@ externC void HalIOMMUInvalidateDCacheMultipleLine(UINT32 u4VirAddr, UINT32 u4Phy
 externC void HalIOMMUFlushDCacheMultipleLine(UINT32 u4VirAddr, UINT32 u4PhyAddr, UINT32 u4Size);
 externC void HalIOMMUFlushInvalidateDCacheMultipleLine(UINT32 u4VirAddr, UINT32 u4PhyAddr, UINT32 u4Size);
 
+extern UINT32 g_u4Dcachelinesize;
 //-----------------------------------------------------------------------------
 /** Called when DMA on a buffer is about to start.
  * 

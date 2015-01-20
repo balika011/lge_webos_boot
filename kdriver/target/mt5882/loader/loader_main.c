@@ -173,7 +173,7 @@ VOID CMain()
     Printf("\nMT5882 Boot Loader v%u.%u\n", LOADER_VERSION_MAJOR, LOADER_VERSION_MINOR);
 //#ifndef CC_FPGA
 #if 1
-#if USB_CHANGE_DRAM_PRIORITY
+#if 1
     // enable MMU, cache
     HalInitMMU(TCMGET_CHANNELA_SIZE() * 0x100000 - 0x4000);
 #endif

@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: musb_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -179,6 +179,7 @@ LINT_EXT_HEADER_BEGIN
 #endif
 
 #include "drvcust_if.h"
+#include "x_hal_arm.h"
 
 LINT_EXT_HEADER_END
 
@@ -273,11 +274,6 @@ LINT_EXT_HEADER_END
 
 #endif // #if !defined(CONFIG_ARCH_MT85XX)
 
-#ifdef MUSB_DATA_COMPARE
-static void *_pvMusbMemReadPool = NULL;
-extern uint8_t bMgcDmaEnable;
-//static uint8_t breadcount = 0;
-#endif
 //---------------------------------------------------------------------------
 // Type definitions
 //---------------------------------------------------------------------------
@@ -1256,33 +1252,18 @@ INT32 MUSB_Read(UINT64 u8Offset, UINT32 u4MemPtr, UINT32 u4MemLen)
     MU_FS_DEVICE_TYPE *pHfiDriver = NULL;
     MUSB_HfiMediumInfo *pMediumInfo;
     INT32 i4Status;
-#ifdef MUSB_DATA_COMPARE
-    static UINT8 printCount = 0;
-	int i,DMA_RetryCount=0;
-	//int j, cpu_i, dma_i;
-    UINT8 *SrcBuf;
-    SrcBuf = (UINT8 *)_pvMusbMemReadPool;
-
-    if(printCount == 0)
-        {
-        printCount++;
-        if((UINT32)u4MemPtr % 0x40 != 0)
-            Printf("USB upgrade - DMA Buffer address[0x%08x] not 64 byte alignment \n",(UINT32)u4MemPtr);
-        }
+    static uint8_t breadcount = 0;
+	breadcount ++;
+	if(breadcount == 0xff)
+		Printf(".");
     
-	//breadcount ++;		
-	//if(breadcount == 0xff)
-	//	printf("*");
-	/* 
-	 *	@=1, DMA Channel
-	 *	@=0, CPU Channel
-	 */
-	bMgcDmaEnable = 1;
-DMA_Retry:
-    
-#endif
     if ((u4MemPtr == 0) ||(u4MemLen < 512))
     {
+        return -1;
+    }
+    if(u4MemPtr % g_u4Dcachelinesize != 0)
+        {
+        Printf("The DMA buffer Address[0x%08x] not 64byte align !\n",(UINT32)u4MemPtr);
         return -1;
     }
 
@@ -1343,9 +1324,6 @@ DMA_Retry:
     #endif
 #endif
 
-
-     MUSB_MemSet((uint8_t *)u4MemPtr, 0, u4MemLen);
-
     _rMUSBData.u4Count = u4MemLen;
     _rMUSBData.u4TransCount = 0;
     _rMUSBData.pvData = (void *)u4MemPtr;
@@ -1361,140 +1339,7 @@ DMA_Retry:
         return -1;
     }
 
-
-#ifdef MUSB_DATA_COMPARE
-
-    //  check DMA data 
-
-	for(i = 0; i < 32; i ++)
-	{
-		if(*((uint8_t *)u4MemPtr + i)!=0)
-		{
-		    DMA_RetryCount = 0;
-            break;
-        }
-	}
-    if(i==32)
-    {
-        //Printf("DMA read address 0x%8x\n",u4MemPtr);
-        DMA_RetryCount ++;
-        if(DMA_RetryCount <=1)
-        {
-            Printf("!");
-            goto DMA_Retry;
-        }
-        else
-        {
-            Printf("-");
-            DMA_RetryCount = 0;
-
-            // initital to 0;
-            MUSB_MemSet(SrcBuf, 0, 4096);
-
-            bMgcDmaEnable = 0;
-            // get Hfi driver structure.
-            pHfiDriver = MUSB_HfiDriverGet();
-
-            if (!pHfiDriver)
-            {
-                return -1;
-            }
-
-            // check device status.
-            if (0 > pHfiDriver->pfIoCtl(u4Lun, (uint32_t)MUSB_IOCTL_GET_DEVICE_STATUS, 0, &i4Status))
-            {
-                return -1;
-            }
-
-            if (HFI_STATUS_READY != i4Status)
-            {
-                return -1;
-            }
-
-            // get medium information.
-            if (0 > pHfiDriver->pfIoCtl(u4Lun, (uint32_t)MUSB_IOCTL_GET_MEDIUM_INFO, 0, &pMediumInfo))
-            {
-                return -1;
-            }
-
-            if (pMediumInfo->dwBlockSize < 512)
-            {
-                return -1;
-            }
-
-            // Set read call back function.
-            _rMUSBAsynInfo.pvHfiNfyTag = (void *)0x12345678;
-            _rMUSBAsynInfo.pfHfiNfy = _Musb_Complete;
-            if (0 > pHfiDriver->pfIoCtl(u4Lun, (uint32_t)MUSB_IOCTL_SET_TYPENFY, 0, &_rMUSBAsynInfo))
-            {
-                return -1;
-            }
-
-            // prepare sync in different os environment.
-            if (0 != _Musb_InitLock())
-            {
-                return -1;
-            }   
-            _rMUSBData.u8BlkNum = (uint64_t)(u8Offset / pMediumInfo->dwBlockSize);
-
-            _rMUSBData.u4Count = u4MemLen;
-            _rMUSBData.u4TransCount = 0;
-            _rMUSBData.pvData = (void *)SrcBuf;
-
-            if (0 > pHfiDriver->pfRWBurst(u4Lun, MUSB_HFI_OP_READ, (void *)&_rMUSBData))
-            {
-                return -1;
-            }
-            // wait complete from _Musb_Complete().
-            if (0 != _Musb_Lock())
-            {
-                return -1;
-            }
-#if 0
-            //Printf("MUSB_Read finish read data.\n");
-            for(j = 0; j < 512; )
-            {
-                Printf("[%d]0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x.\n", j, SrcBuf[j+0], SrcBuf[j+1], SrcBuf[j+2],SrcBuf[j+3],SrcBuf[j+4],SrcBuf[j+5],SrcBuf[j+6],SrcBuf[j+7]);
-                j += 8;
-            }
-#endif
-
-            MUSB_MemCopy((uint8_t *)u4MemPtr, SrcBuf, 32);
-        }
-    }
-#endif
-
-
-    
-//#ifdef MUSB_DATA_COMPARE
-#if 0
-	//for(i = 0; i < _rMUSBData.u4TransCount; i ++)
-	for(i = 0; i < 64; i ++)
-	{
-		if(SrcBuf[i] != *((uint8_t *)u4MemPtr + i))
-		{
-			Printf("[MUSB_Read][%d]compail fail.blk=0%x \n", i, _rMUSBData.u8BlkNum);
-			Printf("********************DMA read data ********************\n");
-			for (cpu_i = 0; cpu_i < _rMUSBData.u4TransCount; )
-			{
-				Printf("[%d]0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x.\n", cpu_i, SrcBuf[cpu_i+0], SrcBuf[cpu_i+1], SrcBuf[cpu_i+2],SrcBuf[cpu_i+3],SrcBuf[cpu_i+4],SrcBuf[cpu_i+5],SrcBuf[cpu_i+6],SrcBuf[cpu_i+7]);
-				cpu_i += 8;
-			}
-			Printf("********************CPU read data ********************\n");
-			for (dma_i = 0; dma_i < _rMUSBData.u4TransCount; )
-			{
-				Printf("[%d]0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x.\n", dma_i, *((uint8_t *)u4MemPtr + dma_i), *((uint8_t *)u4MemPtr +dma_i+ 1), *((uint8_t *)u4MemPtr +dma_i+ 2), *((uint8_t *)u4MemPtr +dma_i+ 3), *((uint8_t *)u4MemPtr +dma_i+ 
-				4), *((uint8_t *)u4MemPtr +dma_i + 5), *((uint8_t *)u4MemPtr +dma_i + 6), *((uint8_t *)u4MemPtr +dma_i + 7));				
-				dma_i += 8;
-			}
-			Printf("=========== Error Lock code==========");
-			//Lock. if error ......
-			while(1);
-		}
-	}
-#endif
-
-
+    // check result.
     return ((_rMUSBData.u4Count == _rMUSBData.u4TransCount) ? 0 : -1);
 }
 
@@ -3111,19 +2956,6 @@ INT32 MUSB_Init(UINT32 u4Mode)
 
         _fgMUSBHostMode = (u4Mode) ? TRUE: FALSE;
 
-#ifdef MUSB_DATA_COMPARE
-if (!_pvMusbMemReadPool)
-{
-	_pvMusbMemReadPool = x_mem_alloc(4096);
-	if ( _pvMusbMemReadPool == NULL )
-	{
-		LOG(0, "_pvMusbMemReadPool allocate memory failed!\n");
-
-	}
-}
-
-#endif
-		
 #ifdef MUSB_PORT_CONFIG
 	_Musb_Port_Init();
 #endif
