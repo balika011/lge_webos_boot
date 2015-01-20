@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/20 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -475,12 +475,13 @@ static VOID _FbmConfigurePool_MT5882_SCPOS_MAIN(POOL_LIST_T* prPoolList, POOL_AR
     prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_MPEG2].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_MPEG2;
-
+   #if 0
     prPoolList[FBM_POOL_TYPE_FEEDER2].u4Inherit = FBM_POOL_ROOT;
     prPoolList[FBM_POOL_TYPE_FEEDER2].u4PoolSize = FBM_FEEDER_POOL_SIZE;
     prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER2].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER2].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_FEEDER2;
+	#endif
 #endif
    
 #if defined(CC_FBM_FOUR_INST_SUPPORT)
@@ -522,6 +523,14 @@ static VOID _FbmConfigurePool_MT5882_SCPOS_MAIN(POOL_LIST_T* prPoolList, POOL_AR
     prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER4].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_FEEDER4;
 #endif
+#if defined(CC_FBM_SECURE_FEEDER)
+		prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4PoolSize = FBM_SECURE_FEEDER_2K_SIZE;
+		prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4Inherit = FBM_POOL_ROOT;			 
+		prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].eMode = FBM_POOL_ARRANGE_AFTER; 
+		prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].ePool1 = u4AheadType;			 
+		u4AheadType = FBM_POOL_TYPE_SECURE_FEEDER;
+#endif
+
     // pq tool
     prPoolList[FBM_POOL_TYPE_PQ_TOOL].u4Inherit = FBM_POOL_ROOT;
     prPoolList[FBM_POOL_TYPE_PQ_TOOL].u4PoolSize = FBM_PQ_TOOL_POOL_SIZE; // A3 needs 8MB for OD dump
@@ -829,7 +838,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 	
 	//-----DSP-----
 	prPoolList[FBM_POOL_TYPE_DSP].u4Inherit = FBM_POOL_ROOT;
-	//prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
+	prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].eMode = FBM_POOL_ARRANGE_AFTER;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].ePool1 = u4AheadType;
 #if defined(CC_SUPPORT_5_SEC_PTS_PCR_OFFSET)
@@ -1080,7 +1089,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 		u4AheadType = FBM_POOL_TYPE_JPEG;
 #endif
 
-#if defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) 
+#if 0//defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) 
 	
 	prPoolList[FBM_POOL_TYPE_FEEDER2].u4Inherit = FBM_POOL_ROOT;
     prPoolList[FBM_POOL_TYPE_FEEDER2].u4PoolSize = FBM_FEEDER_POOL_SIZE;
@@ -1150,6 +1159,14 @@ u4AheadType = FBM_POOL_TYPE_FEEDER4;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DRM].ePool1 = u4AheadType;
 	u4AheadType = FBM_POOL_TYPE_DRM;
 
+
+#if defined(CC_FBM_SECURE_FEEDER)
+    prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4PoolSize = FBM_SECURE_FEEDER_2K_SIZE;
+    prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4Inherit = FBM_POOL_ROOT;			 
+    prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].eMode = FBM_POOL_ARRANGE_AFTER; 
+    prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].ePool1 = u4AheadType;			 
+    u4AheadType = FBM_POOL_TYPE_SECURE_FEEDER;
+#endif
 
 //----- DMX-----
     prPoolList[FBM_POOL_TYPE_DMX].u4Inherit = FBM_POOL_ROOT;
