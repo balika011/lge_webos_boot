@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1424,6 +1424,7 @@ void vDrvNRInit(void)
     vDrvNRPQInit();
 
     _SWW(NR_FWBNR_00, (DRVCUST_OptGet(eShareBnrHwCfg)?1:0), NR_FWBNR_USE_HW_MINLS_TH);
+	_SWW(NR_FWBNR_0B, 6, NR_FWBNR_CONF_OFST);  
 }
 
 void vDrvNRProc(void)

@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: nptv_pq_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  * Description:
  *         This file contains CLI implementation of NPTV Video.
@@ -153,6 +153,7 @@ static INT32 _i4LcDimCheckOnOff(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _i4LcDimInitQuality(INT32 i4Argc, const CHAR **szArgv);
 
 // for adaptive luma adjustment
+static INT32 _i4AlGetLumaCurve(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _i4AlGetLumaHist(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _i4AlGetLumaHistLR(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _i4AlGetLumaAPLLR(INT32 i4Argc, const CHAR **szArgv);
@@ -310,6 +311,7 @@ CLI_EXEC_T arDump[] = {
 
 CLI_EXEC_T arAdaptiveLuma[] = {
 #ifdef CC_CLI
+	{"Get Luma Curve",	"lcurve",	_i4AlGetLumaCurve,	NULL,	"Get luma curve", CLI_GUEST},
     {"Get Luma Hist",	"lhist",	_i4AlGetLumaHist,	NULL,	"Get luma histogram", CLI_GUEST},
     {"Get LR Luma Hist",	"lhistlr",	_i4AlGetLumaHistLR,	NULL,	"Get LR luma histogram", CLI_GUEST},        
     {"Get LR APL",	"lapllr",	_i4AlGetLumaAPLLR,	NULL,	"Get LR luma APL", CLI_GUEST},                
@@ -1565,6 +1567,28 @@ static INT32 _i4LcDimCheckOnOff(INT32 i4Argc, const CHAR **szArgv)
 	}
 		Printf("LcDim Enable = %d \n", vDrvGetLcDimOnOffStatus());
         
+	return 0;
+}
+ static INT32 _i4AlGetLumaCurve(INT32 i4Argc, const CHAR **szArgv)
+ {
+	UINT16 i = 0;
+	UINT16 wlumaArray[LUMA_CURVE_NUM];
+
+ 
+	vDrvADLGetLumaCurve(wlumaArray);
+    if (wlumaArray == NULL)
+        {
+            return 0;
+        }
+    
+	Printf("Luma Curve ");    
+	for (i=0; i<LUMA_CURVE_NUM; i++)
+	{
+		Printf("%d ", wlumaArray[i]);
+	}
+	
+	Printf("\n");
+
 	return 0;
 }
 

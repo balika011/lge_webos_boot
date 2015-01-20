@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: drv_bnr_int.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_BNR_INT_H_
@@ -87,7 +87,7 @@
 #include "drv_common.h"
 #endif
 
-#define BNR_NEW_FW
+#define BNR_NEW_FW 1
 
 #define SUPPORT_BNR_SIZE_PHASE_PREDICT
 
