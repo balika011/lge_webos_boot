@@ -74,28 +74,37 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/20 $
  * $RCSfile: drv_autocolor.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
 #ifndef _DRV_AUTOCOLOR_H_ 
 #define _DRV_AUTOCOLOR_H_
 //  IC 回來初期 mark掉這段define
+
+#ifdef CC_LGE_PROTO_PCBA
+#define EEPROM_READY  0
+
+#else
+
 #ifndef CC_COPLAT_MT82
-	#ifndef CC_EEPROM_READY_AUTO_COLOR
-		#define EEPROM_READY   1
-       #else
-		#define EEPROM_READY          CC_EEPROM_READY_AUTO_COLOR
-	#endif
+		#ifndef CC_EEPROM_READY_AUTO_COLOR
+			#define EEPROM_READY   1
+	    #else
+			#define EEPROM_READY          CC_EEPROM_READY_AUTO_COLOR
+		#endif
 #else
 #define EEPROM_READY  0
 #endif
 
+#endif
+
+
 //#define EEPROM_READY  0   //IC 回來初期先強制為 0
-#define EEPROM_USAGE_debug 0
+#define EEPROM_USAGE_debug 1
 
 #define FULLY_HW_AUTO_CALIBRATION   1  //fully total cancel blank level shift by H/W
 //#define DIGITAL_CALIBRATION   1
