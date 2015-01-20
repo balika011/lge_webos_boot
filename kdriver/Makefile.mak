@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #10 $
-# $Date: 2015/01/19 $
+# $Revision: #11 $
+# $Date: 2015/01/20 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -1158,6 +1158,12 @@ ifeq "$(ENABLE_WIFI_DISPLAY)" "true"
             export ENABLE_HDCP2 := true
         endif
     endif
+endif
+
+
+# SKB
+ifndef ENABLE_SKB
+export ENABLE_SKB := true
 endif
 
 # IPCC and MSS support
