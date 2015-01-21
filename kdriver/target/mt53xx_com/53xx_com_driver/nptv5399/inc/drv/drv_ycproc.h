@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/21 $
  * $RCSfile: drv_ycproc.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -636,6 +636,7 @@ UINT8 DRVCUST_MMAPPGetTiming(UINT8 bOutputTiming);
 UINT16 DRVCUST_Y2RMap(void);
 UINT32 DRVCUST_HDMIRange(UINT8 bPath);
 UINT32 DRVCUST_GetOSMatrix709(UINT8 bPath);
+void DRVCUST_SetGamutOnOSMatrix(void);
 
 void vDrvAmbilightISRInit(void);  
 void vDrvAmbiLPrintContent(UINT8 u1Color);

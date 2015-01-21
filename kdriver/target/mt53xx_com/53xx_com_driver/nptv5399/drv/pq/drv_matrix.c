@@ -1326,6 +1326,8 @@ void vDrvCalVideoColorMatrix(UINT8 bPath, UINT16 wBriValue, UINT16 wContValue,
         COLOR_TRANSFORM_ADJ[u4Index] = CLIP(COLOR_TRANSFORM_ADJ[u4Index], -1024, 1023);
     }
 
+	DRVCUST_SetGamutOnOSMatrix();
+
     vLoadOSColorMatrix(bPath, COLOR_TRANSFORM_ADJ);
 }
 

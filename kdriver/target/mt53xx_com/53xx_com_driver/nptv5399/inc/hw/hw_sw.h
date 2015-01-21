@@ -234,6 +234,26 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define YCBCR444_HDMI      Fld(1, 0, AC_MSKB0) 
     #define YCBCR444_VGA       Fld(1, 1, AC_MSKB0) 
 
+#define MATRIX_04     u4SWReg(0x0060)
+    #define GAMUT_MATRIX_00      Fld(15, 0, AC_MSKDW) //14:0
+    #define GAMUT_MATRIX_01      Fld(15, 16, AC_MSKDW) //30:16
+    #define GAMUT_MATRIX_LOAD    Fld(1, 31, AC_MSKDW) //31
+	
+#define MATRIX_05     u4SWReg(0x0064)
+    #define GAMUT_MATRIX_02      Fld(15, 0, AC_MSKDW) //14:0
+    #define GAMUT_MATRIX_10      Fld(15, 16, AC_MSKDW) //30:16
+    #define GAMUT_ENABLE		 Fld(1, 31, AC_MSKDW) //31
+	
+#define MATRIX_06     u4SWReg(0x0068)
+    #define GAMUT_MATRIX_11      Fld(15, 0, AC_MSKDW) //14:0
+    #define GAMUT_MATRIX_12      Fld(15, 16, AC_MSKDW) //30:16
+	
+#define MATRIX_07     u4SWReg(0x006C)
+    #define GAMUT_MATRIX_20      Fld(15, 0, AC_MSKDW) //14:0
+    #define GAMUT_MATRIX_21      Fld(15, 16, AC_MSKDW) //30:16
+	
+#define MATRIX_08     u4SWReg(0x0070)
+    #define GAMUT_MATRIX_22      Fld(15, 0, AC_MSKDW) //14:0
 //=============================================================
 // Addr : 0x0100 - 0x03FF
 // Name : Meter Info
