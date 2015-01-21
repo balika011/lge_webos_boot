@@ -631,6 +631,7 @@ int console_assign(int file, const char *devname)
 int console_init_f(void)
 {
 	gd->have_console = 1;
+	DDI_CMNIO_I2C_Init();
 
 #ifdef CONFIG_SILENT_CONSOLE
 	if (getenv("silent") != NULL)
