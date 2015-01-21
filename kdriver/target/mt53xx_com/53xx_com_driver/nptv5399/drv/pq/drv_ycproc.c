@@ -963,7 +963,7 @@ void vDrvGlobalPQAdj(void)
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_BRI) != u2Ext2AdjMatrix[bPath][PQ_BRIGHTNESS]) ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_CONT) != u2Ext2AdjMatrix[bPath][PQ_CONTRAST])  ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_08 + bOffset, EXT2_ADJ_SAT) != u2Ext2AdjMatrix[bPath][PQ_SATURATION]) ||
-                bDemoToggle)
+                bDemoToggle || (IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_LOAD) == SV_ON))
             {
                 vDrvVideoColorMatrix(bPath);
 
@@ -991,7 +991,7 @@ void vDrvGlobalPQAdj(void)
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_BRI) != u2Ext2AdjMatrix[bPath][PQ_BRIGHTNESS]) ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_CONT) != u2Ext2AdjMatrix[bPath][PQ_CONTRAST])  ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_08 + bOffset, EXT2_ADJ_SAT) != u2Ext2AdjMatrix[bPath][PQ_SATURATION]) ||
-                bDemoToggle)
+                bDemoToggle || (IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_LOAD) == SV_ON))
             {                
                 vIO32WriteFldAlign(G_PIC_ADJ_MAIN_1, 
                     0x400 + ((IO32ReadFldAlign(GLOBAL_ADJ_00, BRIGHT_DUMMY) - 0x80) << IO32ReadFldAlign(SCE_REG_00, SCE_BRI_INTERVAL)), 
