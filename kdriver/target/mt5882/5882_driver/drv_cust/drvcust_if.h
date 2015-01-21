@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/21 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -337,7 +337,7 @@ C Total size:
 #endif
 
 #if defined(CC_FBM_SECURE_FEEDER)
-#define FBM_SECURE_FEEDER_2K_SIZE   (0x400000)
+#define FBM_SECURE_FEEDER_2K_SIZE   (0x800000)
 #else
 #define FBM_SECURE_FEEDER_2K_SIZE   (0)
 #endif
