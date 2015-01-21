@@ -1231,22 +1231,56 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
 
 UINT32 DRVCUST_HDMIRange(UINT8 bPath)
 {
-    return (bDviIsVideoTiming() ? SV_HDMI_RANGE_LIMIT : SV_HDMI_RANGE_FULL);
+	UINT32 u4RangeMode;
+    UINT8 bMode;
+    
+	if(bDviIsVideoTiming())
+	{
+        u4RangeMode = SV_HDMI_RANGE_LIMIT;
+	}
+    else
+    {
+        u4RangeMode = SV_HDMI_RANGE_FULL;
+    }
+
+    bMode = bGetHDMIRangeMode(); //LG for DVI settings special- UI black level operation
+
+    switch(bMode)
+    {
+        case SV_HDMI_RANGE_FORCE_LIMIT:
+            u4RangeMode = SV_HDMI_RANGE_LIMIT;
+            break;
+        case SV_HDMI_RANGE_FORCE_FULL:
+            u4RangeMode = SV_HDMI_RANGE_FULL;
+            break;
+        case SV_HDMI_RANGE_FORCE_AUTO:
+        default:
+            break;
+    }
+
+    return u4RangeMode;
 }
 
 UINT32 DRVCUST_GetOSMatrix709(UINT8 bPath)
 {
     UINT32 u4Matrix709;
-
-#if 1
-    u4Matrix709 = GET_MATRIX_HD_709 && (wDrvVideoInputHeight(bPath) >= 720);
-#else
     UINT32 u4ScrTiming = bDrvVideoGetSourceTypeTiming(bPath);
-    u4Matrix709 = ((u4ScrTiming >= SOURCE_TYPE_TIMING_MM_SD_I) && (u4ScrTiming <= SOURCE_TYPE_TIMING_MM_1080IP_HD)) ? 
-                    SV_FALSE : (GET_MATRIX_HD_709 && (wDrvVideoInputHeight(bPath) >= 720));
-#endif
-    return u4Matrix709;
 
+    if((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase)  & 0xc0) == 0x40)
+    {
+        u4Matrix709 = SV_FALSE;
+    }
+    else if((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase) & 0xc0) == 0x80)
+    {
+        u4Matrix709 = SV_TRUE;
+    }
+    else
+    {
+        u4Matrix709 = ((u4ScrTiming >= SOURCE_TYPE_TIMING_MM_SD_I) && (u4ScrTiming <= SOURCE_TYPE_TIMING_MM_1080IP_HD)) ? 
+                        SV_FALSE : (GET_MATRIX_HD_709 && (wDrvVideoInputHeight(bPath) >= 720));
+    }
+
+    return u4Matrix709;
 }
 
 UINT8 DRVCUST_MMAPPGetTiming(UINT8 bOutputTiming)
