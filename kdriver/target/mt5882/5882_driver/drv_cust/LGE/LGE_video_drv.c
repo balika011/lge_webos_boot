@@ -934,7 +934,8 @@ UINT8 DRVCUST_GetRealCinema(void)
     return bIsRealCinema;
 }
 
-void DRVCUST_TDshpGMVYPatch(){
+void DRVCUST_TDshpGMVYPatch(void)
+{
 	 static UINT8 u1State;
 	 static UINT8 u1GmvX;
 	 static UINT8 u1GmvY;
