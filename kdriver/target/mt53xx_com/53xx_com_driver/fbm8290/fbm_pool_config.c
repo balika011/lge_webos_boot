@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/22 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2975,7 +2975,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL2;
     u1NRNum = 1;\
     else\
     u1NRNum = 0;\
-    if((u4FlipModule & FLIP_BY_PSCAN)||((SRM_IsEpgMode())))\
+    if(u4FlipModule & FLIP_BY_PSCAN)\
     u1NRNum += 1;\
     if(E_TDTV_DI_DRAM_DOUBLE==u4PscanModeEx)\
     u1NRNum *= 2;\
@@ -3225,7 +3225,7 @@ static inline void vCalcInterlaceFldNum(UINT32 u4VdpId,
                 *u1Cnum += 2;
             }
         }        
-        if ((u4flip & FLIP_BY_PSCAN)||(SRM_IsEpgMode()))
+        if (u4flip & FLIP_BY_PSCAN)
         {
             *u1Ynum += 1;
             *u1Cnum += 1;
