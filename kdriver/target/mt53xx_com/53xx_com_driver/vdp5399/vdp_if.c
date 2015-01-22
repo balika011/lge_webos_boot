@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/22 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1046,7 +1046,7 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 		    if((SRM_IsPipVideo() ==1)||(SRM_IsPopVideo()== 1))//change 5 to 10 when change need to check CR DTV00612212 DTV00583481
           _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?10:0, FALSE); 
 		    else
-		      _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?5:0, FALSE); 
+		      _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?9:0, FALSE); 
 
     }
 

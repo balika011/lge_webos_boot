@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/22 $
  * $RCSfile: mloop_video.c $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -131,6 +131,7 @@
 #include "vdp_drvif.h"
 #include "vdp_display.h"
 #include "vdo_if.h"
+#include "vdp_if.h"
 #include "vdo_misc.h"
 #include "srm_drvif.h"
 #include "tve_if.h"
@@ -255,6 +256,13 @@ extern UINT8 _fgPostMuteInitStage;
 void vVdoModeChgDone(UINT8 bPath)
 {
     RVChannel *pt_rv_channel = (bPath == SV_VP_MAIN) ? (&_rMChannel) : (&_rPChannel);
+    VDP_REGION_T rSrcRegion;
+    
+    rSrcRegion.u4X = 0;
+    rSrcRegion.u4Y = 0;
+    rSrcRegion.u4Width = wDrvVideoInputWidth(bPath);
+    rSrcRegion.u4Height = wDrvVideoInputHeight(bPath);
+    VDP_SetSrcRegion(bPath,0, rSrcRegion);
 
     // Check video path characteristic
     pt_rv_channel->bIs444 = bIsScalerInput444(bPath);
