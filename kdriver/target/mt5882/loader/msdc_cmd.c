@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/22 $
  * $RCSfile: msdc_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -743,6 +743,72 @@ static INT32 _MSDCCLI_Read_Perform(INT32 i4Argc, const CHAR ** szArgv)
 	return 0;
 }
 
+static INT32 _MSDCCLI_Write_BS(INT32 i4Argc, const CHAR ** szArgv)
+{
+    INT32 i4Ret = 0;
+    UINT32 u4Offset, u4Len, u4DstPtr;
+    UINT32 u4BS = 0;
+    UINT32 u4templen = 0;
+    UINT32 u4fgDev;
+    UINT32 U4Speed;
+    HAL_TIME_T rMsdTimeStart;
+    HAL_TIME_T rMsdTimeEnd;
+    HAL_TIME_T rMsdTimeDelta = {0};
+   Printf("_MSDCCLI_Write\n");
+
+    if (i4Argc != 5)
+    {
+        LOG(0, "%s [memptr] [offset] [size][bs size/KB]\n", szArgv[0]);
+        return 0;
+    }
+    
+    u4BS = StrToInt(szArgv[4]);
+
+    u4BS <<= 10; 
+    	Printf("bs is 0x%x\n",u4BS);
+    
+    if((szArgv[1][0] == '-') && (szArgv[1][1] == 'd'))
+    {
+        u4DstPtr = StrToInt(szArgv[1] + 2);	
+        u4fgDev = 1;
+    }
+    else
+    {
+		u4DstPtr = StrToInt(szArgv[1]);
+        u4fgDev = 0;
+    }
+    u4Offset = StrToInt(szArgv[2]);
+    u4Len    = StrToInt(szArgv[3]);
+	
+  LOG(0, "_MSDCCLI_Read, %sDstPtr:0x%08X, Offset:0x%08X, Len:0x%08X\n", 
+                           u4fgDev?"(Dev)":"", u4DstPtr, u4Offset, u4Len);
+	HAL_GetTime(&rMsdTimeStart);				
+
+    if(u4fgDev == 1)
+    {         
+        i4Ret = MsdcWriteCard((UINT32 *)MSDC_TESTBUF2_ADDR, u4DstPtr, u4Len); 
+    }
+    else
+    {
+        do
+        {
+        	  i4Ret = MsdcWriteCard(u4Offset, (UINT32 *)u4DstPtr, u4BS);
+        	  u4templen += u4BS;
+        	  u4DstPtr += u4BS;
+        }while(u4templen < u4Len);  
+    }
+    				
+    HAL_GetTime(&rMsdTimeEnd);
+    HAL_GetDeltaTime(&rMsdTimeDelta, &rMsdTimeStart, &rMsdTimeEnd);
+    LOG(0, "rMsdTimeDelta.u4Seconds = %d.\n", rMsdTimeDelta.u4Seconds);
+    LOG(0, "rMsdTimeDelta.u4Micros = %d. \n", rMsdTimeDelta.u4Micros);		//		
+	U4Speed = (UINT64)(((UINT64)u4Len  * 1000000 / (1024*1024)) / (UINT64)(rMsdTimeDelta.u4Seconds * 1000000 + rMsdTimeDelta.u4Micros));
+    LOG(0,"Read Speed is %d MB/S, bs is %d, read size %d\n", U4Speed, u4BS, u4Len);
+	
+End:
+    LOG(0, "_MSDCCLI_Read, i4Ret = 0x%X.\n", i4Ret);
+    return 0;
+}
 
 static INT32 _MSDCCLI_Write_Perform(INT32 i4Argc, const CHAR ** szArgv)
 {
@@ -1200,6 +1266,85 @@ static INT32 _MSDCCLI_SDR50Calibration(INT32 i4Argc, const CHAR ** szArgv)
     MSDCTest_SDR50Calibration(offset, size);
     return 0;
 }
+
+static INT32 _MSDCCLI_ETT(INT32 i4Argc, const CHAR ** szArgv)
+{
+	extern UINT32 maxclock;
+	extern UINT32 g_msdc_ett_debug1;
+
+    UINT32 l_ret; 
+    BOOL fgauto = 0;
+    if(i4Argc != 3)
+    	{
+    	    LOG(0, "%s [clock(50M/162M/200M)] [auto cmd param(1/0)]\n", szArgv[0]);
+        return 0;
+    	}
+    	
+    maxclock = StrToInt(szArgv[1]);
+    LOG(0,"set max clock to (%d) M\n", maxclock);
+    
+    fgauto = StrToInt(szArgv[2]);
+    if(fgauto)
+    LOG(0,"use cmd parameter auto tuned\n");
+    else
+    	LOG(0,"use cmd parameter manual input\n");
+    	
+    	g_msdc_ett_debug1 = !fgauto;
+    
+    l_ret = msdc_test_init(0, 0);
+    
+    if (l_ret != 0){
+        LOG(0,"[%s %d][SD%d] card init failed(%d)\n", __func__, __LINE__, 0, l_ret);
+        return -1;
+    }
+    
+    if(!fgauto)
+    	{
+    		LOG(0,"please use cli cmd [manual_ett] to set [DAT_LATCH_CK_SEL] [CKGEN_DLY_SEL]\n");
+    		return 0;
+    	}
+ 
+    ett_cmd_test();   	
+    ett_write_test();
+    ett_read_test();
+     
+    
+    return 0;
+}
+static INT32 _MSDCCLI_ETT_MANUAL_TUNE(INT32 i4Argc, const CHAR ** szArgv)
+{
+
+	extern UINT32 g_msdc_ett_debug1_dat_latch_ck_sel;
+extern UINT32 g_msdc_ett_debug1_ckgen_dly_sel;
+extern UINT32 g_msdc_ett_debug1;
+    UINT32 l_ret; 
+    BOOL fgauto = 0;
+    if(i4Argc != 3)
+    	{
+    	    LOG(0, "%s [DAT_LATCH_CK_SEL] [CKGEN_DLY_SEL]\n", szArgv[0]);
+        return 0;
+    	}
+    	if(!g_msdc_ett_debug1)
+    	{
+    		  LOG(0, "it is not user debug mode\n");
+        return 0;
+    	}
+    	
+    g_msdc_ett_debug1_dat_latch_ck_sel = StrToInt(szArgv[1]);
+    LOG(0,"set DAT_LATCH_CK_SEL to (%d)\n", g_msdc_ett_debug1_dat_latch_ck_sel);
+    
+    g_msdc_ett_debug1_ckgen_dly_sel = StrToInt(szArgv[2]);
+    LOG(0,"set CKGEN_DLY_SEL to (%d)\n", g_msdc_ett_debug1_ckgen_dly_sel);
+    
+    ett_cmd_test();
+     ett_write_test();
+     ett_read_test();
+     
+    
+    return 0;
+}
+
+
 #ifdef CC_MSDC_SDMMC_TEST
 static INT32 _MSDCCLI_RegisterTest(INT32 i4Argc, const CHAR ** szArgv)
 {
@@ -1418,6 +1563,7 @@ static CLI_EXEC_T arMsdcCmdTbl[] =
     DECLARE_G_CMD(_MSDCCLI_Write, write, w, "msdc.write"),
     DECLARE_G_CMD(_MSDCCLI_Erase, erase, e, "msdc.erase"),
     DECLARE_G_CMD(_MSDCCLI_Read_Perform, readperform, rp, "msdc.readperform"),	
+	DECLARE_G_CMD(_MSDCCLI_Write_BS, readBS, wBS, "msdc.writeBS"),
     DECLARE_G_CMD(_MSDCCLI_Write_Perform, writeperform, wpe, "msdc.writeperform"),
     DECLARE_G_CMD(_MSDCCLI_WriteProtect, writeprotect, wp, "msdc.writeprotect"),
 #ifdef CC_PARTITION_WP_SUPPORT
@@ -1429,6 +1575,8 @@ static CLI_EXEC_T arMsdcCmdTbl[] =
     DECLARE_G_CMD(_MSDCCLI_HS200Calibration, hs200calibration, hs200c, "msdc.hs200calibration"),
     DECLARE_G_CMD(_MSDCCLI_DDR50Calibration, ddr50calibration, ddr50c, "msdc.ddr50calibration"),
     DECLARE_G_CMD(_MSDCCLI_SDR50Calibration, sdr50calibration, sdr50c, "msdc.sdr50calibration"),
+    DECLARE_G_CMD(_MSDCCLI_ETT, ett, ett, "msdc.ett"),
+    DECLARE_G_CMD(_MSDCCLI_ETT_MANUAL_TUNE, manual_ett, manual_ett, "msdc.manual_ett"),  
 #ifdef CC_MSDC_SDMMC_TEST
     DECLARE_CMD(_MSDCCLI_RegisterTest, registertest, rt, "msdc.registertest"),
     DECLARE_CMD(_MSDCCLI_DetectionTest, detectiontest, dt, "msdc.detectiontest"), 

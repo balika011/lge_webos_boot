@@ -926,6 +926,7 @@ void vDrvGlobalPQAdj(void)
     UINT8 bPath, bOffset, bDemoModeOnOff = SV_OFF, bDemoToggle = SV_OFF;
     static UINT8 bpreDemoModeOnOff = 0xFF;
     UINT8 u1MatrixPQAdj = IO32ReadFldAlign(MATRIX_00, MATRIX_PQ_ADJ);
+	UINT8 u1Offset;
 
     for (bPath = SV_VP_MAIN; bPath < SV_VP_NA; bPath++)
     {
@@ -991,7 +992,7 @@ void vDrvGlobalPQAdj(void)
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_BRI) != u2Ext2AdjMatrix[bPath][PQ_BRIGHTNESS]) ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_06 + bOffset, EXT2_ADJ_CONT) != u2Ext2AdjMatrix[bPath][PQ_CONTRAST])  ||
                 (IO32ReadFldAlign(GLOBAL_ADJ_08 + bOffset, EXT2_ADJ_SAT) != u2Ext2AdjMatrix[bPath][PQ_SATURATION]) ||
-                bDemoToggle || (IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_LOAD) == SV_ON))
+                bDemoToggle)
             {                
                 vIO32WriteFldAlign(G_PIC_ADJ_MAIN_1, 
                     0x400 + ((IO32ReadFldAlign(GLOBAL_ADJ_00, BRIGHT_DUMMY) - 0x80) << IO32ReadFldAlign(SCE_REG_00, SCE_BRI_INTERVAL)), 
@@ -1003,6 +1004,28 @@ void vDrvGlobalPQAdj(void)
                 vIO32WriteFldAlign(G_PIC_ADJ_MAIN_2, IO32ReadFldAlign(GLOBAL_ADJ_02, SAT_DUMMY), SAT);
                 vIO32WriteFldAlign(G_PIC_ADJ_MAIN_1, IO32ReadFldAlign(GLOBAL_ADJ_02, CONT_DUMMY), CONTRAST);
 
+				u1Offset = (bPath == SV_VP_MAIN) ? 0 : 0x4;
+    
+				if (bPath >= SV_VP_NA)  //fix klockwork warning
+				{
+				    return;
+				}
+
+				u2PQItemMatrix[bPath][PQ_BRIGHTNESS] = IO32ReadFldAlign(GLOBAL_ADJ_00 + u1Offset, BRIGHT_DUMMY);
+				u2PQItemMatrix[bPath][PQ_CONTRAST] = IO32ReadFldAlign(GLOBAL_ADJ_02 + u1Offset, CONT_DUMMY);
+				u2PQItemMatrix[bPath][PQ_SATURATION] = IO32ReadFldAlign(GLOBAL_ADJ_02 + u1Offset, SAT_DUMMY);
+				u2PQItemMatrix[bPath][PQ_HUE] = IO32ReadFldAlign(GLOBAL_ADJ_00 + u1Offset, HUE_DUMMY);
+
+				u2ExtAdjMatrix[bPath][PQ_BRIGHTNESS] = IO32ReadFldAlign(GLOBAL_ADJ_04 + u1Offset, EXT_ADJ_BRI);
+				u2ExtAdjMatrix[bPath][PQ_CONTRAST] = IO32ReadFldAlign(GLOBAL_ADJ_04 + u1Offset, EXT_ADJ_CONT);
+				u2ExtAdjMatrix[bPath][PQ_SATURATION] = IO32ReadFldAlign(GLOBAL_ADJ_04 + u1Offset, EXT_ADJ_SAT);
+				u2ExtAdjMatrix[bPath][PQ_HUE] = IO32ReadFldAlign(GLOBAL_ADJ_04 + u1Offset, EXT_ADJ_HUE);
+
+				//--For fade in/fade out function
+				u2Ext2AdjMatrix[bPath][PQ_BRIGHTNESS] = IO32ReadFldAlign(GLOBAL_ADJ_06 + u1Offset, EXT2_ADJ_BRI);
+				u2Ext2AdjMatrix[bPath][PQ_CONTRAST] = IO32ReadFldAlign(GLOBAL_ADJ_06 + u1Offset, EXT2_ADJ_CONT);
+				u2Ext2AdjMatrix[bPath][PQ_SATURATION] = IO32ReadFldAlign(GLOBAL_ADJ_08 + u1Offset, EXT2_ADJ_SAT);
+
                 vDrvCalVideoColorMatrix(bPath, 0x80, 0x80, 0x80, 0x80);
                 // Blue stretch
                 if (bPath == SV_VP_MAIN)
@@ -1010,6 +1033,16 @@ void vDrvGlobalPQAdj(void)
                     vDrvSetBlueStretchBase();
                 }
             }
+
+			if(IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_LOAD) == SV_ON)
+			{
+				vDrvCalVideoColorMatrix(bPath, 0x80, 0x80, 0x80, 0x80);
+	            // Blue stretch
+	            if (bPath == SV_VP_MAIN)
+	            {
+	                vDrvSetBlueStretchBase();
+	            }
+        	}
         }
     }
 

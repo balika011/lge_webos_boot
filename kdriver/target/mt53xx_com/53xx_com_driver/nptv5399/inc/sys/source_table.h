@@ -89,8 +89,8 @@
  * Last changed:
  * -------------
  * $Author: p4admin $
- * $Revision: #4 $
- * $Date: 2015/01/20 $
+ * $Revision: #5 $
+ * $Date: 2015/01/22 $
  ****************************************************************************/
 #ifndef _SOURCE_TABLE_H_
 #define _SOURCE_TABLE_H_
@@ -129,6 +129,12 @@ typedef struct
 } RVideoSrcSelectVFEAVD;
 extern RVideoSrcSelectVFEAVD	_rVdoSrcVFEAVD[2];
 extern UINT8 _fVSCConnectVFEAVD;
+extern UINT8 _fVSCConnectVFEAVD;
+extern UINT8 _fVSCConnectVFEAVDMain;
+extern UINT8 _fVSCConnectVFEAVDSub;
+extern UINT8 _fVSCConnectVFEMainChannel;
+extern UINT8 _fVSCConnectVFESubChannel;
+
 #endif
 
 extern RVideoSrcSelect  _rVdoSrc[2];
@@ -183,6 +189,10 @@ typedef struct _source_detect_t
 #define _fVFEAVDSubICPin _rVdoSrcVFEAVD[1].ICInAVD
 
 #define _fVSCConnectAVD _fVSCConnectVFEAVD
+#define _fVSCConnectAVDMainDEC _fVSCConnectVFEAVDMain
+#define _fVSCConnectAVDSubDEC _fVSCConnectVFEAVDSub
+#define _fVSCConnectAVDMainChannelON _fVSCConnectVFEMainChannel
+#define _fVSCConnectAVDSubChannelON _fVSCConnectVFESubChannel
 
 extern UINT8 u1ADCConnentSrc;
 extern UINT8 u1ADCConnentSrcType;

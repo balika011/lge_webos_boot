@@ -148,6 +148,8 @@
 
 #define MSDC_DAT_RD_DLY0_SHIFT       (24)
 #define MSDC_DAT_RD_DLY0         (((UINT32)0x1F) << MSDC_DAT_RD_DLY0_SHIFT)
+#define MSDC_IOCON_W_D0SPL_SHIFT        (10)     
+#define MSDC_IOCON_W_D0SPL              (((UINT32)0x01) << MSDC_IOCON_W_D0SPL_SHIFT)
 
 
 /* MSDC_INT */
@@ -260,14 +262,18 @@
 #define DMA_CFG_GPD_CS_ERR              (((UINT32)0x01) << 5)
 
 /* PAD_TUNE */
-#define PAD_CLK_TXDLY_SHIFT        		(27)
-#define PAD_CLK_TXDLY              		(((unsigned int)0x1F) << PAD_CLK_TXDLY_SHIFT)
+#define PAD_CLK_TXDLY_SHIFT        		 (27)
+#define PAD_CLK_TXDLY              		 (((unsigned int)0x1F) << PAD_CLK_TXDLY_SHIFT)
 #define PAD_CMD_RESP_RXDLY_SHIFT        (22)
 #define PAD_CMD_RESP_RXDLY              (((unsigned int)0x1F) << PAD_CMD_RESP_RXDLY_SHIFT)
 #define PAD_DAT_RD_RXDLY_SHIFT          (8)
+#define PAD_CMD_RXDLY_SHIFT             (16)
+#define PAD_CMD_RXDLY                   (((unsigned int)0x1F) << PAD_CMD_RXDLY_SHIFT)
 #define PAD_DAT_RD_RXDLY                (((unsigned int)0x1F) << PAD_DAT_RD_RXDLY_SHIFT)
 #define PAD_DAT_WR_RXDLY_SHIFT          (0)
 #define PAD_DAT_WR_RXDLY                (((unsigned int)0x1F) << PAD_DAT_WR_RXDLY_SHIFT)
+#define MSDC_DAT_RDDLY0_D0_SHIFT        (24)
+#define MSDC_DAT_RDDLY0_D0              (((unsigned int)0x1F) << MSDC_DAT_RDDLY0_D0_SHIFT)
 
 /* EMMC_CFG0 */
 #define BTSUP                           (((UINT32)0x01) << 15)

@@ -96,7 +96,7 @@
  *
  * $Modtime: 04/05/17 6:55p $
  *
- * $Revision: #2 $
+ * $Revision: #3 $
 ****************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -295,7 +295,11 @@ PRIVATE void vInputVSyncISR(UINT8 bDecType)
     switch(bDecType)
     {
         case SV_VD_TVD3D:
-            vTvd3dVSyncISR();
+        #ifdef CC_SUPPORT_PIPELINE
+		     //to do;
+        #else
+			vTvd3dVSyncISR();
+        #endif
             break;
 
         case SV_VD_YPBPR:
@@ -547,6 +551,23 @@ void vVdoInISR(void)
 #endif
     }
 
+     
+#ifdef CC_SUPPORT_PIPELINE
+	 if(_fVSCConnectAVDMainChannelON == SV_ON)
+	 {
+		 vTvd3dVSyncISR();
+		 
+		 if(fgIsMainScart())
+		 {
+			 vSetSP0Flg(SP0_VGA_AUTO_FLG | SP0_AUTOCOLOR_FLG);
+		 }																							  
+ 
+		 vApiApplyVideoEvent(PEQTY_APPLY_TIME_INPUT_VSYNC_ISR);
+		 vDrvTdNaviAtInputISR();
+		 DRVCUST_VdoInISR();
+		 
+	 }
+#endif	
     // Call MainChannel Decoder Service Routine
     if(_rMChannel.bIsChannelOn == SV_ON)
     {
@@ -564,9 +585,7 @@ void vVdoInISR(void)
     }
 
     // VBI Interrupt Service Routine
-#ifdef CC_SUPPORT_PIPELINE
-    vTvd3dVSyncISR();
-#endif
+
 #if SUPPORT_VBI
     VBI_ISR();
 #endif

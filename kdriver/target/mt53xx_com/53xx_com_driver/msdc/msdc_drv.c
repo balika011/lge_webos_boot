@@ -581,6 +581,14 @@ void MsdcDrivingStrength(UINT32 driving)
     MSDC_SETBIT(SD30_PAD_CTL0, (((0x4)<<15) |((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
     MSDC_SETBIT(SD30_PAD_CTL1, (((0x4)<<15) |((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
     MSDC_SETBIT(SD30_PAD_CTL2, (((0x4)<<15) |((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));	
+	/*    MSDC_CLRBIT(SD30_PAD_CTL0, (0x7<<4) | (0x7<<0));
+    MSDC_CLRBIT(SD30_PAD_CTL1, (0x7<<4) | (0x7<<0));
+    MSDC_CLRBIT(SD30_PAD_CTL2, (0x7<<4) | (0x7<<0));	
+
+    MSDC_SETBIT(SD30_PAD_CTL0, (((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
+    MSDC_SETBIT(SD30_PAD_CTL1, (((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));
+    MSDC_SETBIT(SD30_PAD_CTL2, (((driving>>3)&0x7)<<4) | ((driving&0x7)<<0));	
+	*/
 #endif
 
 #if defined(CC_MT5890) || defined(CONFIG_ARCH_MT5890)

@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #7 $
+* $Revision: #8 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4316,8 +4316,8 @@ static void _svDrvTvdModeChgDone(void)
     _svDrvTvdUpdateActiveWH();
     
 #ifdef CC_SUPPORT_PIPELINE
-	//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	_fVSCConnectAVD=0x1;
+	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	//_fVSCConnectAVD=0x1;
 	if(_fVSCConnectAVD)
 	{
 		if(fgIsMainTvd3d())
@@ -4780,8 +4780,8 @@ static void _svDrvTvdModeChg(void)
 #endif
         
 		#ifdef CC_SUPPORT_PIPELINE
-		//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-		_fVSCConnectAVD=0x1;
+		_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+		//_fVSCConnectAVD=0x1;
 		if(_fVSCConnectAVD)
 		{
 			if(fgIsMainTvd3d())
@@ -8472,8 +8472,8 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
 
     vTvd3dTrigModeDet();
 #ifdef CC_SUPPORT_PIPELINE
-	//_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	_fVSCConnectAVD=0x1;
+	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	//_fVSCConnectAVD=0x1;
 	if(_fVSCConnectAVD)
     {
 		if(fgIsMainTvd3d())
@@ -10013,7 +10013,7 @@ void vTvdSetPorch(UINT8 bPorchType, UINT16 wValue)
  */
 void vDrvTvdQueryStatus(void)
 {
-    LOG(0, "VPRES(%d) Mode(%ld) 525(%ld) 443(%ld) PHA(%ld) MMode(%d) NA(%ld) NA_Lvl(%ld) RF_Lvl(%d) vpres(%d)\n",
+    LOG(0, "VPRES(%d) Mode(%ld) 525(%ld) 443(%ld) PHA(%ld) MMode(%d) NA(%ld) NA_Lvl(%ld) RF_Lvl(%d)\n",
            fgHwTvdVPres(),
            bHwTvdMode(),
            fgHwTvd525(),
@@ -10022,9 +10022,17 @@ void vDrvTvdQueryStatus(void)
            fgHwTvdIsMMode(),
            bHwTvdNAState(),
            bHwTvdNRLevel(),
-           _svDrvTvdGetNRLevel(),
-           _rTvd3dStatus.fgVPres
+           _svDrvTvdGetNRLevel()
           );
+
+    LOG(0, "fgVPres(%d) wTvdWidth(%d) wTvd3dHeight(%d) bIsMain(%d) wTvdHTotal(%d) wTvdVTotal(%d).\n",
+			_rTvd3dStatus.fgVPres,
+			wTvdWidth(),
+			wTvd3dHeight(),
+			_rTvd3dStat.bIsMain,
+			wTvdHTotal(),
+			wTvdVTotal()
+	      );
     LOG(0, "MV(%d,%ld,%ld) CoCh(%ld) Scan(%d) VLock(%ld) VLen(%ld) HLock(%d) HsyncLock(%d) VCR_BV(%d)\n",
            fgHwTvdIsMacroVision(),fgHwTvdIsPSync(),fgHwTvdIsCSTRIPE(),
            fgHwTvdCoChannel(),

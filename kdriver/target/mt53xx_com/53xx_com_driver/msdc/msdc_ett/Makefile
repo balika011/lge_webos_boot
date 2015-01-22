@@ -74,9 +74,6 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #1 $
-# $Date: 2009/02/01 $
-# $Author: joshuahuang $
 #
 # Description:
 #         Leave-level makefile to build the subcomponent of driver library.
@@ -84,58 +81,22 @@
 #         Specify the source files to be compile in SRC.
 #############################################################################
 
-THIS_COMPONENT = msdc
-
-ifeq "$(UBOOT_LIBRARY)" "y"
-
-include $(TOPDIR)/config.mk
-
-CPPFLAGS += -I$(TOPDIR)/board/$(BOARDDIR)/drv_lib/drv_inc -I$(TOPDIR)/board/$(BOARDDIR)/drv_lib/inc
-CFLAGS += -I$(TOPDIR)/board/$(BOARDDIR)/drv_lib/drv_inc -I$(TOPDIR)/board/$(BOARDDIR)/drv_lib/inc
-CPPFLAGS += -I$(TOPDIR)/board/$(BOARDDIR)/include -I$(OSAI_INC)
-CFLAGS += -I$(TOPDIR)/board/$(BOARDDIR)/include -I$(OSAI_INC)
-
-LIB	= lib$(THIS_COMPONENT).a
-
-OBJS	:= msdc_part.o
-
-SOBJS	:= 
-
-$(LIB):	$(OBJS) $(SOBJS)
-	$(AR) crv $@ $^
-
-clean:
-	rm -f $(SOBJS) $(OBJS)
-
-distclean:	clean
-	rm -f $(LIB) core *.bak .depend
-
-#########################################################################
-
-.depend:	Makefile $(SOBJS:.o=.S) $(OBJS:.o=.c)
-		$(CC) -M $(CPPFLAGS) $(SOBJS:.o=.S) $(OBJS:.o=.c) > $@
-
--include .depend
-
-else # UBOOT_LIBRARY
+THIS_COMPONENT = msdcett
 
 ifdef LINUX_DRV_ROOT
 export DRV_ROOT = $(LINUX_DRV_ROOT)
 else
-export DRV_ROOT = ../..
+export DRV_ROOT = ../../..
 endif
 
-SRC = msdc_ext.c msdc_drv.c msdc_if.c msdc_part.c
 
-SRC += msdc_test.c
+SRC = msdc_cmd_ett.c msdc_cmd_tx_ett.c msdc_emmc50_ett.c msdc_ett.c msdc_read_ett.c msdc_write_ett.c msdc_write_tx_ett.c
 
-ifdef CC_MSDC_SDIO_TEST
-SRC += msdc_sdio.c
-endif
+
 
 OBJ =
 
-SUB_COMPONENTS = msdc_ett
+SUB_COMPONENTS =
 
 OPTIONAL_SUB_COMPONENTS =
 
@@ -143,14 +104,11 @@ DEFINES +=
 
 CC_INC +=
 
-
 #############################################################################
 #
 # Include the makefile common to all components
 #
 
+# include $(DRV_ROOT)/common.mak
 include $(DRV_ROOT)/driver.mak
-
-
-endif # UBOOT_LIBRARY
 

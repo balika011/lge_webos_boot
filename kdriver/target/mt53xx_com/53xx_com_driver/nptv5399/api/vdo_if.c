@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/22 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -810,12 +810,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		}
 	}
 
-	if(((fgMainCh== TRUE) && (bGetSignalType(SV_VP_MAIN) != SV_ST_TV) && (bGetSignalType(SV_VP_MAIN) != SV_ST_MPEG) && (bGetSignalType(SV_VP_MAIN) != SV_ST_MAX))||
-	   ((fgPipCh== TRUE)&& (bGetSignalType(SV_VP_PIP) != SV_ST_TV)&& (bGetSignalType(SV_VP_PIP) != SV_ST_MPEG) && (bGetSignalType(SV_VP_PIP) != SV_ST_MAX)))
-	{
-		_fgAutoSearch = FALSE;
-	}
-
 	if(bMainSrc == SV_VS_MAX)
 	{
 		_rMChannel.bIsChannelOn = SV_OFF;
@@ -825,9 +819,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	else
 	{
 		_rMChannel.bIsChannelOn = SV_ON;
-	#ifdef CC_DEMOD_FASTACQ
-		fgApiEepromWriteByte(EEP_DEMOD_FASTBOOT_LASTSRC,bMainSrc);		
-	#endif
+
 #if 1 // defined(CC_FAST_INIT)
 
 		//if(!b_boot_rec_once)
@@ -854,16 +846,8 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_rPChannel.bIsChannelOn = SV_ON;
 	}
 
-	/* disconnect unused internal mux */
-	vMuxCleanup();
-	vDrvSetExternalMux(_bSrcMainNew, _bSrcSubNew);
-
 	if(fgMainCh)
 	{
-		if((_bSrcMainNew != _bSrcSubNew) || (fgPipCh))
-		{
-			vDrvSetInternalMux(0,_bSrcMainNew);
-		}
 		vSetMOutMux(bNewMainDec);
 	}
 
@@ -878,21 +862,13 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 
 	if(fgPipCh)
 	{
-		if((_bSrcMainNew != _bSrcSubNew) || (fgMainCh))
-		{
-			vDrvSetInternalMux(1,_bSrcSubNew);
-		}
 		vSetSOutMux(bNewSubDec);
 	}
-
-	// MDisableMainINT();
 
 	if(fgMainCh)
 	{
 		_rMChannel.bDecType = bNewMainDec;
-
 		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
-
 		vSetMainFlg(MAIN_FLG_MODE_CHG);
 		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
 	}
@@ -900,9 +876,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	if(fgPipCh)
 	{
 		_rPChannel.bDecType = bNewSubDec;
-
 		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
-		
 		vSetPipFlg(PIP_FLG_MODE_CHG);
 		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
 	}
@@ -937,6 +911,7 @@ UINT8 bApiVideoSetVideoSrc(UINT8 bPath, UINT8 bSrc)
 	#else
 	//to do
 	#endif
+	
     LOG(0, "00000ApiVideoSetVideoSrc(%d, %d)\n", (UINT32)bPath, (UINT32)bSrc);
 
     if(bPath == SV_VP_MAIN)	//check the real source
@@ -977,6 +952,12 @@ UINT8 bApiVideoMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc)
     BOOL fgPipCh = FALSE;
     BOOL fgMainCombi;
     BOOL fgSubCombi;
+
+	#ifdef CC_SUPPORT_PIPELINE
+	return 1;  //for new pipeline test
+	#else
+	//to do
+	#endif
 
 #ifndef CC_UP8032_ATV
     VERIFY(x_sema_lock(_hMainSubSrcSemaphore, X_SEMA_OPTION_WAIT) == OSR_OK);
@@ -1495,6 +1476,10 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
         _fVFEAVDSourceSubOld = bSubSrc;
 	    _fVFEAVDMainICPin = NewExtInput.MapIntMode >> 8;
 	    _fVFEAVDSubICPin = NewExtInput.MapIntMode & 0xff;
+		 _fVSCConnectAVDMainChannelON = SV_ON;
+		_fVSCConnectAVDSubChannelON= SV_ON;
+        _fVSCConnectAVDMainDEC = SV_VD_TVD3D;
+		_fVSCConnectAVDSubDEC= SV_VD_TVD3D;
        
     }
 	LOG(0, "11111bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",

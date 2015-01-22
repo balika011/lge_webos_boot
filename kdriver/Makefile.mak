@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #12 $
-# $Date: 2015/01/21 $
+# $Revision: #13 $
+# $Date: 2015/01/22 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -348,12 +348,12 @@ ifeq "$(BOOT_TYPE)" "ROM2EMMC"
         export KERNEL_CONFIG_DIFF += msdc_common
         endif
     endif
-    export SDMMC_SUPPORT  := true
+    export SDMMC_SUPPORT  := false
     export EXT_FS_SUPPORT := true
 else
     export SYS_IMG_FS     := ubifs
     export UBIFS          := true
-    export SDMMC_SUPPORT  := true
+    export SDMMC_SUPPORT  := false
 endif
 
 ifeq "$(SDMMC_SUPPORT)" "true"
