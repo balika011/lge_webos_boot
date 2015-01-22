@@ -1022,11 +1022,13 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	    }
 #endif
 	}
+	#if defined(CONFIG_MULTICORES_PLATFORM)
 	//IO_WRITE32(0xf0008000, 0x2c, 0x42000000);
 	extern void thread_start(void);
 	thread_start();
-
+	#else
 	fast_boot();
+	#endif
 #endif
 
 #if !defined(CONFIG_FAST_BOOT) || defined(CONFIG_SUPPORT_ETHERNET)
