@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/22 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -752,9 +752,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 
 UINT8 bApiVFESetMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc)
 {
-	static UINT8 bOldMainDec = 0xff;
-	static UINT8 bOldSubDec = 0xff;
-	UINT8 bNewMainDec, bNewSubDec;
 	ExtInputTable NewExtInput;
 	BOOL fgMainCombi;
 	BOOL fgSubCombi;
