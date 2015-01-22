@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/22 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -604,75 +604,48 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 
 }
 
+UINT8 bApiDecTypeMapping(UINT8 bSrc)
+{
+	if(bSrc == VSC_DEC_AVD)
+	{
+		return SV_VD_TVD3D;
+	}
+	else if(bSrc == VSC_DEC_ADC)
+	{
+		return SV_VD_YPBPR;
+	}
+	else if(bSrc == VSC_DEC_HDMI)
+	{
+		return SV_VD_DVI;
+	}
+	else if(bSrc == VSC_DEC_VDEC)
+	{
+		return SV_VD_MPEGHD;
+	}
+	else
+	{
+		return SV_VD_NA;
+	}
+}
 
 UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Type)
 {
 	UINT8 bStatus;
 	
 	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
-	if(bPath == SV_VP_MAIN)
-	{
-		if(bSrc == VSC_DEC_AVD)
-		{
-		   bSrc = _fVFEAVDSourceMainNew;
-		}
-		else if(bSrc == VSC_DEC_ADC)
-		{
-			
-		}
-		else if(bSrc == VSC_DEC_HDMI)
-		{
-		}
-		else if(bSrc == VSC_DEC_VDEC)
-		{
-		
-		}
-		else if(bSrc == VSC_DEC_JPEG)
-		{
-			
-		}
-		else
-		{
-			
-		}
-	}
-	else
-	{
-		if(bSrc == VSC_DEC_AVD)
-		{
-		   bSrc = _fVFEAVDSourceSubNew;
-		}
-		else if(bSrc == VSC_DEC_ADC)
-		{
-			
-		}
-		else if(bSrc == VSC_DEC_HDMI)
-		{
-		}
-		else if(bSrc == VSC_DEC_VDEC)
-		{
-		
-		}
-		else if(bSrc == VSC_DEC_JPEG)
-		{
-			
-		}
-		else
-		{
-			
-		}	
-	}
+
+	bSrc = bApiDecTypeMapping(bSrc);
 
 	if(u4Type == 1)//connect source
 	{
 		if(bPath == SV_VP_MAIN)	//check the real source
 	    {
-	        bStatus = bApiVSCMainSubSrc(bSrc, SV_VS_NO_CHANGE, bEnable);
+	        bStatus = bApiVSCMainSubSrc(bSrc, VSC_DEC_NO_CHANGE, bEnable);
 
 	    }
 	    else
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, bSrc, bEnable);
+	        bStatus = bApiVSCMainSubSrc(VSC_DEC_NO_CHANGE, bSrc, bEnable);
 	    }
 		
 	}
@@ -680,12 +653,12 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	{
 		if(bPath == SV_VP_MAIN)	//check the real source
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VS_MAX, SV_VS_NO_CHANGE, bEnable);
+	        bStatus = bApiVSCMainSubSrc(SV_VD_NA, VSC_DEC_NO_CHANGE, bEnable);
 
 	    }
 	    else
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, SV_VS_MAX, bEnable);
+	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, SV_VD_NA, bEnable);
 	    }	
 	}
 	return SV_SUCCESS;
@@ -697,19 +670,95 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	static UINT8 bOldMainDec = 0xff;
 	static UINT8 bOldSubDec = 0xff;
 	UINT8 bNewMainDec, bNewSubDec;
-	ExtInputTable NewExtInput;
 	BOOL fgMainCh = FALSE;
 	BOOL fgPipCh = FALSE;
+
+	if(bMainSrc == SV_VS_NO_CHANGE)
+	{
+		bMainSrc = bOldMainDec;
+	}
+
+	if(bSubSrc == SV_VS_NO_CHANGE)
+	{
+		bSubSrc = bOldSubDec;
+	}
+
+	bNewMainDec = bMainSrc;
+	bNewSubDec = bSubSrc;
+
+	u1VSCConnectStatus[SV_VP_MAIN] = bNewMainDec;
+	u1VSCConnectStatus[SV_VP_PIP] = bNewSubDec;
+
+	if(bNewMainDec != bOldMainDec)
+	{
+		fgMainCh = TRUE;
+	}
+
+	if(bNewSubDec != bOldSubDec)
+	{
+		fgPipCh = TRUE;
+	}
+
+	bOldMainDec = bNewMainDec;
+	bOldSubDec = bNewSubDec;
+
+	if(bMainSrc == VSC_DEC_MAXN)
+	{
+		_rMChannel.bIsChannelOn = SV_OFF;
+		_rMChannel.bDecType = SV_VD_NA;
+	}
+	else
+	{
+		_rMChannel.bIsChannelOn = SV_ON;
+	}
+
+	if(bSubSrc == VSC_DEC_MAXN)
+	{
+		_rPChannel.bIsChannelOn = SV_OFF;
+		_rPChannel.bDecType = SV_VD_NA;
+	}
+	else
+	{
+		_rPChannel.bIsChannelOn = SV_ON;
+	}
+
+	if(fgMainCh)
+	{
+		vSetMOutMux(bNewMainDec);
+	}
+
+	if(fgPipCh)
+	{
+		vSetSOutMux(bNewSubDec);
+	}
+
+	if(fgMainCh)
+	{
+		_rMChannel.bDecType = bNewMainDec;
+		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
+		vSetMainFlg(MAIN_FLG_MODE_CHG);
+		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+	}
+
+	if(fgPipCh)
+	{
+		_rPChannel.bDecType = bNewSubDec;
+		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
+		vSetPipFlg(PIP_FLG_MODE_CHG);
+		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
+	}
+	return SV_SUCCESS;
+}
+
+UINT8 bApiVFESetMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc)
+{
+	static UINT8 bOldMainDec = 0xff;
+	static UINT8 bOldSubDec = 0xff;
+	UINT8 bNewMainDec, bNewSubDec;
+	ExtInputTable NewExtInput;
 	BOOL fgMainCombi;
 	BOOL fgSubCombi;
 
-#ifndef CC_UP8032_ATV
-	VERIFY(x_sema_lock(_hMainSubSrcSemaphore, X_SEMA_OPTION_WAIT) == OSR_OK);
-	VERIFY(AD_AcquireControl()==OSR_OK);
-	VERIFY(BIM_DisableIrq(VECTOR_VDOIN));
-#else
-	vDisableSysInt2(VDOIN_INT_EN);
-#endif
 
 	if(bMainSrc ==SV_VS_NO_CHANGE)
 	{
@@ -762,130 +811,20 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 			_bMonSubNew = SV_VS_MAX;
 			_bSubMonICIn = (UINT8)P_FA;
 		}
-
-		/* Combi related behavior here */
-
-		if(_bSrcMainOld != bMainSrc)
-		{
-			fgMainCh = TRUE;
-			vApiVideoSetFixColorSpaceMode(SV_VP_MAIN,SV_FIXCOLORSPACE_OFF);
-			vDrvSwitchMTKGoodDclk(SV_OFF);
-		}
-
-		if(_bSrcSubOld != bSubSrc)
-		{
-			fgPipCh = TRUE;
-			vApiVideoSetFixColorSpaceMode(SV_VP_PIP,SV_FIXCOLORSPACE_OFF);
-		}
-         
+   
 		_bSrcMainNew = bMainSrc;
 		_bSrcMainOld = bMainSrc;
 		_bSrcSubNew = bSubSrc;
 		_bSrcSubOld = bSubSrc;
 		_bMainICIn = NewExtInput.MapIntMode >> 8;
 		_bSubICIn = NewExtInput.MapIntMode & 0xff;
-		bNewMainDec = bGetInternalDec(SV_VP_MAIN);
-		bNewSubDec = bGetInternalDec(SV_VP_PIP);
-
-		u1VSCConnectStatus[SV_VP_MAIN] = bNewMainDec;
-		u1VSCConnectStatus[SV_VP_PIP] = bNewSubDec;
-
-		if(bNewMainDec != bOldMainDec)
-		{
-			fgMainCh = TRUE;
-		}
-
-		if(bNewSubDec != bOldSubDec)
-		{
-			fgPipCh = TRUE;
-		}
-
-		bOldMainDec = bNewMainDec;
-		bOldSubDec = bNewSubDec;
-	   
-		if((!fgMainCh) && (!fgPipCh))
-		{
-			MainSubSrc_Biglock_Release();
-			return SV_NO_CHANGE;
-		}
 	}
 
-	if(bMainSrc == SV_VS_MAX)
-	{
-		_rMChannel.bIsChannelOn = SV_OFF;
-		_rMChannel.bDecType = SV_VD_NA;
-		//		  vDrvScpipWriteCtrl(SV_VP_MAIN,SV_OFF);
-	}
-	else
-	{
-		_rMChannel.bIsChannelOn = SV_ON;
-
-#if 1 // defined(CC_FAST_INIT)
-
-		//if(!b_boot_rec_once)
-		{
-		   
-#ifdef TIME_MEASUREMENT
-		   TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "bApiVideoMainSubSrc");
-		   TMS_DIFF_EX(TMS_FLAG_BOOT, TMS_COOL_BOOT_TIME, "bApiVideoMainSubSrc");
-#endif
-			x_os_drv_set_timestamp("bApiVideoMainSubSrc");
-			b_boot_rec_once = TRUE;
-		}
-#endif
-	}
-
-	if(bSubSrc == SV_VS_MAX)
-	{
-		_rPChannel.bIsChannelOn = SV_OFF;
-		_rPChannel.bDecType = SV_VD_NA;
-		//vDrvScpipWriteCtrl(SV_VP_PIP,SV_OFF);
-	}
-	else
-	{
-		_rPChannel.bIsChannelOn = SV_ON;
-	}
-
-	if(fgMainCh)
-	{
-		vSetMOutMux(bNewMainDec);
-	}
-
-#ifdef SUPPORT_AV_COMP_AUTO
-
-	if(fgMainCombi)
-	{
-		vDrvSetInternalMux(0,_bMonMainNew);
-	}
-
-#endif
-
-	if(fgPipCh)
-	{
-		vSetSOutMux(bNewSubDec);
-	}
-
-	if(fgMainCh)
-	{
-		_rMChannel.bDecType = bNewMainDec;
-		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
-		vSetMainFlg(MAIN_FLG_MODE_CHG);
-		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
-	}
-
-	if(fgPipCh)
-	{
-		_rPChannel.bDecType = bNewSubDec;
-		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
-		vSetPipFlg(PIP_FLG_MODE_CHG);
-		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
-	}
-
-#ifdef CC_SRM_ON
+	#ifdef CC_SRM_ON
 	SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_SOURCE + (UINT32)VDP_1), (UINT32)bMainSrc, 0);
 	SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_SOURCE + (UINT32)VDP_2), (UINT32)bSubSrc, 0);
-#endif
-	MainSubSrc_Biglock_Release();
+	#endif
+
 	return SV_SUCCESS;
 }
 #endif
