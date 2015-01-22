@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/21 $
+ * $Date: 2015/01/22 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2839,8 +2839,6 @@ EXTERN void DRVCUST_VUPSCaleCoeff(UINT8 bPath);
 EXTERN void DRVCUST_VideoInit(void);
 EXTERN void DRVCUST_VdoModeChgDone(UINT8 bPath);
 EXTERN void DRVCUST_VideoMainloop(void);
-EXTERN void DRVCUST_TDshpGMVYPatch(void);
-EXTERN void DRVCUST_InputCSCAdj(UINT8 bPath);
 EXTERN void DRVCUST_OutVSyncISR(void);
 EXTERN void DRVCUST_VdoInISR(void);
 EXTERN void DRVCUST_PostOutVSyncISR(void);

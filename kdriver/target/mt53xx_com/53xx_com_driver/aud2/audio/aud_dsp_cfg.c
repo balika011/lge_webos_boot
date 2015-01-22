@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/22 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -566,6 +566,7 @@ static UINT8 _u1Bbe3dGain=80;
 #ifdef CC_AUD_DDI
 static UINT8 SpdifSoundBarId = 0;
 static UINT8 SpdifSoundBarData = 0;
+UINT8 _u1SpdifRawDec = AUD_DEC_MAIN; 
 #endif
 
 static UINT8 u1HdevMode = 0;
@@ -2789,6 +2790,9 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 
     /* Get stream source and user setting */
     eStreamSrc = _aeStreamSrc[AUD_DEC_MAIN]; // only need to check main decoder
+#ifdef CC_AUD_DDI
+    eStreamSrc = _aeStreamSrc[_u1SpdifRawDec]; // only need to check main decoder
+#endif    
     if (eStreamSrc >= AUD_STREAM_FROM_NUM)
     {
         eStreamSrc = AUD_STREAM_FROM_OTHERS;
@@ -2824,6 +2828,10 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 #else
     eDecFormat = _AudGetStrFormat(AUD_DEC_MAIN);
 #endif
+#ifdef CC_AUD_DDI
+    eDecFormat = _AudGetStrFormat(_u1SpdifRawDec);
+#endif
+
     _gSetIecInfo.eDecFormat = eDecFormat;
 
     /* Convert IEC type for RAW type */
@@ -2905,6 +2913,23 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
             eRawSource = IEC_RAW_SRC_DEC3_ON; // dec1 on, dec2 off
         }
         #endif
+#ifdef CC_AUD_DDI
+        switch (_u1SpdifRawDec)
+        {
+        case AUD_DEC_MAIN:
+            eRawSource = IEC_RAW_SRC_DEC1_ON;
+            break;
+        case AUD_DEC_AUX:
+            eRawSource = IEC_RAW_SRC_DEC2_ON;
+            break;
+        case AUD_DEC_THIRD:
+            eRawSource = IEC_RAW_SRC_DEC3_ON;
+            break;
+        default:
+            eRawSource = IEC_RAW_SRC_DEC1_ON;
+            break; 
+        }
+#endif        
     }
 
     /*set HDMI */
@@ -12826,6 +12851,11 @@ void _AUD_DspGetSoundBarStatus(UINT8 *pId, UINT8 *pdata)
 {
     *pId = uReadShmUINT8(AUD_DSP0, B_IEC_SOUNDBAR_ID);
     *pdata = uReadShmUINT8(AUD_DSP0, B_IEC_SOUNDBAR_DATA);
+}
+
+void _AUD_UserSetSpdifRawDec(UINT8 u1DecId)
+{
+   _u1SpdifRawDec = u1DecId;
 }
 #endif
 
@@ -27184,13 +27214,13 @@ void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime)
     }
 }
 
-void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT8 u1DecId)
+void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL fgEnable)
 {
-    UINT32 u4Reg;
-    AUD_DEC_ID_VALIDATE(u1DecId);
+    UINT32 u4Reg, u4OutSelVal;
+
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
-    LOG(5, "%s, ouput_port = %d, DEC(%d)\n", __FUNCTION__, eAudioOutPort, u1DecId);
+    LOG(5, "%s, ouput_port = %d, DEC(%d)\n", __FUNCTION__, eAudioOutPort, u4OutSel);
     
     switch (eAudioOutPort)
     {
@@ -27215,12 +27245,32 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT8 u1DecId)
     case AUD_BLUETOOTH:
         u4Reg = APROC_REG_SEL_DSP_BT_IN;
         break;
+    case AUD_PORT_LGSE:
+        u4Reg = APROC_REG_SEL_LGSE_IN;
+        if (u4OutSel == APROC_OUT_SEL_LGSE)
+        {
+            LOG(0, "LGSE input cound be himself\n");
+            return;
+        }
+        break;        
     default:
         u4Reg = APROC_REG_SEL_DSP_SP_IN;
-        break;        
+        return;        
+    }
+
+    //NOTE: LGSE input could not be itself
+    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_SEL, u4Reg, &u4OutSelVal, 1);
+
+    if (fgEnable)
+    {
+        u4OutSelVal |= u4OutSel;
+    }
+    else
+    {
+        u4OutSelVal &= ~u4OutSel; 
     }
     
-    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, u4Reg, (UINT32 *)&u1DecId, 1);   
+    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, u4Reg, &u4OutSelVal, 1);   
 }
 #endif
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER) //#A0005

@@ -110,6 +110,7 @@
 #include "drv_upscaler.h"
 #include "hw_tdsharp.h"
 #include "hw_di_int.h"
+#include "drv_di.h"
 
 #if defined(CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
 #include "mtk_video_drv_4k2k.c"
@@ -858,60 +859,62 @@ void DRVCUST_VUPSCaleCoeff(UINT8 bPath)
     }
 }
 
+void DRVCUST_InputCSCAdj(UINT8 bPath)
+{
+	switch (bDrvVideoGetSourceTypeTiming(bPath))
+	{
+		case SOURCE_TYPE_TIMING_RFTV_PAL:
+		case SOURCE_TYPE_TIMING_RFTV_PAL_N:
+		case SOURCE_TYPE_TIMING_RFTV_PAL_M:
+		case SOURCE_TYPE_TIMING_RFTV_PAL_60:
+		case SOURCE_TYPE_TIMING_SECAM_RFTV:
+		case SOURCE_TYPE_TIMING_RFTV_NTSC_443:
+			//RF PAL 
+			vIO32WriteFldAlign(MATRIX_01, 0x1fe, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x22a, IN_C_GAIN);
+			break;
+		case SOURCE_TYPE_TIMING_RFTV_NTSC_358:
+			//RF N 
+			vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x209, IN_C_GAIN);
+			break;
+		case  SOURCE_TYPE_TIMING_CVBS_NTSC_358:
+		case  SOURCE_TYPE_TIMING_CVBS_NTSC_443:
+		case  SOURCE_TYPE_TIMING_CVBS_PAL:
+		case  SOURCE_TYPE_TIMING_CVBS_PAL_M:
+		case  SOURCE_TYPE_TIMING_CVBS_PAL_N:
+		case  SOURCE_TYPE_TIMING_CVBS_PAL_60:
+		case  SOURCE_TYPE_TIMING_SECAM_CVBS:
+			//CVBS 
+			vIO32WriteFldAlign(MATRIX_01, 0x206, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_C_GAIN);
+			break;
+		case SOURCE_TYPE_TIMING_SCART_RGB:			
+			//SCART 
+			vIO32WriteFldAlign(MATRIX_01, 0x1f7, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x1f5, IN_C_GAIN);
+			break;
+		default:
+			//bypass 
+			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_C_GAIN);
+			break;
+	}
+	vIO32WriteFldAlign(PEUI_00, SV_ON, PEUI_IN_CSC_MODE_CHANGE_M);
+
+}
+
 void DRVCUST_VdoModeChgDone(UINT8 bPath)
 {
    // UNUSED(bPath);
    DRVCUST_InputCSCAdj(bPath);
 }
 
-void DRVCUST_InputCSCAdj(UINT8 bPath)
-{
-	switch (bDrvVideoGetSourceTypeTiming(bPath))
-			{
-				case SOURCE_TYPE_TIMING_RFTV_PAL:
-				case SOURCE_TYPE_TIMING_RFTV_PAL_N:
-				case SOURCE_TYPE_TIMING_RFTV_PAL_M:
-				case SOURCE_TYPE_TIMING_RFTV_PAL_60:
-				case SOURCE_TYPE_TIMING_SECAM_RFTV:
-				case SOURCE_TYPE_TIMING_RFTV_NTSC_443:
-					//RF PAL 
-				   vIO32WriteFldAlign(MATRIX_01, 0x1fe, IN_Y_GAIN);
-				   vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
-				   vIO32WriteFldAlign(MATRIX_01, 0x22a, IN_C_GAIN);
-					break;
-				case SOURCE_TYPE_TIMING_RFTV_NTSC_358:
-					//RF N 
-				   vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_GAIN);
-				   vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_OFST);
-				   vIO32WriteFldAlign(MATRIX_01, 0x209, IN_C_GAIN);
-					break;
-				case  SOURCE_TYPE_TIMING_CVBS_NTSC_358:
-				case  SOURCE_TYPE_TIMING_CVBS_NTSC_443:
-				case  SOURCE_TYPE_TIMING_CVBS_PAL:
-				case  SOURCE_TYPE_TIMING_CVBS_PAL_M:
-				case  SOURCE_TYPE_TIMING_CVBS_PAL_N:
-				case  SOURCE_TYPE_TIMING_CVBS_PAL_60:
-				case  SOURCE_TYPE_TIMING_SECAM_CVBS:
-					//CVBS 
-				   vIO32WriteFldAlign(MATRIX_01, 0x206, IN_Y_GAIN);
-				   vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_OFST);
-				   vIO32WriteFldAlign(MATRIX_01, 0x200, IN_C_GAIN);
-					break;
-				case SOURCE_TYPE_TIMING_SCART_RGB:			
-					//SCART 
-				   vIO32WriteFldAlign(MATRIX_01, 0x1f7, IN_Y_GAIN);
-				   vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
-				   vIO32WriteFldAlign(MATRIX_01, 0x1f5, IN_C_GAIN);
-					break;
-				default:
-					//bypass 
-				   vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_GAIN);
-				   vIO32WriteFldAlign(MATRIX_01, 0x200, IN_Y_OFST);
-				   vIO32WriteFldAlign(MATRIX_01, 0x200, IN_C_GAIN);
-					break;
-			}
-
-}
 
 
 #include "drv_display.h"
@@ -930,6 +933,101 @@ UINT8 DRVCUST_GetRealCinema(void)
 {
     return bIsRealCinema;
 }
+
+void DRVCUST_TDshpGMVYPatch(){
+	 static UINT8 u1State;
+	 static UINT8 u1GmvX;
+	 static UINT8 u1GmvY;
+	 static UINT8 u1GmvCnt;
+	 static UINT8 u1CombiGain;
+	 static UINT8 u1PreCombiGain;
+	 static UINT8 u1ModCombiGain;
+
+
+	 static UINT16 u2HistCnt;	
+	 static UINT16 u2NonZeroCnt;
+
+	 static UINT32 u4CbValue;
+	 static UINT32 u4CrValue;
+	 static UINT32 u4GmvCntTH;
+	 static UINT32 u4HEdgeCnt;
+	 static UINT32 u4VEdgeCnt;
+	 static UINT32 u4EdgeSum;
+
+	if(IO32ReadFldAlign(TDS_ADAP_00, TDS_ADAP_GMV_EN))
+	{
+		u4GmvCntTH = IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GMV_CNT_TH);
+		u1CombiGain =IO32ReadFldAlign(SHARP_27,SHP_COMBINED_GAIN);
+
+		u1GmvX = IO32ReadFldAlign(MCVP_CS_28, GMV_MVX);
+		u2HistCnt = IO32ReadFldAlign(MCVP_CS_27, HIST_CNT);
+		u4HEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_HOR_EDGE_CNT);
+		u4VEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_VER_EDGE_CNT);
+		u4EdgeSum =  u4HEdgeCnt + u4VEdgeCnt ;
+		u2NonZeroCnt = IO32ReadFldAlign(MCVP_CS_29, CS_NON_ZERO_CNT);
+		u4CbValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CB);
+		u4CrValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CR);
+		
+		if(u1ModCombiGain != u1CombiGain)
+		{
+			u1PreCombiGain = u1CombiGain;
+		}
+
+		if(u1GmvY !=IO32ReadFldAlign(MCVP_CS_28, GMV_MVY))
+		{
+
+			u1GmvY = IO32ReadFldAlign(MCVP_CS_28, GMV_MVY);
+			u1GmvCnt=0;   
+		}
+		else
+		{
+			u1GmvCnt = (u1GmvCnt < u4GmvCntTH) ? u4GmvCntTH : u1GmvCnt+1 ;
+		}
+
+		vIO32WriteFldAlign(TDS_ADAP_02, u1GmvCnt, TDS_ADAP_GMVY_CNT_TH);
+
+		if(IS_SD_TIMING(VDP_1)) 
+		{//SD
+			if((u1GmvY >10))
+			{
+				u1ModCombiGain = (u1ModCombiGain > (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN))) ?
+								  u1ModCombiGain-1 : (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN));
+			}
+			else
+			{
+				u1ModCombiGain = (u1ModCombiGain< u1PreCombiGain) ? u1ModCombiGain+1 : u1PreCombiGain;
+			}
+		}
+		else if((bDrvVideoGetTiming(VDP_1) == MODE_1080i) 
+				|| (bDrvVideoGetTiming(VDP_1) == MODE_1080i_50))
+		{//HD
+			if((u1GmvX != 0) && (u2NonZeroCnt>15) && (u2NonZeroCnt<26) && (u2HistCnt > 1500)
+			&&(u4VEdgeCnt > 4000) && (u4EdgeSum > 6000)
+			&&((u4CbValue>520) && (u4CbValue<550) && (u4CrValue>470) && (u4CrValue<500)))
+			{
+				u1ModCombiGain = (u1ModCombiGain > (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN))) ?
+								 u1ModCombiGain-1 : (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN));
+
+			}
+			else
+			{  
+				u1ModCombiGain = (u1ModCombiGain< u1PreCombiGain) ? u1ModCombiGain+1 : u1PreCombiGain;
+			}
+		}	
+
+
+		vIO32WriteFldAlign(SHARP_27, u1ModCombiGain, SHP_COMBINED_GAIN);
+		u1State =1;
+	}
+	else if(u1State ==1)
+	{
+		vIO32WriteFldAlign(SHARP_27, u1PreCombiGain,SHP_COMBINED_GAIN);
+		u1State=0;
+	} 
+	
+
+}
+
 void DRVCUST_VideoMainloop()
 {
     DRVCUST_AdaptiveBacklightProc();
@@ -944,63 +1042,7 @@ void DRVCUST_VideoMainloop()
 	DRVCUST_TDshpGMVYPatch();
 
 }
-void DRVCUST_TDshpGMVYPatch(){
-    static UINT8 _u1State;
-      static UINT8 _u1GmvY;
-      static UINT8 _u1GmvCnt;
-      static UINT8 _u1PreCombiGain;
-      static UINT8 _u1ModCombiGain;
-      static UINT8 u1CombiGain;
-      static UINT32 u4GmvCntTH;
-     
-    
-       if (IO32ReadFldAlign(TDS_ADAP_00, TDS_ADAP_GMV_EN))
-           {
-           
-                       u4GmvCntTH = IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GMV_CNT_TH);
-                       
-                       u1CombiGain =IO32ReadFldAlign(SHARP_27,SHP_COMBINED_GAIN);
-                       if (_u1ModCombiGain !=u1CombiGain)
-                       {
-                           _u1PreCombiGain = u1CombiGain;
-                       }
-           
-                       if (_u1GmvY !=IO32ReadFldAlign(MCVP_CS_28, GMV_MVY))
-                       {
-                            _u1GmvY = IO32ReadFldAlign(MCVP_CS_28, GMV_MVY);
-                            _u1GmvCnt=0;   
-                       }
-                       else
-                       {
-                           _u1GmvCnt = (_u1GmvCnt < u4GmvCntTH) ? u4GmvCntTH : _u1GmvCnt+1 ;
-                       }
-    
-                        vIO32WriteFldAlign(TDS_ADAP_02, _u1GmvCnt, TDS_ADAP_GMVY_CNT_TH);
-                        
-                        vIO32WriteFldAlign(TDS_ADAP_02, _u1GmvY, TDS_ADAP_GMVY);
-                      
-                       if (_u1GmvY >10)
-                       {
-                          
-                           _u1ModCombiGain = (_u1ModCombiGain > (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN))) ? _u1ModCombiGain-1 : (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN));
-                       }
-                       else
-                       {  
-                            _u1ModCombiGain = (_u1ModCombiGain< _u1PreCombiGain) ? _u1ModCombiGain+1 : _u1PreCombiGain;
-                       }
-                       
-                       vIO32WriteFldAlign(SHARP_27, _u1ModCombiGain, SHP_COMBINED_GAIN);
-           
-                       _u1State =1;
-                   }
-                   else if (_u1State ==1)
-                   {
-                       vIO32WriteFldAlign(SHARP_27, _u1PreCombiGain,SHP_COMBINED_GAIN);
-                       _u1State=0;
-                } 
 
-
-}
 
 void DRVCUST_OutVSyncISR()
 {

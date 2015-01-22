@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/01/22 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -592,8 +592,25 @@ typedef enum
     AUD_MONITOR_SCART,
     AUD_TV_SCART,
     AUD_BLUETOOTH,
+    AUD_PORT_LGSE,
     AUD_OUT_PORT_NUM
 } AUD_OUT_PORT_T;
+
+typedef enum
+{
+    APROC_OUT_SEL_DEC0 =  0x00000001,
+    APROC_OUT_SEL_DEC1 =  0x00000002,
+    APROC_OUT_SEL_DEC2 =  0x00000004,
+    APROC_OUT_SEL_MIX0 =  0x00000100,
+    APROC_OUT_SEL_MIX1 =  0x00000200,
+    APROC_OUT_SEL_MIX2 =  0x00000400,
+    APROC_OUT_SEL_MIX3 =  0x00000800,
+    APROC_OUT_SEL_MIX4 =  0x00001000,
+    APROC_OUT_SEL_MIX5 =  0x00002000,
+    APROC_OUT_SEL_MIX6 =  0x00004000,
+    APROC_OUT_SEL_MIX7 =  0x00008000,
+    APROC_OUT_SEL_LGSE =  0x80000000,
+} APROC_OUT_SEL_T;
 
 typedef void (*CODEC_INIT)(void);
 typedef void (*CODEC_MUTE)(UINT8 u1DacId, BOOL fgMute);
@@ -3577,7 +3594,8 @@ typedef enum
     AUD_USER_SET_MIX_INPUT_VOL,
     AUD_USER_SET_MIX_OUTPUT_VOL,
     AUD_USER_SET_DEC_INPUT_DELAY,
-    AUD_USER_SET_DEC_OUT_CTRL, 
+    AUD_USER_SET_DEC_OUT_CTRL,
+    AUD_USER_SET_SPDIF_RAW_DEC,
     AUD_USER_SET_CMD_NUM
 }AUD_USER_SET_CMD_T;
 
@@ -5281,6 +5299,9 @@ typedef enum {
     APROC_REG_SEL_MIXSND1_MIX_IN,
     APROC_REG_SEL_UPLOAD1_IN,
     APROC_REG_SEL_ENC_IN,
+    APROC_REG_SEL_UPLOAD0_IN,
+    APROC_REG_SEL_UPLOAD2_IN,    
+    APROC_REG_SEL_LGSE_IN, //for LGSE input
     APROC_REG_SEL_NUM
 } APROC_ASM_ID_SEL0_T;
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/15 $
+ * $Date: 2015/01/22 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6925,6 +6925,7 @@ void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
 #else
 void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
 {
+#if 0    
     UINT32 u4Reg;
     if((u1DecId != AUD_DEC_MAIN) &&  (u1DecId != AUD_DEC_AUX))
     {
@@ -6946,6 +6947,7 @@ void AUD_Aproc_OutCtrl(UINT8 u1DecId, APROC_MW_CTRL_T* arMwCtrl)
     default:
         break; 
     } 
+#endif    
 }
 
 #endif
@@ -7182,7 +7184,10 @@ void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
         _AUD_UserSetDecInputDelay(u4Index, u4Arg1);
         break;
     case AUD_USER_SET_DEC_OUT_CTRL:
-        _AUD_UserSetDecOutCtrl((AUD_OUT_PORT_T)u4Index, u4Arg1);
+        _AUD_UserSetDecOutCtrl((AUD_OUT_PORT_T)u4Index, u4Arg1, (BOOL)u4Arg2);
+        break;
+    case AUD_USER_SET_SPDIF_RAW_DEC:
+        _AUD_UserSetSpdifRawDec(u4Index);
         break;
 #endif
 #endif 

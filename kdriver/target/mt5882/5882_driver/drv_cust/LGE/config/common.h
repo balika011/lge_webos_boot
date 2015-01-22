@@ -197,7 +197,7 @@
  * default VGA table
 */
 #ifndef VGA_INCLUDE_FILE
-#define VGA_INCLUDE_FILE                    "mtk/mtk_vga.h"
+#define VGA_INCLUDE_FILE                    "LGE/mtk_vga.h"
 #endif
 
 //----------------------------------------------------------------------------

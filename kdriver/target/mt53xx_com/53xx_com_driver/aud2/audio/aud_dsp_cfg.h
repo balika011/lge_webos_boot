@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/01/22 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -442,6 +442,7 @@ extern void _AUD_DspSetIEC(UINT8 u1DecId);
 extern void _AUD_DspSetSoundBarOnOff(BOOL fgOnOff);
 extern void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo);
 extern void _AUD_DspGetSoundBarStatus(UINT8 *pId, UINT8 *pdata);
+extern void _AUD_UserSetSpdifRawDec(UINT8 u1DecId); 
 #endif
 #ifdef CC_AUD_MIXSOUND_SUPPORT
 extern void _AUD_DspMixSndEnable(BOOL fgEnable);
@@ -873,7 +874,7 @@ extern void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1Fin
 extern void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol, 
                     UINT8 u1LeftFineVol, UINT8 u1RightMainVol, UINT8 u1RightFineVol);
 extern void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime);
-extern void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT8 u1DecId); 
+extern void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL fgEnable); 
 #endif
 #endif
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
