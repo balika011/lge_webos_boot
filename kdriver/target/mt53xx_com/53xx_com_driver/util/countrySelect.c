@@ -119,10 +119,13 @@ void SetTargetCountry(UINT32 u4Country)
 
 UINT32 GetTargetCountry(void)
 {
+#if 0
     static UINT8 u1Init = 0 ;
+#endif
 
     #ifndef COUNTRY_FROM_EEPROM
     {
+        #if 0 //no need ,because hal would init  _u4TargetCountry
         if (u1Init == 0)
         {
             UINT32 u4Country;
@@ -149,6 +152,7 @@ UINT32 GetTargetCountry(void)
             }
             u1Init = 1;
         }
+		#endif
     }
     #else  //COUNTRY_FROM_EEPROM
     {
