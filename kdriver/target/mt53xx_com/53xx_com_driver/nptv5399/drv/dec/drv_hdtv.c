@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/23 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1832,6 +1832,7 @@ void vHdtvSetModeCHG(void)
 
 void vHdtvSetModeDone(void)
 {
+	DBG_Printf(DBG_MDET, "_bHdtvModeChged%d  _bHdtvTiming%d _IsHdtvDetectDone%d\n",_bHdtvModeChged,_bHdtvTiming,_IsHdtvDetectDone);
     if(!_bHdtvModeChged)
     {
         return ;
@@ -1854,6 +1855,12 @@ void vHdtvSetModeDone(void)
         vSetPipFlg(PIP_FLG_MODE_DET_DONE);
         DBG_Printf(DBG_MDET, "Pip Mode Donel\n");
     }
+	#ifdef CC_SUPPORT_PIPELINE
+	if(fgIsMainYPbPr() && bApiQuearyVSCConnectStatus(0)!=SV_VD_YPBPR && bApiQuearyVSCConnectStatus(1)!=SV_VD_YPBPR )
+	{
+		 vDrvEnableBlankLevelAdjust();
+	}
+	#endif
     _bHdtvModeChged = 0 ;
 }
 
