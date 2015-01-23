@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/23 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1592,6 +1592,16 @@ BOOL TZ_HDCP2_SW_Decrypt(void *prKernParam, UINT32 u4Size)
 	return TZ_CTL(TZCTL_HDCP2_SW_DecryptData, PHYSICAL((UINT32)prKernParam), TZ_CACHE_ALIGN(u4Size));
 }
 
+BOOL TZ_HDCP2_GetPDKey(void *prKernParam, UINT32 u4Size)
+{
+    return TZ_CTL(TZCTL_HDCP2_GetPDKey, PHYSICAL((UINT32)prKernParam), TZ_CACHE_ALIGN(u4Size));
+}
+
+
+BOOL TZ_HDCP2_SetPDKey(void *prKernParam, UINT32 u4Size)
+{
+    return TZ_CTL(TZCTL_HDCP2_SetPDKey, PHYSICAL((UINT32)prKernParam), TZ_CACHE_ALIGN(u4Size));
+}
 
 #endif
 

@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/23 $
  * $RCSfile: dmx.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -264,6 +264,8 @@ EXTERN BOOL TZ_HDCP2_SW_Decrypt	(void *prKernParam, UINT32 u4Size);
 
 EXTERN BOOL TZ_HDCP2_enable_tz_key(void *prKernParam, UINT32 u4Size);
 
+EXTERN BOOL TZ_HDCP2_GetPDKey(void *prKernParam, UINT32 u4Size);
+EXTERN BOOL TZ_HDCP2_SetPDKey(void *prKernParam, UINT32 u4Size);
 
 #endif
 

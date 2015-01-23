@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/19 $
+ * $Date: 2015/01/23 $
  * $RCSfile: dmx.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -204,6 +204,9 @@
 #define TZCTL_HDCP2_SW_DecryptData                  	 ((UINT32)0x1331)
 
 #define TZCTL_HDCP2_ENABLE_TZ_KEY                         ((UINT32)0x1332)
+
+#define TZCTL_HDCP2_GetPDKey							 ((UINT32)0x1333)
+#define TZCTL_HDCP2_SetPDKey                             ((UINT32)0x1334)
 
 #endif
 
