@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/01/23 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -2291,6 +2291,7 @@ EXTERN BOOL vdecomx_colorcvt_init(VOID);
 #define VDEC_PUSH_SUPPORT
 #endif
 
+EXTERN VOID _Vdec_FrameDisplayStart(UCHAR ucEsId,UCHAR ucFbgId,UCHAR ucFbId);
 EXTERN VOID _Vdec_IFrameDecodeDone(UCHAR ucEsId, VOID *pPicNfyInfo);
 EXTERN BOOL _VPUSH_Play(VOID* prdec);
 EXTERN BOOL _VPUSH_Stop(VOID* prdec);

@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/23 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2424,6 +2424,16 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
                 &rPicNfyInfo);
         }
     }
+    else if(ucFbStatus == FBM_FB_STATUS_LOCK)
+    {
+        if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START],
+                                     _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
+        {
+            ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
+                _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+        }
+    }
+    
 }
 
 
