@@ -583,6 +583,47 @@ UINT8 bApiFlashPqUpdateRawDataEx(UINT16 u2TblId, UINT16 u2CaseId)
     return bApiFlashPqUpdateRawData();
 }
 
+void DRVCUST_DitherInit(void)
+{
+    //if (!IS_PANEL_L12R12)
+    if (!IS_PANEL_2D_N_3D_L12R12)
+    {
+        // Set dither setting for all 8 bit panel
+        // front dither 12 -> 10
+        vIO32WriteFldAlign(OS_DITHER_02, 1, DRMOD_R);
+        vRegWriteFldMulti(OS_DITHER_00, 
+                    P_Fld(SV_ON, RDITHER_EN) | 
+                    P_Fld(0x2, REG_FPHASE_BIT) | 
+                    P_Fld(0x1, REG_FPHASE_SEL) | 
+                    P_Fld(SV_ON, REG_FPHASE_CTRL) | 
+                    P_Fld(0x19, DITHER_FPHASE) | 
+                    P_Fld(0x1, REG_FPHASE_R) | 
+                    P_Fld(SV_ON, REG_FPHASE_EN)|
+                    P_Fld(1, REG_SUBPIX_EN));
+
+        //if (GetCurrentPanelIndex() == PANEL_LCD_HD_60HZ)
+        //{
+            // post dither: use LFSR dither
+        //    vIO32WriteFldAlign(OS_DITHER_03, SV_ON, REG_LFSR_EN_POST);
+        //}
+        //else
+        {
+            // post dither: use R-dither 12 -> 8
+            vIO32WriteFldAlign(OS_DITHER_05, 2, REG_DRMOD_R_POST);
+            vRegWriteFldMulti(OS_DITHER_03, 
+                    P_Fld(SV_ON, REG_RDITHER_EN_POST) | 
+                    P_Fld(0x4, REG_FPHASE_BIT_POST) | 
+                    P_Fld(0x3, REG_FPHASE_SEL_POST) | 
+                    P_Fld(SV_ON, REG_FPHASE_CTRL_POST) | 
+                    P_Fld(0x19, REG_FPHASE_POST) | 
+                    P_Fld(0x1, REG_FPHASE_R_POST) | 
+                    P_Fld(SV_ON, REG_FPHASE_EN_POST)|
+                    P_Fld(1, REG_SUBPIX_EN_POST));
+
+        }
+    }
+}
+
 void DRVCUST_HwInit(void)
 {
 #ifdef DRV_SUPPORT_CUST_ANR
@@ -594,6 +635,7 @@ void DRVCUST_HwInit(void)
 
 void DRVCUST_VideoInit(void)
 {
+	DRVCUST_DitherInit();
     DRVCUST_AdaptiveBacklightInit();
 #ifdef SUPPORT_LCDIM_AVG_DEMO
     DRVCUST_LcDimBlkInit(10,6);
@@ -1171,11 +1213,11 @@ void DRVCUST_SetGamutOnOSMatrix(void)
 			dwGamutTable[i] = dwGamutTable[i]&0x7FFF;
 			dwGamutTable[i] = dwGamutTable[i]&0x4000 ? (dwGamutTable[i] - 0x8000) : dwGamutTable[i];
 
-			Printf("%d(0x%x)	", dwGamutTable[i], dwGamutTable[i]);
+			LOG(5, "%d(0x%x)	", dwGamutTable[i], dwGamutTable[i]);
 
 			dwTable[i+3] = dwTable[i+3]&0x3FFF;
 			dwTable[i+3] = dwTable[i+3]&0x2000 ? (dwTable[i+3] - 0x4000) : dwTable[i+3];
-			Printf("%d(0x%x)\n", dwTable[i+3], dwTable[i+3]);
+			LOG(5, "%d(0x%x)\n", dwTable[i+3], dwTable[i+3]);
 		}
 
 		i4TempMatrix[0] = 
@@ -1219,13 +1261,13 @@ void DRVCUST_SetGamutOnOSMatrix(void)
 
 		for(i=0; i<9; i++)
 		{
-			Printf("%d(0x%x)	%d(0x%x)	", i4TempMatrix[i], i4TempMatrix[i], COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
+			LOG(5, "%d(0x%x)	%d(0x%x)	", i4TempMatrix[i], i4TempMatrix[i], COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
 			i4TempMatrix[i] = i4TempMatrix[i]>0x1FFF ? 0x1FFF : i4TempMatrix[i];
 			i4TempMatrix[i] = i4TempMatrix[i]<-0x2000 ? -0x2000 : i4TempMatrix[i];
 			//i4TempMatrix[i] = i4TempMatrix[i]<0 ? (i4TempMatrix[i]+0x4000) : i4TempMatrix[i];
 
 			COLOR_TRANSFORM_ADJ[i+3] = (COLOR_TRANSFORM_ADJ[i+3]&0xC000) | i4TempMatrix[i];
-			Printf("%d(0x%x)\n", COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
+			LOG(5, "%d(0x%x)\n", COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
 		}
 		vIO32WriteFldAlign(MATRIX_04, SV_OFF, GAMUT_MATRIX_LOAD);
     }

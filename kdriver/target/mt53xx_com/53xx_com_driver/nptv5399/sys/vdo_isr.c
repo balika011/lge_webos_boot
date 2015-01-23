@@ -96,7 +96,7 @@
  *
  * $Modtime: 04/05/17 6:55p $
  *
- * $Revision: #3 $
+ * $Revision: #4 $
 ****************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -172,6 +172,7 @@ extern UINT32 _u4VdpCmdDelay;
 EXTERN void PMX_OnOutputVSync(void);
 EXTERN void vDrvDIVSyncCntIncr(UINT8 u1VdpId);
 EXTERN void vDrvSetScanPWMSW_SETDATA(void);
+extern void DRVCUST_DitherInit(void);
 
 #ifdef CC_SCPOS_3DTV_SUPPORT
 EXTERN INT32 GPIO_SetOut(INT32 i4GpioNum, INT32 i4Val);
@@ -423,6 +424,7 @@ PRIVATE void vOutVSyncISR(void)
     if(!fgIsDitherInited)
     {
         vDrvVideoDitherInit();
+		DRVCUST_DitherInit();
         fgIsDitherInited = SV_TRUE;
     }
 
