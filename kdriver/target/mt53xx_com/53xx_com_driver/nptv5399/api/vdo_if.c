@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/23 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -596,7 +596,38 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			 	u1ADCConnentSrcPort=P_FA;
 			}	
 			break;
-
+        case SV_VS_HDMI1:
+		case SV_VS_HDMI2:
+		case SV_VS_HDMI3:
+		case SV_VS_HDMI4:
+#if SUPPORT_DVI	
+			if(bType == 1)
+			{
+			   UINT8 srctype;
+			   srctype = bSrc;
+			   if(bApiQuearyVSCConnectStatus(SV_VP_MAIN) == SV_VD_DVI)
+			   {
+				    vDviConnect(SV_VP_MAIN, 1);
+					bApiVFESetMainSubSrc(srctype,SV_VS_NO_CHANGE);
+					LOG(2, "srctype is %d and it is main\n",srctype);
+			   }
+			   else if(bApiQuearyVSCConnectStatus(SV_VP_PIP) == SV_VD_DVI)
+			   {
+				    vDviConnect(SV_VP_PIP, 1);
+					bApiVFESetMainSubSrc(SV_VS_NO_CHANGE,srctype);
+					LOG(2, "srctype is %d and it is sub\n",srctype);
+			   }
+			   else
+			   {
+					vDviConnect(SV_VP_MAIN, 1);
+			    }			   
+			 }
+			 else
+			 {
+					vDviConnect(SV_VP_MAIN, 0);
+			 }			
+#endif	
+             break;
 		default:
 			break;
 	}

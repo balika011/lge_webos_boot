@@ -531,6 +531,32 @@ void vDVISetModeCHG(void)
 
     //_bEQCH0 = 0xf;_bEQCH1 = 0xf;_bEQCH2 = 0xf;
 
+#ifdef CC_SUPPORT_PIPELINE
+    if((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_DVI)||(bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_DVI))
+    {
+        if(fgIsMainDVI())
+        {
+          // test for fast mode change /done bug
+          vClrMainFlg(MAIN_FLG_MODE_DET_DONE);
+          vSetMainFlg(MAIN_FLG_MODE_CHG);
+#if DVI_DEBUG
+          LOG(3, "Main Mode Chg #1 in vDviInitial\n");
+#endif
+         }
+
+         if(fgIsPipDVI())
+         {
+        // test for fast mode change /done bug
+            vClrPipFlg(PIP_FLG_MODE_DET_DONE);
+            vSetPipFlg(PIP_FLG_MODE_CHG);
+#if DVI_DEBUG
+            LOG(3, "Pip Mode Chg #1 in vDviInitial\n");
+#endif
+          }
+	}
+
+
+#else
     if(fgIsMainDVI())
     {
         // test for fast mode change /done bug
@@ -550,6 +576,7 @@ void vDVISetModeCHG(void)
         LOG(3, "Pip Mode Chg #1 in vDviInitial\n");
 #endif
     }
+#endif
 }
 
 void vDVISetModeDone(void)
@@ -573,7 +600,28 @@ void vDVISetModeDone(void)
     LOG(3, " The HDMI ColorSpace is %d \n", _bHDMIColorSpace);
 	vHDMIAudioStatus();
     _bNodifyConnect = 0;
-
+#ifdef CC_SUPPORT_PIPELINE
+    if((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_DVI)||(bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_DVI))
+    {
+			if(fgIsMainDVI())
+			{
+				_vDrvVideoSetMute(MUTE_MODULE_HDMI, SV_VP_MAIN, 0, FALSE);
+				vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+#if DVI_DEBUG
+				LOG(3, "Main Mode Done\n");
+#endif
+			}
+		
+			if(fgIsPipDVI())
+			{
+				_vDrvVideoSetMute(MUTE_MODULE_HDMI, SV_VP_PIP, 0, FALSE);
+				vSetPipFlg(PIP_FLG_MODE_DET_DONE);
+#if DVI_DEBUG
+				LOG(3, "Pip Mode Donel\n");
+#endif
+			}
+	}
+#else
     if(fgIsMainDVI())
     {
         _vDrvVideoSetMute(MUTE_MODULE_HDMI, SV_VP_MAIN, 0, FALSE);
@@ -591,7 +639,7 @@ void vDVISetModeDone(void)
         LOG(3, "Pip Mode Donel\n");
 #endif
     }
-
+#endif
     _bDviModeChged = 0 ;
 #ifdef CC_AUD_HDMI_SPDIF_CFG
     aud_ch_info.eACPType=(HDMI_ACPTYPE)bHDMIACPType();
