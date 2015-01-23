@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/13 $
+ * $Date: 2015/01/23 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2043,7 +2043,7 @@ static void _vScpipUpdateScaliingFactorPrm(UINT8 bPath, UINT32 inW, UINT32 inH, 
 static void _vScpipUpdateDataFormatPrm(UINT8 bPath)
 {
     VDP_SCALER_PRM_T* scalerInfo;
-    //UINT8   u1IsMirrorMode = 0;
+    UINT8   u1IsMirrorMode = 0;
     
     scalerInfo = getScalerInfo(bPath);
 
@@ -2057,10 +2057,26 @@ static void _vScpipUpdateDataFormatPrm(UINT8 bPath)
     scalerInfo->u4Is422Mode = u4ScpipGetIs422ScalingMode(bPath);
     
     //4. 422 up + mirror
-    if(scalerInfo->u4Is422Mode== 1 && scalerInfo->u4MirrorEnable == 1)
+   #ifdef MIB_FLIP_MIRROR_COLOR_SHIFT_WA
+   #ifdef CC_FLIP_MIRROR_SUPPORT
+   if((bPath == SV_VP_MAIN) && (scalerInfo->u4Is444 == 0) && (u4GetFlipMirrorModule(bPath)==FLIP_BY_PSCAN))
+   {
+	   if(u1GetFlipMirrorConfig() & SYS_MIRROR_CONFIG_ON)
+	   {
+		   u1IsMirrorMode = 1;
+	   }
+   }
+   #endif
+   #endif
+   
+    if((scalerInfo->u4Is422Mode== 1 && scalerInfo->u4MirrorEnable == 1 && u1ScpipIsDramFrontMode(bPath)==SV_TRUE) || u1IsMirrorMode)
     {
         scalerInfo->u4Is422UVMirrorMode = 1;
-    }    
+    } 
+	else
+	{
+	    scalerInfo->u4Is422UVMirrorMode = 0;
+	}  
 
     //5. update dram input format. 0:422 1:444
     scalerInfo->u4DramInputFmt = u4ScpipUpdateDramInputFmt(bPath);
