@@ -711,11 +711,6 @@ VOID _vDrvVideoSetMuteInvalidFlag(MUTE_MODULE_ID eModule,
     {
         _rVideoMuteInfo[u4Path][eModule].u4InvalidMask &= (~(1 << eInvalidID));
 
-        if ((_rVideoMuteInfo[u4Path][eModule].u4Delay != FOREVER_MUTE)&&(eInvalidID!=MUTE_INVALID_ON_NO_SIG))
-        {
-            _rVideoMuteInfo[u4Path][eModule].u4Delay = 0;
-        }
-
     }
 
     x_crit_end(rCritState);
@@ -741,6 +736,7 @@ VOID _vDrvVideoForceUnMute(UINT32 u4Path, BOOL bOnOff)
 
     for(u4Module = 0; u4Module < MUTE_MODULE_MAX; u4Module++)
     {
+        if(MUTE_MODULE_API_FORCE == u4Module)continue;
         _vDrvVideoSetMuteInvalidFlag((MUTE_MODULE_ID)u4Module, u4Path, bOnOff, MUTE_INVALID_CLI_FORCE);
     }
 
