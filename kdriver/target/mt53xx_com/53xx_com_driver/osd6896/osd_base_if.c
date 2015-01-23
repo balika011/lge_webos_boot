@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/16 $
+ * $Date: 2015/01/23 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1172,7 +1172,7 @@ VOID OSD_BASE_UpdateAutoPosition(VOID)
               IGNORE_RET(_OSD_BASE_SetVsEdge(0));
               #if defined(CC_MT5882)
 #ifdef SMALL_OUTWINDOW_TTD_NEWSETTING
-              i4H = 0x136;
+              i4H = 0x136 - 11; /* need to subtract 11 for LG webos */
 #else
               i4H = 0x1D1;
 #endif
@@ -1204,7 +1204,7 @@ VOID OSD_BASE_UpdateAutoPosition(VOID)
               IGNORE_RET(_OSD_BASE_SetVsEdge(0));
               #if defined(CC_MT5882)
 #ifdef SMALL_OUTWINDOW_TTD_NEWSETTING
-              i4H = 0x136;
+              i4H = 0x136 - 11; /* need to subtract  11 for LG webos */
 #else
               i4H = 0x1D1;
 #endif
