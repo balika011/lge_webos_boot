@@ -124,7 +124,10 @@ int cpu_init (void)
 #endif
 	return 0;
 }
+#if defined(CONFIG_MULTICORES_PLATFORM)
 
+extern volatile int LogEnable;
+#endif
 int cleanup_before_linux (void)
 {
 	/*
@@ -159,7 +162,9 @@ int cleanup_before_linux (void)
 	/* turn off I/D-cache */
     HalDisableCaches();
     HalDisableMMU();
-
+#if defined(CONFIG_MULTICORES_PLATFORM)
+		LogEnable =1;
+#endif
 	return(0);
 }
 #if 0
