@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/16 $
+ * $Date: 2015/01/23 $
  * $RCSfile: mtk_QtyTbl.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1097,30 +1097,30 @@ UINT8 SceBySource[][QTY_IDX_RANGE_DIM]=
 UINT8 bCustomQtyTbl[FLASHPQ_NUM][26][CUSTOM_QTY_TBL_DIM] =
 {
     {
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_RFTV_NTSC_358,      SOURCE_TYPE_TIMING_RFTV_PAL_60},        // [0]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_RFTV_NTSC_358,      SOURCE_TYPE_TIMING_RFTV_PAL_60},        // [0]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_CVBS_NTSC_358,      SOURCE_TYPE_TIMING_SV_PAL_M_OS},        // [1]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_CVBS_PAL,           SOURCE_TYPE_TIMING_SV_PAL_60_OS},       // [2]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_SECAM_RFTV,         SOURCE_TYPE_TIMING_SECAM_RFTV},         // [3]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_SECAM_CVBS,         SOURCE_TYPE_TIMING_SECAM_SV},           // [4]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_SCART_RGB,          SOURCE_TYPE_TIMING_SCART_RGB},          // [5]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_SCART_AV_NTSC_358,  SOURCE_TYPE_TIMING_SCART_SV_SECAM},     // [6]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_YPBPR_SD_I_50,      SOURCE_TYPE_TIMING_YPBPR_SD_I_60_OS},   // [7]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_YPBPR_SD_P_50,      SOURCE_TYPE_TIMING_YPBPR_SD_P_60_OS},   // [8]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_YPBPR_720P_50,      SOURCE_TYPE_TIMING_YPBPR_720P_60},      // [9]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_YPBPR_1080I_50,     SOURCE_TYPE_TIMING_YPBPR_1080P_60},     // [10]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DIGI_SD_I_50,       SOURCE_TYPE_TIMING_DIGI_SD_I_60},       // [11]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DIGI_SD_P_50,       SOURCE_TYPE_TIMING_DIGI_SD_P_60},       // [12]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DIGI_720P_50,       SOURCE_TYPE_TIMING_DIGI_720P_60},       // [13]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DIGI_1080I_50,      SOURCE_TYPE_TIMING_DIGI_1080P_60},      // [14]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DTV_SD_I_50,        SOURCE_TYPE_TIMING_DTV_SD_I_60},        // [15]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DTV_SD_P_50,        SOURCE_TYPE_TIMING_DTV_SD_P_60},        // [16]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DTV_720P_50,        SOURCE_TYPE_TIMING_DTV_720P_60},        // [17]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_DTV_1080I_50,       SOURCE_TYPE_TIMING_DTV_1080P_60},       // [18]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_MM_SD_I,            SOURCE_TYPE_TIMING_MM_SD_P},            // [19]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_MM_720P_SD,         SOURCE_TYPE_TIMING_MM_720P_SD},         // [20]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_MM_720P_HD,         SOURCE_TYPE_TIMING_MM_720P_HD},         // [21]
-        #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_MM_1080IP_SD,       SOURCE_TYPE_TIMING_MM_1080IP_SD},       // [22]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_RFTV_NTSC_358,      SOURCE_TYPE_TIMING_RFTV_PAL_60},        // [0]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_RFTV_NTSC_358,      SOURCE_TYPE_TIMING_RFTV_PAL_60},        // [0]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_CVBS_NTSC_358,      SOURCE_TYPE_TIMING_SV_PAL_M_OS},        // [1]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_CVBS_PAL,           SOURCE_TYPE_TIMING_SV_PAL_60_OS},       // [2]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_SECAM_RFTV,         SOURCE_TYPE_TIMING_SECAM_RFTV},         // [3]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_SECAM_CVBS,         SOURCE_TYPE_TIMING_SECAM_SV},           // [4]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_SCART_RGB,          SOURCE_TYPE_TIMING_SCART_RGB},          // [5]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_SCART_AV_NTSC_358,  SOURCE_TYPE_TIMING_SCART_SV_SECAM},     // [6]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_YPBPR_SD_I_50,      SOURCE_TYPE_TIMING_YPBPR_SD_I_60_OS},   // [7]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_YPBPR_SD_P_50,      SOURCE_TYPE_TIMING_YPBPR_SD_P_60_OS},   // [8]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_YPBPR_720P_50,      SOURCE_TYPE_TIMING_YPBPR_720P_60},      // [9]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_YPBPR_1080I_50,     SOURCE_TYPE_TIMING_YPBPR_1080P_60},     // [10]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_DIGI_SD_I_50,       SOURCE_TYPE_TIMING_DIGI_SD_I_60},       // [11]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_DIGI_SD_P_50,       SOURCE_TYPE_TIMING_DIGI_SD_P_60},       // [12]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_DIGI_720P_50,       SOURCE_TYPE_TIMING_DIGI_720P_60},       // [13]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_DIGI_1080I_50,      SOURCE_TYPE_TIMING_DIGI_1080P_60},      // [14]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_DTV_SD_I_50,        SOURCE_TYPE_TIMING_DTV_SD_I_60},        // [15]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_DTV_SD_P_50,        SOURCE_TYPE_TIMING_DTV_SD_P_60},        // [16]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_DTV_720P_50,        SOURCE_TYPE_TIMING_DTV_720P_60},        // [17]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_DTV_1080I_50,       SOURCE_TYPE_TIMING_DTV_1080P_60},       // [18]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_MM_SD_I,            SOURCE_TYPE_TIMING_MM_SD_P},            // [19]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_MM_720P_SD,         SOURCE_TYPE_TIMING_MM_720P_SD},         // [20]
+        #include "QTY_TBL_DEFAULT_SD_0117.h"        // {SOURCE_TYPE_TIMING_MM_720P_HD,         SOURCE_TYPE_TIMING_MM_720P_HD},         // [21]
+        #include "QTY_TBL_DEFAULT_HD_0117.h"        // {SOURCE_TYPE_TIMING_MM_1080IP_SD,       SOURCE_TYPE_TIMING_MM_1080IP_SD},       // [22]
         #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_MM_1080IP_HD,       SOURCE_TYPE_TIMING_MM_1080IP_HD},       // [23]
         #include "QTY_TBL_DEFAULT.h"        // {SOURCE_TYPE_TIMING_PC_RGB,             SOURCE_TYPE_TIMING_PC_YCBCR},           // [24]
     },
