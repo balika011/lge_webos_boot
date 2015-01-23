@@ -5,581 +5,937 @@
 #include <linux/ctype.h>
 #include <exports.h>
 #include <net.h>
+#include <usb.h>
 #include <xyzModem.h>
 #include <environment.h>
 #include <mmc.h>
 #include <partinfo.h>
+#include <errno.h>
 #include "cmd_polltimer.h"
+#include <cmd_resume.h>
+#include <thread.h>
 
 #include <lg_modeldef.h>
-#include <cmd_resume.h>
 #ifdef SIGN_USE_PARTIAL
 #include "x_ldr_env.h"
 #endif
+#if defined(CONFIG_MULTICORES_PLATFORM)
+#include <smp_platform.h>
+#endif
 
-DECLARE_GLOBAL_DATA_PTR;
+static spin_lock_t decomp_processing_lock = INIT_SPIN_LOCK;
+static u32 decomp_elapsed[NR_CPUS] = {0,};
+static int decomp_do[NR_CPUS] = {0,};
+static u32 emmc_elapsed = 0;
+//static cond_t g_decomp_cond;
+static int wait_cnt = 0;
+static u32 g_read_bytes = 0;
+static loff_t g_snapshot_offset = 0;
+static int decomp_done[NR_CPUS] = {0,};
+static int use_single_core = 0;
+static int decomp_error_cpumask = 0;
 
-/* Cofigurable variable */
+typedef struct _thread_arg
+{
+	loff_t offset;
+	unsigned long image_size;
+}thread_arg_t;
 
-#define PAGE_SIZE	(4096)
-#define PAGE_SHIFT	(12)
-
-#define DMA_UNIT_SIZE	DMA_READ_BUFFER_SIZE
-
-#define	USE_ASYNC_SHA1
-
-struct swsusp_info *header;
-struct swsusp_runtime_val swsusp_resume_val;
 extern void DDI_NVM_SetMakeHib( unsigned char mode );
 extern unsigned char DDI_NVM_GetSnapShot_Support( void );
+extern unsigned char DDI_NVM_GetSnapShotART( void );
+extern void DDI_NVM_SetSnapShotART( unsigned char mode );
 extern void DDI_NVM_SetSnapShot_Support( unsigned char mode );
 extern int storage_read(uint32_t offset, size_t len, void* buf);
 extern int storage_erase(unsigned long long offset, unsigned long long len);
-extern unsigned short __InvertOn;
+extern void enable_console(void);
+extern void disable_console(void);
+#if defined(CONFIG_MULTICORES_PLATFORM)
+extern void release_non_boot_core(void);
+#endif
+//extern void display_boottime_log(void);
 
 
-struct dma_control {
-	unsigned int full_len; /* total length */
-	unsigned int send_pos; /* DMA request sent */
-	unsigned int recv_pos; /* DMA completed */
-	unsigned int used_pos; /* decompressed */
-};
-
-
-
-
-
-static void dump_dma_control(struct dma_control *dmac)
-{
-	printf("full_len: %d\nsend_pos: %d\nrecv_pos: %d\nused_pos: %d\n",
-	       dmac->full_len, dmac->send_pos, dmac->recv_pos, dmac->used_pos);
+#define TIME_CHECK() \
+{ unsigned int u32Timer_b, u32Timer_c; \
+	u32Timer_c = (*((volatile unsigned int *)0x1f006090)) | ((*((volatile unsigned int *)0x1f006094)) << 16); \
+	u32Timer_b = (*((volatile unsigned int *)0x1f206708)) | ((*((volatile unsigned int *)0x1f20670c)) << 16); \
+	printf("\033[0;31m[time] mboot takes %d.%dms \033[0m\n", (u32Timer_c - u32Timer_b)/12000, ((u32Timer_c - u32Timer_b)/12)%1000); \
 }
-
-//#define ALIGN(n, a)  (((n) + ((a)-1)) / (a) * (a))
-#define ALIGN(n, a)  		__ALIGN_MASK(n, (a)-1)
-#define __ALISH_MASK(n, mask)	(((n) + (mask)) & ~(mask))
-
 
 void remake_hib(void)
 {
-    struct partition_info *partition  = NULL;
-    int idx  = -1;
-    DDI_NVM_SetMakeHib(1);
-    idx = get_partition_idx(HIB_PART_NAME);
-    if(0 < idx)
-    {
-        partition = GET_PART_INFO(idx);
-    }
-    if(NULL != partition)
-    {
-        storage_erase(partition->offset, 0x200);
-    }
+	struct partition_info *partition  = NULL;
+	int idx  = -1;
+	DDI_NVM_SetMakeHib(1);
+	idx = get_partition_idx(SNAP_PART_NAME);
+	if(0 < idx)
+	{
+		partition = GET_PART_INFO(idx);
+	}
+	if(NULL != partition)
+	{
+		storage_erase(partition->offset, 0x1000);
+	}
 }
 
 
-
-static int dma_read(struct dma_control *dmac, int force)
+#define MiB(x) (x/(1024 *1024))
+static void print_snapshot_header(const struct swsusp_info *si)
 {
-        int ret = 0;
-	
-	if (dmac->recv_pos >= dmac->full_len)
-		return 1;
+	struct snapshot_header *header = GET_SNAP_HEADER(si);
+	struct dep_parts *deps = &header->deps;
 
-	/*
-	 * we need at least DMA_UNIT_SIZE buffer available to decompress
-	 * otherwise request DMA read.
-	 */
-	if (dmac->used_pos + DMA_UNIT_SIZE > dmac->recv_pos ||
-	    force)
+	printf("/***************************************************************/\n");
+	printf("UTS sys name = %s\n", si->uts.sysname);
+	printf("UTS node name = %s\n", si->uts.nodename);
+	printf("UTS release = %s\n", si->uts.release);
+	printf("UTS version = %s\n", si->uts.version);
+	printf("UTS machine = %s\n", si->uts.machine);
+	printf("UTS domainname = %s\n", si->uts.domainname);
+
+	printf("Kernel %d.%d.%d\n",
+			((si->version_code) >> 16) & 0xff,
+			((si->version_code) >> 8) & 0xff,
+			(si->version_code) & 0xff);
+
+	printf("num_phyuspages = %lu\n", si->num_physpages);
+	printf("cpus = %d\n", si->cpus);
+	printf("image_pages = %lu\n", si->image_pages);
+	printf("pages = %lu\n", si->pages);
+	printf("size = %lu\n", si->size);
+
+	if(header->compress_algo)
+		printf("compressed(%s) image size = %luMB(%lu)\n", (header->compress_algo == LZO) ?
+		"lzo" : ((header->compress_algo == LZ4) ? "lz4" : ((header->compress_algo == LZ4HC) ? "lz4hc" : "unknown")),
+		MiB(header->image_size), header->image_size);
+	else
+		printf("uncompressed image size = %luMB(%lu)\n", MiB(header->image_size), header->image_size);
+
+	if(header->crc != ~0)
+		printf("crc = %u\n", header->crc);
+	else
+		printf("no crc image\n");
+	printf("pfn merge info entry count = %u\n", header->pfn_mi_cnt);
+	printf("metadata start offset for compressed image = %lu\n", header->metadata_start_offset_for_comp);
+	printf("physical address resume func addr %x\n", header->pa_resume_func);
+	printf("snapshot magic number : 0x%lx\n", header->magic);
+	if (deps->nr_dep_parts) {
+		int i;
+		struct dep_part_info *dep_info = &deps->dep_part_info[0];
+
+		printf("snapshot dependency %d partitions\n", deps->nr_dep_parts);
+		printf(" name\t partnum\t %s\t %s\n", deps->value_name[0], deps->value_name[1]);
+
+		for (i = 0; i < deps->nr_dep_parts; i++) {
+			struct partition_info *partition =
+				&partinfo.partition[dep_info[i].partnum];
+			printf(" %s\t  %4d\t\t 0x%-8x\t  0x%x\n",
+			        partition->name,
+					dep_info[i].partnum,
+					dep_info[i].value[0],
+					dep_info[i].value[1]);
+		}
+	} else {
+		printf("snapshot has no dependency partitions\n");
+	}
+	printf("/***************************************************************/\n");
+
+	return;
+}
+
+static unsigned int get_signed_image_size(struct snapshot_header *header)
+{
+	unsigned int size;
+
+	size =  ALIGN(header->image_size, 16);
+
+#if defined (CONFIG_SECURITY_BOOT)
+	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
+#endif
+	return size;
+}
+
+struct swsusp_info *info = (struct swsusp_info *)SNAPSHOT_IMAGE_LOAD_ADDR;
+void *meta_page_ptr;
+void (*kernel_resume_func)(void);
+static char *decomp_buf;
+static struct pfn_merge_info *pfn_merge_info;
+static unsigned int processed_pfn_mi_index;
+
+#ifdef CONFIG_SECURITY_BOOT
+
+int verify_snapshot_image(struct snapshot_header *header)
+{
+	int index = 0;
+	unsigned char *signature_offset = decomp_buf - HEADER_SIZE + header->image_size ;
+	unsigned char signature[32];
+	static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
+
+	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (header->image_size - HEADER_SIZE))
 	{
-		unsigned int len;
-
-		len = dmac->send_pos - dmac->recv_pos;
-		if (len > DMA_UNIT_SIZE) {
-			printf("DMA control data is corrupted!\n");
-			dump_dma_control(dmac);
-			return -1;
-		}
-
-		/* Dma is requested already, wait to complete */
-		if (len) {
-			ret = emmc_async_dma_wait_finish();
-			if(ret) {
-                printf("[dma_read]emmc_async_dma_wait_finish done %d\n", ret);		
-                return 3;			
-            }
-
-#ifdef DEBUG_DMA
-			printf("read %d bytes\n", len);
-#endif
-			dmac->recv_pos += len;
-		}
-
-		/* request at most DMA_UNIT_SIZE bytes */
-		len = DMA_UNIT_SIZE;
-		if (dmac->send_pos > dmac->full_len - len) {
-			len = dmac->full_len - dmac->send_pos;
-		}
-
-		if (len == 0) {
-			printf("DMA finished!\n");
-			return 1;
-		}
-
-		/* request more data to DMA */
-		emmc_async_dma_start_trigger(len);
-		dmac->send_pos += len;
-
-#ifdef DEBUG_DMA
-		printf("request %d bytes\n", len);
-#endif
-		/*
-		 * NOTE: This reduces memory bus contention so that
-		 * the overall performance might be improved.
-		 * (around 100ms on my board)
-		 */
-		udelay(300);
+		printf("boundary check error %s (%d)\n", __FUNCTION__, __LINE__);
+		return -1;
 	}
 
+	//sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
+	index = (get_timer(0) % NUMBER_OF_FRAGMENT);
+	memcpy(sign_area,decomp_buf + (index * FRAGMENT_UNIT_SIZE),FRAGMENT_UNIT_SIZE);
+	memcpy(signature,signature_offset + ((index + 1) * SIGNATURE_SIZE),SIGNATURE_SIZE);
+
+	if( !snapshot_image_verify(signature, sign_area, FRAGMENT_UNIT_SIZE) )
+	{
+		printf("snapshot partial verification successed! (index:%d)\n", index);
+	}
+	else
+	{
+		printf("snapshot partial verification failed! (index:%d)\n", index);
+		return -1;
+	}
 	return 0;
-}
-
-int verify_snapshot(const char*partname, ulong length)
-{
-    unsigned char hash_value[SB_HASH_SIZE];
-    unsigned int hash_size;
-    unsigned long sb_offset;
-    struct {
-        unsigned char aes_key[SB_AES_KEY_SIZE];
-        unsigned char hash_value[SB_HASH_SIZE];
-        unsigned char unused[512 - SB_AES_KEY_SIZE - SB_HASH_SIZE];
-    } saved;
-    int result;
-	char *xip_argv[3] = {"xip", "lgapp", "0"};
-
-    /* calculate hash value for entire image in memory (including header) */
-    memset(hash_value, 0, sizeof(hash_value));
-
-	#ifdef USE_ASYNC_SHA1
-	printf("---[%d] async SHA1...\n", readMsTicks());
-	SHA1_Onece_Async_Start(IMAGE_LOAD_BUFFER_ADDR, length, hash_value, &hash_size);
-	printf("---[%d] async SHA1 started\n", readMsTicks());
-
-	if(do_xiplz4(find_cmd("xip"), 0, 3, xip_argv))
+#if 0 //def SNAPSHOT_DEBUG
+    printf("\n");
+    for(i=0; i<32; ++i)
+        printf("%02x ", 0xFF & ((char*)signature)[i]);
+    printf("\n");
+#endif
+#if 0
+	printf("[%d] full verify snapshot image\n", readMsTicks());
+	sign_area = decomp_buf;
+	signature = signature_offset;
+	if(0 == snapshot_image_verify(signature, sign_area, hib_size - HEADER_SIZE))
 	{
-		printf("do_xip fail\n");
-		return -1;
-	}
-
-	SHA1_Onece_Async_Stop(IMAGE_LOAD_BUFFER_ADDR, length, hash_value, &hash_size);
-	printf("---[%d] async SHA1 finish\n", readMsTicks());
-
-	if(do_verify_xip("lgapp"))
+		printf("snapshot full verification successed!\n");
+		}
+	else
 	{
-		printf("do_verify_xip fail\n");
-		return -1;
-	}
-	#else
-    SHA1_Onece(IMAGE_LOAD_BUFFER_ADDR, length, hash_value, &hash_size);
-	#endif
-
-    if (hash_size != 20) { /* 160-bit SHA1 hash */
-	    printf("SECURE BOOT: hash size is different (%d)\n", hash_size);
-	    return 0;
-    }
-
-    /* cur_meta_floffset points to the first meta page after the header page */
-    sb_offset = swsusp_resume_val.cur_meta_floffset - PAGE_SIZE + SB_AES_KEY_OFFSET;
-    /* read AES key and hash value from flash */
-    result = storage_read(sb_offset, sizeof(saved), &saved);
-    if (result) {
-        printf("storage_read for AES key failed (%d)\n", result);
-		return 0;
-    }
-
-    /* compare hash value with saved (precalculated) value */
-    result = DMX_Decrypt_Snapshot(saved.hash_value, SB_HASH_SIZE, hash_value,
-				  saved.aes_key, SB_AES_KEY_SIZE);
-
-    printf("SECURE BOOT: verification result: %s\n", result ? "SUCCESS" : "FAILURE");
-    return result;
-}
-
-int page_restore(void)
-{
-	unsigned int *meta_buf, *meta_buf_ptr;
-	char *data_buf, *data_buf_ptr_cur, *data_buf_ptr_next;
-	int ret, size = PAGE_SIZE, meta_buf_index;
-	ulong crc = 0, crc_size = PAGE_SIZE;
-	void *dst;
-	int comp_block_size, decompressed_size;
-
-	unsigned int s_mtime, e_mtime;
-
-	struct dma_control dmac = { ALIGN(header->compressed_image_size, 4096), };
-	polling_timer();
-	dump_dma_control(&dmac);
-	
-	// Set metadata pointer (after header page)
-	meta_buf = (unsigned int *)(IMAGE_LOAD_BUFFER_ADDR + PAGE_SIZE);
-
-	s_mtime = readMsTicks();
-
-#ifdef USE_DMA
-	ret = emmc_async_read_setup(0, swsusp_resume_val.cur_meta_floffset,
-			      ALIGN(header->compressed_image_size, 4096), meta_buf);
-
-	polling_timer();
-  	if (ret)
-  	{		
-    	printf("[page_store]emmc_async_read_setup done %d\n", ret);		
-		return 2;	
-  	}
-	
-	/* request 2 * DMA_UNIT_SIZE data in advance */
-	ret = dma_read(&dmac, 1);
-	if(ret == 3)
-  	{
-    	printf("[page_store]dma read failed %d\n", ret);
-    	return ret;
-  	}
-	
-	ret = dma_read(&dmac, 1);
-	if(ret == 3)
-  	{
-    	printf("[page_store]dma read failed %d\n", ret);
-    	return ret;
-  	}
-
-	/* wait for all meta pages ready */
-	while (dmac.recv_pos < swsusp_resume_val.total_meta_pages * PAGE_SIZE)
-	{
-		ret = dma_read(&dmac, 1);
-		if(ret == 3)
+		enable_console();
+		printf("snapshot full verification failed!\n");
+		if((DDI_NVM_GetDebugStatus() == RELEASE_LEVEL) || (DDI_NVM_GetDebugStatus() == EVENT_LEVEL) || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL))
 		{
-      		printf("[page_store]dma read failed %d\n", ret);
-			return ret;
-		}
-	}
-
-	dmac.used_pos = swsusp_resume_val.total_meta_pages * PAGE_SIZE;
-	polling_timer();
-#else
-	// Whole snapshot image read
-	polling_timer();
-	ret = storage_read((uint32_t)swsusp_resume_val.cur_meta_floffset,
-			   (size_t)ALIGN(header->compressed_image_size, 4096), (char *)meta_buf);
-	if(ret)
-		goto storage_read_fail;
-
-	e_mtime = readMsTicks();
-
-	printf("snapshot image read complete, size = %dkbytes\n", (header->compressed_image_size) >> 10);
-	printf("Elapsed time = %ums\n", e_mtime - s_mtime);
-
-	s_mtime = readMsTicks();
-	polling_timer();
-#endif
-	// Check read meta data
-#ifdef CRC_CHECK
-	meta_buf_ptr = meta_buf;
-	while(swsusp_resume_val.left_meta_pages)
-	{
-		crc = _crc32_le(crc, (const uchar *)meta_buf_ptr, crc_size);
-		swsusp_resume_val.left_meta_pages--;
-		meta_buf_ptr += 1024;
-	}
-#else
-	swsusp_resume_val.left_meta_pages = 0;
-#endif
-
-	// Restore data pages
-#ifdef USE_COMPRESS
-	/* sequential read and decompress routine */
-	data_buf = (char *)meta_buf + (PAGE_SIZE * swsusp_resume_val.total_meta_pages);
-
-	printf("getting started to read data pages using DMA\n");
-
-	meta_buf_index = 0;
-	while(swsusp_resume_val.left_data_pages)
-	{
-#ifdef USE_DMA
-		/* ensure that we have space for block size */
-		ret = dma_read(&dmac, dmac.used_pos + 4 > dmac.recv_pos);
-    	if(ret == 3)
-    	{
-      		printf("[page_store]dma read failed %d\n", ret);
-      		return ret;
-    	}
-#endif
-		// Get each compressed block size
-		comp_block_size = *((int*)data_buf);
-		data_buf += sizeof(int);
-		dmac.used_pos += sizeof(int);
-		//polling_timer();
-#ifdef USE_DMA
-		/* ensure that we have actual data block */
-		ret = dma_read(&dmac, dmac.used_pos + comp_block_size > dmac.recv_pos);
-    	if(ret == 3)
-    	{
-      		printf("[page_store]dma read failed %d\n", ret);
-      		return ret;
-    	}
-		/* Paranoid check */
-		while (dmac.used_pos + comp_block_size > dmac.recv_pos) {
-#ifdef DEBUG_DMA
-			printf("some delay might be needed here...\n");
-#endif
-			ret = dma_read(&dmac, 1);
-      		if(ret == 3)
-      		{
-        			printf("[page_store]dma read failed %d\n", ret);
-        			return ret;
-      		}
-		}
-#endif
-		// decompress page block to original page region
-		dst = (void *)(meta_buf[meta_buf_index] << PAGE_SHIFT);
-
-		//printf("decompressing %d bytes ... ", comp_block_size);
-		//printf ("purplearrow, lzo1x_decompress is not implement\n");
-		lzo1x_decompress(data_buf, comp_block_size,  dst, &decompressed_size, NULL);
-		if(decompressed_size != PAGE_SIZE)
-		{
-			e_mtime = readMsTicks();
-			printf("%s[%d] : Something goes wrong, decompressed block size is not match with PAGE_SIZE (%d)\n",
-			       __func__, __LINE__, decompressed_size);
-#ifdef USE_DMA
-			dump_dma_control(&dmac);
-			ret = emmc_async_read_finish(0);
-			if (ret)
-				printf("emmc_async_read_finish done %d\n", ret);
-#endif
-			printf("snapshot image decomp and restore failed, Elapsed time = %ums\n", e_mtime - s_mtime);
-
-			return 0;
-		}
-		//printf("done\n");
-
-		data_buf += comp_block_size;
-		dmac.used_pos += comp_block_size;
-		polling_timer();
-#ifdef CRC_CHECK
-		crc = _crc32_le(crc, (const uchar *)(meta_buf[meta_buf_index] << PAGE_SHIFT), crc_size);
-#endif
-		// update read states
-		swsusp_resume_val.left_data_pages--;
-		meta_buf_index++;
-	}
-#else // else of USE_COMPRESS
-	data_buf = (char *)meta_buf +  (PAGE_SIZE * swsusp_resume_val.total_meta_pages);
-
-	meta_buf_index = 0;
-	while(swsusp_resume_val.left_data_pages)
-	{
-		dst = (void *)(meta_buf[meta_buf_index] << PAGE_SHIFT);
-		memcpy(dst, (void *)data_buf, PAGE_SIZE);
-		data_buf += PAGE_SIZE;
-
-		#ifdef CRC_CHECK
-		crc = _crc32_le(crc, (const uchar *)(meta_buf[meta_buf_index] << PAGE_SHIFT), crc_size);
-		#endif
-		swsusp_resume_val.left_data_pages--;
-		meta_buf_index++;
-	}
-#endif // end of USE_COMPRESS
-
-	e_mtime = readMsTicks();
-
-#ifdef USE_DMA
-	ret = emmc_async_read_finish(0);
-  	if (ret)
-    	printf("emmc_async_read_finish done %d\n", ret);
-	dump_dma_control(&dmac);
-#endif
-	printf("snapshot image decomp and restore complete, Elapsed time = %ums\n", e_mtime - s_mtime);
-
-#ifdef SECURE_BOOT
-	/*
-	 * XXX: Ensure that next storage_read() not to fail...
-	 *      Maybe we can fix this by placing the signature right after the image
-	 *      so that the DMA pass can read it all at once.
-	 */
-	polling_timer();
-
-	udelay(1000);
-
-	s_mtime = readMsTicks();
-	comp_block_size = ALIGN(header->compressed_image_size, PAGE_SIZE) + PAGE_SIZE;
-	if (!verify_snapshot(HIB_PART_NAME, comp_block_size)) {
-		gd->flags &= ~GD_FLG_SILENT;
-		printf("SECURE BOOT: verification failed: halt...\n");
-//		memset(IMAGE_LOAD_BUFFER_ADDR, 0, comp_block_size);
-//		writeFullVerifyOTP();
-
-		if(DDI_NVM_GetDebugStatus() == RELEASE_LEVEL)	{
 			char cmd[] = "reset";
 			remake_hib();
 			run_command(cmd, 0);
 		}
 		else
+		{
 			while (1); /* halt */
-
+		}
 	}
-	e_mtime = readMsTicks();
-	polling_timer();
-	printf("SECURE BOOT: snapshot image verification done, Elapsed time = %ums\n", e_mtime - s_mtime);
+#endif
+}
 #endif
 
-#ifdef CRC_CHECK
-	printf("%s[%d] : crc = %#x\n", __func__, __LINE__, crc);
-#endif
-	polling_timer();
-	return 1;
 
-storage_read_fail:
-	printf("Storage read fail\n");
+#if defined(CONFIG_MULTICORES_PLATFORM)
+extern u64 arch_counter_get_ms(void);
+
+static int emmc_user_callback(int err, int bytes)
+{
+	g_read_bytes += bytes;
+}
+static int read_emmc(void *arg)
+{
+	u32 start_time;
+	thread_arg_t *p = (thread_arg_t*)arg;
+	thread_arg_t a;
+	a.offset = p->offset;
+	a.image_size = p->image_size;
+
+	//eMMC_register_callback(emmc_user_callback);
+
+	g_read_bytes = 0;
+	start_time = (u32)arch_counter_get_ms();
+	if (storage_read(a.offset, a.image_size, (void*)(decomp_buf)) < 0)
+	{
+		printf("Can't read compressed snapshot image image\n");
+		return -1;
+	}
+	if( g_read_bytes < a.image_size )
+		tlog("eMMC error : wrong read size in callback request size=%u, read=%u\n",a.image_size,g_read_bytes);
+	emmc_elapsed = (u32)arch_counter_get_ms() - start_time;
+	decomp_done[1] = 1;
+	return 0;
+}
+
+void storage_dma_read_wait(int len)
+{
+	while( 1 ) {
+		if( len > g_read_bytes  ) {
+			udelay(5);
+			wait_cnt++;
+		} else
+			break;
+	}
+}
+#endif
+
+
+static int decompress_routine(void *print)
+{
+	unsigned int local_pfn_mi_index, pre_pfn_mi_index = 0;
+	unsigned int start_pfn;
+	unsigned long compblock_len;
+	size_t output_len;
+	size_t local_start_offset = 0;
+	int i;
+	int cpuid = 0;
+	struct snapshot_header *header = GET_SNAP_HEADER(info);
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	u32 start_time;
+	cpuid =  get_cpu_id();
+	thread_t *thread = get_current_thread(cpuid);
+	start_time = (u32)arch_counter_get_ms();
+	//decomp_do[cpuid] = 0;
+#endif
+
+	while(1) {
+#if defined(CONFIG_MULTICORES_PLATFORM)
+		spin_lock(&decomp_processing_lock);
+		local_pfn_mi_index = processed_pfn_mi_index;
+		processed_pfn_mi_index++;
+		spin_unlock(&decomp_processing_lock);
+		//decomp_do[cpuid]++;
+#else
+		local_pfn_mi_index = processed_pfn_mi_index;
+		processed_pfn_mi_index++;
+#endif
+		if (local_pfn_mi_index >= header->pfn_mi_cnt)
+			break;
+
+		compblock_len = pfn_merge_info[local_pfn_mi_index].info.compblock_len;
+		start_pfn = pfn_merge_info[local_pfn_mi_index].start_pfn;
+
+		for (i = pre_pfn_mi_index; i < local_pfn_mi_index; i++) {
+			local_start_offset += pfn_merge_info[i].info.compblock_len;
+		}
+
+		pre_pfn_mi_index = local_pfn_mi_index;
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+		if( !use_single_core )
+			storage_dma_read_wait(local_start_offset + compblock_len);
+#endif
+
+        if (pfn_merge_info[local_pfn_mi_index].compressed == 1)
+        {
+
+            if (header->compress_algo == LZ4HC || header->compress_algo == LZ4)
+            {
+                output_len = LZ4_uncompress_unknownOutputSize((const void *)(decomp_buf + local_start_offset), \
+                (void *)(start_pfn << PAGE_SHIFT), compblock_len, pfn_merge_info[i].info.merged_cnt * PAGE_SIZE);
+            }
+            else if (header->compress_algo == LZO)
+            {
+                lzo1x_decompress((const void *)(decomp_buf + local_start_offset), (size_t)compblock_len,\
+                (void *)(start_pfn << PAGE_SHIFT), &output_len);
+            }
+            else
+            {
+                printf("%s : Unknown decompress type!\n");
+            }
+
+            if( print ) tlog("cpu[%d] [%4d] decomp -> in : %p, in_len : 0x%x, out : 0x%x, out_len : 0x%x\n",cpuid,local_pfn_mi_index, decomp_buf + local_start_offset, compblock_len, start_pfn << PAGE_SHIFT, output_len);
+
+
+            if (output_len != pfn_merge_info[i].info.merged_cnt * PAGE_SIZE)
+            {
+                tlog("snapshot image decompress cpu=%d,index : %d fail offset = 0x%lx, pfn = 0x%x, outlen=%u,orglen=%u\n",cpuid, local_pfn_mi_index, local_start_offset, start_pfn,output_len,pfn_merge_info[i].info.merged_cnt * PAGE_SIZE);
+				decomp_error_cpumask |= 1 << cpuid;
+				decomp_done[cpuid] = 1;
+                return -1;
+            }
+        }
+        else
+        {
+			if( print ) tlog("cpu[%d] [%4d] memcpy -> in : 0x%x, in_len : 0x%x, out : 0x%x\n",cpuid, local_pfn_mi_index, SNAPSHOT_IMAGE_LOAD_ADDR + local_start_offset, compblock_len, start_pfn << PAGE_SHIFT);
+
+			memcpy((void *)(start_pfn << PAGE_SHIFT), (void *)(decomp_buf + local_start_offset), compblock_len);
+		}
+	}
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	//decomp_elapsed[cpuid] = (u32)arch_counter_get_ms() - start_time;
+	decomp_done[cpuid] = 1;
+	//if( !use_single_core ) thread_cond_signal(&g_decomp_cond);
+#endif
+
+	return 0;
+}
+
+static int uncompressed_snapshot_image_restore(unsigned long nr_meta_pages, loff_t offset_cur)
+{
+	uint32_t *pfn_ptr;
+	unsigned int read_pages = 0;
+
+	printf("[%4d]Loading snapshot image...\n", readMsTicks());
+
+	pfn_ptr = (uint32_t *)(meta_page_ptr);
+
+#if 1
+	while (read_pages < info->image_pages) {
+#else
+	while (read_pages != info->image_pages) {
+#endif
+		if (storage_read(offset_cur, PAGE_SIZE, (void *)((*pfn_ptr) << PAGE_SHIFT)) < 0) {
+			printf("Can't read snapshot image\n");
+			return -1;
+		}
+		pfn_ptr++;
+		read_pages++;
+		offset_cur += PAGE_SIZE;
+	}
+
+	printf("[%4d]Completed... [%dKBytes]\n", readMsTicks(), (read_pages << 2));
+
+	return 0;
+}
+
+static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int desc_print, int decomp_print)
+{
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	/* Multithread support */
+	char thread_name[15];
+	thread_t *decomp_2,*decomp_3,*emmc_thread;
+	thread_arg_t arg;
+	u32 start_time;
+	int cnt = 0;
+#endif
+
+	// =================================================================
+	// 1. get snapshot header
+	// =================================================================
+	struct snapshot_header *header = GET_SNAP_HEADER(info);
+
+	/* compressed payload size = total size - header size - metadata size */
+	unsigned long snapshot_image_payload_size = get_signed_image_size(header) - PAGE_SIZE;
+
+	pfn_merge_info = (struct pfn_merge_info *)meta_page_ptr;
+	processed_pfn_mi_index = 0;
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	start_time = (u32)arch_counter_get_ms();
+	memset(decomp_done,0,sizeof(decomp_done));
+#endif
+
+#ifdef SNAPSHOT_VERIFY
+	// =================================================================
+	// 2. snapshot verify
+	// =================================================================
+    // signature offset = current offset(offset + PAGE_SIZE) - PAGE_SIZE(header) + compressed image size
+	const loff_t singature_offset = offset_cur - HEADER_SIZE + header->image_size;
+	const unsigned long hib_size = header->image_size;
+	unsigned char signature[32] = {0,};
+	unsigned int index = 0;
+	char *sign_area = NULL;
+
+#ifdef SNAPSHOT_PARTIAL_VERIFY
+	// partial verification
+	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (hib_size - HEADER_SIZE))
+	{
+		printf("boundary check error %s (%d)\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
+
+	sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
+	if(NULL == sign_area)
+	{
+		printf("can not allocate memory %s (%d)\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
+
+	index=(get_timer(0) % NUMBER_OF_FRAGMENT);
+	if (-1 == storage_read(offset_cur + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, sign_area))
+	{
+		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+		free(sign_area);
+		return -1;
+	}
+
+	if(-1 == storage_read(singature_offset + ((index + 1) * sizeof(signature)), sizeof(signature), signature))
+	{
+		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+		free(sign_area);
+		return -1;
+	}
+
+#if 0 //def SNAPSHOT_DEBUG
+	printf("\n");
+	for(i=0; i<32; ++i)
+		printf("%02x ", 0xFF & ((char*)signature)[i]);
+	printf("\n");
+#endif
+
+	printf("[%d] partial verify snapshot image\n", readMsTicks());
+	if(0 == snapshot_image_verify(signature, sign_area, FRAGMENT_UNIT_SIZE))
+		{
+		printf("snapshot partial verification successed! (index:%d)\n", index);
+		goto skip_full_verification;
+		}
+	else
+	{
+		printf("snapshot partial verification failed! (index:%d)\n", index);
+		free(sign_area);
+		sign_area = NULL;
+	}
+#endif
+
+	// full verification
+	sign_area = (char *) malloc((hib_size - HEADER_SIZE) * sizeof(char));
+	if(NULL == sign_area)
+	{
+	    printf("can not allocate memory %s (%d)\n", __FUNCTION__, __LINE__);
+		return -1;
+	}
+	printf("[%d] snapshot data read, image_leghth = %d\n", readMsTicks(), singature_offset - offset_cur);
+	if (-1 == storage_read(offset_cur, (hib_size - HEADER_SIZE), sign_area))
+	{
+	    printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+	    free(sign_area);
+	    return -1;
+	}
+
+	if(-1 == storage_read(singature_offset, sizeof(signature), signature))
+	{
+	    printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+	    free(sign_area);
+	    return -1;
+	}
+
+#if 0 //def SNAPSHOT_DEBUG
+    printf("\n");
+    for(i=0; i<32; ++i)
+        printf("%02x ", 0xFF & ((char*)signature)[i]);
+    printf("\n");
+#endif
+
+	printf("[%d] full verify snapshot image\n", readMsTicks());
+	if(0 == snapshot_image_verify(signature, sign_area, hib_size - HEADER_SIZE))
+	{
+		printf("snapshot full verification successed!\n");
+		}
+	else
+	{
+		enable_console();
+		printf("snapshot full verification failed!\n");
+		if((DDI_NVM_GetDebugStatus() == RELEASE_LEVEL) || (DDI_NVM_GetDebugStatus() == EVENT_LEVEL) || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL))
+		{
+			char cmd[] = "reset";
+			remake_hib();
+			run_command(cmd, 0);
+		}
+		else
+		{
+			while (1); /* halt */
+	}
+	}
+skip_full_verification:
+	free(sign_area);
+	sign_area = NULL;
+	printf("[%d] verify completed\n", readMsTicks());
+#endif
+
+	// =================================================================
+	// 3. snapshot decompress
+	// =================================================================
+	decomp_buf = (char *)(SNAPSHOT_IMAGE_LOAD_ADDR + PAGE_SIZE);
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+
+	//flush_cache_all();
+	start_time = (u32)arch_counter_get_ms();
+
+	if( use_single_core ) {
+		if (storage_read(offset_cur, snapshot_image_payload_size, (void*)(decomp_buf)) < 0)
+		{
+			printf("Can't read compressed snapshot image image\n");
+			return -1;
+		}
+		decompress_routine((void *)decomp_print);
+		printf("single thread decomp time = %u\n",(u32)arch_counter_get_ms()-start_time);
+	} else {
+		arg.offset = offset_cur;
+		arg.image_size = snapshot_image_payload_size;
+
+		//thread_cond_new(&g_decomp_cond);
+
+		sprintf(thread_name,sizeof(thread_name),"read_emmc");
+		emmc_thread = thread_create_ex(thread_name,read_emmc,&arg,0,1,THREAD_DEFAULT_PRIORITY,0);
+		sprintf(thread_name,sizeof(thread_name),"decomp[2]");
+		decomp_2 = thread_create_ex(thread_name,decompress_routine,(void *)decomp_print,0,2,THREAD_DEFAULT_PRIORITY,0);
+		sprintf(thread_name,sizeof(thread_name),"decomp[3]");
+		decomp_3 = thread_create_ex(thread_name,decompress_routine,(void *)decomp_print,0,3,THREAD_DEFAULT_PRIORITY,0);
+		decompress_routine((void *)decomp_print);
+
+		if( !decomp_done[0] || !decomp_done[1] || !decomp_done[2] || !decomp_done[3] )
+			while( 1 ) {
+				//ret = thread_cond_timedwait(&g_decomp_cond,5);
+				mtk_msleep(2);
+				cnt++;
+				printf("Waiting for decompression done cnt=%d,CPU0=%d,CPU1=%d,CPU2=%d,CPU3=%d\n",cnt,decomp_done[0],decomp_done[1],decomp_done[2],decomp_done[3]);
+				if( decomp_done[0] && decomp_done[1] && decomp_done[2] && decomp_done[3] ) {
+					break;
+				}
+			}
+#if 0
+		tlog("Decomp time CPU0=%u ms,cnt=%d | CPU2=%u ms,cnt=%d | CPU3=%u ms,cnt=%d | eMMC=%u ms,wait=%d,waiting for eMMC time=%u ms\n",decomp_elapsed[0],decomp_do[0],decomp_elapsed[2],decomp_do[2],decomp_elapsed[3],decomp_do[3],emmc_elapsed,wait_cnt,(5*wait_cnt)/1000);
+		tlog("multi thread decomp time = %u\n",(u32)arch_counter_get_ms()-start_time);
+#endif
+		if( desc_print ) {
+			u32 speed;
+			if( emmc_elapsed < 1000 ) {
+				speed = (snapshot_image_payload_size>>10) / (emmc_elapsed);
+				speed *= 1000;
+			} else {
+				speed = (snapshot_image_payload_size>>10) / (emmc_elapsed/1000);
+			}
+			tlog("eMMC size=%u,read speed=%u KB(%u MB) per second\n",snapshot_image_payload_size,speed,speed >> 10);
+		}
+	}
+#else
+
+	printf("[%d] read snapshot image\n", readMsTicks());
+	if (storage_read(offset_cur, snapshot_image_payload_size, (void*)(decomp_buf)) < 0)
+	{
+		printf("Can't read compressed snapshot image image\n");
+		return -1;
+	}
+	printf("[%d] decompress snapshot image\n", readMsTicks());
+	decompress_routine((void *)0);
+#endif
+
+#ifdef CONFIG_SECURITY_BOOT
+	if( verify )
+		if( verify_snapshot_image(header) < 0 )
+			return -1;
+#endif
+
+	TIME_CHECK();
+
+	if(decomp_error_cpumask) {
+		printf("Snapshot booting failed!! : Decomp error in cpu=0x%x\n",decomp_error_cpumask);
+		return -1;
+	}
+
+	return 0;
+}
+
+int storage_get_partition(const char* name, storage_partition_t* info)
+{
+	struct partition_info *pi;
+
+	if (((pi = get_used_partition(name)) == NULL) &&
+		((pi = get_unused_partition(name)) == NULL))
+	{
+		return -1;
+	}
+
+//	strcpy(info->name, pi->name);
+	info->offset = pi->offset;
+	info->size = pi->size;
+	info->filesize = pi->filesize;
+	info->used = pi->used;
+	info->valid = pi->valid;
+
+	return 0;
+}
+
+static inline int is_valid_snapshot_header(const struct swsusp_info *si)
+{
+	struct snapshot_header *header = GET_SNAP_HEADER(si);
+
+	if (header->magic == LG_SNAPSHOT_MAGIC_CODE)
+		return 1;
+
+	return 0;
+}
+
+
+static int check_snapshot_image(void)
+{
+	storage_partition_t partition;
+
+	/* Get partition which has snapshot boot image(hibernation image) */
+	if (storage_get_partition(SNAP_PART_NAME, &partition) < 0) {
+		printf("Invalid snapshot image partition\n");
+		return -1;
+	}
+	g_snapshot_offset = partition.offset;
+
+	/* Get header */
+	if (storage_read(g_snapshot_offset , sizeof(struct swsusp_info), info) < 0) {
+		printf("Can't read snapshot image header\n");
+		return -1;
+	}
+
+	return is_valid_snapshot_header(info);
+}
+static int is_factory_mode(void)
+{
+	if( MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus() )
+		return 1;
+
 	return 0;
 }
 
 int check_snapshot_mode(void)
 {
-#if 1
 	char *bootmode;
-	char *snapshot;
+	char *snapshot_mode;
+	int ret;
+
 
 	bootmode = getenv("bootmode");
-	if(!strcmp(bootmode, "webos") || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL) 
-	   || DDI_NVM_GetSWUMode() || (DDI_NVM_GetSnapShot_Support() == 0) )
-		return LGSNAP_COLDBOOT;
-	else if( DDI_NVM_GetMakeHib() )
-		return LGSNAP_MAKING_IMAGE;
+
+	printf("boot mode : %s\n", bootmode);
+	printf("debug status : %d\n", DDI_NVM_GetDebugStatus());
+	printf("swu mode : %d\n", DDI_NVM_GetSWUMode());
+	printf("snapshot support : %d\n", DDI_NVM_GetSnapShot_Support());
+
+
+	if(!strcmp(bootmode, "webos") || DDI_NVM_GetSWUMode() || (DDI_NVM_GetSnapShot_Support() == 0) || is_factory_mode() )
+	{
+		ret = LGSNAP_COLDBOOT;
+		snapshot_mode = "cold";
+	}
+	else if( !check_snapshot_image() )
+	{
+		ret = LGSNAP_MAKING_IMAGE;
+		snapshot_mode = "making";
+	}
 	else
-		return LGSNAP_SNAPSHOTBOOT;
-#else
-	return LGSNAP_COLDBOOT;
-#endif
+	{
+		ret = LGSNAP_RESUME;
+		snapshot_mode = "resume";
+	}
+
+	printf("check_snapshot_mode : %s\n", snapshot_mode);
+	return ret;
 }
 
-#ifdef CC_TRUSTZONE_SUPPORT
-extern void init_tz(void);
+/* 0 if ok, positive value if mismatched partitions found */
+static int verify_dep_parts(const struct swsusp_info *si)
+{
+	int nr_dep_parts, i;
+	int part_mismatch = 0;
+	struct snapshot_header *header;
+	struct dep_parts *deps;
+	struct dep_part_info *dep_part_info;
+
+	header = GET_SNAP_HEADER(si);
+	deps = &header->deps;
+	dep_part_info = &deps->dep_part_info[0];
+
+	/* check it's valid header */
+#if 0
+	if (!is_valid_snapshot_header(si)) {
+		printf("invalid snapshot header\n");
+		return -1;
+	}
 #endif
-#ifdef SIGN_USE_PARTIAL	
-extern int getFullVerifyOTP(void);
-extern ulong appxip_len;
+	nr_dep_parts = deps->nr_dep_parts;
+	/* sanity check */
+	if (nr_dep_parts > MAX_DEP_PARTS || nr_dep_parts > PARTITION_MAX) {
+		printf("number of dependent partition %d exceeds max %d\n",
+		       nr_dep_parts, MAX_DEP_PARTS);
+		return -1;
+	}
+
+	dep_part_info = &deps->dep_part_info[0];
+
+
+	// FIXME : assuming value0 is filesize and value1 is sw_ver.
+	for (i = 0; i < nr_dep_parts; i++) {
+
+		int partnum = dep_part_info[i].partnum;
+		int value0 = dep_part_info[i].value[0];
+		int value1 = dep_part_info[i].value[1];
+		struct partition_info *partition;
+
+		if (partnum > partinfo.npartition - 1)
+			return -1;
+
+		partition = &partinfo.partition[partnum];
+
+		if (value0 != partition->filesize) {
+			printf("partition %s "
+			       "doesn't have the identical filesize (%d,%d)",
+			       partition->name,
+			       partition->filesize,
+			       value0);
+			part_mismatch++;
+		}
+
+		if (value1 != partition->sw_ver) {
+			printf("partition %s "
+			       "doesn't have the identical sw version (%d,%d)",
+			       partition->name,
+			       partition->sw_ver,
+			       value1);
+			part_mismatch++;
+		}
+	}
+
+	return part_mismatch;
+}
+
+
+int snapshot_boot(int verify, int load_only, int header_print, int desc_print, int decomp_print)
+{
+	storage_partition_t partition;
+	loff_t offset, offset_datapage;
+	unsigned long nr_meta_pages;
+	int part_mismatch = 0;
+	struct snapshot_header *header;
+
+#if defined(LG_CHG)
+#ifdef CONFIG_SECURITY_BOOT
+    verify_apps(BOOT_SNAPSHOT);
 #endif
+#endif
+
+	offset = g_snapshot_offset;
+	TIME_CHECK();
+	if( !offset ) {
+		/* Get partition which has snapshot boot image(hibernation image) */
+		if (storage_get_partition(SNAP_PART_NAME, &partition) < 0) {
+			printf("Invalid snapshot image partition\n");
+			return -1;
+		}
+		offset = partition.offset;
+
+		/* Get header */
+		if (storage_read(offset, sizeof(struct swsusp_info), info) < 0) {
+			printf("Can't read snapshot image header\n");
+			return -1;
+		}
+	}
+	header = GET_SNAP_HEADER(info);
+
+	if(header_print)
+		print_snapshot_header(info);
+
+	part_mismatch = verify_dep_parts(info);
+	if(part_mismatch) {
+		printf("%d dep parts are mismatched!\n", part_mismatch);
+		return -1;
+	}
+
+	/* Restore snapshot image into memory */
+	switch(header->compress_algo) {
+	case UNCOMPRESSED:
+		/* Read metadata pages */
+		nr_meta_pages = info->pages - info->image_pages - 1;
+		meta_page_ptr = malloc(nr_meta_pages * PAGE_SIZE);
+		if (meta_page_ptr == NULL) {
+			printf("Can`t alloc buffer for metadata pages\n");
+			printf("nr metadata pages : %d\n", nr_meta_pages);
+			return -1;
+		}
+
+		if (storage_read(offset + PAGE_SIZE, nr_meta_pages * PAGE_SIZE, meta_page_ptr) < 0) {
+			printf("Can't read snapshot image metadata\n");
+			free(meta_page_ptr);
+			return -1;
+		}
+
+		/* add header and metadata pages */
+		offset_datapage = offset + ((1 + nr_meta_pages) * PAGE_SIZE);
+
+		if (uncompressed_snapshot_image_restore(nr_meta_pages, offset_datapage) < 0) {
+			free(meta_page_ptr);
+			return -1;
+		}
+		break;
+
+	case LZO:
+		// Fall through
+	case LZ4HC:
+	case LZ4:
+		/* Read metadata pages */
+		meta_page_ptr = malloc(sizeof(struct pfn_merge_info) * header->pfn_mi_cnt);
+		if (meta_page_ptr == NULL) {
+			printf("Can`t alloc buffer for metadata pages\n");
+			return -1;
+		}
+
+		if (storage_read(offset + header->metadata_start_offset_for_comp, sizeof(struct pfn_merge_info) * header->pfn_mi_cnt, meta_page_ptr) < 0) {
+			printf("Can't read snapshot image metadata\n");
+			free(meta_page_ptr);
+			return -1;
+		}
+
+		/* add header */
+		offset_datapage = offset + PAGE_SIZE;
+
+		if (compressed_snapshot_image_restore(offset_datapage, verify, desc_print, decomp_print) < 0) {
+			free(meta_page_ptr);
+			return -1;
+		}
+
+		break;
+
+	default:
+		printf("Unsupported compress type\n");
+		return -1;
+	}
+
+	/* Cleaning before exit bootloader */
+	free(meta_page_ptr);
+
+	printf("Welcome to snapshot world!\n");
+
+	//wait_oneshot_timer();
+
+	if(load_only)
+		return 0;
+
+	//display_boottime_log();
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	release_non_boot_core();
+#endif
+
+	if(before_start_linux() < 0)
+		return -1;
+
+	kernel_resume_func = (void (*))header->pa_resume_func;
+#ifdef CONFIG_SECURITY_BOOT
+	wait_tee_ready();
+#endif
+
+	kernel_resume_func();
+
+	return 0;
+}
+
+#ifdef CONFIG_USB_PL2303
+extern struct usb_device *pPL2303Dev;
+#endif
+int before_start_linux(void)
+{
+	eth_halt();
+
+#ifdef CONFIG_USB_PL2303
+	pPL2303Dev = NULL;
+#endif
+
+	usb_stop();
+
+	flush_cache_all();
+
+	cleanup_before_linux();
+
+	return 0;
+}
+
 int do_hib(void)
 {
-	struct partition_info	*mpi;
-	int ret, *in_suspend, ret1;
-	extern void __restore_processor_state(unsigned long *, unsigned long *);
-	//char *xip_argv[2] = {"xip", "lgapp"};
-	char* pargs[3] = {0,"tzfw","0x200000"};
-	polling_timer();
-	//BootSplash();
-// verify tzfw partition  
-//	do_cp2ram (NULL, 0, 3, pargs);
-//	do_verification(NULL, 0, 4, pargs);
-#ifdef SIGN_USE_PARTIAL
-	LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)0xfb005000;
-#endif	
-	//BootSplash();
-	mpi	= get_used_partition(HIB_PART_NAME);
-	if(!mpi) {
-		printf("mpi = NULL, no hibernation partition\n");
-		return -1;
-	}
+	int rc = -1;
 
-	ret = read_swsusp_header(mpi);
-	if(ret == -1)
-	{
-		printf("No hibernation image\n");
-		return -1;
-	}
+	rc = snapshot_boot(1, 0, 0, 0, 0);
 
-#ifndef	USE_ASYNC_SHA1
-	// load xip Image
-//	if(do_xipz(find_cmd("xip"), 0, 2, xip_argv))
-	if(do_xiplz4(find_cmd("xip"), 0, 2, xip_argv))
-	{
-		printf("do_xip fail\n");
-		return -1;
-	}
-#endif
-
-	polling_timer();
-	// kernel page restore
-	//BOOTLOG("page_restore() --->\n");
-	ret = page_restore();
-	//BOOTLOG("page_restore() <---\n");
-  	if ((ret == 2) || (ret == 3))
-  	{
-    	do
-    	{
-      		if(ret == 2)              
-        		ret1 = emmc_async_read_stop(0, 0);
-      		else if(ret == 3) 
-        		ret1 = emmc_async_read_stop(0, 1);
-
-      		if(ret1 != -1)
-      		{
-        		swsusp_resume_val.left_data_pages = swsusp_resume_val.total_data_pages;
-        		swsusp_resume_val.left_meta_pages = swsusp_resume_val.total_meta_pages;
-				//BOOTLOG("page_restore() --->\n");
-        		ret = page_restore();
-				//BOOTLOG("page_restore() <---\n");
-      		}
-			
-    	}while((ret1 != -1) && (ret != 1));
-		polling_timer();
-		
-  	}
-
-	if(ret != 1)
-	{
-		printf("page restore fail\n");
-		return -1;
-	}	
-
-	while(1) //InvertOn check loop
-	{
-		if(!__InvertOn) // __InvertOn 0 : off , 1 : on
-		{
-			printf("Check Invert On/Off %d \n", __InvertOn);
-			// if __InvertOn is 0, call BootSplash() to trun Invert on
-			// BootSplash() will set __InvertOn
-			BootSplash();
-		}
-		else
-		{
-			break;
-		}
-	}
-#ifdef CC_TRUSTZONE_SUPPORT
-	init_tz();
-#endif
-
-#ifdef SIGN_USE_PARTIAL	
-		//copy pub key to mem		
-		memcpy((void *)0x4000000+appxip_len-sizeof(prLdrEnv->au4CustKey) /*tail of appxip*/, (void *)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
-#endif
-	// Reset in_suspend
-	in_suspend = (int *)(header->in_suspend_paddr);
-	*in_suspend = 0;
-
-	// restore processor and coprocessor state
-	//gd->flags &= ~GD_FLG_SILENT;
-
-	printf("\n[%d] Restore processor state and jump to kernel\n", readMsTicks());
-	//PrintLateBuffer();
-//	BOOTLOG("Restore processor state and jump to kernel\n");
-//	PrintBootBuffer();
-//	udelay(10000000000000);
-	printf ("purplearrow, __restore_processor_state is not implemented\n");
-	//__restore_processor_state(header->resume_func_vaddr, header->saved_context_paddr);
-
-	// never returns
-	return ret;
+	return rc;
 }
 
 U_BOOT_CMD(
@@ -599,72 +955,22 @@ u32 _crc32_le(u32 crc, unsigned char const *p, size_t len)
 	return crc;
 }
 
-void print_swsusp_resume_val(void)
+static void hib_image_info(void)
 {
-	printf("========swsusp resume runtime val============\n");
-	printf("total_image_pages = %d\n", swsusp_resume_val.total_image_pages);
-	printf("total_data_pages = %d\n", swsusp_resume_val.total_data_pages);
-	printf("total_meta_pages = %d\n", swsusp_resume_val.total_meta_pages);
-	printf("left_data_pages = %d\n", swsusp_resume_val.left_data_pages);
-	printf("left_meta_pages = %d\n", swsusp_resume_val.left_meta_pages);
-	printf("cur_meta_floffset = %x\n", swsusp_resume_val.cur_meta_floffset);
-	printf("========swsusp resume runtime val============\n");
-}
+	struct swsusp_info si;
+	storage_partition_t partition;
 
-
-int read_swsusp_header(struct partition_info *mpi)
-{
-	int ret;
-	unsigned int floffset;
-	unsigned int size;
-	char *buf = (char *)IMAGE_LOAD_BUFFER_ADDR;
-
-	polling_timer();
-	if(buf == NULL)
-	{
-		printf("%s[%d] : fail alloc swsusp_info buffer\n", __func__, __LINE__);
+	/* Get partition which has snapshot boot image(hibernation image) */
+	if (storage_get_partition(SNAP_PART_NAME, &partition) < 0) {
+		printf("Invalid snapshot image partition\n");
 		return -1;
 	}
-
-	floffset = (ulong)(mpi->offset + CFG_FLASH_BASE);
-	size = PAGE_SIZE;
-
-	// Read swsusp_info header
-	ret = storage_read((uint32_t)floffset, (size_t)size, buf);
-	if(ret) {
-		printf("%s[%d] : storage read error.. \n", __func__, __LINE__);
+	/* Get header */
+	if (storage_read(partition.offset, sizeof(struct swsusp_info),&si) < 0) {
+		printf("Can't read snapshot image header\n");
 		return -1;
 	}
-
-	header = (struct swsusp_info *)buf;
-
-	printf("swsusp info read complete\n");
-	printf("swsusp_info{\n");
-	printf("version code = %#x\n", header->version_code);
-	printf("num_physpages = %u\n", header->num_physpages);
-	printf("cpus = %d\n", header->cpus);
-	printf("image_pages = %u\n", header->image_pages);
-	printf("pages = %u\n", header->pages);
-	printf("size = %u\n", header->size);
-	printf("}swsusp_info\n");
-
-	if(header->version_code != 0xaceace)
-	{
-		return -1;
-	}
-
-	// Init runtime structure
-	swsusp_resume_val.total_image_pages = header->pages - 1; // the first page is swsusp_header
-	swsusp_resume_val.total_data_pages = header->image_pages;
-	swsusp_resume_val.total_meta_pages = swsusp_resume_val.total_image_pages - swsusp_resume_val.total_data_pages;
-	swsusp_resume_val.left_data_pages = swsusp_resume_val.total_data_pages;
-	swsusp_resume_val.left_meta_pages = swsusp_resume_val.total_meta_pages;
-	swsusp_resume_val.cur_meta_floffset = floffset + PAGE_SIZE;
-	polling_timer();
-	print_swsusp_resume_val();
-	polling_timer();
-
-	return ret;
+	print_snapshot_header(&si);
 }
 
 int do_snapshot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
@@ -672,7 +978,7 @@ int do_snapshot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	unsigned char snapshot;
 	unsigned char snapshot_old;
 
-	if(argc != 2) {
+	if(argc > 4) {
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		printf ("%s\n", cmdtp->help);
 		snapshot = DDI_NVM_GetSnapShot_Support();
@@ -689,6 +995,66 @@ int do_snapshot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			DDI_NVM_SetSnapShot_Support('S');
 		else
 			DDI_NVM_SetSnapShot_Support(0);
+
+	} else if( !strcmp(argv[1],"info") ) {
+		printf(" !! Display snapshot header info ----------------\n");
+		hib_image_info();
+	} else if( !strcmp(argv[1],"remake") ) {
+		remake_hib();
+		printf("snapshot image has been removed\n");
+	} else if( !strcmp(argv[1],"load") ) {
+		if( argc > 2 ) {
+			if( !strcmp(argv[2],"nolog") )
+				snapshot_boot(1, 1, 0, 1, 0);
+			else if( !strcmp(argv[2],"loop") ) {
+				if( argc > 3 ) {
+					int cnt = simple_strtoul(argv[3], NULL, NULL);
+					int loop = cnt;
+					int try = 0;
+					while( 1 ) {
+						snapshot_boot(1, 1, 0, 1, 0);
+						if( cnt )
+							if( --loop <= 0 )
+								break;
+#if defined(CONFIG_MULTICORES_PLATFORM)
+						mtk_msleep(500);
+#endif
+						printf("Decompress test try cnt=%d\n",try++);
+					}
+				}
+			} else
+				snapshot_boot(1, 1, 1, 1, 1);
+		} else
+			snapshot_boot(1, 1, 1, 1, 1);
+	} else if( !strcmp(argv[1],"single") ) {
+
+		if( argc > 2 ) {
+			if( !strcmp(argv[2],"on") ) {
+				printf("current used %s , changed to single-core\n",use_single_core?"single-core":"multi-core");
+				use_single_core = 1;
+			} else if( !strcmp(argv[2],"off") ) {
+				printf("current used %s , changed to multi-core\n",use_single_core?"single-core":"multi-core");
+				use_single_core = 0;
+			} else {
+				printf("current used %s , changed to multi-core\n",use_single_core?"single-core":"multi-core");
+				use_single_core = 0;
+			}
+		}
+	} else if( !strcmp(argv[1],"art") ) {
+		unsigned char art;
+		if( argc > 2 ) {
+			if( !strcmp(argv[2],"on") ) {
+				DDI_NVM_SetSnapShotART('A');
+			} else if( !strcmp(argv[2],"resume") ) {
+				DDI_NVM_SetSnapShotART('R');
+			} else if( !strcmp(argv[2],"making") ) {
+				DDI_NVM_SetSnapShotART('M');
+			} else {
+				DDI_NVM_SetSnapShotART(0);
+			}
+		}
+		art = DDI_NVM_GetSnapShotART();
+		printf("Snapshot ART(Auto Rebooting Test)=%s\n",(art=='A')?"auto":(art=='R')?"resume":(art=='M')?"making":"off");
 	}else{
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		printf ("%s\n", cmdtp->help);
@@ -701,7 +1067,10 @@ int do_snapshot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 }
 
 U_BOOT_CMD(
-	snapshot,	  2,	  0,	  do_snapshot,
+	snapshot,	  4,	  0,	  do_snapshot,
 	"snapshot\t- set snapshot flag on/off at NVM\n",
 	"snapshot [on|off]\n"
+	"snapshot info -Display snapshot header\n"
+	"snapshot load [nolog|loop [cnt]] -load snapshot image without jump to kernel, if cnt is 0 ,loading image infinitely\n"
+	"snapshot art [on|off] - auto rebooting test\n"
 );

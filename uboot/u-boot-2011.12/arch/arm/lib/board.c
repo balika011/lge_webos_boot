@@ -352,7 +352,7 @@ init_fnc_t *init_sequence_post[] = {
 };
 
 extern int verify_apps(int boot_mode);
-#define IS_SNAPSHOTBOOT		( (check_snapshot_mode() == LGSNAP_SNAPSHOTBOOT)? BOOT_SNAPSHOT : BOOT_COLD  )
+#define IS_SNAPSHOTBOOT		( (check_snapshot_mode() == LGSNAP_RESUME)? BOOT_SNAPSHOT : BOOT_COLD  )
 
 #ifdef SIGN_USE_PARTIAL
 //#define BOOTCOMMAND "cp2ramz kernel 0x7000000 0x7FC0;verification 0 kernel 0x7000000;xipz lgapp;bootm 0x7FC0"
@@ -409,7 +409,7 @@ extern int verify_apps(int boot_mode);
 #endif
 
 #ifdef	CONFIG_HIBERNATION
-		if(check_snapshot_mode() == LGSNAP_SNAPSHOTBOOT)
+		if(check_snapshot_mode() == LGSNAP_RESUME)
 		{	
 			disable_wp(0); // eMMC W/P disable before snapshot booting
 			if(do_hib() == -1)
