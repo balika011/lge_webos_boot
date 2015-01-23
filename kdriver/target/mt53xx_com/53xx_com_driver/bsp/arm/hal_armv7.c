@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/01/23 $
  * $RCSfile: hal_1176.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1569,12 +1569,14 @@ static void CreatePageTable(UINT32 u4Addr)
         if ((i << 20) < u4DramSize)
         {
 #ifdef CC_SECURE_WORLD
-            UINT32 u4NsBit = NS_BIT;
+            UINT32 u4NsBit = 0; // NS_BIT;
 
+#if 0
             if ( TZ_DRAM_START != 0 && TZ_DRAM_END != 0)
             {
                 u4NsBit = (i >= (TZ_DRAM_START >> 20) && i < (TZ_DRAM_END >> 20)) ? 0 : NS_BIT;
             }
+#endif            
 #ifdef CC_DISABLE_SMP
 	     // (no smp) - secure/outer non-cache mode
 	    pu4Table[i] = L1Entry(SECTION, i << 20, TEX_OUTER_NONCACHE, C_BIT | B_BIT | u4NsBit, USER_NO_ACCESS);
