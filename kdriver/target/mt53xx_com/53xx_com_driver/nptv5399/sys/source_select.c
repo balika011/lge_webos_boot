@@ -125,7 +125,9 @@ RVideoSrcSelect  _rVdoSrc[2];
 
 #ifdef CC_SUPPORT_PIPELINE
 RVideoSrcSelectVFEAVD  _rVdoSrcVFEAVD[2];
-UINT8 _fVSCConnectVFEAVD;
+UINT8 _fVSCConnectVFEMainAVD;
+UINT8 _fVSCConnectVFESubAVD;
+
 UINT8 _fVSCConnectVFEAVDMain;
 UINT8 _fVSCConnectVFEAVDSub;
 UINT8 _fVSCConnectVFEMainChannel;

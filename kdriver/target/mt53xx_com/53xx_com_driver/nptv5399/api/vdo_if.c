@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/23 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -522,10 +522,8 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 	case SV_VS_ATD1:
 	case SV_VS_CVBS4:
 	case SV_VS_SCART1:
-		bSrc=SV_VS_CVBS4;
-		bApiVFEAVDConnect(bAVDConnect,bSrc,SV_VS_NO_CHANGE);
-		break;
 	case SV_VS_MAX:
+		bApiVFEAVDConnect(bAVDConnect,bSrc,SV_VS_NO_CHANGE);
 		break;
 	default:
 		break;
@@ -1419,6 +1417,19 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 	if(bOnOff==0x1)
 		
 {
+    _fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
+	if(_fVSCConnectMainAVD)
+	{
+		bApiVFESetMainSubSrc(bMainSrc,SV_VS_NO_CHANGE);
+
+	}
+	if(_fVSCConnectSubAVD)
+	{
+		bApiVFESetMainSubSrc(SV_VS_NO_CHANGE,bSubSrc);
+
+	}
+	
     if(bMainSrc ==SV_VS_NO_CHANGE)
     {
         bMainSrc = _fVFEAVDSourceMainOld;
@@ -1430,7 +1441,7 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
     }
 	
     NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
-
+    vDrvCvbsVfePWON();
     /*AVD source is changed ? */
     {
 
@@ -1452,24 +1463,14 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
     }
 	LOG(0, "11111bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
      _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
-    //if(fgMainCh)
+    if(fgMainCh)
     {
             vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
-       // vSetMOutMux(bNewMainDec);  need video path to set it
     }
 
-    //if(fgMainCh)
+    if(fgMainCh)
     {
 			
-#if SUPPORT_SCART
-			/* considering SCART-RGB */
-			//if(_bMainICIn == P_FB0)
-			if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
-			{
-				vDrvSetPorchTune(0x0, SV_PORCHTUNE_SCPOS);   // need to do ?
-			}
-
-#endif
 		vTvd3dConnect(0x0, SV_ON);//just  connect TVD
 
      }
@@ -1478,7 +1479,7 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 // disconnet  from here	
 else
 {   
-	vDrvAvMux(0);     // tuner off the AVMUX 
+	LOG(0, "bApiVFEAVDdisconnect\n");
 	vDrvCvbsVfePD();  //power down cvbs ADC  and Scart RGB will not get the information
 	vTvd3dConnect(0x0, SV_OFF);// disconnect TVD
 }

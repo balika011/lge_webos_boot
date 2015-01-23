@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #6 $
+ * $Revision: #7 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -526,16 +526,16 @@ void vDrvVideoSwInit(void)
 	
 #ifdef CC_SUPPORT_PIPELINE
 	_fVFEAVDSourceMainNew=(UINT8)SV_VS_MAX;
-    _fVFEAVDSourceMainOld=(UINT8)SV_VS_MAX;
-    _fVFEAVDSourceSubNew=(UINT8)SV_VS_MAX;
-    _fVFEAVDSourceSubOld=(UINT8)SV_VS_MAX;
+	_fVFEAVDSourceMainOld=(UINT8)SV_VS_MAX;
+	_fVFEAVDSourceSubNew=(UINT8)SV_VS_MAX;
+	_fVFEAVDSourceSubOld=(UINT8)SV_VS_MAX;
 	_fVFEAVDMainICPin=(UINT8)P_FA;
 	_fVFEAVDSubICPin=(UINT8)P_FA;
 	_fVSCConnectAVDMainChannelON = SV_OFF;
 	_fVSCConnectAVDSubChannelON= SV_OFF;
 	_fVSCConnectAVDMainDEC = SV_VD_NA;
 	_fVSCConnectAVDSubDEC= SV_VD_NA;
-	_fVSCConnectAVD=0x0;  // init set VSC do not  connect the AVD
+	_fVSCConnectMainAVD=0x0;  // init set VSC do not  connect the AVD
 	 u1ADCConnentSrc=(UINT8)SV_VS_MAX;
 	 u1ADCConnentSrcType=(UINT8)VSS_MAX;
 	 u1ADCConnentSrcPort=(UINT8)P_FA;

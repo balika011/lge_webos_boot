@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #8 $
+* $Revision: #9 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -231,7 +231,7 @@
 #define TVD_FAST_CHCHG 1
 #define TVD_NOBURST_SLOW_V625_WA 1
 #define TVD_LIM_HERR_WA 1
-#define TVD_BP_ATV_MODECHG 1
+#define TVD_BP_ATV_MODECHG 0
 #define TVD_ADAP_VPRES_SETTING 1
 #define TVD_RESET_MODE_CHCHG 1
 #define TVD_VMASK_HEAD_SHAKING  1
@@ -4316,9 +4316,8 @@ static void _svDrvTvdModeChgDone(void)
     _svDrvTvdUpdateActiveWH();
     
 #ifdef CC_SUPPORT_PIPELINE
-	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	//_fVSCConnectAVD=0x1;
-	if(_fVSCConnectAVD)
+	_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	if(_fVSCConnectMainAVD)
 	{
 		if(fgIsMainTvd3d())
 		{
@@ -4780,9 +4779,8 @@ static void _svDrvTvdModeChg(void)
 #endif
         
 		#ifdef CC_SUPPORT_PIPELINE
-		_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-		//_fVSCConnectAVD=0x1;
-		if(_fVSCConnectAVD)
+		_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+		if(_fVSCConnectMainAVD)
 		{
 			if(fgIsMainTvd3d())
 			{
@@ -8472,9 +8470,8 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
 
     vTvd3dTrigModeDet();
 #ifdef CC_SUPPORT_PIPELINE
-	_fVSCConnectAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	//_fVSCConnectAVD=0x1;
-	if(_fVSCConnectAVD)
+    _fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	if(_fVSCConnectMainAVD)
     {
 		if(fgIsMainTvd3d())
 		{
