@@ -55,7 +55,9 @@ void *main_init(void *arg)
 		//create_thread_test();
 		
 			fast_boot();
-		second_main();
+		for (;;) {
+			main_loop();
+			}
 			//char c = 0;
 			//c = getc();
 			//printf ("\n C main_loop C \n");

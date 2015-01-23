@@ -1023,6 +1023,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 	}
 	#if defined(CONFIG_MULTICORES_PLATFORM)
+	second_main();
 	//IO_WRITE32(0xf0008000, 0x2c, 0x42000000);
 	extern void thread_start(void);
 	thread_start();
@@ -1338,9 +1339,9 @@ void second_main(void)
 		
 		printf("\n[Snapshot debug] normal uboot flow\n");
 		/* main_loop() can return to retry autoboot, if so just run it again. */
-		for (;;) {
-			main_loop();
-		}
+//		for (;;) {
+//			main_loop();
+//		}
 }
 void hang(void)
 {
