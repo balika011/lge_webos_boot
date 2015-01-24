@@ -59,19 +59,13 @@ int __release_smp_cpu(void)
         if (megic_number_cleaned)
         {
             smp_cpu_released[get_cpu_id()].lock= 1;
-            asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (0));
             dsb();
-            wfi();
-            if(MAGIC_NUMBER == readl(CONFIG_KERNEL_START_ADDRESS+SMP_DUMMY_MAGIC));
-            {
-                return jump_to_secondary();
-            }
         }
     }
 }
 static void *sub_init(void *arg)
 {
-#if 1		
+#if 0		
 		char name[16];
 		int pri;
 		
@@ -112,10 +106,10 @@ static void *sub_init(void *arg)
 		//printf("\n#######main_init#########\n");
 	#endif
 
-	//printf("Starting in sub thread main context\n");
-//	thread_cond_timedwait(&g_sub_cond[get_current_cpu()],NO_TIMEOUT);
-//	for(;;)
-//		__release_smp_cpu();
+	dbg_print("Starting in sub thread main context\n");
+	thread_cond_timedwait(&g_sub_cond[get_current_cpu()],NO_TIMEOUT);
+	for(;;)
+		__release_smp_cpu();
 }
 
 static void _thread_main(int (*func)(void *),void *arg, thread_t *thread)
