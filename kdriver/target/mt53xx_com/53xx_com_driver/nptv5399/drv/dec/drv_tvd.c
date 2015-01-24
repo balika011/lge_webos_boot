@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #10 $
+* $Revision: #11 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8439,7 +8439,7 @@ void vTvd3dTrigModeDet(void)
  */
 void vDrvTvd3dSetColorSystem(UINT8 bColSys)
 {
-    LOG(1,"[TVD_DBG_MSG] vDrvTvd3dSetColorSystem bColSys=%d \n",bColSys);
+    LOG(0,"[TVD_DBG_MSG] vDrvTvd3dSetColorSystem bColSys=%d \n",bColSys);
 
     if(bTvdCtrl(TCTL_NTSCONLY,TC_GETVAL,0)== 1)
     {
@@ -8657,13 +8657,13 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
         vIO32WriteFldAlign(CDET_00, pTvdEnabledCS->u1TvdEnSECAM, SECAM_EN);
         vIO32WriteFldAlign(CDET_00, pTvdEnabledCS->u1TvdEnPAL60, PAL60_EN);
         vIO32WriteFldAlign(CDET_00, pTvdEnabledCS->u1TvdEnNTSC443, NTSC443_EN);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem PALN=%d\n", pTvdEnabledCS->u1TvdEnPALN);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem PAL=%d\n", pTvdEnabledCS->u1TvdEnPAL);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem PALM=%d\n", pTvdEnabledCS->u1TvdEnPALM);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem NTSC358=%d\n", pTvdEnabledCS->u1TvdEnNTSC358);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem SECAM=%d\n", pTvdEnabledCS->u1TvdEnSECAM);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem PAL60=%d\n", pTvdEnabledCS->u1TvdEnPAL60);
-        LOG(3, "[TVD_DBG_MSG] SetEnabledColorSystem NTSC443=%d\n", pTvdEnabledCS->u1TvdEnNTSC443);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem PALN=%d\n", pTvdEnabledCS->u1TvdEnPALN);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem PAL=%d\n", pTvdEnabledCS->u1TvdEnPAL);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem PALM=%d\n", pTvdEnabledCS->u1TvdEnPALM);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem NTSC358=%d\n", pTvdEnabledCS->u1TvdEnNTSC358);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem SECAM=%d\n", pTvdEnabledCS->u1TvdEnSECAM);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem PAL60=%d\n", pTvdEnabledCS->u1TvdEnPAL60);
+        LOG(0, "[TVD_DBG_MSG] SetEnabledColorSystem NTSC443=%d\n", pTvdEnabledCS->u1TvdEnNTSC443);
         if(_bATVChannelChange==FALSE && bDrvTvd3dCheckModeChgForEnabledCS())
         {
             _svDrvTvdModeChg();
