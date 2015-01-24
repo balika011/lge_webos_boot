@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/24 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -688,7 +688,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	    }
 	    else
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VS_NO_CHANGE, SV_VD_NA, bEnable);
+	        bStatus = bApiVSCMainSubSrc(VSC_DEC_NO_CHANGE, SV_VD_NA, bEnable);
 	    }	
 	}
 	return SV_SUCCESS;
@@ -703,12 +703,12 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	BOOL fgMainCh = FALSE;
 	BOOL fgPipCh = FALSE;
 
-	if(bMainSrc == SV_VS_NO_CHANGE)
+	if(bMainSrc == VSC_DEC_NO_CHANGE)
 	{
 		bMainSrc = bOldMainDec;
 	}
 
-	if(bSubSrc == SV_VS_NO_CHANGE)
+	if(bSubSrc == VSC_DEC_NO_CHANGE)
 	{
 		bSubSrc = bOldSubDec;
 	}
@@ -732,7 +732,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	bOldMainDec = bNewMainDec;
 	bOldSubDec = bNewSubDec;
 
-	if(bMainSrc == VSC_DEC_MAXN)
+	if(bMainSrc == SV_VD_NA)
 	{
 		_rMChannel.bIsChannelOn = SV_OFF;
 		_rMChannel.bDecType = SV_VD_NA;
@@ -742,7 +742,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_rMChannel.bIsChannelOn = SV_ON;
 	}
 
-	if(bSubSrc == VSC_DEC_MAXN)
+	if(bSubSrc == SV_VD_NA)
 	{
 		_rPChannel.bIsChannelOn = SV_OFF;
 		_rPChannel.bDecType = SV_VD_NA;
@@ -755,15 +755,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	if(fgMainCh)
 	{
 		vSetMOutMux(bNewMainDec);
-	}
-
-	if(fgPipCh)
-	{
-		vSetSOutMux(bNewSubDec);
-	}
-
-	if(fgMainCh)
-	{
 		_rMChannel.bDecType = bNewMainDec;
 		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
 		vSetMainFlg(MAIN_FLG_MODE_CHG);
@@ -772,11 +763,13 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 
 	if(fgPipCh)
 	{
+		vSetSOutMux(bNewSubDec);
 		_rPChannel.bDecType = bNewSubDec;
 		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
 		vSetPipFlg(PIP_FLG_MODE_CHG);
 		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
 	}
+
 	return SV_SUCCESS;
 }
 
