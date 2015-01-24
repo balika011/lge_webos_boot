@@ -723,7 +723,6 @@ thread_t *thread_init(void)
 void thread_start(void)
 {
 	thread_t *thread = thread_init();
-	#if 0
 	asm volatile (
 				"ldr	sp ,[%0]\n\t"
 				"ldr	r4,[%0,#8]\n\t"
@@ -733,9 +732,8 @@ void thread_start(void)
 				: :"r"(thread)
 				:"memory"
 				);
-	#endif
-	if( thread )
-	_thread_main(thread->start,NULL,thread);
+	//if( thread )
+	//_thread_main(thread->start,NULL,thread);
 }
 
 
