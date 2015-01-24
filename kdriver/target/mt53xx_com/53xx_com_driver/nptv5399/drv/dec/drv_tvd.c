@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #9 $
+* $Revision: #10 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4317,14 +4317,15 @@ static void _svDrvTvdModeChgDone(void)
     
 #ifdef CC_SUPPORT_PIPELINE
 	_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	if(_fVSCConnectMainAVD)
+	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
+	if(_fVSCConnectMainAVD||_fVSCConnectSubAVD)
 	{
-		if(fgIsMainTvd3d())
+		if(fgIsMainTvd3d()&&_fVSCConnectMainAVD)
 		{
 			vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
 		}
 		
-		if(fgIsPipTvd3d())
+		if(fgIsPipTvd3d()&&_fVSCConnectSubAVD)
 		{
 			vSetPipFlg(PIP_FLG_MODE_DET_DONE);
 		}
@@ -4780,15 +4781,16 @@ static void _svDrvTvdModeChg(void)
         
 		#ifdef CC_SUPPORT_PIPELINE
 		_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-		if(_fVSCConnectMainAVD)
+		_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
+		if(_fVSCConnectMainAVD||_fVSCConnectSubAVD)
 		{
-			if(fgIsMainTvd3d())
+			if(fgIsMainTvd3d()&&_fVSCConnectMainAVD)
 			{
 				vSetMainFlg(MAIN_FLG_MODE_CHG);
 				vClrMainFlg(MAIN_FLG_MODE_DET_DONE);	// Clear this flag!
 			}
 			
-			if(fgIsPipTvd3d())
+			if(fgIsPipTvd3d()&&_fVSCConnectSubAVD)
 			{
 				vSetPipFlg(PIP_FLG_MODE_CHG);
 				vClrPipFlg(PIP_FLG_MODE_DET_DONE);	// Clear this flag!
@@ -7015,11 +7017,19 @@ void vTvd3dVSyncISR(void)
     UINT8 bTvdMode;
 
     //********************************** VSync Interrupt***************************************
+    
+#ifdef CC_SUPPORT_PIPELINE
+	if(!((_rTvd3dStat.bIsMain ) || (_rTvd3dStat.bIsPip )))
+	{
+		return;
+	}
+#else
     if(!((_rTvd3dStat.bIsMain && fgIsVdoIntMainDet()) || (_rTvd3dStat.bIsPip && fgIsVdoIntPipDet())))
     {
         return;
     }
-
+	
+#endif
     if(bTvdCtrl(TCTL_BP_ISR,TC_GETEN,0))
     {
         return;
@@ -8471,14 +8481,15 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
     vTvd3dTrigModeDet();
 #ifdef CC_SUPPORT_PIPELINE
     _fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
-	if(_fVSCConnectMainAVD)
+	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
+	if(_fVSCConnectMainAVD||_fVSCConnectSubAVD)
     {
-		if(fgIsMainTvd3d())
+		if(fgIsMainTvd3d()&&_fVSCConnectMainAVD)
 		{
 			vSetMainFlg(MAIN_FLG_MODE_CHG);       
 		}
 		
-		if(fgIsPipTvd3d())
+		if(fgIsPipTvd3d()&&_fVSCConnectSubAVD)
 		{
 			vSetPipFlg(PIP_FLG_MODE_CHG);
 		}

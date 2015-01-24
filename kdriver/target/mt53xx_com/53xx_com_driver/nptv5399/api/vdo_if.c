@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/24 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1407,9 +1407,6 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
     BOOL fgMainCh = FALSE;
     ExtInputTable NewExtInput;
 	// connect AVD is from here
-	if(bOnOff==0x1)
-		
-{
     _fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
 	if(_fVSCConnectMainAVD)
@@ -1434,7 +1431,6 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
     }
 	
     NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
-    vDrvCvbsVfePWON();
     /*AVD source is changed ? */
     {
 
@@ -1458,7 +1454,7 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
      _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
     if(fgMainCh)
     {
-            vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
+        vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
     }
 
     if(fgMainCh)
@@ -1468,12 +1464,10 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 
      }
 
-}
 // disconnet  from here	
-else
+if(bOnOff==0x0)
 {   
 	LOG(0, "bApiVFEAVDdisconnect\n");
-	vDrvCvbsVfePD();  //power down cvbs ADC  and Scart RGB will not get the information
 	vTvd3dConnect(0x0, SV_OFF);// disconnect TVD
 }
     return SV_SUCCESS;

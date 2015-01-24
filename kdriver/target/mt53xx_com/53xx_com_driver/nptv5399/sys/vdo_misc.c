@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #7 $
+ * $Revision: #8 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -536,6 +536,7 @@ void vDrvVideoSwInit(void)
 	_fVSCConnectAVDMainDEC = SV_VD_NA;
 	_fVSCConnectAVDSubDEC= SV_VD_NA;
 	_fVSCConnectMainAVD=0x0;  // init set VSC do not  connect the AVD
+	_fVSCConnectSubAVD=0x0;
 	 u1ADCConnentSrc=(UINT8)SV_VS_MAX;
 	 u1ADCConnentSrcType=(UINT8)VSS_MAX;
 	 u1ADCConnentSrcPort=(UINT8)P_FA;
@@ -3487,7 +3488,7 @@ UINT16 wDrvVideoGetPorchByDec(UINT8 bDecType, UINT8 bPorchType)
     switch(bDecType)
     {
         case SV_VD_TVD3D:
-            wDecPorch=wTvdGetPorch(0,bPorchType);
+            wDecPorch=wTvdGetDefaultPorch(0,bPorchType);
             break;
 
         case SV_VD_VGA:
