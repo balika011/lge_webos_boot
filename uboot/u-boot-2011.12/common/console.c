@@ -26,6 +26,9 @@
 #include <malloc.h>
 #include <stdio_dev.h>
 #include <exports.h>
+#ifdef CFG_LG_CHG
+#include <lg_modeldef.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -372,10 +375,10 @@ static inline void print_pre_console_buffer(void) {}
 
 void putc(const char c)
 {
-#ifdef CONFIG_SILENT_CONSOLE
+//#ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
-#endif
+//#endif
 
 #ifdef CONFIG_DISABLE_CONSOLE
 	if (gd->flags & GD_FLG_DISABLE_CONSOLE)
@@ -426,10 +429,10 @@ int gets(char *s)
 
 void puts(const char *s)
 {
-#ifdef CONFIG_SILENT_CONSOLE
+//#ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
-#endif
+//#endif
 
 #ifdef CONFIG_DISABLE_CONSOLE
 	if (gd->flags & GD_FLG_DISABLE_CONSOLE)
@@ -475,6 +478,11 @@ if(LogEnable == 2)
 	 */
 	i = vsprintf(printbuffer, fmt, args);
 	va_end(args);
+
+#ifdef CFG_LG_CHG
+if(gd->flags & GD_FLG_SILENT)
+	return;
+#endif
 
 	/* Print the string */
 	serial_puts(printbuffer);
@@ -633,11 +641,19 @@ int console_init_f(void)
 	gd->have_console = 1;
 	DDI_CMNIO_I2C_Init();
 
+#ifdef CFG_LG_CHG
+char* print = getenv("print");
+if( (DDI_NVM_GetDebugStatus() > EVENT_LEVEL) || !strcmp(print, "off") )
+	gd->flags |= GD_FLG_SILENT; 	// print off
+	else
+	gd->flags &= ~GD_FLG_SILENT;	// print on
+#else
+
 #ifdef CONFIG_SILENT_CONSOLE
 	if (getenv("silent") != NULL)
 		gd->flags |= GD_FLG_SILENT;
 #endif
-
+#endif
 	print_pre_console_buffer();
 
 	return 0;
@@ -831,3 +847,16 @@ int console_init_r(void)
 }
 
 #endif /* CONFIG_SYS_CONSOLE_IS_IN_ENV */
+
+#ifdef CFG_LG_CHG
+void disable_console(void)
+{
+	gd->flags |= GD_FLG_SILENT;
+}
+
+void enable_console(void)
+{
+	gd->flags &= ~GD_FLG_SILENT;
+}
+#endif
+

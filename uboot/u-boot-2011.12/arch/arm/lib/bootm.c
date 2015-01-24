@@ -374,7 +374,7 @@ extern	struct mmc emmc_info[];
 	if ((!(strncmp(getenv("print"),"off",3))) || (DDI_NVM_GetDebugStatus() != DEBUG_LEVEL))
 	{
 		printf("SILENT MODE!\n");
-		//sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
+		sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
 	}
 	sprintf(arg_next(kargs), "%s ", "devtmpfs.mount=1");
 	sprintf(arg_next(kargs),"modelopt=%s ", strModelOpt);
