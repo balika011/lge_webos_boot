@@ -53,11 +53,10 @@ void *main_init(void *arg)
 	//for (;;) 
 		{
 		//create_thread_test();
-		
+		#if 1
 			fast_boot();
-		for (;;) {
-			main_loop();
-			}
+		second_main();
+		#endif
 			//char c = 0;
 			//c = getc();
 			//printf ("\n C main_loop C \n");
@@ -76,9 +75,9 @@ void *main_init(void *arg)
 			sprintf(name,"test-%d",0);
 			printf("Creating test thread=%s,pri=%d,cpu=%d\n",name,pri,cpu_id);
 			t = thread_create_ex(name,thread_test0, NULL, 0,cpu_id,pri,0);
-		    sprintf(name,"test-%d",1);
+		  //  sprintf(name,"test-%d",1);
 			
-			t = thread_create_ex(name,thread_test1, NULL, 0,cpu_id,pri,0);
+			//t = thread_create_ex(name,thread_test1, NULL, 0,cpu_id,pri,0);
 		}
 		#else
 		
