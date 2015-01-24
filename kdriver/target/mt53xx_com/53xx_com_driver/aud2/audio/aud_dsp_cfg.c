@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/01/25 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27105,8 +27105,10 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
         u4Idx = APROC_IOCTR_TRIM_AMIXER2;
     } 
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
-    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MUTE, (UINT32 *)&fgMute, 1); 
-    
+    if (_u1SpdifRawDec == u1DecId)
+    {
+        vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), fgMute);
+    }
 }
 
 void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
