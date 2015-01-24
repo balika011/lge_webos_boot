@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/24 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2765,6 +2765,15 @@ void vHdtvStatus(void)
     DBG_Printf(DBG_MCHG,"[SA7]bRefreshRate=%d\n", _rHDTV_NSTDStatus.bRefreshRate);
     DBG_Printf(DBG_MCHG,"[SA7]wVTotalDiff=0x%x\n", _rHDTV_NSTDStatus.wVTotalDiff);
 	DBG_Printf(DBG_MCHG,"[SA7]wHLenDiff=%d\n", wHLenDiff);
+	 {	DBG_Printf(VGA_Debug,"offset %d %d %d",	
+		(IO32ReadFldAlign(HDFE_00, AD1_OFFSET)),	//R channel maximum value in a frame
+		(IO32ReadFldAlign(HDFE_00, AD2_OFFSET)),	//G channel maximum value in a frame
+		(IO32ReadFldAlign(HDFE_00, AD3_OFFSET)));	//B channel maximum value in a frame);
+	 	DBG_Printf(VGA_Debug,"gain %d %d %d",
+	 	(IO32ReadFldAlign(HDFE_01, AD1_GAIN)),	//R channel maximum value in a frame
+        (IO32ReadFldAlign(HDFE_01, AD2_GAIN)),	//G channel maximum value in a frame
+        (IO32ReadFldAlign(HDFE_02, AD3_GAIN)));
+	}
 }
 #ifdef  SUPPORT_AV_COMP_AUTO
 UINT8 u1DrvGetCompStatus(void)
