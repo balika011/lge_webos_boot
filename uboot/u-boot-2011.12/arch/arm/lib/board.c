@@ -444,6 +444,9 @@ extern int verify_apps(int boot_mode);
 	
 	disable_wp(0); // eMMC W/P disable for user debugging in boot prompt
 	
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	second_main();
+#endif
 	return 0;
 }
 #endif
@@ -1339,9 +1342,9 @@ void second_main(void)
 		
 		printf("\n[Snapshot debug] normal uboot flow\n");
 		/* main_loop() can return to retry autoboot, if so just run it again. */
-		for (;;) {
-			main_loop();
-		}
+		//for (;;) {
+		//	main_loop();
+		//}
 }
 void hang(void)
 {

@@ -55,7 +55,12 @@ void *main_init(void *arg)
 		//create_thread_test();
 		#if 1
 			fast_boot();
-		second_main();
+		//second_main();
+		for(;;)
+			{
+				main_loop();
+			}
+		
 		#endif
 			//char c = 0;
 			//c = getc();
