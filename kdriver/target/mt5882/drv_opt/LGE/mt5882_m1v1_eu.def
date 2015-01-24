@@ -158,6 +158,7 @@ DEFINES += -DCC_AUD_HP_DEPOP
 ifeq "$(AV_RECORD_LIB)" "true"
 DEFINES += -DCC_AUD_LINEIN_USE_DEC3
 endif
+DEFINES += -DCC_DSP_SUPPORT_ARC
 
 #
 # Dolby tech. license

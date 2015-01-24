@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/25 $
  * $RCSfile: adac_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1341,11 +1341,11 @@ void ADAC_ArcEnable(BOOL fgEnable)
 #if defined(CC_MT5398) || defined(CC_MT5399) || defined(CC_MT5890) || defined(CC_MT5882)
         if (fgEnable)
         {
-            vIO32WriteFldAlign(CKGEN_PMUX0, 1, FLD_PAD_ASPDIF1);
+            BSP_PinSet(PIN_ASPDIF0, PINMUX_FUNCTION1);
         }
         else
         {
-            vIO32WriteFldAlign(CKGEN_PMUX0, 0, FLD_PAD_ASPDIF1);
+            BSP_PinSet(PIN_ASPDIF0, PINMUX_FUNCTION0);
         }
 #elif defined(CC_MT5880)
         if (fgEnable)
