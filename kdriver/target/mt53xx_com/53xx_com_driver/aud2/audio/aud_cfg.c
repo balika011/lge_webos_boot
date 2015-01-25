@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/25 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3756,16 +3756,16 @@ void AUD_SPDIF_Output_HDMI_Rx(BOOL fgEnable)
     { 
         if (fgEnable)
         {
-            bSpdifFunc = PINMUX_FUNCTION2; 
+            bSpdifFunc = PINMUX_FUNCTION3; 
             AUD_SET_BIT(REG_SPOCFG0, HDMI_RX_SPDIF);
-            BSP_PinSet(AUD_SPDIF0, PINMUX_FUNCTION2);
+            BSP_PinSet(AUD_SPDIF0, PINMUX_FUNCTION3);
             LOG(9, "SPDIF output source from HDMI Rx\n");
         }
         else
         {
-            bSpdifFunc = PINMUX_FUNCTION1; 
+            bSpdifFunc = PINMUX_FUNCTION2; 
             AUD_CLR_BIT(REG_SPOCFG0, HDMI_RX_SPDIF);
-            BSP_PinSet(AUD_SPDIF0, PINMUX_FUNCTION1);
+            BSP_PinSet(AUD_SPDIF0, PINMUX_FUNCTION2);
             LOG(9, "SPDIF output source from audio module\n");
         }
     }
