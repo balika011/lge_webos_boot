@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/25 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -12809,6 +12809,28 @@ void _AUD_DspSetSoundBarOnOff(BOOL fgOnOff)
     }
 }
 
+static UINT8 _AUD_CaclCheckSum(UINT8 *pu1Data, UINT32 u4Len)
+{
+    UINT8 i; 
+    UINT8 u1CheckSum = 0;
+
+    while (u4Len--)
+    {
+        u1CheckSum ^= *pu1Data++;
+        for (i = 0; i < 8; i++)
+        {
+            if (u1CheckSum & 0x1)
+            {
+                u1CheckSum = (u1CheckSum >> 1) ^ 0x80;
+            }
+            else
+            {
+                u1CheckSum >>= 1;
+            }
+        } 
+    }
+    return u1CheckSum;
+}
 
 void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo)
 {
@@ -12817,7 +12839,9 @@ void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo)
     UINT32 u4Temp;
     UINT32 u4Data = (UINT32)data;
     UINT32 u4Volome = (UINT32)volumeInfo;
-    
+    UINT32 u4CheckSum = 0;
+    UINT32 u4CheckData[2];
+        
     u4Temp = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2));
     u4ChCfg2 = (u4Temp & 0xFFF) | ((Id & 0xF) << 12); //ID[3:0]
     u4ChCfg3 = (Id >> 4) & 0xFFFF; //ID[19:4]
@@ -12825,9 +12849,13 @@ void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo)
                ((u4Volome & 0xff) << 4) | //volume[7:0]
                ((u4Data & 0xF) << 12); //cmd[3:0]
     u4ChCfg5 = (u4Data>>4) & 0xF;
+
+    u4CheckData[0] = (Id & 0xFFFFFF) | (u4Volome << 24);
+    u4CheckData[1] = (u4Data & 0xFF);
+    u4CheckSum = _AUD_CaclCheckSum((UINT8 *)u4CheckData, 8);    
+    u4ChCfg6 = (u4CheckSum & 0x0F) << 12; //checksum
+    u4ChCfg7 = (u4CheckSum & 0xF0) >> 4; //checksum
     
-    u4ChCfg6 = 0; //checksum
-    u4ChCfg7 = 0; //checksum
 
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2), u4ChCfg2);
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG3), u4ChCfg3);
