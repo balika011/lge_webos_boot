@@ -74,10 +74,10 @@
 *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/26 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -143,7 +143,7 @@ EXTERN UINT32 _au4OriFrameNum[VDP_NS];
 #define CC_CHECK_READ_POINTER
 #ifdef CC_CHECK_READ_POINTER
 //static UINT8 _u1WritePointer[VDP_NS] = {0, 0};
-static UINT8 _u1ReadEnCnt[VDP_NS] = {0, 0};
+static UINT8 _u1ReadEnCnt[VDP_NS] = {0xff, 0xff};
 #define READ_DELAY_COUNTER (0xff)
 static UINT8 _fgReadEnOpening[VDP_NS] = {SV_FALSE, SV_FALSE};
 #endif
