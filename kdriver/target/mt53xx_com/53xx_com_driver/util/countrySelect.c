@@ -106,7 +106,7 @@ void SetTargetCountry(UINT32 u4Country)
 			{
 				if (DRVCUST_OptQuery(arKey[i], &u4Offset) == 0)
 				{
-					if (EEPROM_Write((UINT64)u4Offset, (UINT32)&u1Country, 1) != 0)
+//					if (EEPROM_Write((UINT64)u4Offset, (UINT32)&u1Country, 1) != 0)
 					{
 						Printf("SetTargetCountry fail, eeprom addr=0x%x\n", u1Country);
 					}
@@ -281,7 +281,7 @@ void SetHidKbCountry(UINT32 u4Country)
     
     if (DRVCUST_OptQuery(eHidKbCountry, &u4Offset) == 0)
     {
-        if (EEPROM_Write((UINT64)u4Offset, (UINT32)&u1Country, 1) != 0)
+ //       if (EEPROM_Write((UINT64)u4Offset, (UINT32)&u1Country, 1) != 0)
 		{
 		    Printf("SetHidKbCountry fail, eeprom addr=0x%x\n", u1Country);
 	    }

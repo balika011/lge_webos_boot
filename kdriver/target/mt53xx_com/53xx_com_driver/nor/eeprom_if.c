@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/26 $
  * $RCSfile: eeprom_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1750,7 +1750,7 @@ INT32 EEPVGAEDID_Read(UINT64 u8Offset, UINT32 u4MemPtr, UINT32 u4MemLen)
     // adjust offset to map to physical offset.
     u8Offset += EEPROM_VGA_EDID_OFFSET;
 
-    i4Ret = EEPROM_Read(u8Offset, u4MemPtr, u4MemLen);
+//    i4Ret = EEPROM_Read(u8Offset, u4MemPtr, u4MemLen);
 
     _EEP_Unlock();
     return i4Ret;
@@ -1920,7 +1920,7 @@ INT32 EEPHDMIEDID_Read(UINT64 u8Offset, UINT32 u4MemPtr, UINT32 u4MemLen)
     // adjust offset to map to physical offset.
     u8Offset += EEPROM_HDMI_EDID_OFFSET;
 
-    i4Ret = EEPROM_Read(u8Offset, u4MemPtr, u4MemLen);
+//    i4Ret = EEPROM_Read(u8Offset, u4MemPtr, u4MemLen);
 
     _EEP_Unlock();
     return i4Ret;

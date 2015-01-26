@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/13 $
+ * $Date: 2015/01/26 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1982,7 +1982,7 @@ void WritePanelIndexToEeprom(UINT32 u4PanelIndex)
         {
             if (DRVCUST_PanelQuery(arKey[i], &u4Value) == 0)
             {
-                if (EEPROM_Write((UINT64)u4Value, (UINT32)&u4PanelIndex, 1) != 0)
+       //         if (EEPROM_Write((UINT64)u4Value, (UINT32)&u4PanelIndex, 1) != 0)
                 {
                     Printf("WritePanelIndexToEeprom fail, eeprom addr=0x%x\n",
                            u4Value);

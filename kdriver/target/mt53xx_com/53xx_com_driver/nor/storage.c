@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/26 $
  * $RCSfile: storage.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -558,6 +558,7 @@ static STORG_COND_T _Storge_DoIORequest(const STORG_REQ_T *prReq)
         return COND_UNINIT_OK;
         
     case STORG_OP_READ:
+    	#if 0
         ASSERT(prFuncTbl->pfnRead != NULL);
         if (prFuncTbl->pfnRead == NULL)
         {
@@ -569,9 +570,11 @@ static STORG_COND_T _Storge_DoIORequest(const STORG_REQ_T *prReq)
         {
             return COND_READ_OK;
         }
+        #endif
         break;
 
     case STORG_OP_WRITE:
+    	#if 0
         ASSERT(prFuncTbl->pfnWrite != NULL);
         if (prFuncTbl->pfnWrite == NULL)
         {
@@ -583,6 +586,7 @@ static STORG_COND_T _Storge_DoIORequest(const STORG_REQ_T *prReq)
         {
             return COND_WRITE_OK;
         }
+        #endif
         break;
 
     case STORG_OP_ERASE:
