@@ -1285,10 +1285,10 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
             switch (bLevel)
             {
                 case SV_OFF:
-                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_FULL);
+                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_LIMIT);
                     break;
                 case SV_ON:
-                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_LIMIT);
+                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_FULL);
                     break;
                 default:
                     vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
