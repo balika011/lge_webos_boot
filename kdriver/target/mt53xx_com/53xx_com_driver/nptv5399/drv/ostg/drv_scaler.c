@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/26 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3513,8 +3513,8 @@ static void _vDrvScpipISR(UINT16 u2Vector)
 
     if(u4ScpipGetISRstatus(ISR_DRAM_GFX_WRITE)) // 14
     {
-        LOG(3, "ISR_DRAM_GFX_WRITE %d\n", u4ScpipGetOutVCnt());
-        LOG(3, "GFX interrupt\n");
+        LOG(5, "ISR_DRAM_GFX_WRITE %d\n", u4ScpipGetOutVCnt());
+        LOG(5, "GFX interrupt\n");
         if (_pfVdoVSSCb != NULL)
         {
             _pfVdoVSSCb(); // trigger callback

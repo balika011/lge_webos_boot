@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/24 $
+ * $Date: 2015/01/26 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -516,7 +516,7 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 {
   UINT8 bAVDConnect;
   bAVDConnect=bType;
-  LOG(0, "11111bApiVFEAVDConnect(bSrc=%d, u4Port=%d,bEnable=%d,bType=%d)\n",bSrc,u4Port,bEnable,bType);
+  LOG(2, "Pipeline bApiVFEAVDConnect(bSrc=%d, u4Port=%d,bEnable=%d,bType=%d)\n",bSrc,u4Port,bEnable,bType);
   switch(bSrc)
 	{ 
 	case SV_VS_ATD1:
@@ -691,6 +691,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	        bStatus = bApiVSCMainSubSrc(VSC_DEC_NO_CHANGE, SV_VD_NA, bEnable);
 	    }	
 	}
+	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
 	return SV_SUCCESS;
 
 }
@@ -752,6 +753,8 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 		_rPChannel.bIsChannelOn = SV_ON;
 	}
 
+	LOG(2, "Pipeline fgMainCh %d, fgPipCh %d bNewMainDec %d bNewSubDec %d\n", fgMainCh, fgPipCh,bNewMainDec,bNewSubDec);
+	
 	if(fgMainCh)
 	{
 		vSetMOutMux(bNewMainDec);
