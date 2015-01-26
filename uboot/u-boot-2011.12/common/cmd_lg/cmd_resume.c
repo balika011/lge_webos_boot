@@ -226,6 +226,9 @@ int verify_snapshot_image(struct snapshot_header *header)
 }
 #endif
 
+typedef  int (*pemmc_user_callback)(int,int);
+
+extern void emmc_register_callback(pemmc_user_callback pemmc_user_callback_external);
 
 #if defined(CONFIG_MULTICORES_PLATFORM)
 extern u64 arch_counter_get_ms(void);
@@ -242,7 +245,7 @@ static int read_emmc(void *arg)
 	a.offset = p->offset;
 	a.image_size = p->image_size;
 
-	//eMMC_register_callback(emmc_user_callback);
+	emmc_register_callback(emmc_user_callback);
 
 	g_read_bytes = 0;
 	start_time = (u32)arch_counter_get_ms();

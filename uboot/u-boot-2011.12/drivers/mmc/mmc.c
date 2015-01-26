@@ -346,7 +346,7 @@ int mmc_read_blocks(struct mmc *mmc, void *dst, ulong start, lbaint_t blkcnt)
 typedef  int (*pemmc_user_callback)(int,int);
 pemmc_user_callback pemmc_user_callback_internal = NULL;;
 
-static void emmc_register_callback(pemmc_user_callback pemmc_user_callback_external)
+ void emmc_register_callback(pemmc_user_callback pemmc_user_callback_external)
 {
 	pemmc_user_callback_internal = pemmc_user_callback_external;
 }
