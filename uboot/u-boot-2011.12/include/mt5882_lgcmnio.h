@@ -73,6 +73,9 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 
+#ifndef _MT5882_LGCMNIO_H_
+#define _MT5882_LGCMNIO_H_
+
 //-----------------------------------------------------------------------------
 // Configurations
 //-----------------------------------------------------------------------------
@@ -264,4 +267,4 @@ extern int DDI_SetLocalDimming_OS_Panel(uchar ctrl);
 
 extern void initHW_model_option();
 
-
+#endif

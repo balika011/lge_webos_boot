@@ -73,6 +73,8 @@ typedef	struct
  ******************************************************************************/
 UINT16 gToolOpt[NUM_TOOL_OPTION] = {0, };
 static UINT32	_gModelOptions;
+PANEL_INFO_T	gPanelInfo = {0, };
+
 #ifndef NEW_BOOT_LOGO
 extern void	Splash_GetImageInfo(SPLASH_BMP_TYPE_T bmpType, SPLASH_BMP_INFO_T *pSplashBmpInfo, void *argv, unsigned char systype );
 #endif
@@ -119,6 +121,7 @@ UINT32 Splash_GetHWoption(HW_OPT_T option_mask);
 //#define mdelay(x)		(udelay(x) * (1000))
 
 extern char strModelOpt[];
+extern MODELOPT_T gModelOpt;
 unsigned short __InvertOn = 0; //for checking whether Invert is on
 
 int Get_modelOpt(HW_OPT_T option_mask)
@@ -181,8 +184,7 @@ int Get_modelOpt(HW_OPT_T option_mask)
 	switch(option_mask)
 	{
 		case FRC_OPT_SEL:
-			if(strModelOpt[1] == '0')		return 0;
-			else							return 1;
+			return (int)gModelOpt.bSupport_frc;
 			break;
 
 		case PANEL_RES_OPT_SEL:
@@ -190,38 +192,16 @@ int Get_modelOpt(HW_OPT_T option_mask)
             printf ("Get_modelOpt force fhd\n");
             return 1;
 #else
-			if(strModelOpt[2] == '0')		return 0;
-			else							return 1;
+			return (gModelOpt.panel_resolution == MODELOPT_PANEL_RESOLUTION_FHD)? 1:0;
 #endif
-			break;
-		case DISP_OPT_SEL:
-			if(strModelOpt[3] == '0')		return 0;
-			else							return 1;
 			break;
 
 		case PANEL_TYPE_OPT_SEL:
-			if(strModelOpt[4] == '0')		return 0;
-			else							return 1;
-			break;
-
-		case DDRSPEED_OPT_SEL:
-			if(strModelOpt[5] == '0')		return 0;
-			else							return 1;
+			return (gModelOpt.panel_type != MODELOPT_PANEL_V12)? 1:0;
 			break;
 
 		case CPBOX_OPT_SEL:
-			if(strModelOpt[6] == '0')		return 0;
-			else							return 1;
-			break;
-
-		case T2_TUN_OPT_SEL:
-			if(strModelOpt[7] == '0')		return 0;
-			else							return 1;
-			break;
-
-		case S_TUN_OPT_SEL:
-			if(strModelOpt[8] == '0')		return 0;
-			else							return 1;
+			return (int)gModelOpt.bSupport_cp_box;
 			break;
 
 		case EPI_OPT_SEL:
@@ -230,8 +210,7 @@ int Get_modelOpt(HW_OPT_T option_mask)
             return 0;       //low, not support
             break;
 #else
-			if(strModelOpt[10] == '0')		return 0;
-			else							return 1;
+			return (gModelOpt.panel_interface == MODELOPT_PANEL_INTERFACE_EPI)? 1:0;
 #endif
 			break;
 
@@ -253,6 +232,14 @@ int Get_modelOpt(HW_OPT_T option_mask)
 			}
 			break;
 #endif
+		case HW_OPT_PANEL_INTERFACE:
+			return (int)gModelOpt.panel_interface;
+			break;
+
+		case HW_OPT_PANEL_RESOLUTION:
+			return (int)gModelOpt.panel_resolution;
+			break;
+
 		default:
 			return -1;
 			break;
@@ -342,6 +329,20 @@ void Splash_MICOM_InvOn( void )
 
 }
 
+void Splash_GetPanelInfo(TOOL_OPTION1_T* opt1)
+{
+	gPanelInfo.panel_resolution	= Get_modelOpt(HW_OPT_PANEL_RESOLUTION);
+	gPanelInfo.panel_interface	= Get_modelOpt(HW_OPT_PANEL_INTERFACE);
+	gPanelInfo.bSupport_frc		= Get_modelOpt(FRC_OPT_SEL);
+	gPanelInfo.eModelModuleType = opt1->flags.eModelModuleType;
+	gPanelInfo.nLVDSBit			= opt1->flags.nLVDSBit;
+
+	printf("######panel_resolution: %d\n",gPanelInfo.panel_resolution);
+	printf("######panel_interface: %d\n",gPanelInfo.panel_interface);
+	printf("######bSupport_frc: %d\n",gPanelInfo.bSupport_frc);
+	printf("######eModelModuleType: %d\n",gPanelInfo.eModelModuleType);
+	printf("######nLVDSBit: %d\n",gPanelInfo.nLVDSBit);
+}
 
 void Splash_DrawLogoImage(unsigned int loadaddr, unsigned char systype)
 {
@@ -1126,6 +1127,8 @@ void BootSplash(void)
 	DDI_NVM_GetToolOpt5(&toolOpt5);
 	DDI_NVM_GetToolOpt6(&toolOpt6);
 	DDI_NVM_GetToolOpt7(&toolOpt7);
+
+	Splash_GetPanelInfo(&toolOpt1);
 
 	gToolOpt[0] = toolOpt1.all;
 	gToolOpt[1] = toolOpt2.all;

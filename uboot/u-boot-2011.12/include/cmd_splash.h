@@ -20,6 +20,9 @@
 #ifndef _CFE_SPLASH_H_
 #define _CFE_SPLASH_H_
 
+#include <cmnio_type.h>
+#include "mt5882_lgcmnio.h"
+
 /*********************************************************************
 	매크로 정의(Macro Definitions)
 **********************************************************************/
@@ -47,15 +50,13 @@ typedef enum
 {
 	FRC_OPT_SEL,
 	PANEL_RES_OPT_SEL,
-	DISP_OPT_SEL,
 	PANEL_TYPE_OPT_SEL,
-	DDRSPEED_OPT_SEL,
 	CPBOX_OPT_SEL,
-	T2_TUN_OPT_SEL,
-	S_TUN_OPT_SEL,
 	EPI_OPT_SEL,
-	PHM_OPT_SEL,
 	DISPLAY_TYPE_OPT_SEL,
+
+	HW_OPT_PANEL_INTERFACE,
+	HW_OPT_PANEL_RESOLUTION,
 }	HW_OPT_T;
 
 /* enum for HardWare Display Option */
@@ -109,9 +110,22 @@ typedef enum
 	SOUNDOUT_BLUETOOTH_SOUNDBAR,
 } SOUNDOUT_MODE_T;
 
+/**
+* PANEL SETTING
+*/
+typedef struct panelinfo_t
+{
+	MODELOPT_PANEL_RESOLUTION_T panel_resolution;
+	MODELOPT_PANEL_INTERFACE_T	panel_interface;
+	unsigned char				bSupport_frc;
+	MODULE_MAKER_TYPE_T			eModelModuleType;
+	unsigned short				nLVDSBit;
+} PANEL_INFO_T;
+
 /*********************************************************************
 	Defines
 **********************************************************************/
+extern PANEL_INFO_T gPanelInfo;
 
 /*********************************************************************
 	Function Prototypes

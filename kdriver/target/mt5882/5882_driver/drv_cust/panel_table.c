@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/26 $
+ * $Date: 2015/01/28 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -124,6 +124,57 @@ LINT_EXT_HEADER_END
 #include "modelIndex.h"
 #endif
 #ifdef CC_LGE_PROTO_PCBA
+#ifdef CC_UBOOT
+typedef enum
+{
+	MODULE_LGD = 0,
+	MODULE_CMI,
+	MODULE_AUO,
+	MODULE_SHARP,
+	MODULE_IPS,
+	MODULE_BOE,
+	MODULE_CSOT,
+	MODULE_INX,
+	MODULE_LCD_END,
+
+	MODULE_LGE = MODULE_LCD_END,
+	MODULE_PANASONIC,
+	MODULE_PDP_END,
+	MODULE_BASE	= MODULE_PDP_END
+} MODULE_MAKER_TYPE_T;
+
+
+
+ typedef enum
+{
+	MODELOPT_PANEL_INTERFACE_EPI	= 0,
+	MODELOPT_PANEL_INTERFACE_LVDS	= 1,
+	MODELOPT_PANEL_INTERFACE_VBYONE = 2,
+	MODELOPT_PANEL_INTERFACE_MAX	= 3
+}MODELOPT_PANEL_INTERFACE_T;
+
+
+
+typedef enum
+{
+	MODELOPT_PANEL_RESOLUTION_HD	= 0,
+	MODELOPT_PANEL_RESOLUTION_FHD	= 1,
+	MODELOPT_PANEL_RESOLUTION_UD	= 2,
+	MODELOPT_PANEL_RESOLUTION_MAX	= 3
+}MODELOPT_PANEL_RESOLUTION_T;
+
+typedef struct panelinfo_t
+{
+	MODELOPT_PANEL_RESOLUTION_T panel_resolution;
+	MODELOPT_PANEL_INTERFACE_T	panel_interface;
+	unsigned char				bSupport_frc;
+	MODULE_MAKER_TYPE_T			eModelModuleType;
+	unsigned short				nLVDSBit;
+} PANEL_INFO_T;
+
+extern PANEL_INFO_T gPanelInfo;
+
+#endif
 #define NOT_USE_EEP
 #endif
 //---------------------------------------------------------------------------
@@ -1078,7 +1129,41 @@ void SelectPanel(UINT32 u4Index)
     // read panel index from customer define
     if (u4Index == PANEL_INVALID)
     {
-        u4Index = DRVCUST_PanelGet(eDefaultPanelSelect);
+#if 0//defined(CC_LGE_PROTO_PCBA) && defined(CC_UBOOT)
+	
+		UINT32 u4ControlWord ;
+		printf("#resolution: %d\n",gPanelInfo.panel_resolution);	// 1
+		printf("#interface: %d\n",gPanelInfo.panel_interface);// 1
+		printf("#bSupport_frc: %d\n",gPanelInfo.bSupport_frc);// 0
+		printf("#eModelModuleType: %d\n",gPanelInfo.eModelModuleType);// 0
+		printf("#nLVDSBit: %d\n",gPanelInfo.nLVDSBit);// 0
+
+		if(gPanelInfo.panel_resolution)
+		{
+			if(gPanelInfo.bSupport_frc==0)
+				_u4PanelIndex=PANEL_LG_37_WU1;
+			else if(gPanelInfo.bSupport_frc==1)
+				_u4PanelIndex=PANEL_LG_42_WUD_SAC1_10BIT_NS;
+		
+		}
+		else
+		{
+			if(gPanelInfo.bSupport_frc==0)
+				_u4PanelIndex=PANEL_LG_26_WX2;
+			else if(gPanelInfo.bSupport_frc==1)
+		   		_u4PanelIndex=PANEL_LG_42_WX4_SLB1_8280;
+
+		}
+		u4ControlWord = PANEL_GetControlWord();
+		if(gPanelInfo.panel_interface ==MODELOPT_PANEL_INTERFACE_EPI) 
+			u4ControlWord |= DISP_TYPE_EPI;
+	    PANEL_SetControlWord(u4ControlWord);
+
+		 _prPanelAttribute = &_arPanelAttribute[_u4PanelIndex];
+
+#else 
+	u4Index = DRVCUST_PanelGet(eDefaultPanelSelect);
+#endif
     }
     if (u4Index != PANEL_INVALID)
     {
@@ -1751,6 +1836,7 @@ void LoadPanelIndex(void)
 #endif
 
 #ifdef NOT_USE_EEP  //for a5lr remove eep function
+#else
     if ((DRVCUST_PanelQuery(ePanelIndexFromEeprom, &u4Value) == 0) &&
         (u4Value == 1))
     {
@@ -1982,7 +2068,7 @@ void WritePanelIndexToEeprom(UINT32 u4PanelIndex)
         {
             if (DRVCUST_PanelQuery(arKey[i], &u4Value) == 0)
             {
-       //         if (EEPROM_Write((UINT64)u4Value, (UINT32)&u4PanelIndex, 1) != 0)
+                if (EEPROM_Write((UINT64)u4Value, (UINT32)&u4PanelIndex, 1) != 0)
                 {
                     Printf("WritePanelIndexToEeprom fail, eeprom addr=0x%x\n",
                            u4Value);

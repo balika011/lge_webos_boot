@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/01/28 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -565,8 +565,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			break;
 		case SV_VS_YPbPr1:
 			if(bType)
-			{   vDrvAllHDADCPow(TRUE);
-				vDrvSOY0EN(1);
+			{   
 				//vDrvSetInternalMux(0,_bSrcMainNew);// replaced by following code
 				{
 #if SUPPORT_SCART
