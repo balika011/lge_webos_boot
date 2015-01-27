@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/28 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -376,6 +376,7 @@ static UINT32 PANEL_GetExtAttributeIndex(void);
 //-----------------------------------------------------------------------------
 
 #ifndef LOAD_PANEL_FROM_FLASH_CUSTOM
+#ifndef NOT_USE_EEP
 static BOOL _PanelLoadTableFromFlash(UINT32 u4Offset)
 {
     PANEL_FLASH_ATTRIBUTE_T rFlashTable;
@@ -563,6 +564,7 @@ static BOOL _PanelLoadTableFromFlash(UINT32 u4Offset)
 #endif /* CC_EXTERNAL_LVDS_CHIP */
     return TRUE;
 }
+#endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -1814,14 +1816,23 @@ void GetModelIndexSetDriverTypes(void)
  
 void LoadPanelIndex(void)
 {
-    UINT8 au1Index[] = {PANEL_INVALID, PANEL_INVALID, PANEL_INVALID};
+#ifdef NOT_USE_EEP  //for a5lr remove eep function
+static UINT8 _fgInit = 0 ;
+UINT32 u4Value,i;
+UINT32 u4FinalIndex = PANEL_INVALID;
+
+#else
+
+	UINT8 au1Index[] = {PANEL_INVALID, PANEL_INVALID, PANEL_INVALID};
     QUERY_TYPE_T arKey[] = {ePanelIndexOffset1, ePanelIndexOffset2,
                             ePanelIndexOffset3};
     UINT32 u4Size = sizeof(arKey) / sizeof(QUERY_TYPE_T);
     UINT32 u4Value, u4ValidCounter = 0, i, j;
     UINT32 u4FinalIndex = PANEL_INVALID, i4Ret;
     UINT32 u4WriteIdxToEeprom = 0;
-    static UINT8 _fgInit = 0 ;
+    
+#endif
+
 
 
     if(_fgInit)
