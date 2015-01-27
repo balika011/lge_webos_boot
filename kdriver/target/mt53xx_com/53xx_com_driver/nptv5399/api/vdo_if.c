@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/26 $
+ * $Date: 2015/01/27 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -532,6 +532,13 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 
 }
 
+UINT8 bHDMISrc = 0xff;
+UINT8 bYPbPrSrc = 0xff;
+
+#define _fVFEHDMISourceMainNew bHDMISrc
+#define _fVFEYPbPrSourceMainNew bYPbPrSrc
+
+
 UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bType)
 {
 
@@ -572,6 +579,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 				u1ADCConnentSrc=SV_VS_YPbPr1;
 				u1ADCConnentSrcType=VSS_YPBPR;
 				u1ADCConnentSrcPort=P_YP0;
+				bYPbPrSrc = u1ADCConnentSrc;
 				if(bApiQuearyVSCConnectStatus(0)==SV_VD_YPBPR)
 				{
 					u1VSCConnectADC_main=VSS_YPBPR;
@@ -603,6 +611,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			{
 			   UINT8 srctype;
 			   srctype = bSrc;
+			   bHDMISrc = bSrc;
 			   if(bApiQuearyVSCConnectStatus(SV_VP_MAIN) == SV_VD_DVI)
 			   {
 				    vDviConnect(SV_VP_MAIN, 1);
@@ -663,6 +672,30 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	UINT8 bStatus;
 	
 	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
+
+	if(bPath ==  SV_VP_MAIN)
+	{
+		if(bSrc == VSC_DEC_AVD)
+		{
+			bApiVFESetMainSubSrc(_fVFEAVDSourceMainNew, SV_VS_NO_CHANGE);
+		}
+		else if(bSrc == VSC_DEC_ADC)
+		{
+			bApiVFESetMainSubSrc(_fVFEYPbPrSourceMainNew, SV_VS_NO_CHANGE);
+		}
+		else if(bSrc == VSC_DEC_HDMI)
+		{
+			bApiVFESetMainSubSrc(_fVFEHDMISourceMainNew, SV_VS_NO_CHANGE);
+		}
+		else if(bSrc == VSC_DEC_VDEC)
+		{
+			
+		}
+		else
+		{
+			
+		}
+	}
 
 	bSrc = bApiDecTypeMapping(bSrc);
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/01/27 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -626,6 +626,10 @@ static void _VdpIfStatus(UCHAR ucVdpId)
     */
     vScpipPrintCurrentScale(ucVdpId);
 	vScpipPrintNonlinearStatus(ucVdpId);
+	#ifdef CC_SUPPORT_PIPELINE
+	LOG(1, " VSC  %d Connect Type %d  NA:0 TVD:1 ADC:2 HDMI:4 VDEC:5\n",ucVdpId,bApiQuearyVSCConnectStatus(ucVdpId));
+	LOG(1, " OMux %d select  to    %d NA:1 TVD:0 ADC:2 HDMI:6 VDEC:8/9\n",ucVdpId,ucVdpId == SV_VP_MAIN ?IO32ReadFldAlign(OMUX_00,OMUX_MAIN_SEL) : IO32ReadFldAlign(OMUX_00,OMUX_PIP_SEL));
+	#endif
 }
 
 //-----------------------------------------------------------------------------
