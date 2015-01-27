@@ -298,6 +298,7 @@ extern UINT8 _bDVIAVIinfoBypass;
 
 extern UINT8 _bHdmiVsdbActive;
 extern UINT8 _bCcir2status;
+extern UINT8 _bHdmiModeActive;
 extern void vHdmiMute(E_HDMI_SWITCH_NUM ePort);
 
 #define USE_AVI_CHECK_STABLE 1
@@ -2467,7 +2468,7 @@ PRIVATE void vDviSetInputCapture(UINT8 bMode)
         }
         else
         {
-        	if(pInfo->HDMI_3D_Structure != HDMI_3D_Structure_TopBottom)
+        	if((pInfo->HDMI_3D_Structure != HDMI_3D_Structure_TopBottom)&&(_bHdmiModeActive))
         	{
 	            vIO32WriteFldAlign(CCIR_00, 1, CCH_CEN_SEL);
 	            vIO32WriteFldAlign(CCIR_00, 0x0, CCH_CLK_DIV);
