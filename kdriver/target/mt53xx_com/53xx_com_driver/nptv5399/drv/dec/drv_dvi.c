@@ -2633,12 +2633,13 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
             }
 
             // End
+            #ifndef CC_SUPPORT_PIPELINE
             if(fgIsExtSrcCCIR())
             {
                 //need to modify???
                 vIO32WriteFldAlign(OMUX_00, 0x2 , OMUX_MAIN_SEL);// When in CCIR input the output mux must be set to CCH
             }
-
+            #endif
             vVDOINIrqOn(MSK_MAIN_DET);//need to modify???
             _rDVIStat.bIsMain = TRUE;
 

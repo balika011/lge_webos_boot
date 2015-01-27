@@ -834,7 +834,11 @@ PRIVATE UINT8 OMuxMapTbl[SV_VD_MAX]=
     0,	/* tvd3d */
     2,	/* hdtv */
     2,	/* hdtv */
-    6,	/* dvi */
+    #ifdef CC_SUPPORT_PIPELINE
+	4,	/* dvi */
+    #else
+	6,
+    #endif
     8,	/* mpeghd */
     9 	/* mpegsd */
 };

@@ -4399,7 +4399,9 @@ PRIVATE void vHDMIVideoHdmiSetting(void)
         {
             vIO32WriteFldAlign(CCIR_00, 1, CCH_SRC24_SEL);
             vIO32WriteFldAlign(CCIR_00, 1, CCH_CBCR_SW);
+			#ifndef CC_SUPPORT_PIPELINE
             vIO32WriteFldAlign(OMUX_00, 0x4, OMUX_MAIN_SEL);
+			#endif
         }
 
         if(fgIsPipDVI())
@@ -4453,7 +4455,9 @@ PRIVATE void vHDMIVideoHdmiSetting(void)
         {
             vIO32WriteFldAlign(CCIR_00, 1, CCH_SRC24_SEL);
             vIO32WriteFldAlign(CCIR_00, 1, CCH_CBCR_SW);
+			#ifndef CC_SUPPORT_PIPELINE
             vIO32WriteFldAlign(OMUX_00, 0x4, OMUX_MAIN_SEL);
+			#endif
         }
 
         //else if(fgIsPipDVI())
@@ -4504,7 +4508,9 @@ PRIVATE void vHDMIVideoHdmiSetting(void)
             {
                 vIO32WriteFldAlign(CCIR_00, 0, CCH_SRC24_SEL);
                 vIO32WriteFldAlign(CCIR_00, 0, CCH_CBCR_SW);
+				#ifndef CC_SUPPORT_PIPELINE
                 vIO32WriteFldAlign(OMUX_00, 0x4, OMUX_MAIN_SEL);
+				#endif
             }
 
             //	else if(fgIsPipDVI())
@@ -4529,7 +4535,9 @@ PRIVATE void vHDMIVideoHdmiSetting(void)
             {
                 vIO32WriteFldAlign(CCIR_00, 1, CCH_SRC24_SEL);
                 vIO32WriteFldAlign(CCIR_00, 1, CCH_CBCR_SW);
+				#ifndef CC_SUPPORT_PIPELINE
                 vIO32WriteFldAlign(OMUX_00, 0x4, OMUX_MAIN_SEL);
+				#endif
             }
 
             if(fgIsPipDVI())
@@ -4633,7 +4641,9 @@ void vHDMISetColorRalated(void)
             {
                 vIO32WriteFldAlign(CCIR_00, 1, CCH_SRC24_SEL);
                 vIO32WriteFldAlign(CCIR_00, 1, CCH_CBCR_SW);
+				#ifndef CC_SUPPORT_PIPELINE
                 vIO32WriteFldAlign(OMUX_00, 0x4, OMUX_MAIN_SEL);
+				#endif
             }
             if(fgIsPipDVI())
             {
