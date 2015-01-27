@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #11 $
+* $Revision: #12 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -9022,6 +9022,21 @@ BOOL fgDrvTvdCheckVideoStable(void)
         return FALSE;
     }
 }
+
+BOOL fgDrvTvdCheckTVDModeDone(void)
+{
+
+  if(_sbTvdModeCnt>=_sbTvd_McDone_cnt)
+  {
+     return TRUE;
+  }
+  else
+  {
+	 return FALSE;
+  }
+  	
+}
+
 
 /**
  * @brief   Get NA state.

@@ -92,11 +92,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/31 9:52p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 *************************************************************************/
 /**
 * @file drv_tvd.h
@@ -437,6 +437,7 @@ extern BOOL fgDrvTvdCheckTVDLock( UINT16 bTryLoopCnt );
 extern BOOL fgDrvTvdCheckVPresOn(void);
 extern void vDrvTvdSetChannelChange(UINT8 bOnOff);
 extern BOOL fgDrvTvdCheckVideoStable(void);
+extern BOOL fgDrvTvdCheckTVDModeDone(void);
 extern UINT8 bTvdNAState4Step(void);
 extern UINT16 wTvdHTotal(void);
 extern UINT16 wTvdVTotal(void);
