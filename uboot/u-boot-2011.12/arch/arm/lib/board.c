@@ -323,9 +323,7 @@ init_fnc_t *init_sequence[] = {
 	env_init,		/* initialize environment */
 	init_baudrate,		/* initialze baudrate settings */
 	serial_init,		/* serial communications setup */
-//#ifndef CFG_LG_CHG 	
-	console_init_f, 	/* stage 1 init of console */
-//#endif
+	console_init_f,		/* stage 1 init of console */
 	display_banner,		/* say that we are here */
 #if defined(CONFIG_DISPLAY_CPUINFO)
 	print_cpuinfo,		/* display cpu info (and speed) */

@@ -471,12 +471,6 @@ void main_loop (void)
 # endif
 	}
 
-#ifdef CFG_LG_CHG
-	//enable_console(); // enable console for user debugging
-#endif
-
-
-
 # ifdef CONFIG_MENUKEY
 	if (menukey == CONFIG_MENUKEY) {
 		s = getenv("menucmd");
