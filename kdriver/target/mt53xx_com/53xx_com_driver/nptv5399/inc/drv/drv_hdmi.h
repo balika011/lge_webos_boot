@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_hdmi.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_HDMI_H_
@@ -700,4 +700,5 @@ BOOL fgHDMIinterlacedByPort(UINT8 u1Port);
 UINT8 bHDMIRefreshRateByPort(UINT8 u1Port);
 UINT8 bHDMIScanInfoByPort(UINT8 u1Port);
 UINT8 HDMI_3D_Get_InfoFrameByPort(UINT8 u1Port);
+BOOL fgHDMIIsPixelRepeate(void);
 
