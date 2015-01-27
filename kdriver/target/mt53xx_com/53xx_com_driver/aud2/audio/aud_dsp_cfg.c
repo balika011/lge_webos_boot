@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/27 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27044,6 +27044,8 @@ void _vAUD_Aproc_SetMp3Enc(BOOL fgEnable)
 #ifdef CC_AUD_DDI
 UINT32 _au4MixSoundInputVolume[AUD_MIXSND_NUM] = {VOL_SHM_0_DB};
 BOOL _fgMixSoundInputMute[AUD_MIXSND_NUM] = {FALSE};
+BOOL _fgSpdifConnet[AUD_DEC_MAX] = {FALSE};
+BOOL _fgInputMute[AUD_DEC_MAX] = {FALSE};
 
 static UINT32 _AUD_UserGetDrvVol(UINT8 u1MainVol, UINT8 u1FineVol)
 {
@@ -27136,7 +27138,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     {
         i4Vol = 0x7fffff; 
     }
-
+    _fgInputMute[u1DecId] = fgMute;
     u4Idx = APROC_IOCTR_TRIM_AMIXER0; 
     if (u1DecId == AUD_DEC_AUX)
     {
@@ -27148,8 +27150,15 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     } 
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     if (_u1SpdifRawDec == u1DecId)
-    {
-        vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), fgMute);
+    {   
+        if(!fgMute && _fgSpdifConnet[u1DecId]) //unmute raw
+        {
+            vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 0);
+        }
+        else
+        {
+            vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 0); 
+        }
     }
 }
 
@@ -27261,6 +27270,7 @@ void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime)
 void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL fgEnable)
 {
     UINT32 u4Reg, u4OutSelVal;
+    UINT8 u1DecId = 0xFF;
 
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
@@ -27276,6 +27286,27 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
         break;
     case AUD_SPDIF:
         u4Reg = APROC_REG_SEL_DSP_SPDIF_IN;
+        if (u4OutSel & APROC_OUT_SEL_DEC0)
+        {
+            u1DecId = AUD_DEC_MAIN;
+            _fgSpdifConnet[u1DecId] = fgEnable; 
+        }
+        else if (u4OutSel & APROC_OUT_SEL_DEC1)
+        {
+            u1DecId = AUD_DEC_AUX; 
+            _fgSpdifConnet[u1DecId] = fgEnable; 
+        }
+        if (_u1SpdifRawDec == u1DecId)
+        { 
+            if (fgEnable && !_fgInputMute[u1DecId])
+            { 
+                vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 0);
+            }
+            else
+            {
+                vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 1);
+            }
+        }
         break;
     case AUD_AV_OUT:
         u4Reg = APROC_REG_SEL_DSP_MON_IN;
