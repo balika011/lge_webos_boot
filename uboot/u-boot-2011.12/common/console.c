@@ -375,10 +375,10 @@ static inline void print_pre_console_buffer(void) {}
 
 void putc(const char c)
 {
-//#ifdef CONFIG_SILENT_CONSOLE
+#ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
-//#endif
+#endif
 
 #ifdef CONFIG_DISABLE_CONSOLE
 	if (gd->flags & GD_FLG_DISABLE_CONSOLE)
@@ -429,10 +429,10 @@ int gets(char *s)
 
 void puts(const char *s)
 {
-//#ifdef CONFIG_SILENT_CONSOLE
+#ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
-//#endif
+#endif
 
 #ifdef CONFIG_DISABLE_CONSOLE
 	if (gd->flags & GD_FLG_DISABLE_CONSOLE)
@@ -461,7 +461,7 @@ int printf(const char *fmt, ...)
 	va_list args;
 	uint i;
 	char printbuffer[CONFIG_SYS_PBSIZE];
-	
+
 #if defined(CONFIG_MULTICORES_PLATFORM)
 if(LogEnable == 2)
 	spin_lock(&g_print_lock);
@@ -479,10 +479,7 @@ if(LogEnable == 2)
 	i = vsprintf(printbuffer, fmt, args);
 	va_end(args);
 
-#ifdef CFG_LG_CHG
-if(gd->flags & GD_FLG_SILENT)
-	return;
-#endif
+
 
 	/* Print the string */
 	serial_puts(printbuffer);
@@ -641,7 +638,7 @@ int console_init_f(void)
 	gd->have_console = 1;
 	DDI_CMNIO_I2C_Init();
 
-#ifdef CFG_LG_CHG
+#if 0 //def CFG_LG_CHG
 char* print = getenv("print");
 if( (DDI_NVM_GetDebugStatus() > EVENT_LEVEL) || !strcmp(print, "off") )
 	gd->flags |= GD_FLG_SILENT; 	// print off

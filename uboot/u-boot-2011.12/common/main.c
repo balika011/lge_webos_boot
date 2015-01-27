@@ -472,7 +472,7 @@ void main_loop (void)
 	}
 
 #ifdef CFG_LG_CHG
-	enable_console(); // enable console for user debugging
+	//enable_console(); // enable console for user debugging
 #endif
 
 
