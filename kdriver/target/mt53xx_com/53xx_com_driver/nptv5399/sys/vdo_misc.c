@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #8 $
+ * $Revision: #9 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -237,7 +237,7 @@ extern UINT8 u1SupportHdmiYCbCr444;
 extern UINT8 u1SupportVgaYCbCr444;
 
 //drv_matrix.c
-extern UINT8 u1HdmiColorMode;
+extern UINT8 u1HdmiColorModeEx;
 extern UINT8 u1VgaColorMode;
 #ifdef CC_SUPPORT_PREPROC_TIMING
 extern BOOL _fgPreProcInterlace;
@@ -284,16 +284,20 @@ UINT8 u1GetVGAColorMode(void)
 
 void vSetHDMIColorMode(UINT8 bPath, UINT8 bMode)
 {
-    if(bMode != u1HdmiColorMode)
+    if(bMode != u1HdmiColorModeEx)
     {
-        u1HdmiColorMode = bMode ;
-        vApiHdmiColorModeChg(bPath);
+        u1HdmiColorModeEx = bMode ;
+       // vApiHdmiColorModeChg(bPath);
+
+   		vSetMainFlg(MAIN_FLG_MODE_CHG);
+		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+        _vDrvVideoSetMute(MUTE_MODULE_COLORMODE, VDP_1, 10, FALSE);
     }
 }
 
 UINT8 u1GetHDMIColorMode(void)
 {
-    return u1HdmiColorMode ;
+    return u1HdmiColorModeEx ;
 }
 
 
@@ -367,7 +371,7 @@ UINT8 bIsScalerInput444(UINT8 bPath) reentrant
     {
 #if SUPPORT_DVI
         case SV_VD_DVI:
-            switch (u1HdmiColorMode)
+            switch (u1HdmiColorModeEx)
             {
                 case SV_HDMI_MODE_GRAPHIC:
                      if(bDrvVideoIsSrcInterlace(bPath))

@@ -150,7 +150,8 @@ static CHAR _aszMuteModuleStr[MUTE_MODULE_MAX][MODULE_STR_LEN] =
     "(MW_DISP_FMT)",
     "(MJC)",
     "(TDC)",
-    "(FRC)"
+    "(FRC)",
+    "(Color Mode)"
 };
 #endif
 
