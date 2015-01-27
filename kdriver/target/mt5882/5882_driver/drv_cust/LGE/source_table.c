@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: source_table.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -161,7 +161,7 @@ const rPortmap_t portmap_table[] =
 #ifdef __MODEL_slt__
 	{SV_VS_CVBS3	,P_C3	,AVMUX(CVBS2,0), 0},
 #endif
-	{SV_VS_CVBS4	,P_C4	,AVMUX(CVBSINY,0), P_YP0}, //for CVBS in Y
+	{SV_VS_CVBS4	,P_C4	,AVMUX(CVBS3,0), 0}, //for CVBS in Y
 	{SV_VS_S1	,P_SV0	,AVMUX(CVBS1,CVBS0), 0},
 	{SV_VS_S2	,P_SV1	,AVMUX(SY1,SC1), 0},
 	{SV_VS_S3	,P_SV2	,AVMUX(SY2,SC2), 0},
