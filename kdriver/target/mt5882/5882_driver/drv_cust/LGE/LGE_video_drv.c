@@ -1297,7 +1297,7 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
         }
         else if (fgIsMainTvd3d() || fgIsMainYPbPr())
         {
-            SET_MATRIX_PED(bLevel);
+            SET_MATRIX_PED(!bLevel);
             vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
         }
         else
