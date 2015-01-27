@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/25 $
+ * $Date: 2015/01/27 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4263,6 +4263,12 @@ void AudAprocJtagPinmux(void)
     vIO32WriteFldAlign(CKGEN_PMUX4, 0x5, FLD_PAD_GPIO60);
 
 	#endif
+#ifdef CC_MT5882
+	BSP_PinSet(PIN_HDMI_0_SDA, PINMUX_FUNCTION3);
+	BSP_PinSet(PIN_HDMI_0_SCL, PINMUX_FUNCTION3);
+	BSP_PinSet(PIN_HDMI_1_SDA, PINMUX_FUNCTION3);
+	BSP_PinSet(PIN_HDMI_1_SCL, PINMUX_FUNCTION3);
+#endif    
 }
 
 void AudAprocModuleCtrl(UINT32 u4Module, UINT32 u4Flag)

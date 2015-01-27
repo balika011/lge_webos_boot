@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/25 $
+ * $Date: 2015/01/27 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7685,7 +7685,7 @@ void _AUD_DspChannelDelayValue(INT16 u2Delay, AUD_CH_T eChIndex, UINT8 uDecIndex
     {
         u2DelayLR=u2Delay;
     }
-    else if(eChIndex==AUD_CH_BYPASS_LEFT)
+    else if((eChIndex==AUD_CH_BYPASS_LEFT)||(eChIndex==AUD_CH_IEC_LEFT))
     {
         u2DelayBypass=u2Delay;
     }
@@ -7906,7 +7906,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3, APROC_REG_DELAY_SP), u2Delay/9);
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/9);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);      
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)               
             break;
@@ -7958,6 +7958,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)            
             break;
         case AUD_CH_BYPASS_RIGHT:
+        case AUD_CH_IEC_LEFT:
             u2ShmIndex = W_CHDELAY_CH8;
             u2UopIndex = UOP_DSP_CONFIG_DELAY_CH8;
             if (u2ReadShmUINT16(u1DspId, u2ShmIndex) == u2DelayBypassMix)
@@ -8113,6 +8114,10 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             vWriteShmUINT16(AUD_DSP0, u2ShmIndex, u2DelayLRMix);
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/9);
+        _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);      
+#endif       
         break;
     case AUD_CH_FRONT_RIGHT:
         u2ShmIndex = W_CHDELAY_R;
@@ -8128,6 +8133,7 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
         }
         break;
     case AUD_CH_BYPASS_LEFT:
+    case AUD_CH_IEC_LEFT:
         u2ShmIndex = W_CHDELAY_CH7;
         u2UopIndex = UOP_DSP_CONFIG_DELAY_CH7;
         if (u2ReadShmUINT16(AUD_DSP0, u2ShmIndex) == u2DelayBypassMix)
@@ -8139,6 +8145,10 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             vWriteShmUINT16(AUD_DSP0, u2ShmIndex, u2DelayBypassMix);
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2DelayBypassMix/9);
+        _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);      
+#endif               
         break;
     case AUD_CH_BYPASS_RIGHT:
         u2ShmIndex = W_CHDELAY_CH8;
@@ -8165,6 +8175,10 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             vWriteShmUINT16(AUD_DSP0, u2ShmIndex, u2DelayDownmixMix);
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2DelayDownmixMix/9);
+        _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);      
+#endif               
         break;
     case AUD_CH_DMX_RIGHT:
         u2ShmIndex = W_CHDELAY_CH10;
