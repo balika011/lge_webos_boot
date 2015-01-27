@@ -369,6 +369,10 @@ extern int verify_apps(int boot_mode);
 	char *cmd1 = BOOTCOMMAND;
 	char *cmd2[1024];
 
+//#if defined(CONFIG_MULTICORES_PLATFORM)
+		second_main();
+//#endif
+
 	printf("[%4d] fast boot check \n", readMsTicks());
 	/* delay 10 * 1us */
 
@@ -444,9 +448,6 @@ extern int verify_apps(int boot_mode);
 	
 	disable_wp(0); // eMMC W/P disable for user debugging in boot prompt
 	
-#if defined(CONFIG_MULTICORES_PLATFORM)
-	second_main();
-#endif
 	return 0;
 }
 #endif
@@ -1032,6 +1033,10 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	thread_start();
 	#else
 	fast_boot();
+	for(;;)
+		{
+			main_loop();
+		}
 	#endif
 #endif
 
