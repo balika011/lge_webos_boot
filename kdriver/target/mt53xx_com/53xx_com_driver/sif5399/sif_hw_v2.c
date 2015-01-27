@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/27 $
  * $RCSfile: sif_hw_v2.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2087,9 +2087,21 @@ static INT32 _SIF_Write(UINT16 u2ClkDiv, UINT8 u1DevAddr, UINT8* pu1DataBuf, UIN
 // Fill control register
 static VOID _SIF_Control(VOID)
 {
-    UINT32 u4Reg, u4Msk;
+    UINT32 u4Reg, u4Msk, u4RiseValue;
 
     ASSERT(_rSifDevParm.u2ClkDiv);
+    if(_rSifDevParm.u2ClkDiv < 0x80)// Fast Mode
+    {
+        u4RiseValue = _rSifDevParm.u2ClkDiv * 3 / 5;
+        u4RiseValue = CLK_DIV(u4RiseValue);
+        u4RiseValue |= 0x1;
+    }
+	else  // Standard Mode
+	{
+        u4RiseValue &= 0x00000000;	
+	}
+	_SIF_WRITE32MSK(RW_SM0_CTRL2_REG, u4RiseValue, 0x0FFF0001);
+
     if (_fgEnableSclStretch)
     {
         _rSifDevParm.u2ClkDiv -= ((SIF_DEGLITCHLEVEL) << 1);
