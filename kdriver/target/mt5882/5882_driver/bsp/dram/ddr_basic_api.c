@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/28 $
  * $RCSfile: pi_basic_api.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -217,7 +217,7 @@ void DdrPhyInit(void)
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0c0), 0x00000002);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d0), (DEFAULT_PI_A1_DQA<<24)|(DEFAULT_PI_A1_DQB<<8));
 	//only for channel A, clk pi delay 14*T/64
-    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d4), 0x0000000A);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d4), 0x00000010);
 	//--RG_MEMPHYPLL_A1_TEST_EN (10D8H[4]) may be set later?, use default values here
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d8), 0x00230000);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0dc), 0x00000000);
