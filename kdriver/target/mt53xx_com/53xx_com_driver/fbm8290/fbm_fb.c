@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/28 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2422,15 +2422,6 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
             ((FBM_FB_READY_IND_FUNC_EX)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND])(
                 _prFbmCbFunc->aau4CbFuncTag[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND],
                 &rPicNfyInfo);
-        }
-    }
-    else if(ucFbStatus == FBM_FB_STATUS_LOCK)
-    {
-        if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START],
-                                     _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
-        {
-            ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
-                _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
         }
     }
     
@@ -6456,4 +6447,28 @@ void FBM_FlushLockFrameBuffer(UCHAR ucFbgId)
 
     FBM_MUTEX_UNLOCK(ucFbgId);
 }
+
+VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
+{
+    if (VERIFY_FBG(ucFbgId))
+    {
+        return;
+    }
+    if (VERIFY_FB_NS(ucFbgId))
+    {
+        return;
+    }
+    
+    FBM_MUTEX_LOCK(ucFbgId);
+    if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START],
+                                 _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
+    {
+         LOG(2,"FBM_FrameDisplayStart(%d,%d)\n",ucFbgId,ucFbId);
+        ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
+            _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+    }
+    FBM_MUTEX_UNLOCK(ucFbgId);
+    return;
+}
+
 

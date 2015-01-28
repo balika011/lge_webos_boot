@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/01/28 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -969,7 +969,7 @@ static VOID _B2R_SeamlessJob(B2R_OBJECT_T* this)
             #endif
             {
                 B2R_HAL_ADDR_T tFrmAddr;
-                    
+                  
                 tFrmAddr.u4Y0 = u4AddrY;
                 tFrmAddr.u4C0 = u4AddrC;
                 #ifdef CC_3D_MM_DS_SUPPORT
@@ -989,6 +989,12 @@ static VOID _B2R_SeamlessJob(B2R_OBJECT_T* this)
                     #endif
                     B2R_HAL_Set(this->hB2r, B2R_HAL_ADDR_LEN, &tFrmAddr_len);
                 }
+
+                // DTV picture information callback when frame start to display.
+                FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                 /*-------------------------------------*/
+                 //callback 
+                 /*---------------------------------------*/
             }
 
             

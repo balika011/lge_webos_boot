@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/28 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1651,6 +1651,7 @@ EXTERN VOID FBM_SetFrameBufferStatus_dbg(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFb
 
 #endif
 
+EXTERN VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId);
 EXTERN VOID FBM_FlushLockFrameBuffer(UCHAR ucFbgId);
 
 EXTERN UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId);
