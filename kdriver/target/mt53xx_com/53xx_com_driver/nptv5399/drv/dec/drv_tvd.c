@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #12 $
+* $Revision: #13 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -5932,7 +5932,11 @@ BOOL fgHwTvdVPres(void)
     }
     else
     {
-        if(DRVCUST_OptGet(eTVDUseVPres4))
+        #ifdef CC_SUPPORT_PIPELINE
+		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+        #else
+		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
+        #endif
         {
             return ((IO32ReadFldAlign(DFE_STA_00, VPRES4_ON_FLAG))||(IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D)));
         }
@@ -7041,14 +7045,19 @@ void vTvd3dVSyncISR(void)
 #endif
     //-------------------------TVD Vpres State-------------------------------------------//
 #if TVD_VPRES_STATE
-
-    if(DRVCUST_OptGet(eTVDUseVPres4))
+    
+#ifdef CC_SUPPORT_PIPELINE
+    if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+#else
+    if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
+#endif
     {
-        fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
+		fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
     }
     else
     {
         fgPreVPres_0 = fgHwTvdVPres();
+		LOG(3, "[TVD_DBG_MSG] external demod issue\n");
     }
 
 #else
@@ -7818,7 +7827,7 @@ void vTvd3dVSyncISR(void)
 void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 {
     LOG(1,"======================================\n");
-    LOG(0,"[11111TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d \n", bPath, bOnOff);
+    LOG(0,"[TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d ,type=%d.\n", bPath, bOnOff,bGetSignalType(bPath));
     LOG(1,"======================================\n");	
     #ifdef CC_SUPPORT_PIPELINE
     if(bGetSignalTypeAVD(bPath)==SV_ST_TV)
@@ -7827,7 +7836,12 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 	#endif
     {
         vTvd3dFastChannelChange(SV_ON);
+        vIO32WriteFldAlign(DFE_0E, 0x0, VPRES4TVD_MODE);
     }
+	else
+	{
+        vIO32WriteFldAlign(DFE_0E, 0x1, VPRES4TVD_MODE);
+	}
 #if TVD_ADAP_VPRES_SETTING
 #ifdef CC_SUPPORT_PIPELINE
     if(bPath==SV_VP_MAIN && bGetSignalTypeAVD(bPath)==SV_ST_TV && _sbTvdConnected==FALSE)
@@ -10560,10 +10574,12 @@ void vTvd3dInit(void)
     vIO32WriteFldAlign(DFE_00, DFE_CLAMP_START, CLAMP_START);
     vIO32WriteFldAlign(DFE_0E, 0x1, NR_DET_VPRES_SEL);
     vIO32WriteFldAlign(DFE_0E, 0x0, VPRES4PIC_MODE); //DFE referenced VPRES3
+    /*
     if(!DRVCUST_OptGet(eTVDUseVPres4))
     {
         vIO32WriteFldAlign(DFE_0E, 0x0, VPRES4TVD_MODE);
     }
+	*/
     vIO32WriteFldAlign(DFE_02, 0x1, BLV_LIM_SEL);// Original Back-porch blank level
 #if TVD_COCH_FLICKER
     vIO32WriteFldAlign(DFE_13, DFE_CLAMP_ERROR_SUM_TH, CLAMP_CURRENT_SUM_THR);
