@@ -261,7 +261,7 @@ dv: prepare_build
 ifneq "$(SECURE_BOOT)" "y"
 	$(CP) $(CP_FLAG) $(BOOT_ROOT)/$(SOC_UBOOT)/$(MODEL)_$(BOOT)boot.bin $(BOOT_RESULT_DIR)/$(BOOT_NAME_DV).bin
 	$(CHMOD) +x $(MK_EPAK)
-	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/boot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/u-boot_pack_secure.lzhs	\
+	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/boot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/u-boot_pack.lzhs	\
 				boot $(MODEL_NAME) $(BUILD_VERS) $(COMPILE_DATE) 0x0 RELEASE
 else
 	$(CP) $(CP_FLAG) $(BOOT_ROOT)/$(SOC_UBOOT)/$(MODEL)_secure_$(BOOT)boot.bin $(BOOT_RESULT_DIR)/$(BOOT_NAME_DV).bin
