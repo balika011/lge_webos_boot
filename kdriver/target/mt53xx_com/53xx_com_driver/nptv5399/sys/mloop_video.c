@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/01/28 $
  * $RCSfile: mloop_video.c $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -190,6 +190,8 @@
 #include "drv_tdtv.h"
 
 #define DELAY_MODE_CHG_UNMUTE 10  //[DTV00130707]
+extern void vGetPGAGainInitVal(void);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 BOOL _fgVideoReady;
@@ -1248,6 +1250,7 @@ void vApiVideoMainloop(void)
 #endif
 
     }
+	vGetPGAGainInitVal();
 
     vDrvAdjustBlankLevel();
     vDrvOnChipAutoColorIteration(); // do auto color
