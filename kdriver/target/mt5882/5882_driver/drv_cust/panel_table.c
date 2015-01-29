@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/01/29 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1131,7 +1131,7 @@ void SelectPanel(UINT32 u4Index)
     // read panel index from customer define
     if (u4Index == PANEL_INVALID)
     {
-#if 0//defined(CC_LGE_PROTO_PCBA) && defined(CC_UBOOT)
+#if defined(CC_LGE_PROTO_PCBA) && defined(CC_UBOOT)
 	
 		UINT32 u4ControlWord ;
 		printf("#resolution: %d\n",gPanelInfo.panel_resolution);	// 1
