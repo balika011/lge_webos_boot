@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -115,6 +115,15 @@
 #define VDP_B2R_MULTI_VIEW          (1 << 1)    // MVC or two frame buffer mode 
 
 #define B2R_CHECK_CB_FUNC_VERIFY(func, crc)     ((UINT32)func == ~((UINT32)crc))
+
+#define B2R_NS                      4
+EXTERN BOOL fgLGPipLine;
+EXTERN BOOL fgVdpModeChg[B2R_NS];
+
+EXTERN void  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId);
+EXTERN void  LG_PipLineDisconnect(UCHAR ucVdpId);
+EXTERN void  LG_PipLineTest(UCHAR ucVdpId,UCHAR ucEsId);
+
 
 
 typedef enum
@@ -452,7 +461,7 @@ typedef struct
     UCHAR ucPicCdTp;
     UCHAR ucHwFrameEncode;
     UCHAR ucTffStableCounter;
-
+    
     // Frc
     UCHAR ucMultipleField;      // multiple field display due to RFF/TFF
     UCHAR ucStopAuto;
@@ -643,6 +652,7 @@ typedef struct _VDP_CFG_T
     UCHAR ucBobMode;
     // Input port (frame buffer group ID)
     UCHAR ucInputPort[VDP_MAX_INPORT_NS];
+	BOOL   fgLGPipLine;
     //UCHAR ucPauseMm;
     UCHAR ucNoOverScan;
     UCHAR ucEarlyDisp;
@@ -884,6 +894,8 @@ EXTERN UCHAR VDP_GetOutFrameRate(UCHAR ucVdpId);
 EXTERN UINT32 VDP_Es2Vdp(UCHAR ucEsId);
 
 EXTERN VOID VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
+EXTERN void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
+
 
 /* VDP trigger mode + audio master to do trigger mode */
 EXTERN VOID VDP_TriggerAudReceive(UINT8 ucVdpId, UINT32 u4Pts);

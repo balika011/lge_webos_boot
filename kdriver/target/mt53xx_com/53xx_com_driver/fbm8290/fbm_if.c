@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/29 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -151,6 +151,7 @@ typedef struct
 #else
 #define MAX_SEAMLESS_BUFF_COUNT 1
 #endif
+static BOOL fgPipLine =TRUE;
 
 //---------------------------------------------------------------------------
 // Macro definitions
@@ -1900,7 +1901,7 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     B2R_IPT_INFO_T t_b2r_res;
     VDEC_ES_INFO_T *prVdecEsInfo = NULL;
 #endif
-
+    UCHAR ucB2rId     = B2R_NS;
     FBP_LIST_T* prFbpList;
     
     if(prPar && (prPar->ucCftFbgId == 0))
@@ -2614,7 +2615,8 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     ASSERT(_arFbg[u4FbgId].hEmptyBQSemaphore.hMutex == _arFbg[u4FbgId].hMutex);
 
     VERIFY(x_sema_unlock(_hFbgMutex) == OSR_OK);
-
+	ucB2rId= FBM_B2rResIdAccess(u4FbgId, RES_R, NULL);
+    LG_PipLineConnect(VDP_1,ucB2rId);
     return FBM_BYTE(u4FbgId);
 }
 
@@ -2850,6 +2852,7 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
 #ifdef CC_B2R_RES_SUPPORT
     FBM_B2rResIdRelease(ucFbgId);
 #endif
+    LG_PipLineDisconnect(VDP_1);
     // [LOG] FBM Release
     SYSLOG(FBM_PREFIX + 98, ucFbgId, _arFbg[ucFbgId].ucFbgType, 0);
 
@@ -6091,13 +6094,16 @@ UINT8 FBM_B2rResIdAccess(UCHAR ucFbgId,
 
         if(u4Mask & RES_RW)
         {
-            FBM_B2rResHdrVdpId(ucFbgId, pt_src);
+            if(fgPipLine)
+				pt_src->u1VdpId= 0;    // for LG case
+		   else
+                FBM_B2rResHdrVdpId(ucFbgId, pt_src);
 
-            LOG(1,"B2r Res get VdpId(%d)!\n", pt_src->u1VdpId);
+            LOG(0,"B2r Res get VdpId(%d)!,fgPipLine=%d\n", pt_src->u1VdpId,fgPipLine);
             
             u1B2rId = FBM_B2rResAlloc(pt_src);
             
-            LOG(1,"Alloc B2r(%d) hardware resource!\n", u1B2rId);
+            LOG(0,"Alloc B2r(%d) hardware resource!\n", u1B2rId);
             
             pt_this = _FBM_B2rResGetObj(u1B2rId);
             if(pt_this)

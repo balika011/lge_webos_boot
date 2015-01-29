@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -473,6 +473,9 @@ EXTERN UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable);
  * @param ucMode VDP_MODE_NORMAL or VDP_MODE_BG.
  * @return VDP_SET_ERROR or VDP_SET_OK
  */
+
+EXTERN UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable);
+
 EXTERN UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode);
 
 /**

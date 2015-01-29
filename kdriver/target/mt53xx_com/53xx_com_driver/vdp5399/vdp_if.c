@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -845,6 +845,138 @@ void VDP_QueryStatus(void)
  * @param ucEnable value 0:disable, 1:enable.
  * @return VDP_SET_ERROR or VDP_SET_OK
  */
+UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
+{
+    VERIFY_VDP_ID(ucVdpId);
+#ifdef CHANNEL_CHANGE_LOG
+    HAL_TIME_T dt;
+
+    if(ucEnable != 0)
+    {
+        HAL_GetTime(&dt);
+        LOG(0, " %u.%06u s [AV SYNC] 7 VDP Enable VDP(%d) On(%d)\n", dt.u4Seconds, dt.u4Micros, ucVdpId, ucEnable);
+    }
+
+#endif
+
+    if((_arVdpConf[ucVdpId].ucVdpEnable == ucEnable))
+    {
+        return VDP_SET_OK;
+    }
+
+    VDP_MUTEX_LOCK;
+
+#if SUPPORT_POP
+    if (ucVdpId == VDP_2)
+    {
+        if (ucEnable && !_u4ForceDispOff[VDP_2])
+        {
+            vDrvVrmSetAppFlag(VRM_APP_POP_PIP);
+        }
+        else
+        {
+            vDrvVrmClrAppFlag(VRM_APP_POP_PIP);
+        }
+    }    
+#endif
+
+#ifdef CC_SRM_ON
+    SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_ONOFF + (UINT32)ucVdpId), (UINT32)ucEnable, 0);
+#endif
+#ifdef CC_SCPOS_EN
+
+    if(ucEnable == 0)
+    {
+#if 1//def CC_SUPPORT_TVE
+
+        if(_ucSameB2rVdp == VDP_NS)
+        {
+            _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
+            LOG(3, "Mute VDP(%d)\n", ucVdpId);
+        }
+
+#else
+        _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
+        LOG(3, "Mute VDP(%d)\n", ucVdpId);
+#endif
+#if 0
+#ifdef CC_SRM_ON
+        SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_MPEG_SIZE + (UINT32)ucVdpId),
+                      0, 0);
+#endif
+#endif
+    }
+    else
+    {
+        UCHAR ucStatus;
+#if defined(CC_MT5882)
+        B2R_STATUS_T  t_b2r_status;
+#endif
+        
+#ifndef CC_MT5882
+        ucStatus = _arVdpConf[ucVdpId].ucStatus;
+#else
+        x_memset(&t_b2r_status, 0, sizeof(B2R_STATUS_T));
+        VDP_B2R_GetInfo(ucVdpId, B2R_GET_TYPE_B2R_STATUS, &t_b2r_status, sizeof(B2R_STATUS_T));
+        ucStatus = t_b2r_status.ucStatus;
+#endif
+        if((B2R_GetImgConnect(ucVdpId)!= 0) &&
+           (ucStatus == VDP_STATUS_NOSIGNAL))
+        {
+            _VDP_StatusNotify(ucVdpId, VDP_B2R_START_PLAY);
+        }
+    }
+
+#endif
+    _arVdpConf[ucVdpId].ucVdpEnable = ucEnable;
+#if defined(CC_MT5882)
+    VDP_B2R_SetCfgParam(ucVdpId,
+                            B2R_CFG_VDP_ENABLE,
+                            &ucEnable,
+                            sizeof(UCHAR));
+#endif
+
+    if(!ucEnable)
+    {
+#ifdef CC_SCPOS_EN
+        _ScposSetEnable(ucVdpId, ucEnable);
+#endif
+    }
+
+#ifndef CC_MT5882
+    _B2rSetEnable(ucVdpId);
+#else
+    VDP_SetB2rEnable(ucVdpId);
+#endif
+
+#ifdef CC_SCPOS_EN
+
+    if((_arVdpConf[ucVdpId].ucMode != VDP_MODE_BG) &&
+       (_arVdpConf[ucVdpId].ucVdpEnable))
+    {
+        // only unmute when vdp is enable,
+        // else you will see some garbage frame buffer
+        _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, 0, FALSE);
+    }
+
+    // Signal status return to SV_VDO_NOSIGNAL when enable >> disable or disable >> enable
+    if(ucEnable)
+    {
+        _ScposSetEnable(ucVdpId, ucEnable);
+    }
+
+
+#endif
+    VDP_MUTEX_UNLOCK;
+    return VDP_SET_OK;
+}
+/**
+  * VDP set video plane enable.
+ *
+ * @param ucVdpId specify the video plane id.
+ * @param ucEnable value 0:disable, 1:enable.
+ * @return VDP_SET_ERROR or VDP_SET_OK
+ */
 UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 {
     VERIFY_VDP_ID(ucVdpId);
@@ -859,7 +991,7 @@ UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 
 #endif
 
-    if(_arVdpConf[ucVdpId].ucVdpEnable == ucEnable)
+    if((_arVdpConf[ucVdpId].ucVdpEnable == ucEnable)||fgLGPipLine)
     {
         return VDP_SET_OK;
     }

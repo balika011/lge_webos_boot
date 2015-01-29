@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -991,7 +991,7 @@ static VOID _B2R_SeamlessJob(B2R_OBJECT_T* this)
                 }
 
                 // DTV picture information callback when frame start to display.
-                FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
                  /*-------------------------------------*/
                  //callback 
                  /*---------------------------------------*/
@@ -2297,7 +2297,7 @@ static VOID _B2R_SeqSetting(B2R_OBJECT_T *this, FBM_SEQ_HDR_T* prSeqHdr, UINT32 
     LOG(1,"u1Depth : %d , UFO Mode : %d!\n",tColorFmt.u1Depth, tColorFmt.fgUfoEn);
     }
 
-    //omux setting
+   #if 0
     {
         B2R_HAL_OMUX_T tOmux = {0};
         
@@ -2307,7 +2307,7 @@ static VOID _B2R_SeqSetting(B2R_OBJECT_T *this, FBM_SEQ_HDR_T* prSeqHdr, UINT32 
         LOG(1,"Omux B2rId : %d , VdpId : %d , ucPath : %d , fgScartOut : %d!\n",
                 ucB2rId, ucVdpId, tOmux.ucPath, tOmux.fgScartOut);
     }
-    
+    #endif
     // B2R Output Mode Change
  
     prOutInfo = &(prVdpConf->rOutInfo);
@@ -6684,7 +6684,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 #endif
 
 #ifdef CC_B2R_RES_SUPPORT
-                if(_B2R_IsHwResChg(this))
+                if(_B2R_IsHwResChg(this)&&!fgLGPipLine)
                 {
                     //break;
                 }

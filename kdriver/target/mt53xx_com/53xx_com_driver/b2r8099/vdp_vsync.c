@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdp_vsync.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -431,7 +431,7 @@ static UINT32 _B2R_CmdSrcOutRegion(UCHAR ucB2rId)
     // Work-Around # 1, B2R/PSW Width 64 byte alignment
     /* 20081127 Pibben: Why we need to use rOutInfo.u4Width/u4Height to set H/V active? */
     B2R_HAL_Config(this->hB2r);
-
+   if( fgVdpModeChg[ucB2rId])
     {
         B2R_HAL_OMUX_T tOmux = {0};
         VDP_CFG_T *ptVdpCfg = _B2R_GetVdpConf(VDP_1);
@@ -480,7 +480,7 @@ static UINT32 _B2R_HandleEvent(B2R_OBJECT_T *this, UINT32 u4Event)
     // Seqeunce Change
     if (u4Event & VDP_EVENT_SEQ_CHG)
     {
-        LOG(7, "VDP_EVENT_SEQ_CHG \n");
+        LOG(0, "VDP_EVENT_SEQ_CHG \n");
         u4Event |= _B2R_CmdSrcOutRegion(ucB2rId);
     }
     
@@ -493,7 +493,7 @@ static UINT32 _B2R_HandleEvent(B2R_OBJECT_T *this, UINT32 u4Event)
     // Re-config Hardware
     if (u4Event & VDP_EVENT_RECONFIG)
     {
-        LOG(7, "VDP_EVENT_RECONFIG \n");
+        LOG(0, "VDP_EVENT_RECONFIG \n");
         // todo 
         _B2R_ReConfig(ucB2rId);
     }

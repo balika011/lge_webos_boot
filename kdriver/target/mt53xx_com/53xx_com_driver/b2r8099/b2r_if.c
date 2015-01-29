@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/29 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -128,291 +128,9 @@
 #include "x_assert.h"
 //LINT_EXT_HEADER_END
 
-#ifdef CC_B2R_RM_SUPPORT
-PFN_B2R_RM_CB       pfB2R_RM_Cb;
-static UCHAR ucCurB2RId =B2R_NS; 
-static UCHAR ucMainSnkId = B2R_NS;
-static UCHAR ucSubSnkId  = B2R_NS;
-
-
-static void B2R_status_rest(void);
-
-static B2R_Capability_Map B2R_RM;
-//B2R_Capability_Map B2R_RM;
-#if 0
-typedef B2R_RM_T B2R_TimingTab[2];
-B2R_TimingTab  B2R_TIMING_TEST[] =//// only for test 
-{     // H    V     fps  bit   vdec  prio  block           H       V     fps  bit   vdec   prio  block
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 2  AVC fps30 8bit vs AVC fps60  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 3  AVC fps30 8bit vs AVC fps120  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 4  AVC fps30 8bit vs AVC fps120  10bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 5  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 6  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 7  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 8  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 9  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 10  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 11  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 12  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 13  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 14  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 15  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 16  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,30, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 17  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 18  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,30, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 19  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//20  AVC fps30 8bit vs AVC fps30  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 21  AVC fps30 8bit vs AVC fps60  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},//23  AVC fps30 8bit vs AVC fps120  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 23  AVC fps30 8bit vs AVC fps120  10bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 24  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 25  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 26  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 27  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 28  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 29  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 30  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 31  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 32  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 33  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 34  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 35  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,60, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 36  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 37  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,60, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 38  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//39  AVC fps30 8bit vs AVC fps30  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 40  AVC fps30 8bit vs AVC fps60  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 41  AVC fps30 8bit vs AVC fps120  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 42  AVC fps30 8bit vs AVC fps120  10bit 
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 43  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 44  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 45  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 46  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 47  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 48  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 49  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 50  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 51  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 52  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 53  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 54  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,120, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 55  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 56  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 67  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//58  AVC fps30 8bit vs AVC fps30  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 59  AVC fps30 8bit vs AVC fps60  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 60  AVC fps30 8bit vs AVC fps120  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 61  AVC fps30 8bit vs AVC fps120  10bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 62  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 63  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 64  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 65  AVC fps30 8bit vs AVC(FHD) fps120  10bi
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1280,720,120, 0, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1280,720,120, 0, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit/
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bi
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-    {{1920,1080,30, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-    {{1920,1080,30, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit 
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{1920,1080,60, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,60, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit   
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit  
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit  
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit   
-   {{1920,1080,120, 1, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit 
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit 
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit  
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{1920,1080,120, 0, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{1920,1080,120, 0, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bi
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-  {{1920,1080,60, 1, HEVC, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,60, 1, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit 
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 1, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit  
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-  {{1920,1080,120, 0, HEVC, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{1920,1080,120, 0, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-  {{3840,2160,30, 1, HEVC, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit 
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-  {{3840,2160,30, 1, HEVC, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{3840,2160,30, 1, HEVC, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit 
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{3840,2160,30, 1, HEVC, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-  {{3840,2160,30, 1, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-  {{3840,2160,30, 0, HEVC, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{3840,2160,30, 0, H264, 0, 1},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 0, H264, 0, 1},     {3840,2160,30,1, HEVC , 0,   0}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,30, 1, H264 , 0,   1}},//0  AVC fps30 8bit vs AVC fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC fps120  10bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,30, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,60, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,120, 1, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,120, 0, H264 , 0,   1}},// 1  AVC fps30 8bit vs AVC(FHD) fps120  10bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,30, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1280,720,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,60, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,120, 1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {1920,1080,120, 0, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps120  10bit
-   {{3840,2160,30, 1, H264, 0, 0},     {3840,2160,30,1, H264 , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps30  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {3840,2160,30,1, HEVC , 0,   1}},// 1  AVC fps30 8bit vs HEVC(HD) fps60  8bit
-   {{3840,2160,30, 1, H264, 0, 0},     {3840,2160,30,1, HEVC , 0,   0}}// 1  AVC fps30 8bit vs HEVC(HD) fps120  8bit
-
-};
-#endif
-#endif
+ BOOL fgLGPipLine =TRUE;
+BOOL fgVdpModeChg[B2R_NS] ={FALSE,FALSE};
+static VDP_CFG_T    _arVdpPipLineCfg;
 
 //-----------------------------------------------------------------------------
 // Configurations
@@ -789,19 +507,16 @@ void VDP_SetB2rEnable(UCHAR ucVdpId)
 void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 {
     UCHAR ucB2rId;
-#if (defined(CC_MT5890) && defined(CC_SUPPORT_4KBE)) || defined(CC_SUPPORT_NPTV_SEAMLESS)
+
      B2R_OBJECT_T *this;
-    #endif
+    
     
     LOG(3, "DTV(%d) Event(%d)\n", ucVdpId, u4Status);
     VERIFY_VDP_ID_RET_VOID(ucVdpId);
      ucB2rId = VDP2B2RID(ucVdpId);
     VERIFY_B2R_ID_RET_VOID(ucB2rId);
-     
-#if (defined(CC_MT5890) && defined(CC_SUPPORT_4KBE)) || defined(CC_SUPPORT_NPTV_SEAMLESS)
+   
     this = _B2R_GetObj(ucB2rId);
-#endif
-
     B2R_MUTEX_LOCK(ucB2rId);
 
 #ifdef __MODEL_slt__
@@ -944,22 +659,17 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 
         if (u4IssueModeChange != 0)
         {
-            LOG(3, "ucVdpId(%d) DTV Mode Change\n", ucVdpId);
+            LOG(0, "ucVdpId(%d) DTV Mode Change,->fgVdpModeChg=%d,ucB2rId=%d\n\n", ucVdpId,fgVdpModeChg[this->ucB2rId],this->ucB2rId);
 #ifdef TIME_MEASUREMENT
             TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R Mode Change");
 #endif
             _vDrvVideoSetMute(MUTE_MODULE_B2R, ucVdpId, 0, FALSE);
             _vDrvVideoSetMute(MUTE_MODULE_MODECHG, ucVdpId, 10, FALSE);
-             
-            vMpegModeChg(ucVdpId);
-            vMpegModeDetDone(ucVdpId);
-            #if defined(CC_MT5890) && defined(CC_SUPPORT_4KBE)
-            if(this)
+             if(fgVdpModeChg[this->ucB2rId])
             {
-                VDP_SetVB1ControlBit(this);
+                vMpegModeChg(ucVdpId);
+                vMpegModeDetDone(ucVdpId);
             }
-            #endif
-            
             //#ifdef CC_B2R_RM_SUPPORT
             if((u4Status == VDP_B2R_START_PLAY)&&(_prVdpCfg[ucVdpId]->u4SrcWidth>1920||_prVdpCfg[ucVdpId]->u4SrcHeight>1088)&&_prVdpCfg[ucVdpId]->fgBypssEnabe)
             {
@@ -1476,6 +1186,119 @@ VOID _B2R_ProcDPs(B2R_OBJECT_T *this, VDP_CFG_T* ptDP)
  * @param ucB2rId specify B2R id (0 only)
  * @return void
  */
+
+void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
+{
+   UCHAR ucOrgVdpId;
+    B2R_HAL_OMUX_T tOmux = {0};
+	B2R_OBJECT_T *this;
+    UCHAR i;//for test
+    UCHAR ucB2rId;
+	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
+    LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d\n",ucVdpId,ucEsId,ucOrgVdpId);
+	
+	if(ucVdpId!=ucOrgVdpId)
+   {
+       x_memset(&_arVdpPipLineCfg,0x0,sizeof(_arVdpPipLineCfg));
+	   x_memcpy(&_arVdpPipLineCfg,B2R_GetVdpConf(ucOrgVdpId),sizeof(_arVdpPipLineCfg));
+	   _arVdpPipLineCfg.ucVdpId=ucVdpId;
+	   x_memcpy(B2R_GetVdpConf(ucVdpId),&_arVdpPipLineCfg,sizeof(_arVdpPipLineCfg));
+	   tOmux.ucPath = ucVdpId;
+	   tOmux.fgScartOut =FALSE;
+	   ucB2rId=VDP_Vdp2B2rId(ucVdpId);
+	   this = _B2R_GetObj(ucB2rId);
+	   B2R_HAL_Set(this->hB2r, B2R_HAL_OMUX, &tOmux);
+	   vMpegModeChg(ucVdpId);
+       vMpegModeDetDone(ucVdpId);
+   }
+	
+	 for(i=0;i<VDP_NS;i++)
+	 {
+	    if(B2R_GetVdpConf(i)!=NULL)
+           LOG(0,"total(%d,%d),vdpId=%d,framerate=%d\n",B2R_GetVdpConf(i)->rOutInfo.u4TotalHeight,B2R_GetVdpConf(i)->rOutInfo.u4TotalWidth,B2R_GetVdpConf(i)->ucVdpId,B2R_GetVdpConf(i)->u4FrameRate);
+	 }
+}
+
+ void LG_PipLineTest(UCHAR ucVdpId,UCHAR ucEsId)
+ {
+    LG_PipLineVdpConnect(ucVdpId,ucEsId);
+    LOG(0,"LG_PipLineTest(ucVdpId=%d,ucEsId=%d)\n",ucVdpId,ucEsId);
+ }
+
+ void  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId)
+{
+    UCHAR i;
+	
+    if(!fgLGPipLine||ucB2rId>=B2R_NS)
+   {
+	   return;
+   }
+      LOG(0,"LG_PipLineConnect\n");
+	  fgVdpModeChg[ucB2rId]=FALSE;
+	  for(i=0;i<VDP_NS;i++)
+	  {
+	      #ifdef CC_SUPPORT_PIPELINE
+	       if(bApiQuearyVSCConnectStatus(i)==SV_VD_MPEGHD)
+		   	{
+				ucVdpId = i;
+				fgVdpModeChg[ucB2rId]= TRUE;
+				break;
+			}
+		   #endif
+	  }
+	  LG_PipLineSwitch(ucVdpId,ucB2rId); 
+      LG_PipLine_VDP_SetEnable(ucVdpId,TRUE); 
+
+}
+  void	LG_PipLineDisconnect(UCHAR ucVdpId)
+ {
+       if(!fgLGPipLine)
+	      return;
+       LOG(0,"LG_PipLineDisconnect\n");
+	   LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
+	   LG_PipLineSwitch(ucVdpId,B2R_NS); 
+ }
+
+ void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
+{
+		B2R_OBJECT_T *this;
+		VDP_CFG_T* ptDP;
+	
+#ifdef CC_B2R_RES_SUPPORT
+		UCHAR  ucRetB2rid = B2R_NS;    
+#endif
+		
+		// if ucB2rId = B2R_NS, it means that video plane switch to non-DTV video input
+		VERIFY_VDP_ID_RET_VOID(ucVdpId);
+		
+#ifdef CC_B2R_RES_SUPPORT
+		LOG(1, "Switch VdpId(%d) with B2rId(%d)!\n",ucVdpId, ucB2rId);
+
+		ucRetB2rid = _B2R_ChkHwConflict(ucVdpId,ucB2rId);
+		if(ucRetB2rid != B2R_NS)
+		{
+			ucB2rId = ucRetB2rid;
+		}
+		else
+		{
+			LOG(1,"_B2R_ChkHwConflict return invalid b2rid(%d)!\n",ucRetB2rid);
+		}
+		
+#endif
+	
+		ptDP = _prVdpCfg[ucVdpId];
+	
+		this = _B2R_RegDP(ucB2rId, ptDP);
+	
+		LOG(1, "VdpId(%d) switch to B2rId(%d)!\n",ucVdpId, ucB2rId);
+#ifdef CC_SCPOS_EN
+		vMpegInitB2rConf();
+#endif
+      
+		_B2R_ProcDPs(this, ptDP);
+	
+}
+
 void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 {
     B2R_OBJECT_T *this;
@@ -1484,7 +1307,10 @@ void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 #ifdef CC_B2R_RES_SUPPORT
     UCHAR  ucRetB2rid = B2R_NS;    
 #endif
-    
+    if(fgLGPipLine)
+    {
+       return;
+    }
     // if ucB2rId = B2R_NS, it means that video plane switch to non-DTV video input
     #ifdef CC_B2R_RM_SUPPORT
     if(ucB2rId==B2R_NS)
@@ -1521,7 +1347,7 @@ void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 #ifdef CC_SCPOS_EN
     vMpegInitB2rConf();
 #endif
-
+  
     _B2R_ProcDPs(this, ptDP);
 
 }
@@ -2969,7 +2795,7 @@ VOID B2R_Init(VOID)
         _prVdpCfg[i]->ucVdpId = i;
         x_memset(_prVdpCfg[i]->ucInputPort, VDEC_MAX_ES, sizeof(_prVdpCfg[i]->ucInputPort));
     }
-    
+    fgLGPipLine=TRUE;
     FBM_RegCbFunc(FBM_CB_FUNC_FBG_CHG_IND, (UINT32)_VdpFbgChgNotify);
 
     //register the B2R timegen
