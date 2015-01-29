@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/01/29 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -108,6 +108,9 @@ LINT_EXT_HEADER_BEGIN
 #include "x_hal_5381.h"
 #include "drvcust_if.h"
 #include "x_mid.h"
+#ifdef CC_SUPPORT_PIPELINE
+#include "drv_tvd.h"
+#endif
 LINT_EXT_HEADER_END
 
 #include "drv_display.h"
@@ -3537,8 +3540,12 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         UPDATE_PRPOOL(FBM_POOL_TYPE_MDDI_DYN_SUB, MDDI);
         UPDATE_PRPOOL(FBM_POOL_TYPE_SCPOS_DYN_SUB, SCPOS);
     }
-    
-    if (env->u1IsTDC[u4VdpId])
+
+    if (env->u1IsTDC[u4VdpId]
+		#ifdef CC_SUPPORT_PIPELINE
+		|| bTvd3dSignalStatus()
+		#endif
+		)
     {
         UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
     }
@@ -3614,7 +3621,11 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         
 #ifndef CC_SUPPORT_RECORD_AV
         // tdc
-        if(env->u1IsTDC[u4VdpId])
+        if(env->u1IsTDC[u4VdpId]
+			#ifdef CC_SUPPORT_PIPELINE
+			|| bTvd3dSignalStatus()
+			#endif
+			)
         {
             u4Width = 780;
             u4Height = 578;
