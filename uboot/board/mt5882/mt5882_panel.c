@@ -5,7 +5,7 @@
  *	This file is based  ARM Realview platform
  *  Copyright (C) 2002 ARM Ltd.
  *  All Rights Reserved
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -270,8 +270,8 @@ UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 frctype
     vIO32WriteFldAlign(PSCCTRL_0A, 1, PSC_SET_RES_TOGGLE);
     vIO32WriteFldAlign(PSCCTRL_0A, 0, PSC_SET_RES_TOGGLE);
 	
-	//Set OSD Timing from Post Scaler
-	vIO32WriteFldAlign(SCPIP_SCSYS_14, 1, SCSYS_14_SC_OSD_SRC_SEL);
+	//Set OSD Timing from Front Scaler
+	vIO32WriteFldAlign(SCPIP_SCSYS_14, 0, SCSYS_14_SC_OSD_SRC_SEL);
 
 	//set vesa type => jeida
 #ifndef UBOOT_HACK    
