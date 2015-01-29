@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/01/29 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #25 $
+ * $Revision: #26 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1543,20 +1543,20 @@ UINT8 bApiVideoGetAnalogCopyProtect(UINT8 bPath, UINT8 *pu1Psp, UINT8 *pu1CStrip
 		case SV_VD_TVD3D:
 			*pu1Psp = vTvd3dGetAnalogCopyProtectPSync() ? 1:0;
 			*pu1CStripe = vTvd3dGetAnalogCopyProtectCStripe();
-			LOG(1,"bApiVideoGetAnalogCopyProtect SV_VD_TVD3D PSYNC(%d), CSTRIPE(%d)\n",
+			LOG(6,"bApiVideoGetAnalogCopyProtect SV_VD_TVD3D PSYNC(%d), CSTRIPE(%d)\n",
 				*pu1Psp,*pu1CStripe);
 			break;
 		case SV_VD_YPBPR:
 		#ifdef HDTV_MV_DETECT_SUPPORT
 			*pu1Psp = bDrvAsyncMvStatus() ? 1:0;
 			*pu1CStripe =0;
-			LOG(1,"defined ");
+			LOG(6,"defined ");
 		#else
 		    *pu1Psp =0;
 		    *pu1CStripe =0;
-			LOG(1,"undefined ");
+			LOG(6,"undefined ");
 		#endif
-		    LOG(1,"bApiVideoGetAnalogCopyProtect SV_VD_YPBPR PSYNC(%d), CSTRIPE(%d)\n",
+		    LOG(6,"bApiVideoGetAnalogCopyProtect SV_VD_YPBPR PSYNC(%d), CSTRIPE(%d)\n",
 				*pu1Psp,*pu1CStripe);
 			break;
 		default:
