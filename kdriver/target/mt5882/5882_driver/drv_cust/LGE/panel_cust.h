@@ -327,7 +327,7 @@
 	//#define SUPPORT_NTK_DEMO_BOARD
 #endif
 
-#define SUPPORT_PANEL_48HZ           PANEL_IsSupportExtAttribute()
+#define SUPPORT_PANEL_48HZ          1// PANEL_IsSupportExtAttribute()
 #define SUPPORT_PANEL_CUSTOMER_SPEC
 //#define SUPPORT_DISP_48TO60         //48 to 60
 #define SUPPORT_CUSTOMER_FRAME_RATE_SPEC
