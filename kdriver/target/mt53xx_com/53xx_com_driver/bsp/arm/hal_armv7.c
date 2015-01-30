@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/01/30 $
  * $RCSfile: hal_1176.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1525,10 +1525,6 @@ Memory mapping of MT5371
 
 **********************************************************************/
 
-#ifdef CC_SECURE_WORLD
-extern UINT32 TZ_DRAM_START, TZ_DRAM_END;
-#endif
-
 //-----------------------------------------------------------------------------
 /** CreatePageTable() Create page table
  *  @param u4Addr[in] - Address of page table, shall be aligned to 16K boundary
@@ -1571,12 +1567,25 @@ static void CreatePageTable(UINT32 u4Addr)
 #ifdef CC_SECURE_WORLD
             UINT32 u4NsBit = 0; // NS_BIT;
 
-#if 0
-            if ( TZ_DRAM_START != 0 && TZ_DRAM_END != 0)
+#if defined(CC_MT5890)
+            /*
+                     * CA12 has a cache bug which could cause inconsistent data between normal world and secure world.
+                     * For example, normal world passes 1 but secure world receives non-1.
+                     * However, TVP (trusted video path) will change TZ_DRAM_START and TZ_DRAM_END at run time.
+                     * If we don't update MMU table, system will crash in ES3 when TVP is enabled.
+                     * ES1 doesn't have this problem.  This workaround is only applied for ES1. 
+                     *
+                     */
+            if (BSP_GetIcVersion() == IC_VER_5890_AA)
             {
-                u4NsBit = (i >= (TZ_DRAM_START >> 20) && i < (TZ_DRAM_END >> 20)) ? 0 : NS_BIT;
+                extern UINT32 TZ_DRAM_START, TZ_DRAM_END;
+                if ( TZ_DRAM_START != 0 && TZ_DRAM_END != 0)
+                {
+                    u4NsBit = (i >= (TZ_DRAM_START >> 20) && i < (TZ_DRAM_END >> 20)) ? 0 : NS_BIT;
+                }
             }
-#endif            
+#endif
+
 #ifdef CC_DISABLE_SMP
 	     // (no smp) - secure/outer non-cache mode
 	    pu4Table[i] = L1Entry(SECTION, i << 20, TEX_OUTER_NONCACHE, C_BIT | B_BIT | u4NsBit, USER_NO_ACCESS);
