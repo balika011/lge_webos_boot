@@ -769,3 +769,57 @@ int DDI_CMNIO_SPI_Init(uint idx, uint u4double)
     return 0;
 }
 
+int DDI_CMNIO_PWM_PreInit(void)
+{
+	//If there is something to initialize in MTK driver, use this function.
+	return 0;
+}
+int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_duty, 
+	UINT32 m_pwm_frequency, UINT32 m_pwm_lock, UINT32 m_pwm_pos_start, UINT32 pwm_scanning_enable)
+{
+	//These parameters are similar to HAL parameters.
+	//Apply the parameters.
+
+	if(pwm_scanning_enable == 0) //OPWM ?
+	{
+		UINT32 u4PwmRsn, u4PwmP, u4PwmH, u4PwmExtP;
+	    UINT32 u4BusClk;
+		UINT32 u4Val = 0;
+
+		UNUSED(u4Val);
+
+	    // Validate duty cycle
+	    if(m_pwm_duty > 255)
+	    {
+	        return -1;
+	    }
+	    u4BusClk = BSP_GetDomainClock(SRC_BUS_CLK);
+	    // Validate frequency upper bound is ((Bus clock)/256)
+	    if ((u4BusClk >> 8) <= m_pwm_frequency)
+	    {
+	        return -2;
+	    }
+	    // Check Rsn value.
+	    u4PwmRsn = (m_pwm_duty == 1000) ? 0xfe : 0xff;
+		if(m_pwm_frequency == 0)
+		{
+			u4PwmP = 0;
+			u4PwmH = 0;
+		}
+		else
+		{
+		    u4PwmP = ((u4BusClk >> 8)/ m_pwm_frequency);
+			u4PwmH = ((m_pwm_duty == 1000) || (((m_pwm_duty * 257) / 1000) > 0xff)) ? 0xff : ((m_pwm_duty * 257) / 1000);
+		}
+	    u4PwmExtP = ((u4PwmP >> 12) & 0xff);
+
+		vDrvSetPWM(pwmIndex,u4PwmP,u4PwmH,u4PwmRsn);
+	}
+	else //Scan PWM ??
+	{
+		;
+	}
+	return 0;
+}
+
+
