@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -151,7 +151,7 @@ typedef struct
 #else
 #define MAX_SEAMLESS_BUFF_COUNT 1
 #endif
-static BOOL fgPipLine =TRUE;
+static BOOL fgPipLine = FALSE;
 
 //---------------------------------------------------------------------------
 // Macro definitions

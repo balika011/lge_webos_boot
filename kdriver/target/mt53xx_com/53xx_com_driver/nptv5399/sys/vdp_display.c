@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: vdp_display.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -634,6 +634,13 @@ UINT8 bVideoUpdateSrcRegion(UINT8 bPath)
         }
     }
 
+    if(bDrvVideoSignalStatus(bPath) == SV_VDO_STABLE)
+    {
+    	if((u4XOff == 0) && (u4YOff == 0) && (u4Width == 64) && (u4Height == 0))
+    	{
+    	   return (SV_SUCCESS);
+    	}
+	}
     if((prPicInfo->u1Interlace == u1Interlace) &&
        (prPicInfo->wHTotal == u2HTotal) &&
        (prPicInfo->wVTotal == u2VTotal) &&

@@ -967,6 +967,9 @@ void DRVCUST_SetRealCinema(void)
 	{
 
 		bIsRealCinema = IO32ReadFldAlign(DRVCUST_REAL_CINEMA, REAL_CINEMA);
+		//1080 24P only
+		if(bDrvVideoIsSrcInterlace(SV_VP_MAIN))
+			return;		
 		vDrvCalPanelFrameRate(wDrvVideoGetVTotal(SV_VP_MAIN), bDrvVideoGetRefreshRate(SV_VP_MAIN));
 	}
 }

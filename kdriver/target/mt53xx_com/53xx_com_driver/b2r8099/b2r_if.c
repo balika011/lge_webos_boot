@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -128,7 +128,7 @@
 #include "x_assert.h"
 //LINT_EXT_HEADER_END
 
- BOOL fgLGPipLine =TRUE;
+BOOL fgLGPipLine =FALSE;
 BOOL fgVdpModeChg[B2R_NS] ={FALSE,FALSE};
 static VDP_CFG_T    _arVdpPipLineCfg;
 
@@ -665,7 +665,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 #endif
             _vDrvVideoSetMute(MUTE_MODULE_B2R, ucVdpId, 0, FALSE);
             _vDrvVideoSetMute(MUTE_MODULE_MODECHG, ucVdpId, 10, FALSE);
-             if(fgVdpModeChg[this->ucB2rId])
+             if(fgLGPipLine==FALSE || fgVdpModeChg[this->ucB2rId])
             {
                 vMpegModeChg(ucVdpId);
                 vMpegModeDetDone(ucVdpId);
@@ -2795,7 +2795,7 @@ VOID B2R_Init(VOID)
         _prVdpCfg[i]->ucVdpId = i;
         x_memset(_prVdpCfg[i]->ucInputPort, VDEC_MAX_ES, sizeof(_prVdpCfg[i]->ucInputPort));
     }
-    fgLGPipLine=TRUE;
+    fgLGPipLine=FALSE;
     FBM_RegCbFunc(FBM_CB_FUNC_FBG_CHG_IND, (UINT32)_VdpFbgChgNotify);
 
     //register the B2R timegen

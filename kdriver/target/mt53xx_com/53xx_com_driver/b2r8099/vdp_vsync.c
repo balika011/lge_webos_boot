@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: vdp_vsync.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -431,7 +431,7 @@ static UINT32 _B2R_CmdSrcOutRegion(UCHAR ucB2rId)
     // Work-Around # 1, B2R/PSW Width 64 byte alignment
     /* 20081127 Pibben: Why we need to use rOutInfo.u4Width/u4Height to set H/V active? */
     B2R_HAL_Config(this->hB2r);
-   if( fgVdpModeChg[ucB2rId])
+   if( fgLGPipLine==FALSE || fgVdpModeChg[ucB2rId])
     {
         B2R_HAL_OMUX_T tOmux = {0};
         VDP_CFG_T *ptVdpCfg = _B2R_GetVdpConf(VDP_1);

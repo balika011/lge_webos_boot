@@ -178,7 +178,7 @@ UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 frctype
         vRegWriteFldAlign(MUTE_04, u4Background & 0xff, B_BACKGROUND_MJC);
         vRegWriteFldAlign(MUTE_04, (u4Background>>8)&0xff, G_BACKGROUND_MJC);
         vRegWriteFldAlign(MUTE_04, (u4Background>>16)&0xff, R_BACKGROUND_MJC);
-        //PMX_SetBg(u4Background, FALSE);
+        PMX_SetBg(u4Background, FALSE);
         return 0;
     }
     _fgInit = 1;

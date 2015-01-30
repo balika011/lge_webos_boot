@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/01/30 $
  * $RCSfile: pmx_hw.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -840,7 +840,7 @@ void _PMX_SetBgColor(UINT32 u4Value, BOOL fgYuvMode, BOOL fgInVsync)
     #endif
     {
 
-	#if defined(CC_MT5368)||defined(CC_MT5396)||defined(CC_MT5398)||defined(CC_MT5880)||defined(CC_MT5881)||defined(CC_MT5399)||defined(CC_MT5890)
+	#if defined(CC_MT5368)||defined(CC_MT5396)||defined(CC_MT5398)||defined(CC_MT5880)||defined(CC_MT5881)||defined(CC_MT5399)||defined(CC_MT5890) ||defined(CC_MT5882)
 		vRegWriteFldAlign(MUTE_00,_u4BgColor,BGR_BACKGROUND);
 		vRegWriteFldAlign(MUTE_04,_u4BgColor,BGR_BACKGROUND_MJC);
 	#else		

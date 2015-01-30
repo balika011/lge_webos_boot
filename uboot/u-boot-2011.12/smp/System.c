@@ -233,17 +233,21 @@ void secondary_start_uboot_cleanup(void)
    #if 1 
     unsigned int *mp_start_addr;
     PFN_IMAGE pfnImage;
-    mp_start_addr=0xfb00bf00;
+	
 	if(get_cpu_id()==0) return ;
+	if(smp_cpu_released[get_cpu_id()].lock ==1) return;
+    mp_start_addr=0xfb00bf00;
 		__raw_writel(0,
 		 0xf0008068);
 	__raw_writel(0,
 		 0xf0008188);
 	__raw_writel((0xffffffff),
 		 0xf000806c);
+	
+	smp_cpu_released[get_cpu_id()].lock =1;
 	local_irq_disable();
 	
-	smp_cpu_released[get_cpu_id()].lock = 1;
+	
     pfnImage = (PFN_IMAGE)(mp_start_addr);
 	flush_cache_all();
 	HalDisableCaches();

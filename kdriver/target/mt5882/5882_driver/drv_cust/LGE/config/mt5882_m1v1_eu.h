@@ -387,8 +387,9 @@
 #define AUDIO_INPUT_MUX_SEL_TABLE           (&_rMustangAudInputMuxTable)
 #define AUDIO_APROC_ENABLE                  (TRUE)
 
+//LG control amp reset function
 #ifndef AUDIO_DIGITAL_AMP_RESET_GPIO
-#define AUDIO_DIGITAL_AMP_RESET_GPIO (GPIO(79))
+//#define AUDIO_DIGITAL_AMP_RESET_GPIO (GPIO(79))
 #endif
 
 #ifndef AUDIO_DIGITAL_AMP_RESET_GPIO_POLARITY

@@ -46,6 +46,7 @@ extern env_t *env_ptr;
 #ifdef CFG_LG_CHG
 extern int storage_write(off_t ofs, size_t len, u_char *buf);
 #endif
+env_t	env_new;
 
 int do_setboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
@@ -121,7 +122,6 @@ int do_setboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	if((env_partinfo = get_partition_by_name("env_nvm")) != NULL)
 	{
 #if 1
-        env_t   env_new;
         char    *res;
         res = (char *)&env_new.data;
         if (hexport_r(&env_htab, '\0', &res, ENV_SIZE, 0, NULL) < 0) {

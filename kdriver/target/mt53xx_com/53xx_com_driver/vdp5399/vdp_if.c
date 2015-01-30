@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -991,7 +991,7 @@ UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 
 #endif
 
-    if((_arVdpConf[ucVdpId].ucVdpEnable == ucEnable)||fgLGPipLine)
+    if((_arVdpConf[ucVdpId].ucVdpEnable == ucEnable))
     {
         return VDP_SET_OK;
     }

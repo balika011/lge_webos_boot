@@ -58,8 +58,9 @@ int __release_smp_cpu(void)
     {
         if (megic_number_cleaned)
         {
-            smp_cpu_released[get_cpu_id()].lock= 1;
+            //secondary_start_uboot_cleanup();
             dsb();
+			break;
         }
     }
 }
@@ -366,7 +367,8 @@ static void *_idle_thread_start(void *arg)
                 if(BOOT_CPU != get_cpu_id() && megic_number_cleaned==1 && smp_cpu_released[get_cpu_id()].lock== 0)
                 {
                 	
-					tlog("_idle_thread_start smp_cpu_released =%x,cpu id =%d \n", smp_cpu_released[get_cpu_id()].lock,get_cpu_id());
+					tlog("exit cpu id =%d \n",get_cpu_id());
+					asm volatile("dsb");
 					secondary_start_uboot_cleanup();
         }
 

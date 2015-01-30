@@ -1923,7 +1923,7 @@ static const AUD_ADAC_USAGE_T _arMtkAdacUsage =
 #ifndef CC_LGE_PROTO_PCBA
 	AUD_AMP_AD82581,
 #else
-	AUD_AMP_NTP7515,
+	AUD_AMP_NULL,
 #endif
     AUD_AMP_NULL
 };
