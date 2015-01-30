@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/30 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -838,13 +838,8 @@ void VDP_QueryStatus(void)
     //SRM_QueryStatus();
 }
 
-/**
-  * VDP set video plane enable.
- *
- * @param ucVdpId specify the video plane id.
- * @param ucEnable value 0:disable, 1:enable.
- * @return VDP_SET_ERROR or VDP_SET_OK
- */
+#ifdef CC_SUPPORT_PIPELINE
+
 UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 {
     VERIFY_VDP_ID(ucVdpId);
@@ -970,6 +965,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
     VDP_MUTEX_UNLOCK;
     return VDP_SET_OK;
 }
+#endif
 /**
   * VDP set video plane enable.
  *

@@ -278,8 +278,10 @@ static INT32 _VdpSetB2rId (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpVB1_test (INT32 i4Argc, const CHAR ** szArgv);
 
 #endif
-static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv);
+#ifdef CC_SUPPORT_PIPELINE
 
+static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv);
+#endif
 static INT32 _VdpStopCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpFreezeCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpNonlinearCmd (INT32 i4Argc, const CHAR ** szArgv);
@@ -552,7 +554,9 @@ static CLI_EXEC_T _arVdpCmdTbl[] =
  	{"query",		"q",	_VdpQueryCmd, NULL,			"Vdp status query", CLI_GUEST},
  	{"info",		NULL,	_VdpInfoCmd, NULL,			"DTV info query", CLI_GUEST},
  	{"stop",		NULL,	_VdpStopCmd, NULL,			"Vdp stop", CLI_SUPERVISOR},
+ 	#ifdef CC_SUPPORT_PIPELINE
  	{"LG",		"sw",	_VdPipLineTest, NULL,			"Vdp PipLine", CLI_GUEST},
+ 	#endif
  	{"freeze",		"f",	_VdpFreezeCmd, NULL,		"Vdp freeze", CLI_GUEST},
  	{"nonlinear",	"nl",	_VdpNonlinearCmd, NULL,		"Vdp nonlinear", CLI_SUPERVISOR},
     {"newnonlinear",   "nnl",   _VdpNewNonlinearCmd, NULL,     "Vdp new nonlinear", CLI_GUEST}, 
@@ -2052,6 +2056,8 @@ INT32 _VdpSetVPSPhaseBottomEn(INT32 i4Argc, const CHAR ** szArgv)
     return 0;
 }
 #endif
+#ifdef CC_SUPPORT_PIPELINE
+
 static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv)
 {
     UINT32 u4VdpId;
@@ -2070,7 +2076,7 @@ static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv)
 
     return 0;
 }
-
+#endif
 static INT32 _VdpSetCmd10BitMode(INT32 i4Argc, const CHAR ** szArgv)
 {
     UINT32 u4VdpId;

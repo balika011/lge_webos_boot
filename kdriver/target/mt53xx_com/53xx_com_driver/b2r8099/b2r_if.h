@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -115,6 +115,7 @@
 #define VDP_B2R_MULTI_VIEW          (1 << 1)    // MVC or two frame buffer mode 
 
 #define B2R_CHECK_CB_FUNC_VERIFY(func, crc)     ((UINT32)func == ~((UINT32)crc))
+#ifdef CC_SUPPORT_PIPELINE
 
 #define B2R_NS                      4
 EXTERN BOOL fgLGPipLine;
@@ -123,7 +124,9 @@ EXTERN BOOL fgVdpModeChg[B2R_NS];
 EXTERN void  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId);
 EXTERN void  LG_PipLineDisconnect(UCHAR ucVdpId);
 EXTERN void  LG_PipLineTest(UCHAR ucVdpId,UCHAR ucEsId);
+EXTERN void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
 
+#endif
 
 
 typedef enum
@@ -894,7 +897,6 @@ EXTERN UCHAR VDP_GetOutFrameRate(UCHAR ucVdpId);
 EXTERN UINT32 VDP_Es2Vdp(UCHAR ucEsId);
 
 EXTERN VOID VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
-EXTERN void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
 
 
 /* VDP trigger mode + audio master to do trigger mode */

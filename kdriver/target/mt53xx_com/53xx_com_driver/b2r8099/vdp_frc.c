@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/01/30 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6684,11 +6684,17 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 #endif
 
 #ifdef CC_B2R_RES_SUPPORT
-                if(_B2R_IsHwResChg(this)&&!fgLGPipLine)
+
+   #ifdef CC_SUPPORT_PIPELINE
+          if(!fgLGPipLine)
+   #endif
+                if(_B2R_IsHwResChg(this))
                 {
                     //break;
                 }
 #endif
+				
+
 
                 _B2R_ChangeFrameBuffer(this);
                 #ifdef CC_SUPPORT_NPTV_SEAMLESS 

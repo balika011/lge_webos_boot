@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/01/30 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -127,11 +127,11 @@
 #include "x_lint.h"
 #include "x_assert.h"
 //LINT_EXT_HEADER_END
-
-BOOL fgLGPipLine =FALSE;
+#ifdef CC_SUPPORT_PIPELINE
+BOOL fgLGPipLine =TRUE;
 BOOL fgVdpModeChg[B2R_NS] ={FALSE,FALSE};
 static VDP_CFG_T    _arVdpPipLineCfg;
-
+#endif
 //-----------------------------------------------------------------------------
 // Configurations
 //-----------------------------------------------------------------------------
@@ -659,13 +659,19 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 
         if (u4IssueModeChange != 0)
         {
+        #ifdef CC_SUPPORT_PIPELINE
             LOG(0, "ucVdpId(%d) DTV Mode Change,->fgVdpModeChg=%d,ucB2rId=%d\n\n", ucVdpId,fgVdpModeChg[this->ucB2rId],this->ucB2rId);
+		#else
+		     LOG(0, "ucVdpId(%d) DTV Mode Change,ucB2rId=%d\n\n", ucVdpId,this->ucB2rId);
+		#endif
 #ifdef TIME_MEASUREMENT
             TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R Mode Change");
 #endif
             _vDrvVideoSetMute(MUTE_MODULE_B2R, ucVdpId, 0, FALSE);
             _vDrvVideoSetMute(MUTE_MODULE_MODECHG, ucVdpId, 10, FALSE);
+			#ifdef CC_SUPPORT_PIPELINE
              if(fgLGPipLine==FALSE || fgVdpModeChg[this->ucB2rId])
+			#endif
             {
                 vMpegModeChg(ucVdpId);
                 vMpegModeDetDone(ucVdpId);
@@ -1186,6 +1192,7 @@ VOID _B2R_ProcDPs(B2R_OBJECT_T *this, VDP_CFG_T* ptDP)
  * @param ucB2rId specify B2R id (0 only)
  * @return void
  */
+#ifdef CC_SUPPORT_PIPELINE
 
 void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 {
@@ -1252,11 +1259,11 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 }
   void	LG_PipLineDisconnect(UCHAR ucVdpId)
  {
-       if(!fgLGPipLine)
-	      return;
+      
        LOG(0,"LG_PipLineDisconnect\n");
 	   LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
 	   LG_PipLineSwitch(ucVdpId,B2R_NS); 
+	   
  }
 
  void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
@@ -1298,7 +1305,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 		_B2R_ProcDPs(this, ptDP);
 	
 }
-
+#endif
 void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 {
     B2R_OBJECT_T *this;
@@ -1307,10 +1314,13 @@ void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 #ifdef CC_B2R_RES_SUPPORT
     UCHAR  ucRetB2rid = B2R_NS;    
 #endif
+#ifdef CC_SUPPORT_PIPELINE
+
     if(fgLGPipLine)
     {
        return;
     }
+#endif
     // if ucB2rId = B2R_NS, it means that video plane switch to non-DTV video input
     #ifdef CC_B2R_RM_SUPPORT
     if(ucB2rId==B2R_NS)
@@ -2795,7 +2805,9 @@ VOID B2R_Init(VOID)
         _prVdpCfg[i]->ucVdpId = i;
         x_memset(_prVdpCfg[i]->ucInputPort, VDEC_MAX_ES, sizeof(_prVdpCfg[i]->ucInputPort));
     }
-    fgLGPipLine=FALSE;
+	#ifdef CC_SUPPORT_PIPELINE
+    fgLGPipLine=TRUE;
+	#endif
     FBM_RegCbFunc(FBM_CB_FUNC_FBG_CHG_IND, (UINT32)_VdpFbgChgNotify);
 
     //register the B2R timegen
