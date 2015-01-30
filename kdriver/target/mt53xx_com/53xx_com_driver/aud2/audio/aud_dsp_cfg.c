@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/01/30 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -12518,6 +12518,24 @@ void _AUD_DspSetSpdifChannelStatus (SPDIF_REG_TYPE_T type)
     DSP_SendDspTaskCmd(AUD_DSP0, UOP_DSP_IEC_SET_DATA);
 }
 
+#ifdef CC_AUD_ARM_RENDER
+
+void _AUD_ArmSetSpdifChannelStatus (SPDIF_REG_TYPE_T type)
+{
+	AUD_DEC_STREAM_FROM_T eStreamFrom = _aeStreamSrc[AUD_DEC_MAIN]; // Now, it is only for main decoder.
+	APROC_IEC_CHANNELSTATUS_T  eInfo;
+
+    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+
+	eInfo.u4CategoryCode= _aSpdifInfo.u1Category[type][eStreamFrom];
+	eInfo.u4WordLength = _aSpdifInfo.u1WordLength[type][eStreamFrom];
+	eInfo.u4CopyRight = _aSpdifInfo.u1Copyright[type][eStreamFrom];
+
+	_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+
+}
+#endif
+
 //-----------------------------------------------------------------------------
 /** _AUD_DspSetSpdifCopyright
  *  Routine handling SPDIF Configuration.
@@ -12553,7 +12571,12 @@ void _AUD_DspSetSpdifCategoryCode(SPDIF_REG_TYPE_T type, AUD_DEC_STREAM_FROM_T e
     LOG (3, "SPDIF set category code (%d) = %d for src = %d\n", type, categoryCode, eStreamFrom);
 
     // setup register type, setup will be feed into DSP....
-    _AUD_DspSetSpdifChannelStatus (type);
+    #ifdef CC_AUD_ARM_RENDER
+      _AUD_ArmSetSpdifChannelStatus(type);
+    #else
+      _AUD_DspSetSpdifChannelStatus (type);
+    #endif
+
 }
 
 //-----------------------------------------------------------------------------
