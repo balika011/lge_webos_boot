@@ -452,6 +452,7 @@ void puts(const char *s)
 extern spin_lock_t g_print_lock;
 //#define readl(addr) (*(volatile unsigned int*)(addr))
 extern volatile int LogEnable ;
+extern volatile int megic_number_cleaned ;
 
 int printf(const char *fmt, ...)
 {
@@ -460,7 +461,7 @@ int printf(const char *fmt, ...)
 	char printbuffer[CONFIG_SYS_PBSIZE];
 	
 #if defined(CONFIG_MULTICORES_PLATFORM)
-if(LogEnable == 2)
+if(LogEnable == 2 && !megic_number_cleaned)
 	spin_lock(&g_print_lock);
 #endif
 #ifndef CONFIG_PRE_CONSOLE_BUFFER
@@ -480,7 +481,7 @@ if(LogEnable == 2)
 	serial_puts(printbuffer);
 	
 #if defined(CONFIG_MULTICORES_PLATFORM)
-	if(LogEnable == 2)
+	if(LogEnable == 2 && !megic_number_cleaned)
 	spin_unlock(&g_print_lock);
 #endif
 

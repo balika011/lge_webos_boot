@@ -25,7 +25,7 @@ spin_lock_t g_sched_lock = INIT_SPIN_LOCK;
 scheduler_t g_scheduler;
 thread_t *current_thread[NR_CPUS];  /* Current thread */
 int active_count = 0;       /* Active thread count */
-int megic_number_cleaned = 0;
+volatile int megic_number_cleaned = 0;
 
 extern void *main_init(void *arg);
 #define readl(addr) (*(volatile unsigned int*)(addr))

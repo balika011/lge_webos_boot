@@ -13,7 +13,7 @@ extern void add_run_queue(thread_t *thread);
 extern void add_sleep_q(thread_t *thread, utime_t timeout);
 #define NR_CPUS 4
 extern spin_lock_t init_done[NR_CPUS];
-extern int megic_number_cleaned ;
+extern volatile int megic_number_cleaned ;
 extern spin_lock_t smp_cpu_released[NR_CPUS];
 volatile unsigned int waitCount=0;
 #if defined(CONFIG_MULTICORES_PLATFORM)
