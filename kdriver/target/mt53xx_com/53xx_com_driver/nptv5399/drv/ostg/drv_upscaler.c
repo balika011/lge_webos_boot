@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/02 $
  * $RCSfile: drv_upscaler.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -245,7 +245,7 @@ void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 
 	if(bType>=COEFTYP_MAX)
 	{
-        Printf("Set Scaler PQ SRAM Coeff Type: %d,  Wrong !!\n", bType);
+        LOG(3,"Set Scaler PQ SRAM Coeff Type: %d,  Wrong !!\n", bType);
 	}
 
 	//initial setting before writing coefficient

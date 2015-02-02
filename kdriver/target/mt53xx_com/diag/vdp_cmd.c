@@ -112,6 +112,9 @@ LINT_EXT_HEADER_BEGIN
 #include "drv_uhd.h"
 #endif
 
+#ifdef CC_SUPPORT_PIPELINE
+#include "source_select.h"
+#endif
 
 #define DEFINE_IS_LOG	CLI_IsLog
 #include "x_debug.h"
@@ -279,8 +282,9 @@ static INT32 _VdpVB1_test (INT32 i4Argc, const CHAR ** szArgv);
 
 #endif
 #ifdef CC_SUPPORT_PIPELINE
-
 static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv);
 #endif
 static INT32 _VdpStopCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpFreezeCmd (INT32 i4Argc, const CHAR ** szArgv);
@@ -556,6 +560,8 @@ static CLI_EXEC_T _arVdpCmdTbl[] =
  	{"stop",		NULL,	_VdpStopCmd, NULL,			"Vdp stop", CLI_SUPERVISOR},
  	#ifdef CC_SUPPORT_PIPELINE
  	{"LG",		"sw",	_VdPipLineTest, NULL,			"Vdp PipLine", CLI_GUEST},
+ 	{"LG",		"som",	_VdPipLineSetMainOmux, NULL,	"Vdp PipLine", CLI_GUEST},
+ 	{"LG",		"sop",	_VdPipLineSetPipOmux, NULL,		"Vdp PipLine", CLI_GUEST},
  	#endif
  	{"freeze",		"f",	_VdpFreezeCmd, NULL,		"Vdp freeze", CLI_GUEST},
  	{"nonlinear",	"nl",	_VdpNonlinearCmd, NULL,		"Vdp nonlinear", CLI_SUPERVISOR},
@@ -2076,6 +2082,38 @@ static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv)
 
     return 0;
 }
+
+static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UINT32 u4Omux;
+
+    if (i4Argc != 2)
+    {
+    	printf("NA:1 TVD:0 ADC:2 HDMI:4 VDEC:8(HD)9(SD)\n");
+      
+        return 0;
+    }
+
+    u4Omux = (UINT32) StrToInt(szArgv[1]);
+    vSetMOutMux(u4Omux);
+    return 0;
+}
+
+static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UINT32 u4Omux;
+
+    if (i4Argc != 2)
+    {
+       printf("NA:1 TVD:0 ADC:2 HDMI:4 VDEC:8(HD)9(SD)\n");
+       return 0;
+    }
+    u4Omux = (UINT32) StrToInt(szArgv[1]);
+	vSetSOutMux(u4Omux);
+  
+    return 0;
+}
+
 #endif
 static INT32 _VdpSetCmd10BitMode(INT32 i4Argc, const CHAR ** szArgv)
 {
