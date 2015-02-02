@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/02 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2385,16 +2385,12 @@ static VOID _B2R_SeqSetting(B2R_OBJECT_T *this, FBM_SEQ_HDR_T* prSeqHdr, UINT32 
     }
     
     // notify SCPOS
-    if(!fgTimingChg)
-    {
-        prB2rVar->u4ReturnValue &= ~VDP_EVENT_SEQ_CHG;
-        return;
-    }
+  
 
     _B2R_PostNotify(this, VDP_MSG_NOTIFY, VDP_B2R_OUTPUT_CHG, 0);
     prB2rVar->u4ReturnValue |= VDP_EVENT_SEQ_CHG;
         
-    LOG(5, "%s \n", __FUNCTION__);
+    LOG(0, "%s \n", __FUNCTION__);
 
  }
 

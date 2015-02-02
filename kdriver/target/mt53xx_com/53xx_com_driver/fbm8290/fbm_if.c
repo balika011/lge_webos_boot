@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/02 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2623,6 +2623,7 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
 	#ifdef CC_SUPPORT_PIPELINE
 	ucB2rId= FBM_B2rResIdAccess(u4FbgId, RES_R, NULL);
     LG_PipLineConnect(VDP_1,ucB2rId);
+	VDP_SetInput(VDP_1,_arFbg[u4FbgId].u1DecoderSrcId,0);
 	#endif
     return FBM_BYTE(u4FbgId);
 }

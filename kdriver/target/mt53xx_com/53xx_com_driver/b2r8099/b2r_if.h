@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/02 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -125,6 +125,7 @@ EXTERN void  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId);
 EXTERN void  LG_PipLineDisconnect(UCHAR ucVdpId);
 EXTERN void  LG_PipLineTest(UCHAR ucVdpId,UCHAR ucEsId);
 EXTERN void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
+EXTERN void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId);
 
 #endif
 

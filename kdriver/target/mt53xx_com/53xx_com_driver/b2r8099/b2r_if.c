@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/02 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -110,6 +110,7 @@
 #include "vdec_drvif.h"
 #include "srm_drvif.h"
 #include "drv_display.h"
+#include "hw_vdoin.h"
 
 
 #ifdef CHANNEL_CHANGE_LOG
@@ -1203,16 +1204,25 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
     UCHAR ucB2rId;
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
     LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d\n",ucVdpId,ucEsId,ucOrgVdpId);
+	vVDOINIrqOn(MSK_MAIN_DET);
 	
-	if(ucVdpId!=ucOrgVdpId)
+	//if(ucVdpId!=ucOrgVdpId)
    {
        x_memset(&_arVdpPipLineCfg,0x0,sizeof(_arVdpPipLineCfg));
 	   x_memcpy(&_arVdpPipLineCfg,B2R_GetVdpConf(ucOrgVdpId),sizeof(_arVdpPipLineCfg));
 	   _arVdpPipLineCfg.ucVdpId=ucVdpId;
+	   if(B2R_GetVdpConf(ucVdpId) == NULL)
+	   	{
+	   	  return;
+	   	}
 	   x_memcpy(B2R_GetVdpConf(ucVdpId),&_arVdpPipLineCfg,sizeof(_arVdpPipLineCfg));
 	   tOmux.ucPath = ucVdpId;
 	   tOmux.fgScartOut =FALSE;
 	   ucB2rId=VDP_Vdp2B2rId(ucVdpId);
+	   if(this==NULL)
+	   {
+	   	   return;
+	   }
 	   this = _B2R_GetObj(ucB2rId);
 	   B2R_HAL_Set(this->hB2r, B2R_HAL_OMUX, &tOmux);
 	   vMpegModeChg(ucVdpId);
@@ -1249,6 +1259,14 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 		   	{
 				ucVdpId = i;
 				fgVdpModeChg[ucB2rId]= TRUE;
+				if(i == SV_VP_MAIN)
+				{	
+					bApiVFESetMainSubSrc(SV_VS_DTV1,SV_VS_NO_CHANGE);
+				}
+				else if (i == SV_VP_PIP)
+				{
+					bApiVFESetMainSubSrc(SV_VS_NO_CHANGE,SV_VS_DTV1);
+				}
 				break;
 			}
 		   #endif
@@ -1261,7 +1279,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
  {
       
        LOG(0,"LG_PipLineDisconnect\n");
-	   LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
+	 //  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
 	   LG_PipLineSwitch(ucVdpId,B2R_NS); 
 	   
  }
