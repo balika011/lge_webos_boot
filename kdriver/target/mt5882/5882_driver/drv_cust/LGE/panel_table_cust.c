@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
   * $RCSfile: panel_table_cust.c,v $
-  * $Revision: #1 $
-  * $Date: 2015/01/09 $
-  * $Author: dtvbm11 $
+  * $Revision: #2 $
+  * $Date: 2015/02/02 $
+  * $Author: p4admin $
   * Description:
   *
   *---------------------------------------------------------------------------*/
@@ -399,6 +399,45 @@ static PANEL_ATTRIBUTE_EXT_T _arPanelAttributeExt[]=
         #endif		
     },
     #endif
+	#if ((PANEL_SELECT == PANEL_LG_37_WU1) || CC_MULTI_PANEL)
+		{
+			PANEL_LG_37_WU1,
+	
+			148500000,				  //u4PixelClk48Hz
+			2184,					   // u2HTotal48Hz
+			1416,					 // u2VTotal48Hz
+			150,
+	
+	#ifdef SUPPORT_PANEL_CUSTOMER_SPEC
+			{32, 32, 32},			   //u1HSyncWidth[3]; 5bits, 1 represents 1 pixel in 5387
+			{4, 4, 4},				  // u1VSyncWidth[3]= VSyn, 4bits, 1 represents 1 line,
+			{136, 136, 136},			// H front porch, 1 represents 1 pixel
+			{16, 16, 16},//{316, 260, 34}			 // V back porch, 1represents 1 line
+			HSYNC_LOW,
+			VSYNC_LOW,
+	#endif
+	#ifdef SUPPORT_PANEL_DITHER
+			0xa000,
+	#endif
+	#ifdef SUPPORT_PANEL_DRIVING
+			0x3,
+	#endif
+	#ifdef SUPPORT_PANEL_ERRORLIMIT_TABLE
+			0x1F,
+	#endif
+	#ifdef SUPPORT_PANEL_3D_PIXEL_SIZE
+			320, // Pixel Size = 0.320 mm = 320 um
+	#endif
+	#ifdef SUPPORT_PANEL_SS
+			20,
+			0,
+	#endif
+	#ifdef SUPPORT_PANEL_SCAN_PWM
+			0,	// u4ScanPWMStart, permillage, 1 means 0.001
+			0,	// u4ScanPWMDuty, permillage, 1 means 0.001
+	#endif		
+		},
+#endif
     #if defined(CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
     #if ((PANEL_SELECT == PANEL_AUO_4K2K_FHD60) || CC_MULTI_PANEL) 
     {

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/02/02 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1164,7 +1164,12 @@ void SelectPanel(UINT32 u4Index)
 		 _prPanelAttribute = &_arPanelAttribute[_u4PanelIndex];
 
 #else 
+#ifdef  CC_LGE_PROTO_PCBA
+						u4Index = PANEL_LG_37_WU1;
+#else
+
 	u4Index = DRVCUST_PanelGet(eDefaultPanelSelect);
+#endif
 #endif
     }
     if (u4Index != PANEL_INVALID)
