@@ -441,7 +441,7 @@ extern int verify_apps(int boot_mode);
 unsigned int kmemsize = 0;
 unsigned int chb_kmemstart = 0;
 unsigned int chb_kmemsize = 0;
-unsigned int fbdfbsize = 0;
+unsigned int tzsize = 0;
 #define FLASH_BASE 0
 #define FLASH_TZFW_TOTAL_LEN 0x200000
 #define FLASH_KERMEM_TOTAL_LEN 0x20000
@@ -468,6 +468,36 @@ ulong get_tzfw_base(void)
 
 void get_kernel_size(ulong src)
 {
+#if 1  // hongjun changed mem get method ,  not from tz.bin 
+
+		kmemsize = TCMGET_CHANNELA_SIZE() * 0x100000 - PHYS_SDRAM_1_FBM_DFB_FB_TRUSTZONE_SIZE; 
+		chb_kmemsize = DIRECT_FB_MEM_SIZE + FB_MEM_SIZE;
+		
+		tzsize  = TRUSTZONE_MEM_SIZE;
+		
+		 if (TCMGET_CHANNELA_SIZE() == 0x300) /* 768M case */
+		 {
+			  kmemsize += 47 * 0x100000;	 /* increase kmemsize by 47MB */
+			  chb_kmemsize -= 47 * 0x100000; /* decrease FBDFB size by 47MB */
+		 }
+		 
+		chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_SIZE - tzsize;
+
+		printf("[uboot debug] kernel memory size=0x%x\n", kmemsize);
+		printf("[uboot debug] FBM dram start addr=0x%x,  size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_SIZE);
+		printf("[uboot debug] FB/DFB dram size=0x%x\n", chb_kmemsize);
+		printf("[uboot debug] TZ dram size=0x%x\n", tzsize);
+
+#if 0
+	printf(" 0x%x, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x \n" ,FBM_SECURE_FEEDER_2K_SIZE , FBM_FEEDER_TVP_SIZE , FBM_DMX1_SIZE , FBM_SCPOS_MAIN_SIZE , FBM_MPEG_Y_SIZE  ,FBM_PQ_TOOL_POOL_SIZE , 
+		FBM_HW_DEMOD_SIZE ,FBM_OD_SIZE , FBM_JPEVDP_POOL_SIZE , \
+		FBM_DMX_PID_BUF_SIZE , FBM_VENC_SIZE  , FBM_TWO_FBP_SIZE , FBM_FD_SIZE , FBM_PVR_SIZE , FBM_SWDMX_SIZE , FBM_VSS_SIZE , FBM_DRM_BUF_SIZE , \
+		FBM_MUXER_SIZE ,FBM_IMGRZ_3D_KR_BUF , FBM_SLT_EXTRA_SIZE , FBM_PNG_POOL_SIZE , FBM_TDCAV_POOL_SIZE  , FBM_DMX_ADD_SIZE , \
+		FBM_EXTRA_FOR_4K2K_FEEDER_DMX ,\
+		FBM_DSP_BIN_POOL_SIZE , FBM_TVE_POOL_FBM_SIZE  , FBM_JPEG_SIZE, FBM_DSP_POOL_SIZE , FBM_REDUCE_FBM_DMX_SIZE);
+#endif
+
+#else
 	int i;
 
         uint8_t kermembuf[FLASH_KERMEM_TOTAL_LEN];
@@ -562,6 +592,7 @@ void get_kernel_size(ulong src)
 	    printf("Error: Please update tzfw partition\n");
 	    //while (1);
 	}
+	#endif
 }
 
 #ifdef CC_TRUSTZONE_SUPPORT

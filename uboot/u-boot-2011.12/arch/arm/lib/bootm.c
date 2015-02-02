@@ -117,7 +117,7 @@ static void announce_and_cleanup(void)
 extern unsigned int kmemsize;
 extern unsigned int chb_kmemstart;
 extern unsigned int chb_kmemsize;
-extern unsigned int fbdfbsize;
+extern unsigned int tzsize;
 
 #define arg_next(p)				(char *)((unsigned long)p+strlen(p))
 
@@ -304,12 +304,12 @@ void linux_param_set(char *kargs)
 #ifdef CC_MT53XX_SUPPORT_2G_DRAM
 	printf("TOTAL_MEM_SIZE = 0x%x \n",TOTAL_MEM_SIZE);
 	printf("kmemsize = 0x%x \n",kmemsize);
-	printf("fbdfbsize = 0x%x \n",fbdfbsize);
-	printf("ALIGN(TOTAL_MEM_SIZE - kmemsize - fbdfbsize, 0x800000)/0x100000 = %d \n",ALIGN(TOTAL_MEM_SIZE - kmemsize - fbdfbsize, 0x800000)/0x100000);
-	printf("ALIGN(fbdfbsize, 0x800000)/0x100000 = %d \n",ALIGN(fbdfbsize, 0x800000)/0x100000);
+	printf("tzsize = 0x%x \n",tzsize);
+	printf("ALIGN(TOTAL_MEM_SIZE - kmemsize - tzsize, 0x800000)/0x100000 = %d \n",ALIGN(TOTAL_MEM_SIZE - kmemsize - tzsize, 0x800000)/0x100000);
+	printf("ALIGN(tzsize, 0x800000)/0x100000 = %d \n",ALIGN(tzsize, 0x800000)/0x100000);
 	//purplearrow, 2013/5/28, assign vmalloc size directly
 #if 0
-	sprintf(arg_next(kargs), "vmalloc=%dMB ", ALIGN(TOTAL_MEM_SIZE - kmemsize - fbdfbsize, 0x800000)/0x100000/*FBM*/ + ALIGN(fbdfbsize, 0x800000)/0x100000/*FB+DFB*/ + 256/*0xf0000000--end*/ + 16/*DFB*/ + 40/*kernel usage*/ + 16/*alignment reserved*/);
+	sprintf(arg_next(kargs), "vmalloc=%dMB ", ALIGN(TOTAL_MEM_SIZE - kmemsize - tzsize, 0x800000)/0x100000/*FBM*/ + ALIGN(tzsize, 0x800000)/0x100000/*FB+DFB*/ + 256/*0xf0000000--end*/ + 16/*DFB*/ + 40/*kernel usage*/ + 16/*alignment reserved*/);
 #else
         printf(" uboot dram param: (0x%x), (0x%x), (0x%x), (0x%x), (0x%x), (0x%x),(0x%x)\n", DEFAULT_LINUX_KERNEL_MEM_SIZE, DEFAULT_CHANNEL_A_SIZE, FBM_MEM_CFG_SIZE, DIRECT_FB_MEM_SIZE, FB_MEM_SIZE, TRUSTZONE_MEM_SIZE, LINUX_KERNEL_MEM_MASK);
 	sprintf(arg_next(kargs), "vmalloc=768MB ");
@@ -623,11 +623,6 @@ static void setup_memory_tags (bd_t *bd)
 	
 	int i;
 
-    if (kmemsize == 0)
-{
-        printf("Error: Please update tzfw partition\n");
-        while (1);
-}
 
     for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
         params->hdr.tag = ATAG_MEM;
