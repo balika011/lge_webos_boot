@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_pwm.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -281,7 +281,7 @@ void vDrvPWM_SetParam(DRV_PWM_PIN_SEL_T pwmIndex,DRV_PWM_PARAM_T *prPwmSetting)
 void vDrvPWM_ApplyParamSet()
 {
 	INT32 i;
-	for(i=0;i<=SrcPWM2;i++) //OPWM
+	for(i=1;i<=SrcPWM2;i++) //OPWM
 	{	if(_gPWMSetting[i].pwm_enable && (_gPWMSetting[i].pwm_scanning_enable))
 			vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
 		vDrvPWM_ApplyParam(PWM_DEV_PIN0+i);
