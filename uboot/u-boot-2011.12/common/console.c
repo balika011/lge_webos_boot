@@ -466,13 +466,14 @@ int printf(const char *fmt, ...)
 	if(gd->flags & GD_FLG_SILENT)
 		return;
 #endif
-#if defined(CONFIG_MULTICORES_PLATFORM)
-//if(LogEnable == 2 && !megic_number_cleaned)
-	//spin_lock(&g_print_lock);
-#endif
 #ifndef CONFIG_PRE_CONSOLE_BUFFER
 	if (!gd->have_console)
 		return 0;
+#endif
+
+#if defined(CONFIG_MULTICORES_PLATFORM)
+//if(LogEnable == 2 && !megic_number_cleaned)
+	//spin_lock(&g_print_lock);
 #endif
 
 	va_start(args, fmt);
@@ -488,7 +489,7 @@ int printf(const char *fmt, ...)
 	serial_puts(printbuffer);
 	
 #if defined(CONFIG_MULTICORES_PLATFORM)
-	//if(LogEnable == 1 && !megic_number_cleaned)
+	//if(LogEnable == 2 && !megic_number_cleaned)
 	//spin_unlock(&g_print_lock);
 #endif
 
