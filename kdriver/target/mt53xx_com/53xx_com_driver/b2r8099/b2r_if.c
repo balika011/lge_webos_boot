@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/03 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1207,7 +1207,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
     UCHAR ucB2rId;
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
     LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d\n",ucVdpId,ucEsId,ucOrgVdpId);
-	vVDOINIrqOn(MSK_MAIN_DET);
+	vMpegHdConnect(ucVdpId,SV_ON);
 	
 	//if(ucVdpId!=ucOrgVdpId)
    {
@@ -1288,7 +1288,8 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
       
        LOG(0,"LG_PipLineDisconnect\n");
 	 //  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
-	   LG_PipLineSwitch(ucVdpId,B2R_NS); 
+	 vMpegHdConnect(ucVdpId,SV_OFF);
+	 LG_PipLineSwitch(ucVdpId,B2R_NS); 
 	   
  }
 

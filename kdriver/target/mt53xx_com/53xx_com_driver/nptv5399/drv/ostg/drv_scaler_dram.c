@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/26 $
+ * $Date: 2015/02/03 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -279,12 +279,14 @@ void vScpipWriteCtrlOnOff(UCHAR ucVdpId, UCHAR ucOnOff)
         return;
     }
     #endif
-    
+
+	#ifndef CC_SUPPORT_PIPELINE
     if (ucOnOff == SV_ON && _arScalePrm[ucVdpId].u4CntToRstDramPrm != 0)
     {
         //do nothing
         return;
-    }    
+    }  
+	#endif
 
     prChannel = getChannel(ucVdpId);
     csState = x_crit_start();   
