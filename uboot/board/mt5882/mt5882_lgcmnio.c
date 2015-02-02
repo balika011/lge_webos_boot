@@ -804,7 +804,7 @@ int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_
 	        return -2;
 	    }
 	    // Check Rsn value.
-	    u4PwmRsn = (m_pwm_duty == 1000) ? 0xfe : 0xff;
+	    u4PwmRsn = 0xff;
 		if(m_pwm_frequency == 0)
 		{
 			u4PwmP = 0;
@@ -813,11 +813,10 @@ int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_
 		else
 		{
 		    u4PwmP = ((u4BusClk >> 8)/ m_pwm_frequency);
-			u4PwmH = ((m_pwm_duty == 1000) || (((m_pwm_duty * 257) / 1000) > 0xff)) ? 0xff : ((m_pwm_duty * 257) / 1000);
+			u4PwmH = m_pwm_duty;
 		}
-	    u4PwmExtP = ((u4PwmP >> 12) & 0xff);
-
 		vDrvSetPWM(pwmIndex,u4PwmP,u4PwmH,u4PwmRsn);
+		vDrvSetLock(pwmIndex, m_pwm_lock);
 	}
 	else //Scan PWM ??
 	{
