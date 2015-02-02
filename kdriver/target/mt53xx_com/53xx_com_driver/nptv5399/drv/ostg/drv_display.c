@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/02/02 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1676,6 +1676,9 @@ void vDrvSetLCDTiming_SETDATA(void)
 	// osd Hstart setting 
 	OSD_Base_SetHStart();
 
+#ifdef CC_LGE_PROTO_PCBA
+	vDrvPWM_ApplyParamSet();
+#else
 	// update dimming frequency
 #ifdef SUPPORT_PANEL_SCAN_PWM
 	vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
@@ -1683,6 +1686,7 @@ void vDrvSetLCDTiming_SETDATA(void)
 	BACKLT_SetDimming(BACKLT_GetDimmingFrequency(), _u4BrightLevel);
 #ifndef CC_MTK_LOADER
     DRVCUST_UpdateBacklightState(BL_STATE_OUTPUT_FR_CHANGE, _u4BrightLevel);
+#endif
 #endif
 #endif
 	#ifndef CC_MTK_LOADER
