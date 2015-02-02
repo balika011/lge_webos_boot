@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/02 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #27 $
+ * $Revision: #28 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -522,6 +522,7 @@ UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
   LOG(2, "Pipeline bApiVFEAVDConnect(bSrc=%d, u4Port=%d,bEnable=%d,bType=%d)\n",bSrc,u4Port,bEnable,bType);
   switch(bSrc)
 	{ 
+	case SV_VS_ATV1:
 	case SV_VS_ATD1:
 	case SV_VS_CVBS4:
 	case SV_VS_SCART1:
