@@ -600,48 +600,6 @@ U_BOOT_CMD(
 #define FALSE 0
 #endif
 
-extern UINT8 DDI_NVM_GetSWUMode( void );
-extern void DDI_NVM_SetSWUMode( UINT8 mode );
-
-int do_swu_mode(cmd_tbl_t *cmdtp, int flag,int argc, char *argv[])
-{
-	UINT8 swu_mode = DDI_NVM_GetSWUMode();
-
-	int i;
-//	for(i=0; i<argc; i++)
-//		printf("arg[%d] : %s\n", i, argv[i]);
-
-	printf("[swu mode status]\n");
-	printf("current : %s", swu_mode ? "on" : "off");
-
-
-	if(argc == 1) {
-		printf("\n");
-		return 0;
-	}
-
-	if (argc == 2) {
-		UINT8 new_mode = swu_mode;
-
-			new_mode = (strcmp(argv[1], "on")) ? (UINT8)FALSE : (UINT8)TRUE;
-
-		if(swu_mode != new_mode) {
-			printf(" => %s\n", argv[1]);
-			DDI_NVM_SetSWUMode((UINT8)(new_mode));
-		}
-	}
-	else
-		return -1;
-
-	return 0;
-}
-
-U_BOOT_CMD(
-		swumode,	2,	0,	do_swu_mode,
-		"swumode\t- set swu mode\n",
-		"swumode [on/off]\n"
-		);
-
 /*
  * for snapshot boot by junorion
  */

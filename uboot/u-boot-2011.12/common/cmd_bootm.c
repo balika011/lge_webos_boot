@@ -599,7 +599,6 @@ int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 /*******************************************************************/
 #ifdef CFG_LG_CHG
 extern int gSecureFlag;
-//extern UINT8 DDI_NVM_GetSWUMode( void );
 #endif
 
 int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])

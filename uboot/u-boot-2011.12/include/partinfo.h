@@ -292,6 +292,8 @@ extern int 							backup_partition(struct partition_info *pi1, struct partition_
 extern int 							erase_flagged_part(struct partmap_info *pmi);
 extern int 							erase_datapart(struct partmap_info *pmi);
 extern int 							erase_cachepart(void);
+extern int 							get_offset_size(int argc, char* argv[], unsigned long* offset, unsigned long* size);
+extern int 							get_offset_size2(int argc, char* argv[], unsigned long long* offset, unsigned long long* size);
 
 #endif /* _PART_INFO_H_ */
 

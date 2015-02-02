@@ -8,9 +8,12 @@
 #include <util.h>
 #include <partinfo.h>
 #include <mmc.h>
+#include <linux/ctype.h>
 
 
 #define EMMC_TEST_LOG 		1
+
+typedef int (*SUB_FUNC_T)(int argc, char *argv[]);
 
 extern unsigned int random(void);
 
@@ -48,9 +51,83 @@ static u32  emmc_test_transfer(void *buff, u32 offset, u32 size, u32 write , u32
 	return speed;
 }
 
-//static int subcmd_emmc_test(int argc, char *argv[])
-int cmd_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+static int subcmd_emmc_erase(int argc, char *argv[])
+{
+	u64		size, offset;
+	int		rc;
 
+	struct mmc	*mmc = find_mmc_device(CONFIG_SYS_MMC_ENV_DEV);
+
+	if(!mmc)
+	{
+		printf("No mmc device at slot %x\n", CONFIG_SYS_MMC_ENV_DEV);
+		return -1;
+	}
+
+	if(argc == 2)
+	{
+		int in_char;
+		printf("Really erase all the data in emmc ? <y/N> ");
+		in_char = getc();
+		printf("%c\n\n", isprint(in_char)? in_char : ' ');
+
+		if(in_char != 'y')
+			return 0;
+
+		offset = 0;
+		size = mmc->capacity;
+	}
+	else
+	{
+		if(get_offset_size2(argc - 2, argv + 2, &offset, &size) < 0)
+			return -1;
+
+		if(size == 0)
+		{
+			printf("invalid size\n");
+			return -1;
+		}
+	}
+
+	printf("emmc erase (0x%012llx ~ 0x%012llx) : ", offset, offset + size);
+	rc = storage_erase(offset, size);
+
+	printf("%s\n", (rc == 0)? "OK" : "Fail");
+
+	return 0;
+}
+
+static int subcmd_emmc_dump(int argc, char *argv[])
+{
+	ulong	size = 0, offset = 0, dst = CFG_LOAD_ADDR;
+	int		ret = 0;
+	char	cmd[20] = {0, };
+
+	if(argc != 3 && argc != 4)
+		return -1;
+
+	if(get_offset_size(argc - 2, argv + 2, &offset, &size) < 0)
+		return -2;
+
+	if(size == 0)
+		size = 512;
+
+	ret = emmc_read(offset, size, dst);
+	if(ret) {
+		printf("block read failed..\n");
+		return -1;
+	}
+
+	printf("Offset 0x%x, size: 0x%x, dst: 0x%x, dump:\n", offset, size, CFG_LOAD_ADDR);
+
+	sprintf(cmd, "md.b 0x%x 0x%x\n", dst, size);
+	ret = run_command(cmd, 0);
+
+	return ret;
+}
+
+
+static int subcmd_emmc_test(int argc, char *argv[])
 {
 	static char		*emmc_test_buf;
 	//static int		emmc_test_buf_inited = 0;
@@ -86,7 +163,7 @@ int cmd_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	printf("subcmd_emmc_test start \n");
 
 	if (argc < 6)
-		goto usage;
+		return -1;
 
 	emmc_test_buf = (char *)0x200000;
 	memset(emmc_test_buf, 0xA5, 1024*1024);
@@ -256,16 +333,10 @@ int cmd_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 
 	return 0;
-
-usage:
-	printf ("Usage in cmd_emmc :\n%s\n", cmdtp->usage);
-	return 1;	
 }
 
 
 
-#if 0
-typedef int (*SUB_FUNC_T)(int argc, char *argv[]);
 static SUB_FUNC_T cmp_subcmd(char *str)
 {
 	typedef struct
@@ -274,9 +345,12 @@ static SUB_FUNC_T cmp_subcmd(char *str)
 		SUB_FUNC_T	func;
 	} SUBCMD_T;
 
-	SUBCMD_T cmd_tbl[] =		
-		 {{ "test", subcmd_emmc_test   },		
-		 {  NULL }};
+	SUBCMD_T cmd_tbl[] = {
+		{ "erase", subcmd_emmc_erase   },
+		{ "dump", subcmd_emmc_dump   },
+		{ "test", subcmd_emmc_test   },
+		{  NULL }
+	};
 
 	int		index;
 
@@ -298,12 +372,9 @@ static SUB_FUNC_T cmp_subcmd(char *str)
 
 int cmd_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]) // should be used integer type function
 {
-	int otpval;
-	int set;
-
 	SUB_FUNC_T	func;
 
-	if (argc < 6)
+	if (argc < 2)
 		goto usage;
 
 	func = cmp_subcmd(argv[1]);
@@ -316,15 +387,15 @@ int cmd_emmc(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]) // should be us
 
 usage:
 	printf ("Usage in cmd_emmc :\n%s\n", cmdtp->usage);
-	return 1;
+	return -1;
 	
 }
-#endif
 
 U_BOOT_CMD(
      emmc,   6,  0,  cmd_emmc,
-     "emmc test case1-6 start size chunk \n",""
+     "emmc dump, erase, test\n",
+	 "emmc erase offset|partition size\n"
+	 "emmc dump offset|partition size\n"
+	 "emmc test case1-6 start size chunk \n"
 );
-
-
 

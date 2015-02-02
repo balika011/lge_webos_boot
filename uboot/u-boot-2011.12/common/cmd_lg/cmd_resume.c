@@ -692,11 +692,11 @@ int check_snapshot_mode(void)
 
 	printf("boot mode : %s\n", bootmode);
 	printf("debug status : %d\n", DDI_NVM_GetDebugStatus());
-	printf("swu mode : %d\n", DDI_NVM_GetSWUMode());
+	printf("swu mode : %d\n", get_swumode());
 	printf("snapshot support : %d\n", DDI_NVM_GetSnapShot_Support());
 
 
-	if(!strcmp(bootmode, "webos") || DDI_NVM_GetSWUMode() || (DDI_NVM_GetSnapShot_Support() == 0) || is_factory_mode() )
+	if(!strcmp(bootmode, "webos") || get_swumode() || (DDI_NVM_GetSnapShot_Support() == 0) || is_factory_mode() )
 	{
 		ret = LGSNAP_COLDBOOT;
 		snapshot_mode = "cold";

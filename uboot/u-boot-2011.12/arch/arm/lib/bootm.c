@@ -41,6 +41,8 @@
 #include <cmd_micom.h>
 #include <cmnio_type.h>
 #include "x_dram.h"
+#include <swum.h>
+
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -145,7 +147,7 @@ void linux_param_set(char *kargs)
 	uint32_t xip_size_mb = 0, appxip_addr = 0, fontxip_addr = 0;
 	char *mac, *print, *lpj;
 	//char *malimem, *umpmem;
-	int swumode = (int)DDI_NVM_GetSWUMode();
+	int swumode = get_swumode();
 	unsigned int soc_rev = 0;
 #ifdef SIGN_USE_PARTIAL	
     LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)0xfb005000;
@@ -371,10 +373,13 @@ extern	struct mmc emmc_info[];
 	}
 	
 //LG's 
+	if(swumode)
+		sprintf(arg_next(kargs), "swumode ");
+
 	if ((!(strncmp(getenv("print"),"off",3))) || (DDI_NVM_GetDebugStatus() != DEBUG_LEVEL))
 	{
 		printf("SILENT MODE!\n");
-		//sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
+		sprintf(arg_next(kargs),"%s ", "quiet loglevel=0"); // silent mode
 	}
 	sprintf(arg_next(kargs), "%s ", "devtmpfs.mount=1");
 	sprintf(arg_next(kargs),"modelopt=%s ", strModelOpt);
@@ -400,7 +405,7 @@ extern	struct mmc emmc_info[];
 	sprintf(arg_next(kargs), "modelName=%s ", gModelInfoDB.aModelName);
 	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
 	sprintf(arg_next(kargs), "%s ", "sver=3.00.00 bver=3.00.00");
-	sprintf(arg_next(kargs), "%s ", "chip=M14B1");
+	sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");
 	if(MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus())
 		sprintf(arg_next(kargs), "%s ", "factory");
 	sprintf(arg_next(kargs), "%s ", "cmdEnd");
@@ -510,7 +515,6 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 #endif
 
 	BIM_SetTimeLog(3);
-	BootSplash();
     release_non_boot_core();
 
 	announce_and_cleanup();
@@ -745,3 +749,23 @@ static ulong get_sp(void)
 	asm("mov %0, sp" : "=r"(ret) : );
 	return ret;
 }
+
+void display_boottime_log(void)
+{
+	char*	timelog = getenv("timelog");
+
+	if(!strcmp("on", timelog))
+	{
+		enable_console();
+	    {
+		/* add to measure booting time */
+//		unsigned int u32Timer_b, u32Timer_c;
+//		u32Timer_c =
+//		u32Timer_b =
+//		printf("\033[0;31m[time] sboot takes %d.%03dms, mboot takes %d.%03dms \033[0m\n", u32Timer_b/12000, (u32Timer_b/12)%1000,
+//							(u32Timer_c - u32Timer_b)/12000, ((u32Timer_c - u32Timer_b)/12)%1000);
+	    }
+		disable_console();
+	}
+}
+

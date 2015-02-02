@@ -1326,3 +1326,42 @@ U_BOOT_CMD(
 		"set initfile path\n",
 		"initfile initfile_path\n"
 		);
+
+void do_timelog_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	int 	changed = 0;
+	char*	timelog = getenv("timelog");
+
+	if(timelog == NULL)
+	{
+		setenv("timelog", "off");
+		changed = 1;
+	}
+
+	printf("current timelog : %s\n", timelog);
+
+	if(argc == 2)
+	{
+		char* input = argv[1];
+
+		if(strcmp(input, timelog))
+		{
+			printf("change the timelog to %s\n", input);
+			setenv("timelog", input);
+			changed = 1;
+		}
+	}
+
+	if(changed)
+		saveenv();
+
+	return;
+}
+
+
+U_BOOT_CMD(
+		timelog,	2,	0,	do_timelog_cmd,
+		"set the bootloader time log [on|off]\n",
+		"[on|off]\n"
+		);
+

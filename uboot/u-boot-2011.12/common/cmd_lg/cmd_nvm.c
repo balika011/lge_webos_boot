@@ -826,42 +826,6 @@ U_BOOT_CMD(
 
 #if 1	/* for swu mode by junorion */
 
-#define MAGIC_SWU_KEY	0x53	/* 'S' */
-#define MAGIC_SWU_MODE	0x20121205
-
-UINT8 DDI_NVM_GetSWUMode( void )
-{
-	UINT32 off_swumode 	= SYS_DB_BASE + (UINT32)&(gSysNvmDB.swuMode) - (UINT32)&gSysNvmDB;
-	UINT32 off_swum_magic	= SYS_DB_BASE + (UINT32)&(gSysNvmDB.swum_magic) - (UINT32)&gSysNvmDB;
-	UINT8 mode;
-	UINT32 swum_magic;
-
-	// check swu mode magic
-	DDI_NVM_Read (off_swum_magic, sizeof(UINT32), &swum_magic);
-	if(swum_magic != MAGIC_SWU_MODE) {
-		printf("Get SWUM Magic ( %08x : %08x ) failed...\n", swum_magic, MAGIC_SWU_MODE);
-		return 0;
-	}
-
-	DDI_NVM_Read(off_swumode, sizeof(UINT8), &mode);
-	mode = ((mode & 0xff) != MAGIC_SWU_KEY) ? (UINT8)FALSE : (UINT8)TRUE;
-
-	return mode;
-}
-
-void DDI_NVM_SetSWUMode( UINT8 mode )
-{
-	UINT32 off_swumode 	= SYS_DB_BASE + (UINT32)&(gSysNvmDB.swuMode) - (UINT32)&gSysNvmDB;
-	UINT32 off_swum_magic	= SYS_DB_BASE + (UINT32)&(gSysNvmDB.swum_magic) - (UINT32)&gSysNvmDB;
-	UINT32 swum_magic = (UINT32)MAGIC_SWU_MODE;
-
-	// write swu mode magic
-	DDI_NVM_Write(off_swum_magic, sizeof(gSysNvmDB.swum_magic), &swum_magic);
-
-	mode = (mode & 0xff) ? MAGIC_SWU_KEY : 0xff;
-	DDI_NVM_Write(off_swumode, sizeof(gSysNvmDB.swuMode), &mode);
-}
-
 #define MAGIC_HIB		0x48	/* 'H' */
 UINT8 DDI_NVM_GetMakeHib( void )
 {

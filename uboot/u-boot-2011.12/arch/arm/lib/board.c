@@ -111,7 +111,6 @@ volatile int LogEnable = 1;
 #ifdef CFG_LG_CHG
 void BootSplash(void);
 static void verify_mac_address(void);
-void polling_timer(void);
 void del_timer_all(void);
 #endif
 /* Fix DECLARE_GLOBAL_DATA_PTR error for the V6 gcc toolchain */
@@ -323,7 +322,9 @@ init_fnc_t *init_sequence[] = {
 	env_init,		/* initialize environment */
 	init_baudrate,		/* initialze baudrate settings */
 	serial_init,		/* serial communications setup */
+#ifndef CFG_LG_CHG
 	console_init_f,		/* stage 1 init of console */
+#endif
 	display_banner,		/* say that we are here */
 #if defined(CONFIG_DISPLAY_CPUINFO)
 	print_cpuinfo,		/* display cpu info (and speed) */
@@ -401,11 +402,6 @@ extern int verify_apps(int boot_mode);
 	if(key != 0x60) {
 	//if(key != 0x0d && key != 0x60) {
 		BootSplash();
-//		BOOTLOG("BootSplash();\n");
-//		BootSplash();
-//		BootSplash();
-//		BootSplash();
-//		BootSplash();
 
 #ifdef SIGN_USE_PARTIAL
 		verify_apps(IS_SNAPSHOTBOOT);
@@ -432,16 +428,6 @@ extern int verify_apps(int boot_mode);
 		}
 #endif
 
-
-		//s = getenv("bootcmd");
-		if(DDI_NVM_GetSWUMode() != 0) //swum on case
-		{
-			sprintf(cmd2,"%s;%s","cp2ram swue 0x04000000;verification 0 swue 0x04000000",cmd1);
-			printf("bootcmd cmd = %s \n",cmd2);
-			run_command(cmd2, 0);
-		}
-		//SHOWLOG();
-		polling_timer();
 		printf("bootcmd cmd = %s \n",cmd1);
 		run_command(cmd1, 0);
 	}
@@ -1145,21 +1131,6 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif
 #endif
 
-#ifdef CFG_LG_CHG
-	BootSplash();
-	BootSplash();
-	BootSplash();
-	BootSplash();
-	BootSplash();
-
-	//BootSplash에서 등록된 타이머를 모두 지움
-	del_timer_all();
-
-	
-	
-	
-	
-#endif
 #ifdef CONFIG_POST
 	post_run(NULL, POST_RAM | post_bootmode_get(0));
 #endif
@@ -1302,21 +1273,6 @@ void second_main(void)
 #endif
 #endif
 	
-#ifdef CFG_LG_CHG
-		BootSplash();
-		BootSplash();
-		BootSplash();
-		BootSplash();
-		BootSplash();
-	
-		//BootSplash에서 등록된 타이머를 모두 지움
-		del_timer_all();
-	
-		
-		
-		
-		
-#endif
 #ifdef CONFIG_POST
 		post_run(NULL, POST_RAM | post_bootmode_get(0));
 #endif

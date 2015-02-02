@@ -1295,7 +1295,7 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 
     // 3. verify signature
 #ifdef SIGN_USE_PARTIAL
-    ret = verifySignature((unsigned int)pu1Image, image_size - (SIG_SIZE), au1EncryptedSignature);
+    ret = verifySignature((unsigned int)pu1Image, image_size - 21*(SIG_SIZE), au1EncryptedSignature);
 #else
 	ret = verifySignature((unsigned int)pu1Image, image_size - SIG_SIZE, au1EncryptedSignature);
 #endif
@@ -1314,8 +1314,6 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
 	struct partition_info *pi = NULL;
 
 	pi = get_used_partition(szPartName);
-
-	polling_timer();
 
 	printf("partial verify ~~ \n");
     // 0. check if partition exist
@@ -1371,7 +1369,6 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
 	    }
 	}
 	printf("[%d]:%s read fragments end\n", readMsTicks(), pi->name);
-	polling_timer();
 
 	// 3. get encrypted signature
 	if (preloaded)
@@ -1391,12 +1388,10 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
 		}
 	}
 
-	polling_timer();
 	dumpBinary((unsigned char*)pu1AllFrag, u4FragSize, "before verfiysiganture start");
 
     // 4. verify signature
     ret = verifySignature((unsigned int)pu1AllFrag, u4FragSize*group_num, au1EncryptedSignature);
-	polling_timer();
 
     return ret;
 }
@@ -1543,7 +1538,6 @@ static int is_verify_part(int idx, int boot_mode)
 	return 0;
 }
 
-extern void polling_timer(void);
 extern int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
 int verify_apps(int boot_mode)
 {
@@ -1574,7 +1568,7 @@ int verify_apps(int boot_mode)
 			printf("Loading address = 0x%x emmc offset = 0x%01x%08x filesize = 0x%x\n",
 			    addr, U64_UPPER(pi->offset), U64_LOWER(pi->offset), pi->filesize);
 
-			if (!DDI_NVM_GetSWUMode() && !strcmp(verify_list[i].part_name, "swue")) //not swum on case
+			if (!get_swumode() && !strcmp(verify_list[i].part_name, "swue")) //not swum on case
 			{
 				printf("skip swue verification ...\n");
 				continue;
@@ -1591,8 +1585,6 @@ int verify_apps(int boot_mode)
 					continue;
 				}
 			}
-
-			polling_timer();
 
 			// Verify image
 			printf("[%d]:%s verification start\n", readMsTicks(), pi->name);

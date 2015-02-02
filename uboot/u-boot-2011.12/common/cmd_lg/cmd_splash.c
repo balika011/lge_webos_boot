@@ -84,7 +84,6 @@ extern void Splash_DrawImage(unsigned int x, unsigned int y, unsigned int u4Widt
 extern int read_blocks_with_bg_task (off_t ofs, size_t *len, u_char *buf, void (*bg_task(BGTASK_POWSEQ_FLAG)));
 
 void poll_timer(void);
-int add_timer(unsigned int interval, unsigned int oneshot, void(* func)(void *), void * arg);
 extern UINT8 DDI_NVM_GetSoundOutMode( void );
 
 
@@ -1087,7 +1086,6 @@ void BootSplash(void)
 	static UINT32		_gTimeFRCreset;
 	static UINT32		_gTimePwrOn;
 	static UINT32		_gTimePwmInit;
-	static UINT32		_mode = 0;
 
 	static PANEL_POWER_SEQ_T	pnlpwrseq;
 	static PANEL_PWM_T       	pnlpwm;
@@ -1112,10 +1110,10 @@ void BootSplash(void)
 
 	static unsigned int	_loadAddr;
 	static unsigned int _uncompAddr;
-	
-//return 0;
-//	_loadAddr  = Get_DrawAddr();
-//	_uncompAddr = _loadAddr + IMAGE_OFFSET;
+
+	//return 0;
+	//	_loadAddr  = Get_DrawAddr();
+	//	_uncompAddr = _loadAddr + IMAGE_OFFSET;
 
 	_uncompAddr = Get_DrawAddr();
 	_loadAddr	= _uncompAddr - IMAGE_OFFSET;
@@ -1138,294 +1136,184 @@ void BootSplash(void)
 	gToolOpt[5] = toolOpt6.all;
 	gToolOpt[6] = toolOpt7.all;
 
-    //should be controlled by NVM
-    //but I found that: tool1 could be controlled by luna command, but what we get in loader is a different loader. It seems we need to sync code from LG in order to have the same data base
-//    printf ("force 10bit\n");
-//    toolOpt1.flags.nLVDSBit=1;//10bit
+	//should be controlled by NVM
+	//but I found that: tool1 could be controlled by luna command, but what we get in loader is a different loader. It seems we need to sync code from LG in order to have the same data base
+	//    printf ("force 10bit\n");
+	//    toolOpt1.flags.nLVDSBit=1;//10bit
 
-	
-	switch(_mode)
+#define	OSA_MD_GetModuleMakerType()		(toolOpt1.flags.eModelModuleType)
+#define	OSA_MD_IsSupportMirrorMode()	(toolOpt5.flags.bMirrorMode)
+#define	OSA_MD_GetModuleInch()			(toolOpt1.flags.eModelInchType)
+
+	inch = OSA_MD_GetModuleInch();
+	//#define OSA_MD_GetToolType()			(toolOpt1.flags.eModelToolType)
+
+	/*-----------------------------------------------
+	 * Read NVM data FOR power sequence data
+	 *-----------------------------------------------*/
+	DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.validMark) - (UINT32)&gSysNvmDB,	\
+			sizeof(gSysNvmDB.validMark), (UINT8 *)&(nvmData));
+	if(nvmData != 0xffffffff)
 	{
-		case 0:
-
-			#define	OSA_MD_GetModuleMakerType()		(toolOpt1.flags.eModelModuleType)
-			#define	OSA_MD_IsSupportMirrorMode()	(toolOpt5.flags.bMirrorMode)
-			#define	OSA_MD_GetModuleInch()			(toolOpt1.flags.eModelInchType)
-
-			inch = OSA_MD_GetModuleInch();
-			//#define OSA_MD_GetToolType()			(toolOpt1.flags.eModelToolType)
-
-			/*-----------------------------------------------
-			 * Read NVM data FOR power sequence data
-			 *-----------------------------------------------*/
-			DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.validMark) - (UINT32)&gSysNvmDB,	\
-					sizeof(gSysNvmDB.validMark), (UINT8 *)&(nvmData));
-			if(nvmData != 0xffffffff)
-			{
-				DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.panelpowerseq) - (UINT32)&gSysNvmDB,	\
-						sizeof(gSysNvmDB.panelpowerseq), (UINT8 *)&(pnlpwrseq));
-				DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.panelpwm) - (UINT32)&gSysNvmDB,	\
-						sizeof(gSysNvmDB.panelpwm), (UINT8 *)&(pnlpwm));
-				DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.systemtype) - (UINT32)&gSysNvmDB,	\
-						sizeof(gSysNvmDB.systemtype), (UINT8 *)&(systype));
-				DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.ColorDepth) - (UINT32)&gSysNvmDB,	\
-						sizeof(gSysNvmDB.ColorDepth), (UINT8 *)&(gSysNvmDB.ColorDepth));
-			}
-			else
-			{
-				pnlpwrseq = gSysNvmDB.panelpowerseq;
-				pnlpwm = gSysNvmDB.panelpwm;
-			}
-
-			printf("[%d]:SPDIF DETECT ENABLE sound out mode =%d \n",readMsTicks(),DDI_NVM_GetSoundOutMode);
-			if(DDI_NVM_GetSoundOutMode() ==SOUNDOUT_OPTICAL_SOUNDBAR)
-			{
-				vIO32Write4B(0xf0005030,(u4IO32Read4B(0xf0005030) & 0xFFFFFFDF));
-				vIO32WriteFldAlign(CKGEN_PMUX0, 1, FLD_PAD_ASPDIF0);
-				vIO32WriteFldAlign(CKGEN_PMUX0, 1, FLD_PAD_ASPDIF1);
-			}
-			printf("panel pwm = 48hz=%d, 50hz=%d, 60hz=%d, vbrB duty=%d \n", pnlpwm.vbrBFreq48hz, pnlpwm.vbrBFreq50hz, pnlpwm.vbrBFreq60hz, pnlpwm.vbrBMaxDuty);
-			printf("gSysNvmDB.ColorDepth = %d\n", gSysNvmDB.ColorDepth);
-			printf("gSysNvmDB.systemtype = %d\n", systype);
-			printf("bPWM_VSync_Enable = %d\n",pnlpwm.config&PWM_VRST_EN);
-			printf("bPWM led current = %d, freq=%d\n",pnlpwm.vbrCLedCurrent, pnlpwm.vbrCFreq);
-			printf("pnlpwrseq.panelPowOnToData = %d\n", pnlpwrseq.panelPowOnToData);
-			printf("pnlpwrseq.dataToLampOn = %d\n", pnlpwrseq.dataToLampOn * 10);
-			printf("pnlpwrseq.lampOffToData = %d\n", pnlpwrseq.lampOffToData * 10);
-			printf("pnlpwrseq.dataToPanelPowOff = %d\n", pnlpwrseq.dataToPanelPowOff);
-			printf("pnlpwrseq.nRLOntoDimSig = %d\n", pnlpwrseq.nRLOntoDimSig*10);
-
-
-			printf("[ToolOpt1] = %d\n",toolOpt1.all);
-			printf("[ToolOpt2] = %d\n",toolOpt2.all);
-			printf("[ToolOpt3] = %d\n",toolOpt3.all);
-			printf("[ToolOpt4] = %d\n",toolOpt4.all);
-			printf("[ToolOpt5] = %d\n",toolOpt5.all);
-			printf("[ToolOpt6] = %d\n",toolOpt6.all);
-			printf("[ToolOpt7] = %d\n",toolOpt7.all);
-
-/* Panel On */
-			if(!(inch == INCH_22 || inch == INCH_23 || inch == INCH_24 || inch == INCH_26 || inch == INCH_27)) // MTV model 이 아닌 경우에만 
-			{
-				printf("[%d]:PANEL ON \n",readMsTicks());
-				Splash_MICOM_PanelOn();
-			}
-			printf("[%d]:FRC RESET START \n",readMsTicks());
-			DDI_FRC_Reset(Get_modelOpt(FRC_OPT_SEL) ,0);//FRC_RESET_START);
-
-			_gTimePwrOn = readMsTicks();
-			_mode++;
-
-			#if 1
-			printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
-			printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
-			printf("open splash_copyimage");
-
-			Splash_copyimage(_loadAddr, _uncompAddr);
-			printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
-			#endif
-
-		/*	
-			add_timer(1, 1,BootSplash, NULL); //case 1
-			add_timer(pnlpwrseq.panelPowOnToData, 1, BootSplash, NULL); //case 2
-			add_timer(pnlpwrseq.panelPowOnToData, 1, BootSplash, NULL); //case 3
-			add_timer(pnlpwrseq.dataToLampOn * 10, 1, BootSplash, NULL); //case 4
-
-		*/
-
-			if(!Get_modelOpt(EPI_OPT_SEL) && OSA_MD_GetModuleMakerType() != MODULE_SHARP)
-			{
-				add_timer(25, 1,BootSplash, NULL);
-				//25ms delay (Panel On <-> PWM delay는 Panel <-> PWM <-> LVDS 와 같이 중간에만 오면 됨.	
-				//udelay(25000); 
-			}
-			else
-			{
-				add_timer(0, 1,BootSplash, NULL);
-			}
-		
-			break;
-
-		case 1:
-			// 50inch AUO module T8 spec
-			if( (OSA_MD_GetModuleMakerType() == MODULE_AUO) && (OSA_MD_GetModuleInch() == INCH_50) )
-				DDI_SetLocalDimming_OS_Panel(1);
-/* LD SPI */
-			if(toolOpt3.flags.bLocalDimming == 0)
-				printf("[%d]:Not support Local dimming \n",readMsTicks());
-
-/* PWM	*/
-			// 60inch sharp module T2 spec max 20ms 이므로 delay 아래 조건에서 제외시킴 
-
-			curTime = readMsTicks();
-			if(!Get_modelOpt(EPI_OPT_SEL) && OSA_MD_GetModuleMakerType() != MODULE_SHARP)
-			{
-				if (25 < (curTime - _gTimePwrOn))
-				{
-					printf("[%4d] Skip delay. PWM init (req=%d, act=%d)\n",
-						curTime, 25, curTime-_gTimePwrOn);
-				}
-				else
-				{
-					
-					udelay(25000);
-					printf("[%4d] **CHECK!** Delay %d ms for PWM init (req=%d, act=%d)\n",
-							curTime, 25000, 25, curTime-_gTimePwrOn);
-				}
-						
-			}
-			
-			DDI_PWM_Init(systype, &pnlpwm, Get_modelOpt(FRC_OPT_SEL));
-			printf("[%d]:PWM1/2 ON \n", readMsTicks());
-			_mode++;
-
-			add_timer(pnlpwrseq.panelPowOnToData, 1,BootSplash, NULL);
-
-			break;
-
-/* LVDS */
-		case 2:
-			curTime = readMsTicks();
-
-			if (pnlpwrseq.panelPowOnToData < (curTime-_gTimePwrOn))
-				printf("[%4d] Skip delay. Panel on ~ LVDS data out (req=%d, act=%d)\n",
-						curTime, pnlpwrseq.panelPowOnToData, curTime-_gTimePwrOn);
-			else
-			{
-				msDelay = pnlpwrseq.panelPowOnToData - (curTime-_gTimePwrOn);
-				msDelay = (msDelay > 500) ? 500 : msDelay;	/* maximum delay is 255ms(UINT8) */
-				udelay(msDelay*1000);
-				printf("[%4d] **CHECK!** Delay %d ms for Panel on ~ LVDS data out (req=%d, act=%d)\n",
-						curTime, msDelay, pnlpwrseq.panelPowOnToData, curTime-_gTimePwrOn);
-			}
-			
-			printf("[%d]:SPDIF DETECT DISABLE \n",readMsTicks());
-			if(DDI_NVM_GetSoundOutMode() ==SOUNDOUT_OPTICAL_SOUNDBAR)
-			{
-				vIO32Write4B(0xf0005030,(u4IO32Read4B(0xf0005030) | 0x20));
-				vIO32WriteFldAlign(CKGEN_PMUX0, 0, FLD_PAD_ASPDIF0);
-				vIO32WriteFldAlign(CKGEN_PMUX0, 0, FLD_PAD_ASPDIF1);
-			}
-			
-			printf("[%d]:FRC RESET END \n",readMsTicks());
-			DDI_FRC_Reset(Get_modelOpt(FRC_OPT_SEL) ,1);//FRC_RESET_END);
-
-			printf("[%d]:LVDS OUT \n",readMsTicks());
-			if(toolOpt1.flags.nLVDSBit)
-				printf("Color Depth 10bit \n");
-			else
-				printf("Color Depth 8bit \n");
-
-			if(Get_modelOpt(DISPLAY_TYPE_OPT_SEL) == 2) // PDP
-			{
-				if(Get_modelOpt(PANEL_RES_OPT_SEL) == 1) // FHD
-				{
-					PmxDisplay_PDP(0x212121, toolOpt1.flags.nLVDSBit, 1);
-				}
-				else // HD
-				{
-					PmxDisplay_PDP(0x212121, toolOpt1.flags.nLVDSBit, 0);
-				}
-			}
-			else // LCD
-			{
-				PmxDisplay(0x212121, toolOpt1.flags.nLVDSBit, Get_modelOpt(EPI_OPT_SEL), Get_modelOpt(FRC_OPT_SEL), OSA_MD_GetModuleInch(), Get_modelOpt(PANEL_TYPE_OPT_SEL), Get_modelOpt(PANEL_RES_OPT_SEL));
-			}
-			_gTimeLvdsOut = readMsTicks();
-			#if 0
-			printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
-			printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
-			printf("open splash_copyimage");
-
-			Splash_copyimage(_loadAddr, _uncompAddr);
-			printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
-			#endif
-			_mode++;
-			add_timer(0, 1,BootSplash, NULL);
-			break;
-
-		case 3:
-			if( Get_modelOpt(EPI_OPT_SEL) == 1 )
-			{
-				if( OSA_MD_IsSupportMirrorMode() )
-				{
-					printf("\n Mirror mode for EPI \n");
-					u1SetFlipMirrorConfig(TRUE, FALSE);
-				}
-				else
-				{
-					printf("\n Normal mode for EPI \n");
-					u1SetFlipMirrorConfig(FALSE, TRUE);
-				}
-			}
-			else
-			{
-				if( OSA_MD_IsSupportMirrorMode() )
-				{
-					printf("\n Mirror mode for LVDS \n");
-					u1SetFlipMirrorConfig(TRUE, TRUE);
-				}
-			}
-			
-			_mode++;
-			
-			if(Get_modelOpt(DISPLAY_TYPE_OPT_SEL) == 2) // PDP
-			{
-				add_timer(500, 1,BootSplash, NULL);
-			}
-			else
-			{
-				add_timer(pnlpwrseq.dataToLampOn * 10 - pnlpwrseq.panelPowOnToData, 1,BootSplash, NULL);
-			}
-			
-			break;
-			
-		case 4:
-			DDI_PWM_PostInit(&pnlpwm);
-			
-			printf("[%d]:DRAW LOGO \n",readMsTicks());
-		
-			printf("open splash_copyimage");
-			Splash_DrawLogoImage(_uncompAddr, systype);
-			printf("[%d]:DRAW LOGO end \n",readMsTicks());
-
-			if(Get_modelOpt(DISPLAY_TYPE_OPT_SEL) == 2) // PDP
-			{
-				_mode++;
-				msDelay = 700;
-				udelay(msDelay * 1000);
-				printf("[%4d] Add %dms delay. LVDS data out ~ INV on (req=%d, act=%d)\n",
-						curTime, msDelay, pnlpwrseq.dataToLampOn*10, curTime-_gTimeLvdsOut);
-
-				__InvertOn = 1;
-				printf("set __InvertOn : %d \n", __InvertOn);
-				break;
-			}
-			curTime = readMsTicks();
-
-			if ( (pnlpwrseq.dataToLampOn*10) < (curTime-_gTimeLvdsOut))
-				printf("[%4d] Skip delay. LVDS data out ~ INV on (req=%d, act=%d)\n",
-						curTime, pnlpwrseq.dataToLampOn*10, curTime-_gTimeLvdsOut);
-			else
-			{
-				msDelay = (pnlpwrseq.dataToLampOn*10) - (curTime-_gTimeLvdsOut);
-				msDelay = (msDelay > 500) ? 500 : msDelay;	/* maximum delay is 255ms(UINT8) */
-				udelay(msDelay*1000);
-				printf("[%4d] **CHECK!** Delay %d ms for LVDS data out ~ INV on (req=%d, act=%d)\n",
-						curTime, msDelay, pnlpwrseq.dataToLampOn*10, curTime-_gTimeLvdsOut);
-			}
-
-			printf("[%d]:INV ON \n",readMsTicks());
-			Splash_MICOM_InvOn();
-			_mode++;
-			__InvertOn = 1;
-			printf("set __InvertOn : %d \n", __InvertOn);
-
-			break;
-		default :
-			//printf("There is no more thing to do for boot logo ...\n");
-			break;
+		DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.panelpowerseq) - (UINT32)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.panelpowerseq), (UINT8 *)&(pnlpwrseq));
+		DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.panelpwm) - (UINT32)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.panelpwm), (UINT8 *)&(pnlpwm));
+		DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.systemtype) - (UINT32)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.systemtype), (UINT8 *)&(systype));
+		DDI_NVM_Read(SYS_DB_BASE + (UINT32)&(gSysNvmDB.ColorDepth) - (UINT32)&gSysNvmDB,	\
+				sizeof(gSysNvmDB.ColorDepth), (UINT8 *)&(gSysNvmDB.ColorDepth));
+	}
+	else
+	{
+		pnlpwrseq = gSysNvmDB.panelpowerseq;
+		pnlpwm = gSysNvmDB.panelpwm;
 	}
 
+	printf("[%d]:SPDIF DETECT ENABLE sound out mode =%d \n",readMsTicks(),DDI_NVM_GetSoundOutMode);
+	if(DDI_NVM_GetSoundOutMode() ==SOUNDOUT_OPTICAL_SOUNDBAR)
+	{
+		vIO32Write4B(0xf0005030,(u4IO32Read4B(0xf0005030) & 0xFFFFFFDF));
+		vIO32WriteFldAlign(CKGEN_PMUX0, 1, FLD_PAD_ASPDIF0);
+		vIO32WriteFldAlign(CKGEN_PMUX0, 1, FLD_PAD_ASPDIF1);
+	}
+	printf("panel pwm = 48hz=%d, 50hz=%d, 60hz=%d, vbrB duty=%d \n", pnlpwm.vbrBFreq48hz, pnlpwm.vbrBFreq50hz, pnlpwm.vbrBFreq60hz, pnlpwm.vbrBMaxDuty);
+	printf("gSysNvmDB.ColorDepth = %d\n", gSysNvmDB.ColorDepth);
+	printf("gSysNvmDB.systemtype = %d\n", systype);
+	printf("bPWM_VSync_Enable = %d\n",pnlpwm.config&PWM_VRST_EN);
+	printf("bPWM led current = %d, freq=%d\n",pnlpwm.vbrCLedCurrent, pnlpwm.vbrCFreq);
+	printf("pnlpwrseq.panelPowOnToData = %d\n", pnlpwrseq.panelPowOnToData);
+	printf("pnlpwrseq.dataToLampOn = %d\n", pnlpwrseq.dataToLampOn * 10);
+	printf("pnlpwrseq.lampOffToData = %d\n", pnlpwrseq.lampOffToData * 10);
+	printf("pnlpwrseq.dataToPanelPowOff = %d\n", pnlpwrseq.dataToPanelPowOff);
+	printf("pnlpwrseq.nRLOntoDimSig = %d\n", pnlpwrseq.nRLOntoDimSig*10);
+
+
+	printf("[ToolOpt1] = %d\n",toolOpt1.all);
+	printf("[ToolOpt2] = %d\n",toolOpt2.all);
+	printf("[ToolOpt3] = %d\n",toolOpt3.all);
+	printf("[ToolOpt4] = %d\n",toolOpt4.all);
+	printf("[ToolOpt5] = %d\n",toolOpt5.all);
+	printf("[ToolOpt6] = %d\n",toolOpt6.all);
+	printf("[ToolOpt7] = %d\n",toolOpt7.all);
+
+	/* Panel On */
+	if(!(inch == INCH_22 || inch == INCH_23 || inch == INCH_24 || inch == INCH_26 || inch == INCH_27)) // MTV model 이 아닌 경우에만 
+	{
+		printf("[%d]:PANEL ON \n",readMsTicks());
+		Splash_MICOM_PanelOn();
+		msDelay = (UINT32)(pnlpwrseq.panelPowOnToData);
+		udelay(msDelay*1000);
+	}
+	printf("[%d]:FRC RESET START \n",readMsTicks());
+	DDI_FRC_Reset(Get_modelOpt(FRC_OPT_SEL) ,0);//FRC_RESET_START);
+
+	_gTimePwrOn = readMsTicks();
+
+#if 1
+	printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
+	printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
+	printf("open splash_copyimage");
+
+	Splash_copyimage(_loadAddr, _uncompAddr);
+	printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
+#endif
+
+	// 50inch AUO module T8 spec
+	if( (OSA_MD_GetModuleMakerType() == MODULE_AUO) && (OSA_MD_GetModuleInch() == INCH_50) )
+		DDI_SetLocalDimming_OS_Panel(1);
+	/* LD SPI */
+	if(toolOpt3.flags.bLocalDimming == 0)
+		printf("[%d]:Not support Local dimming \n",readMsTicks());
+
+	/* PWM	*/
+	// 60inch sharp module T2 spec max 20ms 이므로 delay 아래 조건에서 제외시킴 
+
+	curTime = readMsTicks();
+
+	DDI_PWM_Init(systype, &pnlpwm, Get_modelOpt(FRC_OPT_SEL));
+	printf("[%d]:PWM1/2 ON \n", readMsTicks());
+
+	/* LVDS */
+	curTime = readMsTicks();
+
+	printf("[%d]:SPDIF DETECT DISABLE \n",readMsTicks());
+	if(DDI_NVM_GetSoundOutMode() ==SOUNDOUT_OPTICAL_SOUNDBAR)
+	{
+		vIO32Write4B(0xf0005030,(u4IO32Read4B(0xf0005030) | 0x20));
+		vIO32WriteFldAlign(CKGEN_PMUX0, 0, FLD_PAD_ASPDIF0);
+		vIO32WriteFldAlign(CKGEN_PMUX0, 0, FLD_PAD_ASPDIF1);
+	}
+
+	printf("[%d]:FRC RESET END \n",readMsTicks());
+	DDI_FRC_Reset(Get_modelOpt(FRC_OPT_SEL) ,1);//FRC_RESET_END);
+
+	printf("[%d]:LVDS OUT \n",readMsTicks());
+	if(toolOpt1.flags.nLVDSBit)
+		printf("Color Depth 10bit \n");
+	else
+		printf("Color Depth 8bit \n");
+
+	if(Get_modelOpt(DISPLAY_TYPE_OPT_SEL) == 2) // PDP
+	{
+		if(Get_modelOpt(PANEL_RES_OPT_SEL) == 1) // FHD
+		{
+			PmxDisplay_PDP(0x212121, toolOpt1.flags.nLVDSBit, 1);
+		}
+		else // HD
+		{
+			PmxDisplay_PDP(0x212121, toolOpt1.flags.nLVDSBit, 0);
+		}
+	}
+	else // LCD
+	{
+		PmxDisplay(0x212121, toolOpt1.flags.nLVDSBit, Get_modelOpt(EPI_OPT_SEL), Get_modelOpt(FRC_OPT_SEL), OSA_MD_GetModuleInch(), Get_modelOpt(PANEL_TYPE_OPT_SEL), Get_modelOpt(PANEL_RES_OPT_SEL));
+	}
+	_gTimeLvdsOut = readMsTicks();
+#if 0
+	printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
+	printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
+	printf("open splash_copyimage");
+
+	Splash_copyimage(_loadAddr, _uncompAddr);
+	printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
+#endif
+
+	if( Get_modelOpt(EPI_OPT_SEL) == 1 )
+	{
+		if( OSA_MD_IsSupportMirrorMode() )
+		{
+			printf("\n Mirror mode for EPI \n");
+			u1SetFlipMirrorConfig(TRUE, FALSE);
+		}
+		else
+		{
+			printf("\n Normal mode for EPI \n");
+			u1SetFlipMirrorConfig(FALSE, TRUE);
+		}
+	}
+	else
+	{
+		if( OSA_MD_IsSupportMirrorMode() )
+		{
+			printf("\n Mirror mode for LVDS \n");
+			u1SetFlipMirrorConfig(TRUE, TRUE);
+		}
+	}
+
+	DDI_PWM_PostInit(&pnlpwm);
+
+	printf("[%d]:DRAW LOGO \n",readMsTicks());
+
+	printf("open splash_copyimage");
+	Splash_DrawLogoImage(_uncompAddr, systype);
+	printf("[%d]:DRAW LOGO end \n",readMsTicks());
+	msDelay = pnlpwrseq.dataToLampOn * 10;
+	udelay(msDelay * 1000);
+
+	printf("[%d]:INV ON \n",readMsTicks());
+	Splash_MICOM_InvOn();
+	__InvertOn = 1;
+	printf("set __InvertOn : %d \n", __InvertOn);
 }
 

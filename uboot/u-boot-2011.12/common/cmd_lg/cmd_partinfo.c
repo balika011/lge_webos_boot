@@ -796,3 +796,65 @@ int erase_cachepart(void)
 	return 0;
 }
 
+int get_offset_size(int argc, char* argv[], unsigned long* offset, unsigned long* size)
+{
+	char *endptr;
+
+	if(argc == 0) return -1;
+
+	*offset = simple_strtoul(argv[0], &endptr, 0);
+	if(*endptr == '\0' && argc == 1)	// if not partition name
+		*size = 0;
+
+	if(*endptr != '\0')		// partition name
+	{
+		struct partition_info *pi;
+		if((pi = get_used_partition(argv[0])) == NULL)
+		{
+			if((pi = get_unused_partition(argv[0])) == NULL)
+			{
+				printf("'%s' partition is not exist\n", argv[0]);
+				return -1;
+			}
+		}
+		*offset = pi->offset;
+		*size = pi->size;
+	}
+
+	if(argc > 1)
+		*size = simple_strtoul(argv[1], NULL, 0);
+
+	return 0;
+}
+
+int get_offset_size2(int argc, char* argv[], unsigned long long* offset, unsigned long long* size)
+{
+	char *endptr;
+
+	if(argc == 0) return -1;
+
+	*offset = simple_strtoull(argv[0], &endptr, 0);
+	if(*endptr == '\0' && argc == 1)	// if not partition name
+		*size = 0;
+
+	if(*endptr != '\0')		// partition name
+	{
+		struct partition_info *pi;
+		if((pi = get_used_partition(argv[0])) == NULL)
+		{
+			if((pi = get_unused_partition(argv[0])) == NULL)
+			{
+				printf("'%s' partition is not exist\n", argv[0]);
+				return -1;
+			}
+		}
+		*offset = pi->offset;
+		*size = pi->size;
+	}
+
+	if(argc > 1)
+		*size = simple_strtoull(argv[1], NULL, 0);
+
+	return 0;
+}
+

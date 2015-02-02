@@ -31,6 +31,7 @@ COBJS	+= cmd_cp2ram.o
 COBJS	+= cmd_setboot.o
 #COBJS	+= cmd_silent.o
 COBJS	+= cmd_swu.o
+COBJS	+= cmd_swum.o
 #COBJS	+= cmd_zmodem.o
 COBJS	+= cmd_nvm.o
 #COBJS	+= cmd_extmicom.o

@@ -227,15 +227,11 @@ do_lzo :
 	{
 		printf("[%d]:lgapp verification start \n", readMsTicks());
 		verifyPartition(mpi->name,0,cp_pos);
-		polling_timer();
 		if( !strcmp("lgapp",mpi->name) )
 			gSecureFlag |= SECURE_FLG_LGAPP;
 		printf("[%d]:lgapp verification end \n", readMsTicks());
 	}
 #endif
-
-	//EPI On
-	//BootSplash();
 
 	e_msec	= readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, imgfilesize / (e_msec-s_msec));
@@ -249,8 +245,6 @@ do_lzo :
 	*xiplen		 = (decomp_size1 & 0xFFF00000) + 0x100000;
 	xip_size	+= *xiplen;
 
-	polling_timer();
-
 	dst = APPXIP_LOADADDR;
 	s_msec	= readMsTicks();
 	printf("[%4d] [Lzo Img] Copy \"%s (%ld bytes)\" from 0x%08x to 0x%08x\n", s_msec, mpi->name, imgfilesize, (unsigned int)src, (unsigned int)dst);
@@ -262,18 +256,12 @@ do_lzo :
 	e_msec	= readMsTicks();
 	printf("[%4d] [Lzo Img]...done (%ld msec)\n", (int)e_msec, e_msec-s_msec);
 	
-//	BootSplash();
-	polling_timer();
-
 	return 0;
 
 do_cramfs :
 
 	fshdr = (char *)cp_pos;
 
-	//EPI On
-	//BootSplash();
-	polling_timer();
 	if (!strncmp(&fshdr[16], CRMFS_HDR, 15)) {
 		*xiplen = (imgfilesize & 0xFFF00000) + 0x100000;
 
@@ -298,14 +286,9 @@ do_cramfs :
 		e_msec  = 0; //get_cur_time();
 //		printf("[%4d] ...done (%ld KB/s)\n", (int)e_msec, imgfilesize / (e_msec-s_msec));
 		printf("[%4d] ...done\n", (int)e_msec);
-		//Inverter On
-		//BootSplash();
 	}
 	else
 	{
-		//Inverter On
-		//BootSplash();
-		polling_timer();
 		printf("[%s] is not xip image!\n", mpi->name);
 		return 0;
 	}
@@ -337,7 +320,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		return 1;
 	}
-	polling_timer();
 	/* find partition */
 	mpi = get_used_partition(argv[1]);
 	if(!mpi) {
@@ -365,7 +347,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 		xiplen = &fontxip_len;
 	}
-	polling_timer();
 	/* flash source address */
 	src			= FLASH_BASE + mpi->offset;
 	cp_pos		= CFG_LOAD_ADDR;
@@ -377,8 +358,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
-	//BootSplash();
-
 	decomp_size1 = unlzo_get_decompsize((unsigned char *)cp_pos);
 	if (decomp_size1 == 0) {
 		printf("decompressed size is zero at LZO header\n");
@@ -389,7 +368,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	xip_size	+= *xiplen;
 	dst = APPXIP_LOADADDR;
 
-	polling_timer();
 #ifdef	PARALLEL_DECOMP
 	s_msec = readMsTicks();
 	printf("[%4d] Do XIP \"%s (%ld bytes)\" from 0x%08x to 0x%08x\n", s_msec, mpi->name, len, (unsigned int)src, (unsigned int)cp_pos);
@@ -425,7 +403,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 	}
 
-	polling_timer();
 	e_msec	= readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, len / (e_msec-s_msec));
 #else
@@ -438,10 +415,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	e_msec	= readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, len / (e_msec-s_msec));
 
-	//EPI On
-	//BootSplash();
-
-	polling_timer();
 	s_msec	= readMsTicks();
 	printf("[%4d] LZO decomp (%ld bytes) from 0x%08x to 0x%08x\n", s_msec, len, (unsigned int)cp_pos, (unsigned int)dst);
 
@@ -472,8 +445,6 @@ int do_xipz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 	#endif
 
-	//BootSplash();
-	polling_timer();
 	return 0;
 
 }
@@ -502,7 +473,6 @@ int do_cp2ram (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		return 1;
 	}
-	polling_timer();
 
 	/* find partition */
 	do {
@@ -540,7 +510,6 @@ int do_cp2ram (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	src = (FLASH_BASE + offset);
 	dst = addr;
 
-	polling_timer();
 	s_msec = readMsTicks();
 	printf("[%4d] Copy \"%s (%ld bytes)\" from 0x%08x to 0x%08x\n", s_msec, mpi->name, len, (unsigned int)src, (unsigned int)dst);
 
@@ -559,13 +528,9 @@ int do_cp2ram (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 #endif
-	polling_timer();
 	e_msec = readMsTicks();
 	printf("[%4d] ...done (%ld KB/s)\n", (int)e_msec, len / (e_msec-s_msec));
 	
-	if (strcmp(pname, "lginit") == 0)
-		//BootSplash();
-		polling_timer();
 	return 0;
 }
 
@@ -747,8 +712,6 @@ int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
-	polling_timer();
-
 	/* find partition */
 	do {
 		mpi = GET_PART_INFO(idx);
@@ -782,8 +745,6 @@ int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
-	//BootSplash();
-	polling_timer();
 	src = (FLASH_BASE + offset);
 	dst = addr;
 
@@ -814,7 +775,6 @@ int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		    return 1;
 		}
 	}
-	polling_timer();
 	e_msec = readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, len / (e_msec-s_msec));
 #else
@@ -834,7 +794,6 @@ int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	s_msec	= readMsTicks();
 	printf("[%4d] LZX decomp (%ld bytes)...done (%ld msec)\n", (int)s_msec, decomp_size2, s_msec-e_msec);
 #endif
-	polling_timer();
 	return 0;
 }
 
@@ -917,7 +876,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	printf("hongjun do_xiplz4 return 0 directly\n");
 	return 0;
 #endif
-	polling_timer();
 	
 	if (argc == 2) {
 		mpi = get_used_partition(argv[1]);
@@ -958,7 +916,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 		xiplen = &fontxip_len;
 	}
-	polling_timer();
 	/* flash source address */
 	src			= FLASH_BASE + mpi->offset;
 	cp_pos		= CFG_LOAD_ADDR;
@@ -970,8 +927,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 1;
 	}
 
-	//BootSplash();
-
 	decomp_size1 = unlz4_get_decompsize((unsigned char *)cp_pos);
 	if (decomp_size1 == 0) {
 		printf("decompressed size is zero at LZO header\n");
@@ -982,7 +937,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	xip_size	+= *xiplen;
 	dst = APPXIP_LOADADDR;
 
-	polling_timer();
 #ifdef	PARALLEL_DECOMP
 	s_msec = readMsTicks();
 	printf("[%4d] Do XIP \"%s (%ld bytes)\" from 0x%08x to 0x%08x\n", s_msec, mpi->name, len, (unsigned int)src, (unsigned int)cp_pos);
@@ -1018,7 +972,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		}
 	}
 
-	polling_timer();
 	e_msec	= readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, len / (e_msec-s_msec));
 #else
@@ -1032,10 +985,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	e_msec	= readMsTicks();
 	printf("[%4d] ...done (%ld msec, %ld KB/s)\n", (int)e_msec, e_msec-s_msec, len / (e_msec-s_msec));
 
-	//EPI On
-	//BootSplash();
-
-	polling_timer();
 	s_msec	= readMsTicks();
 	printf("[%4d] LZ4 decomp (%ld bytes) from 0x%08x to 0x%08x\n", s_msec, len, (unsigned int)cp_pos, (unsigned int)dst);
 
@@ -1067,8 +1016,6 @@ int do_xiplz4 (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 	}
 	#endif
 
-	//BootSplash();
-	polling_timer();
 	return 0;
 
 }
@@ -1101,8 +1048,6 @@ int do_verify_xip(char * name)
 	}
 	#endif
 
-	polling_timer();
-	
 	return 0;
 
 }
