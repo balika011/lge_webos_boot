@@ -159,6 +159,7 @@ int cleanup_before_linux (void)
 	//asm ("mcr p15, 0, %0, c7, c10, 0": :"r" (i));
 	asm ("mcr p15, 0, %0, c7, c10, 4": :"r" (i)); /* mem barrier to sync things */
 
+	asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (0));//clean arch timer enable bit
 	/* turn off I/D-cache */
     HalDisableCaches();
     HalDisableMMU();

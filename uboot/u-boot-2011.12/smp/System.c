@@ -247,6 +247,7 @@ void secondary_start_uboot_cleanup(void)
 	smp_cpu_released[get_cpu_id()].lock =1;
 	local_irq_disable();
 	
+	asm volatile("mcr p15, 0, %0, c14, c2, 1" : : "r" (0));//clean arch timer irq enable bit
 	
     pfnImage = (PFN_IMAGE)(mp_start_addr);
 	flush_cache_all();
