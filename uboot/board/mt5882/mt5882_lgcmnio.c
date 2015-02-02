@@ -805,7 +805,7 @@ int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_
 	    }
 	    // Check Rsn value.
 	    u4PwmRsn = 0xff;
-		if(m_pwm_frequency == 0)
+		if((m_pwm_frequency == 0) || (m_pwm_enable == 0))
 		{
 			u4PwmP = 0;
 			u4PwmH = 0;
