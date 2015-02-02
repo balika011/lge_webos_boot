@@ -236,7 +236,7 @@ void secondary_start_uboot_cleanup(void)
 	
 	if(get_cpu_id()==0) return ;
 	if(smp_cpu_released[get_cpu_id()].lock ==1) return;
-    mp_start_addr=0xfb00bf00;
+    mp_start_addr=0xfb00bf04;
 		__raw_writel(0,
 		 0xf0008068);
 	__raw_writel(0,

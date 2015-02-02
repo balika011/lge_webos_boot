@@ -467,8 +467,8 @@ int printf(const char *fmt, ...)
 		return;
 #endif
 #if defined(CONFIG_MULTICORES_PLATFORM)
-if(LogEnable == 2 && !megic_number_cleaned)
-	spin_lock(&g_print_lock);
+//if(LogEnable == 2 && !megic_number_cleaned)
+	//spin_lock(&g_print_lock);
 #endif
 #ifndef CONFIG_PRE_CONSOLE_BUFFER
 	if (!gd->have_console)
@@ -488,8 +488,8 @@ if(LogEnable == 2 && !megic_number_cleaned)
 	serial_puts(printbuffer);
 	
 #if defined(CONFIG_MULTICORES_PLATFORM)
-	if(LogEnable == 2 && !megic_number_cleaned)
-	spin_unlock(&g_print_lock);
+	//if(LogEnable == 1 && !megic_number_cleaned)
+	//spin_unlock(&g_print_lock);
 #endif
 
 	return i;

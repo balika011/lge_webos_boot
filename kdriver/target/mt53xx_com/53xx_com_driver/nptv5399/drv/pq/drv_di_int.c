@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/03 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -2641,7 +2641,7 @@ static void _vDrvDIInitSwRegister(void)
     vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x28, FRM_GAIN1);
     vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x06, FRM_GAIN2);
     vIO32WriteFldAlign(PSCAN_FWFILM_06, 0x01, FILED_WEAVE_EN);   
-    vIO32WriteFldAlign(PSCAN_FWFILM_06, 0x00, DET_24TO50_EN);   
+    vIO32WriteFldAlign(PSCAN_FWFILM_06, 0x01, DET_24TO50_EN);   
 
     //Adaptive IF     
     vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_00, 0x00, MOVING_CZP_BOB_EN);       
