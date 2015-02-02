@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/02 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -1622,7 +1622,7 @@ static void _vDrvDISetIFQualityISR(void)
         if (IO32ReadFldAlign(PSCAN_FWFILM_06, FILED_WEAVE_EN)
             && (((u1DI_Is50HZ == SV_TRUE)&&((DiPar.PdPar.u2FilmMode == E_DI_FILM_44) || (DiPar.PdPar.u2FilmMode == E_DI_FILM_66)))||
                 ((u1DI_Is50HZ == SV_FALSE)&&((DiPar.PdPar.u2FilmMode != E_DI_FILM_44) 
-                   && (DiPar.PdPar.u2FilmMode != E_DI_FILM_66)&&(DiPar.PdPar.u2FilmMode != E_DI_FILM_32322)&&(DiPar.PdPar.u2FilmMode > E_DI_FILM_2224)))||
+                   && (DiPar.PdPar.u2FilmMode != E_DI_FILM_66)&&(DiPar.PdPar.u2FilmMode > E_DI_FILM_22)))||
                 (DiPar.PdPar.bFilm24To50) || 
                 (((DiPar.PdPar.u2FilmMode == E_DI_FILM_22)||((DiPar.PdPar.u2FilmMode == E_DI_FILM_32)&&(u1DI_Is50HZ == SV_FALSE)))
                   &&(E_TD_OUT_3D_FS==_arMDDiPrm[VDP_1].eTDOutput))) 
