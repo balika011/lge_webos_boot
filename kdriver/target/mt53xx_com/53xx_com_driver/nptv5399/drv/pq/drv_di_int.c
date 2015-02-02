@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/02/02 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,15 +508,7 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
     {
         DiPQMode.bFilmOnOff_Y = (u1OnOff & DiPQMode.bCfgFilmOnOff & _u1DrvDIFullQualityOnOff(bPath));
         DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
-
-        if ((bGetSignalType(VDP_1) == SV_ST_MPEG) || (bGetSignalType(VDP_1) == SV_ST_TV))
-        {
-            DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
-        }
-        else
-        {
-            DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
-        } 
+ 
         if (IS_DI_Y4C4(VDP_1))
         {
             DiPQMode.bFilmOnOff_C = DiPQMode.bFilmOnOff_Y;
