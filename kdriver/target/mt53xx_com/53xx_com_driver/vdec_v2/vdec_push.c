@@ -2405,6 +2405,7 @@ BOOL _VPUSH_Move264Data(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
                 if (u4NaluSize == 0)
                 {
                     // move data and leave
+					x_memset(&rDmxMMData, 0, sizeof(DMX_MM_DATA_T));
                     rDmxMMData.u1Idx = prVdec->u1DmxPid;
                     rDmxMMData.u4BufStart = prVdec->u4FifoStart;
                     rDmxMMData.u4BufEnd = prVdec->u4FifoEnd;
@@ -2471,7 +2472,7 @@ BOOL _VPUSH_Move264Data(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
         u4DataSize = u4NaluSize;/* + (H264_STARTCODE_LEN -
                             prVdec->u1StartCodeLenMinus1)+
                             (prVdec->u1StartCodeLenMinus1 + 1);*/
-
+		x_memset(&rDmxMMData, 0, sizeof(DMX_MM_DATA_T));
         rDmxMMData.u1Idx = prVdec->u1DmxPid;
         rDmxMMData.u4BufStart = prVdec->u4FifoStart;
         rDmxMMData.u4BufEnd = prVdec->u4FifoEnd;
