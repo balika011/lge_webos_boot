@@ -308,6 +308,10 @@ static UINT8 fgMjcClearLcdDemo;
 // === END OF STATIC VARIABLE =============================================================
 // === BODY ===============================================================================
 
+void SetPeUiRangeDft_CUSTUI(PE_ARG_TYPE PeArgType)
+{
+	aUiQtyItemMinMax[PeArgType].i4Dft |= R_CUSTUI;
+}
 UINT16 wReadQualityTable(UINT16 wAddr)
 {
 	UINT16 wValue;

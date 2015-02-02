@@ -155,6 +155,8 @@ extern MMAppInfo sMMAppInfo;
 extern UINT8 bSrcTimingInverseTbl[SOURCE_TYPE_TIMING_MAX+1];
 #endif
 
+extern void SetPeUiRangeDft_CUSTUI(PE_ARG_TYPE PeArgType);
+
 extern INT32 COLOR_TRANSFORM_ADJ[15];
 
 #define MAX_COEF_TPYE 5
@@ -633,10 +635,55 @@ void DRVCUST_HwInit(void)
     return;
 }
 
+void DRVCUST_PeUiItem_CustInit(void)
+{
+	UINT32 i;
+    
+    for (i=0; i < (UINT8)PE_ARG_NS; i++)
+    {
+        switch (i)
+        {
+            // List all the quality items that control by customer UI, no need to update.
+            /*
+            case PE_ARG_BRIGHTNESS:
+			case PE_ARG_CONTRAST:
+			case PE_ARG_HUE:
+			case PE_ARG_SATURATION:
+			case PE_ARG_CTI:
+			case PE_ARG_SHARPNESS:
+			case PE_ARG_SHARPNESS_H:
+			case PE_ARG_SHARPNESS_V:
+			case PE_ARG_LTI:
+			*/
+            case PE_ARG_R_GAIN:
+			case PE_ARG_G_GAIN:
+			case PE_ARG_B_GAIN:
+			case PE_ARG_R_OFFSET:
+			case PE_ARG_G_OFFSET:
+			case PE_ARG_B_OFFSET:
+				/*
+			case PE_ARG_NR:
+			case PE_ARG_BACK_LIGHT_LVL:
+			case PE_ARG_ADAPTIVE_BACK_LIGHT:
+			case PE_ARG_3D_NR:
+			case PE_ARG_LCDIM:
+			*/
+				//aUiQtyItemMinMax[i].i4Dft |= R_CUSTUI;
+				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
+				break;
+				
+            default:
+                break;
+        }
+    }
+	
+	return;
+}
 void DRVCUST_VideoInit(void)
 {
 	DRVCUST_DitherInit();
     DRVCUST_AdaptiveBacklightInit();
+	DRVCUST_PeUiItem_CustInit();
 #ifdef SUPPORT_LCDIM_AVG_DEMO
     DRVCUST_LcDimBlkInit(10,6);
 #endif
