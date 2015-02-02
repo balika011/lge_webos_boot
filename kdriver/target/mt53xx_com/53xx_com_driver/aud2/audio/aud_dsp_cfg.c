@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1393,6 +1393,28 @@ static void _DSP_IecOff()
 }
 #endif
 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+INT32 _AudDspToAprocVol(UINT32 u4Volume)
+{
+    INT32 i4Vol;
+
+    if (u4Volume == 0) 
+    {
+        i4Vol = 0; 
+    }
+    else if (u4Volume < VOL_SHM_0_DB * 0x100)
+    {
+         i4Vol = (INT32)u4Volume * 0x40 - 1; 
+    }
+    else 
+    {
+         i4Vol = 0xFFFFFFFF;
+    }
+
+    return i4Vol;
+}
+#endif
+
 #ifdef CC_AUD_SX1_FEATURE
 static UINT32 _DbToShmPEQ(INT32 i4Level)
 {
@@ -1624,7 +1646,7 @@ void _VolumeCtrl(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Value
     //What about audio description volume??
     if (eChannel == AUD_CH_ALL)
     {
-        i4Vol = (INT32) u4Value * 0x3f; // fix me!!!!
+        i4Vol = _AudDspToAprocVol(u4Value);
         // AUD_Aproc_Chk_DecId(&u1DecId);
         if (u1DecId == AUD_DEC_MAIN)
         {
@@ -1640,8 +1662,7 @@ void _VolumeCtrl(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Value
             //FIXME: AD volume: input trim
             //_vAUD_Aproc_Set (APROC_CONTROL_TYPE_VOL, APROC_IOCTR_TRIM_INPUT2, &i4Vol, 1); 
             // change to amixer2 trim for AD only, not AD+main
-            i4Vol = (INT32) u4Value * 0x40; // fix me!!!!
-            if (i4Vol > 0x7fffff) i4Vol = 0x7FFFFF;
+            i4Vol = _AudDspToAprocVol(u4Value);
             _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, APROC_IOCTR_TRIM_AMIXER2, &i4Vol, 1);             
         }
         else
@@ -1662,7 +1683,7 @@ void _VolumeCtrl(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Value
             break;             
         }
     
-        i4Vol = (INT32) u4Value * 0x3f; // fix me!!!!
+        i4Vol = _AudDspToAprocVol(u4Value);
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     }
     else
@@ -1698,7 +1719,7 @@ void _VolumeCtrl(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Value
             break;                   
         }
     
-        i4Vol = (INT32) u4Value * 0x3f; // fix me!!!!
+        i4Vol = _AudDspToAprocVol(u4Value);
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
     }
 
@@ -2598,7 +2619,7 @@ static void _AudDspSrcVolChange(UINT8 u1DecId, UINT32 u4Value)
     }
 #endif
     
-    i4Vol = (INT32) u4Value * 0x3f; // fix me!!!!
+    i4Vol = _AudDspToAprocVol(u4Value);
     _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
         
 #else
@@ -27224,7 +27245,7 @@ void _AUD_UserSetMixSndInputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineVo
     AUD_MIXSND_ID_VALIDATE(u4MixIdex); 
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
     _au4MixSoundInputVolume[u4MixIdex] = u4Volumn;
-    i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!!
+    i4Vol = _AudDspToAprocVol(u4Volumn);
     if (_fgMixSoundInputMute[u4MixIdex])
     {
         i4Vol = 0;
@@ -27243,7 +27264,7 @@ void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute)
     AUD_MIXSND_ID_VALIDATE(u4MixIdex);
     
     _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute; 
-    i4Vol = (INT32) _au4MixSoundInputVolume[u4MixIdex] * 0x3f; // fix me!!!!
+    i4Vol = _AudDspToAprocVol(_au4MixSoundInputVolume[u4MixIdex]);
     if (_fgMixSoundInputMute[u4MixIdex])
     {
         i4Vol = 0;
@@ -27263,7 +27284,7 @@ void _AUD_UserSetMixSndOutputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineV
     AUD_MIXSND_ID_VALIDATE(u4MixIdex);
     
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
-    i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!!
+    i4Vol = _AudDspToAprocVol(u4Volumn);
     pu4Addr[0] = u4MixIdex;
     pu4Addr[1] = (UINT32)i4Vol;
     
@@ -27318,7 +27339,7 @@ void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     AUD_DEC_ID_VALIDATE(u1DecId);
     
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol); 
-    i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!! 
+    i4Vol = _AudDspToAprocVol(u4Volumn);
     u4Idx = APROC_IOCTRL_VOL_AMIXER0;
 
     if (u1DecId == AUD_DEC_AUX)
@@ -27342,7 +27363,7 @@ void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
     AUD_DEC_ID_VALIDATE(u1DecId);
 
     u4Volumn = _AUD_UserGetDrvVol(u1MainVol, u1FineVol);
-    i4Vol = (INT32) u4Volumn * 0x3f; // fix me!!!! 
+    i4Vol = _AudDspToAprocVol(u4Volumn);
     u4Idx = APROC_IOCTR_TRIM_INPUT0;
 
     if (u1DecId == AUD_DEC_AUX)
@@ -27383,12 +27404,12 @@ void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol,
     }
 
     u4Volumn = _AUD_UserGetDrvVol(u1LetfMainVol, u1LeftFineVol); 
-    i4Vol = (INT32) u4Volumn * 0x3f;
+    i4Vol = _AudDspToAprocVol(u4Volumn);
 
     vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_1, u4Idx), (UINT32)i4Vol);
 
     u4Volumn = _AUD_UserGetDrvVol(u1RightMainVol, u1RightFineVol); 
-    i4Vol = (INT32) u4Volumn * 0x3f; 
+    i4Vol = _AudDspToAprocVol(u4Volumn);
     vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_1, u4Idx+1), (UINT32)i4Vol);
     
 }
