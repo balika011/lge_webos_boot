@@ -60,7 +60,7 @@ enum {
 #define THREAD_MIN_PRIORITY             1
 #define THREAD_IDLE_PRIORITY            0
 
-#define MIN_STACK_SIZE 					128 * 1024
+#define MIN_STACK_SIZE 					16 * 1024
 #define DEFAULT_STACK_SIZE 				64 * 1024
 #define STACK_BUFFER_SIZE 				32
 
