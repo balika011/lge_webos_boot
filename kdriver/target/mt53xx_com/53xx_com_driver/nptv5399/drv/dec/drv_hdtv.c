@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/24 $
+ * $Date: 2015/02/02 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -492,6 +492,10 @@ PRIVATE UINT8 bHdtvTimingSearch(void)
 
 #endif
 #endif
+#ifdef  CC_LGE_PROTO_PCBA 
+		if((btime_temp==MODE_720p_25) || (btime_temp==MODE_720p_30))btime_temp=MODE_NOSUPPORT;
+#endif
+
     return btime_temp;
 }
 
