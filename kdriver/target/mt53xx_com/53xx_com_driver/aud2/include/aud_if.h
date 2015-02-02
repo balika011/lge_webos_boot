@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/02/03 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4169,7 +4169,14 @@ typedef enum {
     APROC_ASM_ID_POSTPROC_3C = 0x3C, // APROC_ASM_POSTPROC3B_T
     APROC_ASM_ID_MIXSND_2, // 0x3D: APROC_ASM_MIXSND0_T
     APROC_ASM_ID_MIXSND_3, // 0x3E: APROC_ASM_MIXSND0_T 
-    APROC_ASM_ID_NUM = 0x40 /*_extend_to 0x40*/
+
+// LGSE used ASM --- start ( 0x800 ~ 0x???)
+	APROC_ASM_ID_LGSE_0 = 0x40,   // APROC_ASM_LGSE_CTRL_T
+	APROC_ASM_ID_LGSE_INIT = 0x41,
+	APROC_ASM_ID_LGSE_VAR = 0x55,
+	APROC_ASM_ID_LGSE_OUT = 0x60,
+
+    APROC_ASM_ID_NUM = 0x80 /*_extend_to 0x40*/
 } APROC_ASM_ID_T;
     
     
@@ -5628,6 +5635,20 @@ typedef enum {
     APROC_REG_DELAY_INPUT1,
     
 } APROC_ASM_POSTPROC3C_T;
+
+typedef enum {
+	APROC_REG_LGSE_ENABLE = 0x0,
+	APROC_REG_LGSE_FUNC_ENABLE,
+	APROC_REG_LGSE_MODIFIED_INIT,
+	APROC_REG_LGSE_MODIFIED_VAR,
+	APROC_REG_LGSE_MODIFIED_MODE,
+	APROC_REG_LGSE_INIT_NO,
+	APROC_REG_LGSE_VAR_NO,
+	APROC_REG_LGSE_FUNC_DEBUG, // 0x7
+	APROC_REG_LGSE_VOL_DEBUG1,
+	APROC_REG_LGSE_VOL_DEBUG2
+} APROC_ASM_LGSE_CTRL_T;
+
 
 /* APROC Data Port (ADP)
     */

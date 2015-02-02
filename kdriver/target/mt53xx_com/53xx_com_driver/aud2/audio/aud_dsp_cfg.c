@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -238,6 +238,24 @@ typedef enum
 
 typedef enum
 {
+    SE2015_CLEARVOICE   = 0,
+    SE2015_AUTOVOLUME = 1,
+    SE2015_BASS              = 2,
+    SE2015_DYNAMICEQ   =3,
+    SE2015_PEQMODE1     = 4,
+    SE2015_PEQMODE2     = 5,
+    SE2015_PEQMODE3     = 6,
+    SE2015_SURROUND     = 7,
+    SE2015_VOLUME       = 8,
+    SE2015_FUNC_UNKNOWN1 = 9,
+    SE2015_FUNC_SETTING     = 10,
+    SE2015_FUNC_HARM     = 11,
+    SE2015_FUNC_LGSEFN010 = 12
+} SE2015_HAL_FUNCTION_T;
+
+
+typedef enum
+{
 	AUDIO_LGSE_LGSEFN000		= 0,
 	AUDIO_LGSE_LGSEFN001		= 1,
 	AUDIO_LGSE_LGSEFN003		= 2,
@@ -267,6 +285,18 @@ typedef enum
 	AUDIO_LGSE_GET_DATA         = 26,
 	AUDIO_LGSE_FUNC_NUM
 } AUDIO_LGSE_FUNCLIST_T;
+
+typedef enum {
+	HAL_APROC_LGSE_MAIN = 0,
+	HAL_APROC_LGSE_FN000,
+	HAL_APROC_LGSE_FN001,
+	HAL_APROC_LGSE_FN004,
+	HAL_APROC_LGSE_FN009,
+	HAL_APROC_LGSE_FN010,
+	HAL_APROC_LGSE_MODE,
+	HAL_APROC_LGSE_GET_DATA,
+	HAL_APROC_LGSE_NUM
+} HAL_LGSE_MAPPING_T; // From ARM 11 mapping 
 
 typedef enum
 {
@@ -1311,7 +1341,16 @@ static INT8 _ai1TrebleAttnTable[12] = {28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 2
 #endif  // CC_AUD_NEW_AQ_PARSER
 #endif  // CC_AUD_USE_FLASH_AQ
 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+LGSE_FN_PARAM_T _argLgseFnPara[HAL_APROC_LGSE_NUM];
+#else
 LGSE_FN_PARAM_T _argLgseFnPara[AUDIO_LGSE_FUNC_NUM];
+#endif
+
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+#define APROC_DELAYBUF_BLOCK_SAMPLE_NUM	256   // samples in one block
+const UINT32 u4DelayConstant = APROC_DELAYBUF_BLOCK_SAMPLE_NUM*34/(48*5);
+#endif
 
 //-----------------------------------------------------------------------------
 // Static functions
@@ -7793,11 +7832,11 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
         // 64/48 = 1.3 ms
         // 5cm/34000cm = 0.14 ms
         // 1.3/0.14 = 9
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2Delay/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2Delay/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
 
         // Work Around for PlayMute, need a Aout Enable to let PlayMute know DSP delay is set and done.
@@ -7906,7 +7945,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/9);
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);      
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)               
             break;
@@ -7953,7 +7992,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/9);
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)            
             break;
@@ -7984,7 +8023,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3, APROC_REG_DELAY_HP), u2Delay/9);
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3, APROC_REG_DELAY_HP), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);      
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)            
             break;
@@ -8115,7 +8154,7 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);      
 #endif       
         break;
@@ -8146,7 +8185,7 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2DelayBypassMix/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2DelayBypassMix/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);      
 #endif               
         break;
@@ -8176,7 +8215,7 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
         }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2DelayDownmixMix/9);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2DelayDownmixMix/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);      
 #endif               
         break;
@@ -16170,22 +16209,106 @@ void _AUD_DspSpeed(UINT8 u1DecId, UINT16 u1Speed)
     DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
 }
 
+typedef struct {
+	UINT32 u4InitNo;
+	UINT32 u4InitOffset;
+	UINT32 u4VarNo;
+	UINT32 u4VarOffset;
+} APROC_LGSE_NO_PARAM_T;
+
+APROC_LGSE_NO_PARAM_T Aproc_Lgse_ParamNo_Block[HAL_APROC_LGSE_NUM] = 
+{
+	{10, 0, 3, 0},
+	{195, 10, 1, 3},
+	{21, 305, 130, 4},
+	{0, 326, 25, 134},
+	{10, 326, 2, 159},
+	{10, 336, 1, 161},
+	{0, 346, 3, 162},
+	{0, 0, 0, 0}
+};
 
 void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataOption, UINT8 varOption)
 {
-    static UINT32 u4state = 0xfffe;
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+	UINT32 u4Reg;
+	UINT32 u4StartAddr;
+	UINT32 i;
+	UINT32 *pu4Value;
+	UINT32 u4Mode;
+#else
+	static UINT32 u4state = 0xfffe;
     AUD_DEC_STREAM_FROM_T eStreamFrom;
-
-    if(fNo>12)
-    {
-        return;
-    }
+#endif
     _argLgseFnPara[fNo].isUpdate = 1;
     //_argLgseFnPara[fNo].pParams = u1CV_param_buf;
     _argLgseFnPara[fNo].noParam = noParam;
     _argLgseFnPara[fNo].dataOption = dataOption;
     _argLgseFnPara[fNo].varOption = varOption;
 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+	// 1. Must set the value first (If set mask flag first, there will be timing issue)
+	if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_INIT_ONLY)
+	{
+		if(fNo == HAL_APROC_LGSE_MODE)
+		{
+			Printf ("[LGSE] Mode cannot be init!\n");
+			return;
+		}
+
+		u4StartAddr = APROC_ASM_ADDR(APROC_ASM_ID_LGSE_INIT, 0);
+
+		if (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4InitNo)
+		{
+			Printf ("[LGSE] Number of init param not match. _argLgseFnPara[fNo].noParam=%d, Aproc_Lgse_ParamNo_Block[fNo].u4InitNo=%d\n", _argLgseFnPara[fNo].noParam, Aproc_Lgse_ParamNo_Block[fNo].u4InitNo);
+			return;
+		}
+	}
+	else if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_VARIABLES)
+	{
+		u4StartAddr = APROC_ASM_ADDR(APROC_ASM_ID_LGSE_VAR, 0);
+
+		if (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4VarNo)
+		{
+			Printf ("[LGSE] Number of var param not match. _argLgseFnPara[fNo].noParam = %d, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo=%d\n", _argLgseFnPara[fNo].noParam, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo);
+			return;
+		}
+		if(fNo == HAL_APROC_LGSE_MODE)
+		{	
+			u4Mode = *((UINT32 *)_argLgseFnPara[fNo].pParams);
+			vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_MODE), u4Mode);
+		}
+	}
+	pu4Value = (UINT32 *)_argLgseFnPara[fNo].pParams;
+	for (i = 0; i < _argLgseFnPara[fNo].noParam/4+1; i++)
+	{
+		
+		if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_INIT_ONLY)
+		{
+			vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4InitOffset + i), pu4Value[i]);
+		}
+		else if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_VARIABLES)
+		{
+			vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4VarOffset + i), pu4Value[i]);
+		}
+	}
+
+	// 2. Set the mask flag
+	if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_INIT_ONLY)
+	{
+		u4Reg = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_INIT));
+		u4Reg |= (1<<fNo);
+		vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_INIT), u4Reg);
+		Printf ("[LGSE][INIT] fNo=%d, noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
+	}
+	else if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_VARIABLES)
+	{
+		u4Reg = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_VAR));
+		u4Reg |= (1<<fNo);
+		vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_VAR), u4Reg);
+		Printf ("[LGSE][VAR] fNo=%d noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
+	}
+#else
 
 //case 1 (FN000/FN007/FN009 & ADEC_LGSE_VARIABLES) ' vAudPostSetParas (Set common DRAM)
 //case 2 (Others) ' vAudPostSetParas 'reinit ' fadeout ' vDSPUpdateCommDramLGSE ' fadein
@@ -16254,6 +16377,7 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
             return;
    }
    DSP_SendDspTaskCmd(AUD_DSP0, UOP_DSP_CV);
+#endif
 }
 /** _AUD_GetAC3_EAC3_Info
  *
