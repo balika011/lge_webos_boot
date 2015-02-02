@@ -540,6 +540,16 @@ enum
     cCMD_ID_DEMOD_MAGC_SIZE
 };
 
+//MTK07043, 150130, Add, for complete TSControlOutput feature.
+/***********************************************************************/
+/*      Set TS output control                                       */
+/***********************************************************************/
+#define cCMD_ID_TS_SET_OUTPUT      0xA0        // control TS output 
+enum
+{
+    cOFST_DEMOD_SET_TS_OUTPUT_ENABLE,                 // 1: Enable, 0: Disable
+    cOFST_DEMOD_SET_TS_OUTPUT_TSIZE
+};
 
 /***********************************************************************/
 /*      Get Demod Configuration                                        */

@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/02 $
  * $RCSfile: dtd_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -463,5 +463,8 @@ VOID DTD_SetTsFmt(DEMOD_CTX_T *psDemodCtx, UINT8 u1MpegFmt);
 BOOL DTD_GetTsFmt(DEMOD_CTX_T *psDemodCtx, UINT8 *u1MpegFmt);
 
 VOID DTD_SetTsMode(DEMOD_CTX_T *psDemodCtx, BOOL fgParallel);
+
+VOID DTD_SetTsOutput(DEMOD_CTX_T * psDemodCtx,BOOL fgOutputEnable);//MTK07043, 150130, Add, for complete TSControlOutput feature.
+
 #endif /* DTD_IF_H */
 

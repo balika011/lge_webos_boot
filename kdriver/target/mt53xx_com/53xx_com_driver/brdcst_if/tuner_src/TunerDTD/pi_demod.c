@@ -2374,6 +2374,27 @@ VOID DTD_SetTsOutFmt(DEMOD_CTX_T *psDemodCtx, UINT8 u1Value)
     mcHOST_CMD(psDemodCtx, aucData, 0, cOFST_DEMOD_TS_FMT_SIZE + 1);
 }
 
+//MTK07043, 150130, Add, for complete TSControlOutput feature.
+//-----------------------------------------------------------------------------
+/** DTD_setTsOutput
+ *  disable or enable TS output
+ *  @param  DEMOD_CTX_T *psDemodCtx  pointer the demod context
+            BOOL fgOutputEnable
+ *  @retval VOID.
+ */
+//-----------------------------------------------------------------------------
+
+VOID DTD_SetTsOutput(DEMOD_CTX_T * psDemodCtx,BOOL fgOutputEnable)
+{
+    UCHAR   aucData[cMAX_READ_NUM + 1];    // For Host Cmd
+
+	mcSHOW_DBG_MSG(("%s fgOutputEnable=%d\n",__FUNCTION__,fgOutputEnable));
+
+	mcSET_CMD2(aucData) = cCMD_ID_TS_SET_OUTPUT;
+    mcSET_QUEUE2(aucData, cOFST_DEMOD_SET_TS_OUTPUT_ENABLE) = (UINT8) fgOutputEnable;
+    mcHOST_CMD(psDemodCtx, aucData, 0, cOFST_DEMOD_SET_TS_OUTPUT_TSIZE+1);			
+}
+
 //-----------------------------------------------------------------------------
 /** DTD_GetTsFmt
  *  To get TS format
