@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/02 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11337,7 +11337,7 @@ static void _AudPlayMuteMsgProcess(UINT8 u1DecID, AUD_PLAY_MUTE_CMD_T eCmd, UINT
     }
 }
 
-#ifndef CC_AUD_DDI 
+#if 1//ndef CC_AUD_DDI 
 static void _AudPlayMuteThread(void* pvArg)
 {
     UINT8 u1DecId = AUD_DEC_MAIN;
@@ -11577,7 +11577,8 @@ static void _AudPlayMuteThread(void* pvArg)
                     u2VdpDelayMs = bDrvVideoGetFrameDelay(SV_VP_MAIN);
                     _AudAdjustDelayByAudFmt(u2VdpDelayMs, &u2AudDelayMs);
                     #ifdef CC_ENABLE_AOMX
-                    if (!((_arAudDecoder[AUD_DEC_MAIN].eStreamFrom==AUD_STREAM_FROM_GST)||(_arAudDecoder[AUD_DEC_MAIN].eStreamFrom==AUD_STREAM_FROM_DIGITAL_TUNER)))
+                    if (!((_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom==AUD_STREAM_FROM_GST)||
+                        (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom==AUD_STREAM_FROM_DIGITAL_TUNER)))
                     {
                             u2AudDelayMs = 0;
                     }
@@ -11596,7 +11597,7 @@ static void _AudPlayMuteThread(void* pvArg)
                     {
                         //Only Write share info, but not send UOP. In HDMI case, there maybe Decoder reset.
                         #ifdef CC_AUD_DDI
-                        if(_arAudDecoder[AUD_DEC_MAIN].eStreamFrom != AUD_STREAM_FROM_HDMI)
+                        if(_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom != AUD_STREAM_FROM_HDMI)
                         #endif
                         {
                             AUD_DspChannelDelay_initial(((u2AudDelayMs*34)/5), AUD_CH_ALL, u1DecId);
