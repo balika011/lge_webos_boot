@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_pwm.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -168,6 +168,39 @@
 #define vDrvSetScan8High(u4Val) vIO32WriteFldAlign(PWM_SCAN_38, u4Val, REG_PWM_SCAN8_HIGH)
 #define vDrvSetScan8Low(u4Val) vIO32WriteFldAlign(PWM_SCAN_38, u4Val, REG_PWM_SCAN8_LOW)
 
+///----------------
+/**
+ * PWM Frequency Parameter
+ */
+typedef struct {
+	UINT32			pwm_adapt_freq_enable;
+	UINT32			pwmfreq_48nHz;		// PWM frequency 48xN Hz from DB table
+	UINT32			pwmfreq_50nHz;		// PWM frequency 50xN Hz from DB table
+	UINT32			pwmfreq_60nHz;		// PWM frequency 60xN Hz from DB table
+} DRV_PWM_ADAPT_FREQ_PARAM_T;
+/**
+ * PWM Setting Parameter
+ */
+typedef struct {
+	UINT32					pwm_enable;
+	UINT32					pwm_duty;
+	UINT32					pwm_frequency; // If pwm_adapt_freq_enable == TRUE, ignored
+	DRV_PWM_ADAPT_FREQ_PARAM_T	pwm_adapt_freq_param;
+	UINT32					pwm_lock;
+	UINT32					pwm_pos_start;
+	UINT32					pwm_scanning_enable;
+} DRV_PWM_PARAM_T;
+
+typedef enum {
+	PWM_DEV_PIN0	= 0,	/**< PWM# 0 */
+	PWM_DEV_PIN1,			/**< PWM# 1 */
+	PWM_DEV_PIN2,			/**< PWM# 2 */
+	PWM_DEV_PIN3,			/**< PWM# 3 */
+	PWM_DEV_PIN4,			/**< PWM# 4 */
+	PWM_DEV_MAX,			/**< PWM# MAX */
+	PWM_DEV_NONE	= 0xFF,	/**< PWM# Not used */
+} DRV_PWM_PIN_SEL_T;
+
 //-----------------------------------------------------------------------------
 // Public functions
 //-----------------------------------------------------------------------------
@@ -180,6 +213,11 @@ extern UINT32 _u4ScanPWMTestTop;
 extern UINT32 _u4ScanPWMTestBottom;
 extern UINT32 _u4ScanPWMTestHigh;
 extern UINT32 _u4ScanPWMTestLow;
+
+
+extern void vDrvPWM_Init(void);
+extern void vDrvPWM_ApplyParamSet(void);
+extern void vDrvPWM_SetParam(DRV_PWM_PIN_SEL_T pwmIndex,DRV_PWM_PARAM_T *prPwmSetting);
 
 extern void vDrvSetPWM(UINT32 u4Src, UINT32 u4TimeBase, UINT32 u4DutyON,
                        UINT32 u4DutyAll);

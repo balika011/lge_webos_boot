@@ -772,6 +772,10 @@ int DDI_CMNIO_SPI_Init(uint idx, uint u4double)
 int DDI_CMNIO_PWM_PreInit(void)
 {
 	//If there is something to initialize in MTK driver, use this function.
+	vDrvInitSCANPWM(PWM_PORT_A+2);
+	vDrvInitSCANPWM(PWM_PORT_B+2);
+	vDrvSetScanPWMLatchMode(0,0,0);
+
 	return 0;
 }
 int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_duty, 
@@ -817,9 +821,50 @@ int DDI_CMNIO_PWM_ApplyParamSet(UINT8 pwmIndex, UINT8 m_pwm_enable,	UINT8 m_pwm_
 	}
 	else //Scan PWM ??
 	{
-		;
-	}
+		if(m_pwm_enable==0)
+		{
+			vDrvInitSCANPWM(pwmIndex+2);
+			GPIO_SetOut(80+pwmIndex, 0);
+	
+		}
+		else
+
+		{		    	
+				UINT32 u4Devider=1;
+				UINT32 u4High=0;
+				UINT32 u4Low=0;
+				UINT32 u4Port=0;
+				UINT32 u4Start=0;
+				
+				Printf( "%d,%d,%d,%d\n", pwmIndex, m_pwm_duty, m_pwm_frequency, m_pwm_pos_start);
+				
+				u4Port=pwmIndex+2;
+				if (pwmIndex==0)
+				BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION3);
+				if (pwmIndex==1)
+				BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION3);
+				
+				
+		    	u4High = m_pwm_duty*1000/256;
+				u4Low = 1000-u4High;
+			    u4Start =m_pwm_pos_start*1000/256;
+				
+			    u4Devider = m_pwm_frequency/vDrvGetLCDFreq();
+			   
+			    Printf( "_|-|_  freq:%dHz,Devider:%d,start(permillage):%d%,high(permillage):%d%,low(permillage):%d%\n", m_pwm_frequency, u4Devider, u4Start,u4High, u4Low);
+
+				u4High = u4High/u4Devider;
+				u4Low = u4Low/u4Devider;
+			  	u4Start=u4Start/u4Devider;
+				
+		    
+			    vDrvSetScanPWM(u4Port,u4Start,u4High,u4Low);
+
+			    vDrvScanPWMDataFire();
+			
+		 }
+		}
+	
 	return 0;
 }
-
 

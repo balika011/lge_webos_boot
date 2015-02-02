@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/02 $
  * $RCSfile: ostg_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -400,12 +400,7 @@ void BACKLT_SetDimming(UINT32 u4Frequency, UINT32 u4Dimming)
     }
     
     vDrvSetScanPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort),SCANPWM_START,u4High,u4Low);
-#ifdef CC_LGE_PROTO_PCBA//shift for 1ms
-	if(120 == u4Frequency) //120hz
-	vDrvSetScanPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort)+1,SCANPWM_START+62,u4High,u4Low);
-	else  //100hz
-	vDrvSetScanPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort)+1,SCANPWM_START+50,u4High,u4Low);
-#endif
+
 
     vDrvScanPWMDataFire();
 #endif  // SUPPORT_PANEL_SCAN_PWM
@@ -876,12 +871,15 @@ void vApiPanelPowerSequence(BOOL fgEnable)
         }
 
 #endif
+#if !defined(CC_LGE_PROTO_PCBA)
+
         // set pwm before enable backlight power supply, so that backlight would be expected pwm level once we supply the power
     #ifdef SUPPORT_PANEL_SCAN_PWM
 		_u4BrightLevel = PANEL_GetScanPWMDuty();
     #endif
 	    LOG(3, "_|-|_ vApiPanelPowerSequence Bright:%d%\n", _u4BrightLevel);
         BACKLT_SetDimming(BACKLT_GetDimmingFrequency(), _u4BrightLevel);
+#endif
 #if defined(CC_SUPPORT_BL_DLYTIME_CUT)&&defined(CC_MTK_LOADER)
 		if (IS_DISP_4K2K_TYPE2)
 		{

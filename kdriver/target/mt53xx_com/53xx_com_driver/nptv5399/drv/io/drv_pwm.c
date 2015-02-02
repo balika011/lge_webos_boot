@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_pwm.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -145,6 +145,150 @@ UINT32 _u4ScanPWMTestBottom;
 UINT32 _u4ScanPWMTestTop;
 UINT8 _u1ScanPWMTestSrc;
 
+static DRV_PWM_PARAM_T _gPWMSetting[PWM_DEV_MAX];
+
+void vDrvPWM_Init(void)
+{
+	memset((void *)_gPWMSetting,0,sizeof(_gPWMSetting));
+}
+void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
+{
+	UINT32 u4BusClk;
+	UINT32 u4PwmP,u4PwmH,u4PwmRsn,u4Frequency;
+	u4BusClk = BSP_GetDomainClock(SRC_BUS_CLK);
+	u4PwmRsn = 0xff;
+	if(_gPWMSetting[pwmIndex].pwm_enable && (!_gPWMSetting[pwmIndex].pwm_scanning_enable))//OPWM
+	{
+		if(_gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwm_adapt_freq_enable)
+		{
+			switch(vDrvGetLCDFreq())
+		    {
+		        case 24:
+		        case 48:
+		        case 96:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_48nHz;
+		            break;
+		        case 25:
+		        case 50:
+		        case 100:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_50nHz;
+		            break;
+		        case 30:
+		        case 60:
+		        case 120:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_60nHz;
+					break;
+		        default:
+		        	Printf("Error , get wrong LCD freq : %d .\n",vDrvGetLCDFreq());
+		        	break;
+			}
+		}
+		else
+		{
+			u4Frequency = _gPWMSetting[pwmIndex].pwm_frequency;
+		}
+		if(u4Frequency == 0)
+		{
+			u4PwmP = 0;
+			u4PwmH = 0;
+		}
+		else
+		{
+		    u4PwmP = ((u4BusClk >> 8)/ u4Frequency);
+			u4PwmH = _gPWMSetting[pwmIndex].pwm_duty;
+		}
+		vDrvSetPWM((SrcPWM0 + pwmIndex),u4PwmP,u4PwmH,u4PwmRsn);
+		vDrvSetLock((SrcPWM0 + pwmIndex), _gPWMSetting[pwmIndex].pwm_lock);
+	}
+	else if(_gPWMSetting[pwmIndex].pwm_enable && (_gPWMSetting[pwmIndex].pwm_scanning_enable))
+	{
+	UINT32 u4Devider=1;
+	UINT32 u4High=0;
+	UINT32 u4Low=0;
+	UINT32 u4Port=0;
+	UINT32 u4Start=0;
+	
+	if(_gPWMSetting[pwmIndex].pwm_duty>255)_gPWMSetting[pwmIndex].pwm_duty=255;
+	if(_gPWMSetting[pwmIndex].pwm_pos_start>255)_gPWMSetting[pwmIndex].pwm_pos_start=255;
+	
+	u4Start=_gPWMSetting[pwmIndex].pwm_pos_start*1000/255;
+	u4High=_gPWMSetting[pwmIndex].pwm_duty*1000/255;
+	u4Low = 1000-u4High;
+	u4Port = pwmIndex+1;
+
+	switch(vDrvGetLCDFreq())
+		    {
+		        case 24:
+		        case 48:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_48nHz;
+					u4Devider=u4Frequency/48;
+		            break;
+		        case 25:
+		        case 50:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_50nHz;
+					u4Devider=u4Frequency/50;
+		            break;
+		        case 30:
+		        case 60:
+		            u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_60nHz;
+					u4Devider=u4Frequency/60;
+					break;
+				case 96:
+					u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_48nHz;
+					u4Devider=u4Frequency/96;
+		            break;
+				case 100:
+					u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_50nHz;
+					u4Devider=u4Frequency/100;
+		            break;
+				case 120:
+					u4Frequency = _gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwmfreq_60nHz;
+					u4Devider=u4Frequency/120;
+					break;
+		        default:
+		        	Printf("Error , get wrong LCD freq : %d .\n",vDrvGetLCDFreq());
+		        	break;
+			}
+    LOG(0, "_|-|_  scanpwm[%d] freq:%dHz,dev:%d,start(permillage):%d%,high(permillage):%d%,low(permillage):%d%\n",u4Port, u4Frequency, u4Devider, u4Start, u4High, u4Low);
+
+   if(u4Devider==0)
+		 u4Devider=1; 
+   u4Start=u4Start/u4Devider;
+   u4High=u4High/u4Devider;
+   u4Low=u4Low/u4Devider;
+
+	if(!fgIsScanPWMSetDataLatch())
+	{
+		vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA_OFF,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Aligned Vsync
+	}
+  
+    vDrvSetScanPWM(u4Port,u4Start,u4High,u4Low);
+
+    vDrvScanPWMDataFire();
+	}
+	else
+	{
+		GPIO_SetOut(79+pwmIndex, 0);
+
+	}
+	
+}
+void vDrvPWM_SetParam(DRV_PWM_PIN_SEL_T pwmIndex,DRV_PWM_PARAM_T *prPwmSetting)
+{
+	 memcpy(&_gPWMSetting[pwmIndex], prPwmSetting, sizeof(DRV_PWM_PARAM_T));
+	 vDrvPWM_ApplyParam(pwmIndex);
+}
+void vDrvPWM_ApplyParamSet()
+{
+	INT32 i;
+	for(i=0;i<=SrcPWM2;i++) //OPWM
+	{	if(_gPWMSetting[i].pwm_enable && (_gPWMSetting[i].pwm_scanning_enable))
+			vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
+		vDrvPWM_ApplyParam(PWM_DEV_PIN0+i);
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 /** Brief
@@ -174,7 +318,6 @@ void vDrvSetPWM(UINT32 u4Src, UINT32 u4TimeBase, UINT32 u4DutyON,
         Printf("PWM Error: u4DutyON and u4DutyAll= [0x %x,0x %x], u4DutyON is too large\n", u4DutyON, u4DutyAll);
     }
 #if defined(CC_MT5880)
-	
 		switch(u4Src)
 		{
 			case SrcPWM0:
@@ -268,187 +411,24 @@ void vDrvSetPWM(UINT32 u4Src, UINT32 u4TimeBase, UINT32 u4DutyON,
         case SrcPWM0:
             u4Reg = REG_RW_PWM0;
 
-            if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_PWM0)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION2));
-            }
-
+            UNUSED(BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION2));
             break;
 
         case SrcPWM1:
             u4Reg = REG_RW_PWM1;
-
-            if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_PWM1)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION2));
-            }
+            UNUSED(BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION2));
 
             break;
 
         case SrcPWM2:
             u4Reg = REG_RW_PWM2;
 
-            if(DRVCUST_InitGet(ePWM2Port)==PAD_PWM2_PWM2)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION2));
-            }
-
+            UNUSED(BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION2));
             break;
 
         default:
             ASSERT(u4Src <= SrcPWM2);
     }
-
-#elif defined(CC_MT5396)
-
-    switch(u4Src)
-    {
-        case SrcPWM0:
-            u4Reg = REG_RW_PWM0;
-
-            if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_PWM0)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION2));
-            }
-
-            break;
-
-        case SrcPWM1:
-            u4Reg = REG_RW_PWM1;
-
-            if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_PWM1)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION2)); //Tuner 30V Boost-up PWM in BGA
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_GPIO48)
-            {
-                UNUSED(BSP_PinSet(PIN_GPIO48, PINMUX_FUNCTION1));
-            }
-
-            break;
-
-        case SrcPWM2:
-            u4Reg = REG_RW_PWM2;
-
-            if(DRVCUST_InitGet(ePWM2Port)==PAD_PWM2_PWM2)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION2)); //LED_CTL in BGA
-            }
-
-            break;
-
-        default:
-            ASSERT(u4Src <= SrcPWM2);
-    }
-
-#elif defined(CC_MT5389)
-
-    switch(u4Src)
-    {
-        case SrcPWM0:
-            u4Reg = REG_RW_PWM0;
-
-            if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_GPIO3)
-            {
-                UNUSED(BSP_PinSet(PIN_GPIO3, PINMUX_FUNCTION1));
-            }
-            else if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_OSDA0)
-            {
-                UNUSED(BSP_PinSet(PIN_OSDA0, PINMUX_FUNCTION3));
-            }
-
-            break;
-
-        case SrcPWM1:
-            u4Reg = REG_RW_PWM1;
-
-            if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_IF_AGC)
-            {
-                UNUSED(BSP_PinSet(PIN_IF_AGC, PINMUX_FUNCTION2));
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_OSCL0)
-            {
-                UNUSED(BSP_PinSet(PIN_OSCL0, PINMUX_FUNCTION3));
-            }
-
-            break;
-
-        case SrcPWM2:
-            u4Reg = REG_RW_PWM2;
-
-            if(DRVCUST_InitGet(ePWM2Port)==PAD_PWM2_PWM0)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION1)); //LED_CTL in BGA
-            }
-
-            break;
-
-        default:
-            ASSERT(u4Src <= SrcPWM2);
-    }
-
-#else	//defined(CC_MT5368)
-
-    switch(u4Src)
-    {
-        case SrcPWM0:
-            u4Reg = REG_RW_PWM0;
-
-            if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_PWM0)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION1));
-            }
-            else if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_GPIO4)
-            {
-                UNUSED(BSP_PinSet(PIN_GPIO4, PINMUX_FUNCTION1));
-            }
-            else if(DRVCUST_InitGet(ePWM0Port)==PAD_PWM0_OSDA0)
-            {
-                UNUSED(BSP_PinSet(PIN_OSDA0, PINMUX_FUNCTION3));
-            }
-
-            break;
-
-        case SrcPWM1:
-            u4Reg = REG_RW_PWM1;
-
-            if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_PWM1)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION1)); //Tuner 30V Boost-up PWM in BGA
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_GPIO5)
-            {
-                UNUSED(BSP_PinSet(PIN_GPIO5, PINMUX_FUNCTION1));
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_GPIO8)
-            {
-                UNUSED(BSP_PinSet(PIN_GPIO8, PINMUX_FUNCTION1));
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_IF_AGC)
-            {
-                UNUSED(BSP_PinSet(PIN_IF_AGC, PINMUX_FUNCTION2));
-            }
-            else if(DRVCUST_InitGet(ePWM1Port)==PAD_PWM1_OSCL0)
-            {
-                UNUSED(BSP_PinSet(PIN_OSCL0, PINMUX_FUNCTION3));
-            }
-
-            break;
-
-        case SrcPWM2:
-            u4Reg = REG_RW_PWM2;
-
-            if(DRVCUST_InitGet(ePWM2Port)==PAD_PWM2_PWM2)
-            {
-                UNUSED(BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION1)); //LED_CTL in BGA
-            }
-
-            break;
-
-        default:
-            ASSERT(u4Src <= SrcPWM2);
-    }
-
 #endif
 
     // workaround for full duty drop issue
@@ -521,7 +501,7 @@ void vDrvInitSCANPWM(UINT8 u1Src)
 	vDrvSetScanStartModeOnOff(u1Src,SV_OFF);
 
     vDrvSetScanBLOnOff(SV_OFF);
-    vDrvSetScanPWMPolarity(u1Src, 1); 
+    vDrvSetScanPWMPolarity(u1Src, 0); 
     vDrvSetScanPWMStartPhase(u1Src,0);
 
 	#ifdef CC_MT5882
@@ -1000,7 +980,7 @@ void vDrvSetScanPWM(UINT8 u1Src, UINT32 u4Start, UINT32 u4High, UINT32 u4Low)
     switch(u1Src)
     {
         case SrcPWM1:
-            //UNUSED(BSP_PinSet(PIN_OPWM1, PINMUX_FUNCTION3));
+            BSP_PinSet(PIN_OPWM0, PINMUX_FUNCTION1);
             if (u4High == 1000)            
             {			 
 	            vIO32WriteFldAlign(PWM_SCAN_06, 1, REG_PWM_SCAN1_FIXED_HIGH);			 

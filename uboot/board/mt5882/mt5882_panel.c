@@ -287,6 +287,10 @@ UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 frctype
 	#endif 
 	//set color depth 
 	PANEL_SetColorDepth(colordepth); //added by LG
+	
+	//DDI_CMNIO_PWM_PreInit();//for test pwm 
+	//DDI_CMNIO_PWM_ApplyParamSet(0, 1, 64, 120, 1, 64, 1);//for test pwm 
+	//DDI_CMNIO_PWM_ApplyParamSet(1, 1, 128, 180, 1, 64, 1);//for test pwm
 
    // power on panel
     vApiPanelPowerSequence(TRUE);
