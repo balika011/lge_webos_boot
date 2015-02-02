@@ -367,7 +367,6 @@ static void *_idle_thread_start(void *arg)
                 if(BOOT_CPU != get_cpu_id() && megic_number_cleaned==1 && smp_cpu_released[get_cpu_id()].lock== 0)
                 {
                 	
-					tlog("exit cpu id =%d \n",get_cpu_id());
 					asm volatile("dsb");
 					secondary_start_uboot_cleanup();
         }

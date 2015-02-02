@@ -901,6 +901,9 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 
 	if(before_start_linux() < 0)
 		return -1;
+#ifdef CC_TRUSTZONE_SUPPORT
+		init_tz();
+#endif
 
 	kernel_resume_func = (void (*))header->pa_resume_func;
 #ifdef CONFIG_SECURITY_BOOT
