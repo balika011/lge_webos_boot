@@ -819,7 +819,7 @@ int MsdcWaitIntr (uint vector, uint timeoutCnt, uint fgMode)
             return MSDC_FAILED; 
         }
 
-        HAL_Delay_us(1000);
+        HAL_Delay_us(1);
         //Mtk_udelay(1000);
     }
 

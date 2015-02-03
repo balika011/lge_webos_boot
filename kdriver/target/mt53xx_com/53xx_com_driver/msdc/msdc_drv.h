@@ -153,7 +153,7 @@
 #define MSDC_FIFOCLR_TIMEOUT_LIMIT_COUNT                    5   
 
 #define MSDC_WAIT_SDC_BUS_TIMEOUT_LIMIT_COUNT               400                 
-#define MSDC_WAIT_CMD_TIMEOUT_LIMIT_COUNT                   200                     
+#define MSDC_WAIT_CMD_TIMEOUT_LIMIT_COUNT                   200000                     
 #define MSDC_WAIT_DATA_TIMEOUT_LIMIT_COUNT                  5000              
 #define MSDC_WAIT_DATA_COMPLETE_TIMEOUT_LIMIT_COUNT         1000000//1000000             
 
