@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/03 $
  * $RCSfile: drv_upscaler.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -261,7 +261,7 @@ void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 	vIO32WriteFldMulti(SCFIR_02, P_Fld(bType, COE_SEL)|
 		  						 P_Fld(0x0, CPU_SRAM_ADDR)); 
 
-    LOG(2, "Set Scaler PQ SRAM Coeff Type: %d ,\n", bType);
+    LOG(3, "Set Scaler PQ SRAM Coeff Type: %d ,\n", bType);
 	
 	//writing sram coeff
 	for (i = 0; i < SCPQ_PHASE_NUM; i++)
@@ -269,7 +269,7 @@ void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 		vIO32Write4B(SCFIR_05, dwCoeff[i*SCPQ_COEF_LEN+0]);
 		vIO32Write4B(SCFIR_04, dwCoeff[i*SCPQ_COEF_LEN+1]);
 		vIO32Write4B(SCFIR_03, dwCoeff[i*SCPQ_COEF_LEN+2]);
-        LOG(2, "Set Scaler PQ SRAM Coeff Type: %d , dwCoeff = 0x%x 0x%x 0x%x\n", bType, 
+        LOG(3, "Set Scaler PQ SRAM Coeff Type: %d , dwCoeff = 0x%x 0x%x 0x%x\n", bType, 
             dwCoeff[i*SCPQ_COEF_LEN+0], dwCoeff[i*SCPQ_COEF_LEN+1], dwCoeff[i*SCPQ_COEF_LEN+2]);
         
 	}
@@ -285,7 +285,7 @@ void vDrvSCPQCoeffRead(UINT8 bType, UINT32 dwResult[SCPQ_COEF_TBLSIZE])
     
 	if(bType>=COEFTYP_MAX)
 	{
-        Printf("Scaler PQ Coeff Type: %d,  Wrong !!\n", bType);
+        LOG(3,"Scaler PQ Coeff Type: %d,  Wrong !!\n", bType);
 	}
     
     //vDrvSCPQSramCoeffOnOff(SV_OFF);
@@ -301,14 +301,14 @@ void vDrvSCPQCoeffRead(UINT8 bType, UINT32 dwResult[SCPQ_COEF_TBLSIZE])
 	vIO32WriteFldMulti(SCFIR_02, P_Fld(bType, COE_SEL)|
 		  						 P_Fld(0x0, CPU_SRAM_ADDR)); 
     
-    LOG(2, "Scaler PQ Coeff Type: %d !!\n", bType);
+    LOG(3, "Scaler PQ Coeff Type: %d !!\n", bType);
 	//reading sram coeff
 	for (i = 0; i < SCPQ_PHASE_NUM; i++)
 	{
         dwResult[i*SCPQ_COEF_LEN+2]=IO32ReadFldAlign(SCFIR_06, RDATA_00);
         dwResult[i*SCPQ_COEF_LEN+1]=IO32ReadFldAlign(SCFIR_07, RDATA_01);
         dwResult[i*SCPQ_COEF_LEN+0]=IO32ReadFldAlign(SCFIR_08, RDATA_02);
-		LOG(2, "0x%08x, 0x%08x, 0x%08x,\n", dwResult[i*SCPQ_COEF_LEN+0], dwResult[i*SCPQ_COEF_LEN+1], dwResult[i*SCPQ_COEF_LEN+2]);
+		LOG(3, "0x%08x, 0x%08x, 0x%08x,\n", dwResult[i*SCPQ_COEF_LEN+0], dwResult[i*SCPQ_COEF_LEN+1], dwResult[i*SCPQ_COEF_LEN+2]);
 	}
 	
 	//finish reading sram coeff
@@ -325,7 +325,7 @@ UINT8 bDrvSCPQCoeffValidate(UINT8 bType, UINT32 dwCoeffTblR[SCPQ_COEF_TBLSIZE], 
 
 	if(bType>=COEFTYP_MAX)
 	{
-        Printf("Scaler PQ Coeff Type: %d,  Wrong !!\n", bType);
+        LOG(3,"Scaler PQ Coeff Type: %d,  Wrong !!\n", bType);
 	}
     
     dwCoeffMsk=(bType<=COEFTYP_HOR_C)?dwHCOEFF_MSBVALID_MASK:dwVCOEFF_MSBVALID_MASK;

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/03 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #28 $
+ * $Revision: #29 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -630,7 +630,7 @@ UINT8 bApiVFEConnectVideoSrc(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable, UINT8 bTyp
 			   else
 			   {
 					vDviConnect(SV_VP_MAIN, 1);
-			    }			   
+			   }			   
 			 }
 			 else
 			 {
@@ -670,11 +670,11 @@ UINT8 bApiDecTypeMapping(UINT8 bSrc)
 	}
 }
 
-UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Type)
+UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Type)
 {
 	UINT8 bStatus;
 	
-	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
+	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
 
 	if(bPath ==  SV_VP_MAIN)
 	{
@@ -707,12 +707,12 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	{
 		if(bPath == SV_VP_MAIN)	//check the real source
 	    {
-	        bStatus = bApiVSCMainSubSrc(bSrc, SV_VD_MAX, bEnable);
+	        bStatus = bApiVSCMainSubSrc(bSrc, SV_VD_MAX, u1SrcIdx);
 
 	    }
 	    else
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VD_MAX, bSrc, bEnable);
+	        bStatus = bApiVSCMainSubSrc(SV_VD_MAX, bSrc, u1SrcIdx);
 	    }
 		
 	}
@@ -720,20 +720,20 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 bEnable, UINT8 u4Typ
 	{
 		if(bPath == SV_VP_MAIN)	//check the real source
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VD_NA, SV_VD_MAX, bEnable);
+	        bStatus = bApiVSCMainSubSrc(SV_VD_NA, SV_VD_MAX, u1SrcIdx);
 
 	    }
 	    else
 	    {
-	        bStatus = bApiVSCMainSubSrc(SV_VD_MAX, SV_VD_NA, bEnable);
+	        bStatus = bApiVSCMainSubSrc(SV_VD_MAX, SV_VD_NA, u1SrcIdx);
 	    }	
 	}
-	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,bEnable,u4Type);
+	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
 	return SV_SUCCESS;
 
 }
 
-UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
+UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 {
 	static UINT8 bOldMainDec = 0xff;
 	static UINT8 bOldSubDec = 0xff;
@@ -798,30 +798,34 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 bEnable)
 	{
 		if(bNewMainDec == SV_VD_MPEGHD)
 		{
-			LG_PipLineVdpConnect(SV_VP_MAIN,0);
+			LG_PipLineVdpConnect(SV_VP_MAIN,u1SrcIdx);
 			LOG(2,"Vdo main call LG_PipLineVdpConnect\n");
 		}
 		else
 		{
 			vSetMOutMux(bNewMainDec);
+			LOG(2, "Main VSC Set Omux %d\n",bNewMainDec);
 		}
 		
 		_rMChannel.bDecType = bNewMainDec;
 		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
 		vSetMainFlg(MAIN_FLG_MODE_CHG);
 		vSetMainFlg(MAIN_FLG_MODE_DET_DONE);
+		LOG(2, "VSC Set mode change done\n");
+		
 	}
 
 	if(fgPipCh)
 	{
 		if(bNewSubDec == SV_VD_MPEGHD)
 		{
-			LG_PipLineVdpConnect(SV_VP_PIP,0);
+			LG_PipLineVdpConnect(SV_VP_PIP,u1SrcIdx);
 			LOG(2,"Vdo sub call LG_PipLineVdpConnect\n");
 		}
 		else
 		{
 			vSetSOutMux(bNewSubDec);
+			LOG(2, "SUB VSC Set Omux %d\n",bNewSubDec);
 		}
 		_rPChannel.bDecType = bNewSubDec;
 		_bPipState = VDO_STATE_IDLE; /* mode change state machine */
