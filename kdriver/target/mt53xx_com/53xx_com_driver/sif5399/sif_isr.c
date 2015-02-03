@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/03 $
  * $RCSfile: sif_hw_v2.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -206,7 +206,7 @@ static BOOL _fgEnable8295bMaster1 = FALSE;
 #ifdef CC_SIF_USE_INTERRUPT_MODE
 static VOID _SIF_CommonISR(UINT16 u2Vector)
 {
-    if(_SIF_GetActiveChannel()->rSifOps.pfn_ISRHandler != NULL)
+    if((_SIF_GetActiveChannel()!= NULL)&&(_SIF_GetActiveChannel()->rSifOps.pfn_ISRHandler != NULL))
     {
         _SIF_GetActiveChannel()->rSifOps.pfn_ISRHandler(u2Vector);
     }
