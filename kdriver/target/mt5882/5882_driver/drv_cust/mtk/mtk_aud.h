@@ -2048,8 +2048,8 @@ static const AUD_MTS_FAC_T _arMtsFactory =
     180,                               // higher threshold of FM carrier mute
     120,                                // lower threshold of FM carrier mute
     //****** prescale  ******************************//
-    20,                                //mono and stereo prescale
-    20,                                //SAP prescale
+    22,                                //mono and stereo prescale
+    31,                                //SAP prescale
     //****** pilot offset calibration mode  *********//
     FALSE,                             // enable/disable of pilot calibration mode
     //****** SAP noise mute  ************************//
