@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27306,7 +27306,6 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     {
         i4Vol = 0x7fffff; 
     }
-    _fgInputMute[u1DecId] = fgMute;
     u4Idx = APROC_IOCTR_TRIM_AMIXER0; 
     if (u1DecId == AUD_DEC_AUX)
     {
@@ -27328,6 +27327,13 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
             vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 0); 
         }
     }
+    if (fgMute && !_fgInputMute[u1DecId])
+    {
+        //wait fade out done to avoid pop noise when changing channel or input source
+        x_thread_delay(30);
+    }
+    _fgInputMute[u1DecId] = fgMute; 
+
 }
 
 void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol)
