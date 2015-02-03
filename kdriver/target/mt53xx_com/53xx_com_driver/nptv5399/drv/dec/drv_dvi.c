@@ -2639,11 +2639,7 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
                 vIO32WriteFldAlign(OMUX_00, 0x2 , OMUX_MAIN_SEL);// When in CCIR input the output mux must be set to CCH
             }
             #endif
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_DVI);//need to modify???
-            #else
-            vVDOINIrqOn(MSK_MAIN_DET);
-            #endif
+            vVDOINIrqOn(MSK_MAIN_DET);//need to modify???
             _rDVIStat.bIsMain = TRUE;
 
             _bDviChkState = DVI_NO_SIGNAL;
@@ -2710,11 +2706,8 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
 	                vIO32WriteFldAlign(OMUX_00, 0x5 , OMUX_PIP_SEL);//ccir2
 				}
             }
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_DVI);
-            #else
+
             vVDOINIrqOn(MSK_PIP_DET);
-            #endif
             _rDVIStat.bIsPip = TRUE;
         }
 
@@ -2814,20 +2807,12 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
 
         if(bchannel == SV_VP_MAIN)
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_DVI);//need to modify??
-            #else
-            vVDOINIrqOff(MSK_MAIN_DET);
-            #endif
+            vVDOINIrqOff(MSK_MAIN_DET);//need to modify??
             _rDVIStat.bIsMain = FALSE;
         }
         else
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_DVI);//need to modify??
-            #else
-            vVDOINIrqOff(MSK_PIP_DET);
-            #endif
+            vVDOINIrqOff(MSK_PIP_DET);//need to modify??
             _rDVIStat.bIsPip = FALSE;
         }
     }

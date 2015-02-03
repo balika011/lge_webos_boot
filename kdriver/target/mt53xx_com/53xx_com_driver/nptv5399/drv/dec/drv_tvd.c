@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #14 $
+* $Revision: #15 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8273,21 +8273,13 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         {
             _rTvd3dStat.bIsMain = TRUE;
             // Trun on Interrupt
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_TVD);
-            #else
             vVDOINIrqOn(MSK_MAIN_DET);
-            #endif
         }
         else
         {
             _rTvd3dStat.bIsPip = TRUE;
             // Trun on Interrupt
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_TVD);
-            #else
             vVDOINIrqOn(MSK_PIP_DET);
-            #endif
         }
 
         if(bTvdCtrl(TCTL_MCNT,TC_GETEN,0) == 0)
@@ -8313,22 +8305,14 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
             // Reset VCR mode for DI
             vDrvDITrickModeOnOff(SV_VP_MAIN, SV_OFF);
             _rTvd3dStat.bIsMain = FALSE;
-           #ifdef CC_SUPPORT_PIPELINE
-           vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_TVD);
-           #else
-           vVDOINIrqOff(MSK_MAIN_DET);
-           #endif
+            vVDOINIrqOff(MSK_MAIN_DET);
         }
         else
         {
             // Reset VCR mode for DI
             vDrvDITrickModeOnOff(SV_VP_PIP, SV_OFF);
             _rTvd3dStat.bIsPip = FALSE;
-           #ifdef CC_SUPPORT_PIPELINE
-           vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_TVD);
-           #else
-           vVDOINIrqOff(MSK_PIP_DET);
-           #endif
+            vVDOINIrqOff(MSK_PIP_DET);
         }
 
 #ifdef CC_SOURCE_AUTO_DETECT

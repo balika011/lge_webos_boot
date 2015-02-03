@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1141,22 +1141,12 @@ PRIVATE void vHdtvInitial(UINT8 bReason)
 
     if(fgIsMainYPbPr())
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT);
-        vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_HDTV);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_MAIN_DET));
-        #endif
     }
 
     if(fgIsPipYPbPr())
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT );
-        vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_HDTV);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_PIP_DET));
-        #endif
     }
 
     // Hw Init
@@ -1208,23 +1198,13 @@ void vHdtvConnect(UINT8 bchannel, UINT8 fgIsOn)
 
     if(bchannel == SV_VP_MAIN)
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_SP0_MD_CHG));
-        vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_HDTV);
-        #else
-        vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_SP0_MD_CHG | MSK_MAIN_DET));
-        #endif
+        vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_MAIN_DET | MSK_SP0_MD_CHG));
         _rYPBPRStat.bIsMain = fgIsOn;
     }
 
     if(bchannel == SV_VP_PIP)
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff((MSK_SP0_VSYNCOUT  | MSK_SP0_MD_CHG));
-        vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_HDTV);
-        #else
-        vVDOINIrqOff((MSK_SP0_VSYNCOUT  | MSK_SP0_MD_CHG | MSK_PIP_DET));
-        #endif
+        vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_PIP_DET | MSK_SP0_MD_CHG));
 		#ifdef CC_SUPPORT_PIPELINE
 		_rYPBPRStat.bIsPip = 0;
 		#else
@@ -1658,22 +1638,12 @@ void vHdtvModeDetect(void)
 
                     if(fgIsMainYPbPr())
                     {
-                        #ifdef CC_SUPPORT_PIPELINE
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT);
-                        vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_HDTV);
-                        #else
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT | MSK_MAIN_DET);
-                        #endif
+                        vVDOINIrqOn((MSK_SP0_VSYNCOUT | MSK_MAIN_DET));
                     }
 
                     if(fgIsPipYPbPr())
                     {
-                        #ifdef CC_SUPPORT_PIPELINE
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT);
-                        vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_HDTV);
-                        #else
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT | MSK_PIP_DET);
-                        #endif
+                        vVDOINIrqOn((MSK_SP0_VSYNCOUT | MSK_PIP_DET));
                     }
 
                     vDrvVGASetPhase_Simple(8);

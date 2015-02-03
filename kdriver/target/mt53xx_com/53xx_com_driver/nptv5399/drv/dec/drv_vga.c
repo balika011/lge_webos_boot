@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: drv_vga.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 #define _DRV_VGA_C_
@@ -900,22 +900,12 @@ PRIVATE void vVgaInitial(UINT8 bReason)
 
     if(fgIsMainVga())
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT);
-        vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_VGA);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_MAIN_DET));
-        #endif
     }
 
     if(fgIsPipVga())
     {
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT);
-        vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_VGA);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_PIP_DET));
-        #endif
     }
 
     // HW Init
@@ -1034,23 +1024,13 @@ void vVgaConnect(UINT8 bchannel, UINT8 fgIsOn)
     if(bchannel == SV_VP_MAIN)
     {
         _rVGAStat.bIsMain = fgIsOn;
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT);
-        vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_VGA);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_MAIN_DET));  //CONFIRM
-        #endif
     }
 
     if(bchannel == SV_VP_PIP)
     {
         _rVGAStat.bIsPip = fgIsOn;
-        #ifdef CC_SUPPORT_PIPELINE
-        vVDOINIrqOff(MSK_SP0_VSYNCOUT);
-        vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_VGA);
-        #else
         vVDOINIrqOff((MSK_SP0_VSYNCOUT | MSK_PIP_DET));  //CONFIRM
-        #endif
     }
 
     if(fgIsOn == SV_ON)
@@ -1475,23 +1455,13 @@ void vVgaModeDetect(void)
                     // Turn on VSync INT when Signal mode is valid
                     if(fgIsMainVga())
                     {
-                        #ifdef CC_SUPPORT_PIPELINE
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT);  //CONFIRM
-                        vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_VGA);
-                        #else
                         vVDOINIrqOn((MSK_SP0_VSYNCOUT | MSK_MAIN_DET));  //CONFIRM
-                        #endif
                     }
 
 #if PIP5382Enable
 
                     if(fgIsPipVga())
                     {
-                        #ifdef CC_SUPPORT_PIPELINE
-                        vVDOINIrqOn(MSK_SP0_VSYNCOUT);  //CONFIRM
-                        vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_VGA);
-                        #else
-                        #endif
                         vVDOINIrqOn((MSK_SP0_VSYNCOUT | MSK_PIP_DET)); //CONFIRM
                     }
 

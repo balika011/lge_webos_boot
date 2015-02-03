@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: drv_mpeg.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -101,7 +101,7 @@
 #include "fbm_drvif.h"
 #include "b2r_if.h"
 #include "nptv_debug.h"
-#include "vdo_misc.h"
+
 #include "x_lint.h"
 LINT_EXT_HEADER_BEGIN
 #include "general.h"
@@ -195,11 +195,7 @@ void vMpegSdConnect(UINT8 bchannel, UINT8 fgIsOn)
         {
             vClrMainFlg(MAIN_FLG_MODE_CHG | MAIN_FLG_MODE_DET_DONE);
 
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOn(MSK_MAIN_DET);
-            #endif
             _rMpegSDStat.bIsMain = SV_TRUE;
             _rMpegSDStat.bIsPip = SV_FALSE;
         }
@@ -207,11 +203,7 @@ void vMpegSdConnect(UINT8 bchannel, UINT8 fgIsOn)
         {
             vClrPipFlg(PIP_FLG_MODE_CHG | PIP_FLG_MODE_DET_DONE);
         
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOn(MSK_PIP_DET);
-            #endif
             _rMpegSDStat.bIsMain = SV_FALSE;
             _rMpegSDStat.bIsPip = SV_TRUE;
         }
@@ -220,21 +212,13 @@ void vMpegSdConnect(UINT8 bchannel, UINT8 fgIsOn)
     {
         if(bchannel == SV_VP_MAIN)
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOff(MSK_MAIN_DET);
-            #endif
             _rMpegSDStat.bIsMain = SV_FALSE;
             _rMpegSDStat.bIsPip = SV_FALSE;
         }
         else
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOff(MSK_PIP_DET);
-            #endif
             _rMpegSDStat.bIsMain = SV_FALSE;
             _rMpegSDStat.bIsPip = SV_FALSE;
         }
@@ -255,11 +239,7 @@ void vMpegHdConnect(UINT8 bchannel, UINT8 fgIsOn)
         {
             vClrMainFlg(MAIN_FLG_MODE_CHG | MAIN_FLG_MODE_DET_DONE);
 
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_ON,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOn(MSK_MAIN_DET);
-            #endif
             _rMpegHDStat.bIsMain = SV_TRUE;
             _rMpegHDStat.bIsPip = SV_FALSE;
         }
@@ -267,11 +247,7 @@ void vMpegHdConnect(UINT8 bchannel, UINT8 fgIsOn)
         {
             vClrPipFlg(PIP_FLG_MODE_CHG | PIP_FLG_MODE_DET_DONE);
 
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_ON,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOn(MSK_PIP_DET);
-            #endif
             _rMpegHDStat.bIsMain = SV_FALSE;
             _rMpegHDStat.bIsPip = SV_TRUE;
         }
@@ -280,21 +256,13 @@ void vMpegHdConnect(UINT8 bchannel, UINT8 fgIsOn)
     {
         if(bchannel == SV_VP_MAIN)
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_1,SV_OFF,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOff(MSK_MAIN_DET);
-            #endif
             _rMpegHDStat.bIsMain = SV_FALSE;
             _rMpegHDStat.bIsPip = SV_FALSE;
         }
         else
         {
-            #ifdef CC_SUPPORT_PIPELINE
-            vVdoInVIrqOnOff(VDP_2,SV_OFF,VDO_TYPE_MPEG);
-            #else
             vVDOINIrqOff(MSK_PIP_DET);
-            #endif
             _rMpegHDStat.bIsMain = SV_FALSE;
             _rMpegHDStat.bIsPip = SV_FALSE;
         }

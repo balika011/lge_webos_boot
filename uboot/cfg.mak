@@ -236,6 +236,9 @@ export CC_SUPPORT_VENC = true
 #export CC_SUPPORT_MUXER = true
 endif
 
+DEFINES += -DCC_SUPPORT_PIPELINE
+export CC_SUPPORT_PIPELINE = true
+
 ##### Network #####
 ifneq ($(strip $(findstring -DDLNA_SUPPORT, $(DEFINES))),)
 DEFINES += -DCC_DLNA_SUPPORT
