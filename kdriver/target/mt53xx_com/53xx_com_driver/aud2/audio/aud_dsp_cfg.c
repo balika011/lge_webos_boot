@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/04 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -16296,12 +16296,16 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 		}
 		if(fNo == HAL_APROC_LGSE_MODE)
 		{	
-			u4Mode = *((UINT32 *)_argLgseFnPara[fNo].pParams);
+			u4Mode = 0x0;
+			u4Mode = ((*((UINT32 *)_argLgseFnPara[fNo].pParams) & 0x000000ff) |
+					  ((*((UINT32 *)_argLgseFnPara[fNo].pParams+1) & 0x000000ff) << 8) |
+					  ((*((UINT32 *)_argLgseFnPara[fNo].pParams+2) & 0x000000ff) << 16));
 			vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_MODE), u4Mode);
 		}
 	}
+	
 	pu4Value = (UINT32 *)_argLgseFnPara[fNo].pParams;
-	for (i = 0; i < _argLgseFnPara[fNo].noParam/4+1; i++)
+	for (i = 0; i < _argLgseFnPara[fNo].noParam; i++)
 	{
 		
 		if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_INIT_ONLY)

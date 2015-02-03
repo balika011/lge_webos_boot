@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/04 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2205,14 +2205,14 @@ void AudLGSEFN000(UINT8 fNo, UINT32 pParamsPtr, UINT16 noParam, UINT8 dataOption
     {
         x_mem_free(_argLgseFnPara[fNo].pParams);
     }
-    _argLgseFnPara[fNo].pParams = (void*)x_mem_alloc(noParam);
+    _argLgseFnPara[fNo].pParams = (void*)x_mem_alloc(noParam*4);
     if (_argLgseFnPara[fNo].pParams == NULL)
     {
         LOG(0, "allocate memory for _argLgseFnPara[fNo].pParams fail!\n");
         ASSERT(0);
     }
     u4Ret = copy_from_user(_argLgseFnPara[fNo].pParams, (UINT8*)pParamsPtr,
-                           (noParam));
+                           (noParam*4));
 #else
 
 #endif

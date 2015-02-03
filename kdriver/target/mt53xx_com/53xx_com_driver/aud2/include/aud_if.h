@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/04 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -115,7 +115,7 @@
 //#define DSP_SUPPORT_TCL_VBASS
 //#endif
 
-#define APROC_POSTBUF_BLOCK_SIZE        64
+#define APROC_POSTBUF_BLOCK_SIZE        256
 
 #define AUD_DSP_NUM                     ((UINT8)2)
 
