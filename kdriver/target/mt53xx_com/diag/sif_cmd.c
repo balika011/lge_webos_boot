@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/15 $
+ * $Date: 2015/02/03 $
  * $RCSfile: sif_cmd.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -156,13 +156,21 @@
 #endif
 
 // HDMI EDID 1 EERPOM GPIO pin configuration.
+#ifdef CC_LGE_PROTO_PCBA
+#ifndef SIF_EDID1_SDA
+#define SIF_EDID1_SDA  (GPIO(220))
+#endif
+#ifndef SIF_EDID1_SCL
+#define SIF_EDID1_SCL  (GPIO(221))
+#endif
+#else
 #ifndef SIF_EDID1_SDA
 #define SIF_EDID1_SDA  (GPIO(210))
 #endif
 #ifndef SIF_EDID1_SCL
 #define SIF_EDID1_SCL  (GPIO(211))
 #endif
-
+#endif
 // HDMI EDID 2 EERPOM GPIO pin configuration.
 #ifndef SIF_EDID2_SDA
 #define SIF_EDID2_SDA  (GPIO(226))
@@ -2123,14 +2131,14 @@ static INT32 _SifHDCPReadCmd(INT32 i4Argc, const CHAR** szArgv)
 {
     UINT32 u4Idx;
     UINT32 u4Data[4];
-    INT32 fgSet;
+    /*INT32 fgSet;
 
     fgSet = EEPHDCP_Init();
     if (fgSet)
     {
         Printf("EEPHDCP_Init fail.\n");
         return 0;
-    }
+    }*/
 
     // write to hdcp sram pointer.
     vIO32Write4B(HDCP_ADDR, 0);

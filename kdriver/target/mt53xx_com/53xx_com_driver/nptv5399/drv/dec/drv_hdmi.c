@@ -256,7 +256,9 @@ extern UINT8   _bIntMuteCnt ;
 
 static BOOL _fgHdmiAudInit = FALSE;
 static BOOL _fgAudMute = FALSE;
-
+#ifdef CC_HDMI_CONFIG_BOARD
+static E_HDMI_BOARD_TYPE eBoardType = ATSC_INT_EDID;
+#endif
 #define IS_AUD_MUTE()   _fgAudMute
 
 #define hdmi_audio 0
@@ -4273,7 +4275,9 @@ u1HDMI_SetEdidData(_au1Edid, sizeof(_au1Edid));
 	u4SpdData.PrdDspt[2] = 0;
 	u4SpdData.PrdDspt[3] = 0;
 	u4SpdData.SrcInfo = 0;
-
+#ifdef CC_HDMI_CONFIG_BOARD
+    eBoardType = eHDMIGetBoardType();
+#endif
 }
 
 
@@ -9040,11 +9044,24 @@ UINT8 u1HDMI_SetEdidDataByPort(UINT8 port, UINT8 * pData)
 			Printf("error port number: port = %d\n", port);
 		}
 	}
-
+    #ifdef CC_HDMI_CONFIG_BOARD
+	if((eHDMIBoardType() == ATSC_EXT_EDID)||(eHDMIBoardType() == DVB_EXT_EDID))
+	{
+        vIO32WriteFldAlign(PDWNC_EDID_DEV0, 1, FLD_EDID2_DIS);
+	}
+	else
+	{
+		vIO32WriteFldAlign(PDWNC_EDID_DEV0, 0, FLD_EDID2_DIS);
+	}
+	vIO32WriteFldAlign(PDWNC_EDID_DEV1, 0, FLD_EDID1_DIS);
+	vIO32WriteFldAlign(PDWNC_EDID_DEV2, 0, FLD_EDID2_DIS);
+	vIO32WriteFldAlign(PDWNC_EDID_DEV3, 0, FLD_EDID3_DIS);
+	#else
 	vIO32WriteFldAlign(PDWNC_EDID_DEV0, 0, FLD_EDID0_DIS);
 	vIO32WriteFldAlign(PDWNC_EDID_DEV1, 0, FLD_EDID1_DIS);
 	vIO32WriteFldAlign(PDWNC_EDID_DEV2, 0, FLD_EDID2_DIS);
 	vIO32WriteFldAlign(PDWNC_EDID_DEV3, 0, FLD_EDID3_DIS);
+	#endif
 
 		// switch to DDC function
 #ifndef CC_ENABLE_HDMI_JTAG
@@ -10140,41 +10157,73 @@ static UINT8 SifHDMIReadEeprom(UINT32 u4SDA, UINT32 u4SCL, UINT8* pu1Data, UINT3
 
 
 /* for LGE port3 need extenal EDID */
-UINT8 u1HDMI_SetExternalEdidDataByPort(UINT8 u1port, UINT8 * pData)
+UINT8 u1HDMI_SetExternalEdidDataByPort(UINT8 u1Port, UINT8 * pData)
 {
-    if(u1port != 3)
+    if((u1Port != 1)||(u1Port != 3))
     {
-       LOG(6,"Port number not 3, return directly\n");
+       LOG(6,"Port number not 1 or 3, return directly\n");
 	   return 0;
 	}
-	if(SifHDMIWriteEeprom(226, 227, (UINT8*)pData))
+	if(u1Port == 3)
 	{
-        LOG(6,"Write external EDID success\n");
-	    return 1;	   
+		if(SifHDMIWriteEeprom(226, 227, (UINT8*)pData))
+		{
+			LOG(6,"Write external EDID success\n");
+			return 1;	   
+		}
+		else
+		{
+			LOG(6,"Write external EDID fail\n");
+			return 0;
+		}
 	}
 	else
 	{
-	    LOG(6,"Write external EDID fail\n");
-        return 0;
-	}	   
+	    if(SifHDMIWriteEeprom(220, 221, (UINT8*)pData))
+	    {
+            LOG(6,"Write external EDID success\n");
+	        return 1;	   
+	    }
+	    else
+	    {
+	        LOG(6,"Write external EDID fail\n");
+            return 0;
+	    }	  
+	}
 }
 
 UINT8 u1HDMI_GetExternalEdidDataByPort(UINT8 u1Port, UINT8 *pData, UINT16 u2Length)
 {
-    if(u1Port != 3)
+    if((u1Port != 1)||(u1Port != 3))
     {
        LOG(6,"Port number not 3, return directly\n");
 	   return 0;
 	}
-	if(SifHDMIReadEeprom(226, 227, (UINT8*)pData, u2Length))
+	if(u1Port == 3)
 	{
-        LOG(6,"Read external EDID success\n");
-	    return 1;	   
+		if(SifHDMIReadEeprom(226, 227, (UINT8*)pData, u2Length))
+		{
+			LOG(6,"Read external EDID success\n");
+			return 1;	   
+		}
+		else
+		{
+			LOG(6,"Read external EDID fail\n");
+			return 0;
+		}
 	}
 	else
 	{
-	    LOG(6,"Read external EDID fail\n");
-        return 0;
+	    if(SifHDMIReadEeprom(220, 221, (UINT8*)pData, u2Length))
+	    {
+            LOG(6,"Read external EDID success\n");
+	        return 1;	   
+	    }
+	    else
+	    {
+	        LOG(6,"Read external EDID fail\n");
+            return 0;
+	    }
 	}
 }
 static HDMI_INFOFRAME_DESCRIPTION info_data_port;
@@ -10534,3 +10583,9 @@ BOOL fgHDMIIsPixelRepeate(void)
     }
 }
 
+#ifdef CC_HDMI_CONFIG_BOARD
+E_HDMI_BOARD_TYPE eHDMIBoardType(void)
+{
+    return eBoardType;
+}
+#endif

@@ -105,6 +105,10 @@
 #define HDMI_5V_DETECT2 (OPCTRL(0))
 #endif
 
+#ifdef CC_HDMI_CONFIG_BOARD
+#define ATSC_DVB_GPIO (77)
+#define INT_EXT_EEP_GPIO (78)
+#endif
 
 extern E_HDMI_SWITCH_NUM eActiveHdmiPort;
 //====================//
@@ -424,4 +428,36 @@ UINT8 u1GetHDMIPort5VStatus(E_HDMI_SWITCH_NUM ePort)
 	return input;
 }
 
-
+#ifdef CC_HDMI_CONFIG_BOARD
+E_HDMI_BOARD_TYPE eHDMIGetBoardType(VOID)
+{
+    UINT32 input1 = 0;
+	UINT32 input2 = 0;
+	E_HDMI_BOARD_TYPE eBoardType;
+	input1 = GPIO_GetIn(ATSC_DVB_GPIO); 
+	input2 = GPIO_GetIn(INT_EXT_EEP_GPIO); 
+	if(input1)
+	{
+        if(input2)
+       	{
+            eBoardType = ATSC_EXT_EDID;
+	    }
+	    else
+	    {
+			eBoardType = ATSC_INT_EDID;
+		}	   	
+	}
+	else
+	{
+        if(input2)
+       	{
+            eBoardType = DVB_EXT_EDID;
+	    }
+	    else
+	    {
+			eBoardType = DVB_INT_EDID;
+		}	
+	}
+	return eBoardType;
+}
+#endif

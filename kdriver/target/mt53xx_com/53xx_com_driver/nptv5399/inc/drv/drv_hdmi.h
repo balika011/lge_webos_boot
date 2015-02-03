@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_hdmi.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_HDMI_H_
@@ -422,6 +422,14 @@ typedef struct
 	UINT8 HDMI_3D_Structure;
 	UINT8 HDMI_3D_EXTDATA;
 }HDMI_3D_INFOFRAME;
+#ifdef CC_HDMI_CONFIG_BOARD
+typedef enum{
+     ATSC_INT_EDID = 0,
+	 ATSC_EXT_EDID,
+	 DVB_INT_EDID,
+	 DVB_EXT_EDID
+}E_HDMI_BOARD_TYPE;
+#endif
 #define HDMI_AUD_Length_Unknown  	0
 #define HDMI_AUD_Length_16bits  	1
 #define HDMI_AUD_Length_17bits  	2
@@ -701,4 +709,8 @@ UINT8 bHDMIRefreshRateByPort(UINT8 u1Port);
 UINT8 bHDMIScanInfoByPort(UINT8 u1Port);
 UINT8 HDMI_3D_Get_InfoFrameByPort(UINT8 u1Port);
 BOOL fgHDMIIsPixelRepeate(void);
+#ifdef CC_HDMI_CONFIG_BOARD
+E_HDMI_BOARD_TYPE eHDMIGetBoardType(VOID);
+E_HDMI_BOARD_TYPE eHDMIBoardType(VOID);
+#endif
 

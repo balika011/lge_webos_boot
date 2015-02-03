@@ -74,8 +74,8 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/03 $
  * $RCSfile: drv_edid.c,v $
  * $Revision:
  *
@@ -91,7 +91,9 @@ extern UINT8 HDMIEDID_table[256];
 extern UINT8 HDMICEC_SETTING[3];
 extern void vDrvLoadHdmiEdid2Table(void);
 extern void vDrvLoadVgaEdid2Table(void);
-
+#ifdef CC_HDMI_CONFIG_BOARD
+extern E_HDMI_BOARD_TYPE eHDMIBoardType(void);
+#endif
 #define VGA_EDID_ADDR 0xa0
 void vVGA_INTERNAL_EDID_Init(void)
 {
@@ -264,9 +266,16 @@ void vHDMI_INTERNAL_EDID_Init(void)
     vIO32WriteFldAlign(PDWNC_EDID_CTL3, HDMI4_CEC_PHY_ADR, FLD_PHY_ADDR3);
     vIO32WriteFldAlign(PDWNC_EDID_CTL3, u1PAOffset, FLD_OFFSET3);
     vIO32WriteFldAlign(PDWNC_EDID_CTL3, u1Buf, FLD_CHKSUM3);
-	#ifdef CC_LGE_PROTO_PCBA
-	//LG Port2 need use external EDID
+	#ifdef CC_LGE_PROTO_PCBA	
+	#ifdef CC_HDMI_CONFIG_BOARD
+	if((eHDMIBoardType() == ATSC_EXT_EDID)||(eHDMIBoardType() == DVB_EXT_EDID))
+	{
+       vIO32WriteFldAlign(PDWNC_EDID_DEV0, 1, FLD_EDID2_DIS);
+	}
+	#else
+    //LG Port2 need use external EDID
 	vIO32WriteFldAlign(PDWNC_EDID_DEV2, 1, FLD_EDID2_DIS);
+	#endif
 	#endif
 #else //use external edid, disable internal edid.
     printf("-------------use external edid, disable internal edid------------------\n");
