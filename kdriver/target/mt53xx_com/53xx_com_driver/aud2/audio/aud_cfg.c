@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/02/03 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1615,6 +1615,7 @@ void AUD_StrInputEnable(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStr
                         VERIFY(_AUD_DMX_UpdateWritePtr(u1DecId, u4GetAFIFOStart(AUD_DSP0, u1DecId)));
                     }
                 }
+				PSR_SoftInit(u1DspId);
 #endif
                 if ((eStreamFrom == AUD_STREAM_FROM_MEMORY) && 
                     (AUD_GetBitStrSel(u1DspId, u1DecId) == AUD_BS_SEL_PSR))
