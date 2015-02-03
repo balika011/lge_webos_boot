@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/02/03 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -868,7 +868,7 @@ UINT32 u4LoopCnt123  = SAMPLE_UNIT;
 UINT32 u4LoopCnt456  = 0;
 #define APROC_ADSP_IOBUF_SWDEC_SIZE (256*4*8*6) //256 * 4 bytes * 8 blocks * 6 ch
 #elif defined(ALSA_APROC_PATH)
-#define SAMPLE_UNIT  12
+#define SAMPLE_UNIT  768
 UINT32 u4LoopCnt123[8]  = {SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT, SAMPLE_UNIT}; // 768/64 = 12
 UINT32 u4LoopCnt456[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 #endif
@@ -907,8 +907,8 @@ BOOL fgIsSoftTransferable(UINT8 u1StreamID)
 			}
 			
 	        u4ReadPtr = _gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1StreamID-ALSA_MIXSND_STREAM_ID]].u4Rp;
-
-	        if (u4LoopCnt123[u1StreamID-ALSA_MIXSND_STREAM_ID] != u4ReadPtr*SAMPLE_UNIT)  //768 samples = 64 samples * 12
+		//	printf("[ALSA]u4ReadPtr =%d Wp=%d\n",u4ReadPtr,_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1StreamID-ALSA_MIXSND_STREAM_ID]].u4Wp);
+	        if (_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1StreamID-ALSA_MIXSND_STREAM_ID]].u4Wp != u4ReadPtr)  //768 samples = 64 samples * 12
 	        {
 	            return TRUE;
 	        }
@@ -976,235 +976,168 @@ void vSoftTransfer(UINT32 u4SrcAddr, UINT32 u4Size,
                        UINT8 u1StreamID)
 {
 	
-#ifdef ALSA_AMIXER_PATH
     UINT8 *u1DstTmp, *u1Dst, *u1Src;
     UINT32 j;
     UINT32 u4ChNum;
-
-    u1Dst = (UINT8*)VIRTUAL(u4DstAddr);
-    u1Src = (UINT8*)VIRTUAL(u4SrcAddr);
-    for (j=0; j<(u4Size/2/2); j++)
-    {
-        u4ChNum = 2;                                 
-        u1DstTmp = u1Dst;
-        for (; u4ChNum != 0; u4ChNum --)
-        {
-            *u1DstTmp++ = 0;
-            *u1DstTmp++ = 0;
-            *u1DstTmp++ = *u1Src++;
-            *u1DstTmp++ = *u1Src++;
-            u1DstTmp = (UINT8 *) ((UINT32) u1Dst + (4*256 * SW_DEC_BLOCKS));
-        }
-        u1Dst = (UINT8 *) ((UINT32) u1Dst + 4);                        
-    }
-    DSP_FlushInvalidateDCacheFree(u4DstAddr, u4Size);
-    DSP_FlushInvalidateDCacheFree(u4DstAddr+(4*256*SW_DEC_BLOCKS), u4Size);        
-#elif defined(ALSA_APROC_PATH)
-    UINT8 *u1DstTmp, *u1Dst, *u1Src;
-    UINT32 j;
-    UINT32 u4ChNum;
+	UINT32 uSample;
 	UINT8 u1AlsaStreamID;
-  #ifdef ALSA_PCMDEC_PATH
-    UINT32 u4WritePtr=0;
-  #endif
-  #ifdef ALSA_PCMDEC_PATH
-    if (u1StreamID == ALSA_MIXSND_STREAM_ID+ALSA_DSPDEC_ID)
-   {
-   
-    // Clear interrupt
-    //AUD_DspSetMixSndWritePtr(u1StreamID, u4DstAddr);
-    u4WritePtr = ((u4DstAddr + u4Size) >= u4DstFifoEnd) ?
-                  ((u4DstAddr + u4Size) - (u4DstFifoEnd-u4DstFifoStart)) :
-                  (u4DstAddr + u4Size);
-
-
-    if (u4WritePtr < u4DstAddr)
-    {
-        if (fgMixSndClipMute)
-        {
-        
-            x_memset((VOID*)(VIRTUAL(u4DstAddr)),
-                        0,
-                        (u4DstFifoEnd-u4DstAddr));
-
-            x_memset((VOID*)(VIRTUAL(u4DstFifoStart)),
-                        0,
-                        (u4Size-(u4DstFifoEnd-u4DstAddr)));
-        }
-        else
-        {        
-            x_memcpy((VOID*)(VIRTUAL(u4DstAddr)),
-                        (VOID*)(VIRTUAL(u4SrcAddr)),
-                        (u4DstFifoEnd-u4DstAddr));
-	  
-            x_memcpy((VOID*)(VIRTUAL(u4DstFifoStart)),
-                        (VOID*)(VIRTUAL(u4SrcAddr+(u4DstFifoEnd-u4DstAddr))),
-                        (u4Size-(u4DstFifoEnd-u4DstAddr)));
-        }
-
-        DSP_FlushInvalidateDCacheFree(u4DstAddr, (u4DstFifoEnd-u4DstAddr));
-        DSP_FlushInvalidateDCacheFree(u4DstFifoStart, (u4Size-(u4DstFifoEnd-u4DstAddr)));
-    }
-    else
-    {    
-        if (fgMixSndClipMute)
-        {        
-            x_memset((VOID*)(VIRTUAL(u4DstAddr)),
-                    0,
-                    u4Size);	  
-        }
-        else
-        {        
-            x_memcpy((VOID*)(VIRTUAL(u4DstAddr)),
-                    (VOID*)(VIRTUAL(u4SrcAddr)),
-                    u4Size);
-        }
-        DSP_FlushInvalidateDCacheFree(u4DstAddr, u4Size);	  
-    }
-  
-  }
-  else
- #endif  	
-  {
+	UINT8 tempWP=0;
+	UINT32 tempCa=0;
+	UINT32 i;
+	UINT32 k=1;
+	UINT32 SrcAddr_temp;
+	
+	BOOL uFlag=FALSE;
+	i = u1StreamID;
+ 	uSample = u4Size/4;
+  	SrcAddr_temp = u4SrcAddr;
+	
 	if (u1StreamID >= ALSA_MIXSND_STREAM_ID)
 		u1AlsaStreamID = u1StreamID - ALSA_MIXSND_STREAM_ID;
 	else
 		u1AlsaStreamID = 0xff;
+	
+while(1)
+	 {
 
-    u1Dst = (UINT8*)VIRTUAL(u4DstAddr);
-    u1Src = (UINT8*)VIRTUAL(u4SrcAddr);
+		if(u1AlsaStreamID != 0xff)
+		{
 	
-	if(_u1AlsaAprocMixsndId[u1AlsaStreamID] >= AUD_MIXSND_NUM )
-	{
-		Printf("No available Mixsnd Path for play !!!!");
-		return; 
-	}
+			if((u4LoopCnt123[u1AlsaStreamID] >= uSample)&&(tempCa==0))
+			{
+				u4LoopCnt123[u1AlsaStreamID] -=uSample;
+			
+				if ((u4LoopCnt123[u1AlsaStreamID]) == 0)
+        		{
+    
+					tempWP = _gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp;
+        			if(_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp == 2 )
+        			{
+        		
+        				tempWP = 0;
+        			}
+					else
+					{
+				
+						tempWP +=1;
+					}
+			
+            		AUD_AprocMixSndUpdateWp(_u1AlsaAprocMixsndId[u1AlsaStreamID], _gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp); 
+            		_rAudMixSndStream[u1StreamID].u4Wp = tempWP;
+					_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp = tempWP;
+			
+					u4LoopCnt123[u1AlsaStreamID] = 768;
+			
+        		}
+
+				uFlag = TRUE;
+		}
+		else{
+				
+				if(k == 1)
+					{
+					
+						u4Size = u4LoopCnt123[u1AlsaStreamID]*4;
+						
+						tempCa = uSample - u4LoopCnt123[u1AlsaStreamID];
+
+						tempWP = _gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp;
+        				if(_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp == 2 )
+        				{
+        		
+        					tempWP = 0;
+        				}
+						else
+						{
+				
+							tempWP +=1;
+						}
+			
+            		AUD_AprocMixSndUpdateWp(_u1AlsaAprocMixsndId[u1AlsaStreamID], _gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp); 
+            		_rAudMixSndStream[u1StreamID].u4Wp = tempWP;
+					_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4Wp = tempWP;
+		
+					u4LoopCnt123[u1AlsaStreamID] = 768;
+						
+					}
+
+
+				if(k == 2)
+					{
+				
+						u4SrcAddr = SrcAddr_temp + u4Size;
+						u4Size=tempCa*4;
+				
+						if (i >= ALSA_MIXSND_STREAM_ID)
+						{
+	                   		 _rAudMixSndStream[i].u4DesAddr = _rAudMixSndStream[i].u4AFifoSA + 
+							  (_rAudMixSndStream[i].u4Wp*(768*4)) + ((768-u4LoopCnt123[i-ALSA_MIXSND_STREAM_ID])*4); 
+						
+							u4DstAddr = _rAudMixSndStream[i].u4DesAddr;
+						}
+						u4LoopCnt123[u1AlsaStreamID] = u4LoopCnt123[u1AlsaStreamID]-(u4Size/4);
+						
+						k=1;
+						uFlag=TRUE;
+						tempCa = 0;
+					}
+				k++;
+				
+			}
+		
+		}
 	
-    for (j=0; j<(u4Size/2/2); j++)
-    {
-        u4ChNum = 2;                                 
-        u1DstTmp = u1Dst;
-        for (; u4ChNum != 0; u4ChNum --)
-        {
+
+   		 u1Dst = (UINT8*)VIRTUAL(u4DstAddr);
+    	 u1Src = (UINT8*)VIRTUAL(u4SrcAddr);
+	
+	
+		if(_u1AlsaAprocMixsndId[u1AlsaStreamID] >= AUD_MIXSND_NUM )
+		{
+			Printf("No available Mixsnd Path for play !!!!");
+			return; 
+		}
+	
+    	for (j=0; j<(u4Size/2/2); j++)
+    	{
+        	u4ChNum = 2;                                 
+        	u1DstTmp = u1Dst;
+        	for (; u4ChNum != 0; u4ChNum --)
+        	{
             *u1DstTmp++ = 0;
             *u1DstTmp++ = 0;
             *u1DstTmp++ = *u1Src++;
             *u1DstTmp++ = *u1Src++;
             u1DstTmp = (UINT8 *) ((UINT32) u1Dst + (4*768*_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4End));
-        }
-        u1Dst = (UINT8 *) ((UINT32) u1Dst + 4);                        
-    }
-    DSP_FlushInvalidateDCacheFree(u4DstAddr, u4Size);
-    DSP_FlushInvalidateDCacheFree(u4DstAddr+(4*768*_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4End), u4Size);        
-  }	
-#else            
-    UINT32 u4WritePtr=0;
+        	}
+        	u1Dst = (UINT8 *) ((UINT32) u1Dst + 4);                        
+    	}
+    	DSP_FlushInvalidateDCacheFree(u4DstAddr, u4Size);
+    	DSP_FlushInvalidateDCacheFree(u4DstAddr+(4*768*_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4End), u4Size); 
+		
+  	
 
-    // Clear interrupt
-    //AUD_DspSetMixSndWritePtr(u1StreamID, u4DstAddr);
-    u4WritePtr = ((u4DstAddr + u4Size) >= u4DstFifoEnd) ?
-                  ((u4DstAddr + u4Size) - (u4DstFifoEnd-u4DstFifoStart)) :
-                  (u4DstAddr + u4Size);
+    	if ((u1StreamID >= ALSA_MIXSND_STREAM_ID) && (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency))
+    	{
+        	if (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency > u4Size)
+        	{
+            	_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency -= u4Size;
+            	return;
+        	}
+        	else
+        	{
+            	Printf("DSP start decoding\n");
+            	_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency = 0;
+        	}
+    	}
+		if(uFlag)
+			break;
 
-    if (u4WritePtr < u4DstAddr)
-    {
-        if (fgMixSndClipMute)
-        {
-            x_memset((VOID*)(VIRTUAL(u4DstAddr)),
-                        0,
-                        (u4DstFifoEnd-u4DstAddr));
-            x_memset((VOID*)(VIRTUAL(u4DstFifoStart)),
-                        0,
-                        (u4Size-(u4DstFifoEnd-u4DstAddr)));
-        }
-        else
-        {
-            x_memcpy((VOID*)(VIRTUAL(u4DstAddr)),
-                        (VOID*)(VIRTUAL(u4SrcAddr)),
-                        (u4DstFifoEnd-u4DstAddr));
-            x_memcpy((VOID*)(VIRTUAL(u4DstFifoStart)),
-                        (VOID*)(VIRTUAL(u4SrcAddr+(u4DstFifoEnd-u4DstAddr))),
-                        (u4Size-(u4DstFifoEnd-u4DstAddr)));
-        }
+		
+   	}
 
-        DSP_FlushInvalidateDCacheFree(u4DstAddr, (u4DstFifoEnd-u4DstAddr));
-        DSP_FlushInvalidateDCacheFree(u4DstFifoStart, (u4Size-(u4DstFifoEnd-u4DstAddr)));
-    }
-    else
-    {
-        if (fgMixSndClipMute)
-        {
-            x_memset((VOID*)(VIRTUAL(u4DstAddr)),
-                    0,
-                    u4Size);
-        }
-        else
-        {
-            x_memcpy((VOID*)(VIRTUAL(u4DstAddr)),
-                    (VOID*)(VIRTUAL(u4SrcAddr)),
-                    u4Size);
-        }
 
-        DSP_FlushInvalidateDCacheFree(u4DstAddr, u4Size);
-    }
-#endif
-
-    if ((u1StreamID >= ALSA_MIXSND_STREAM_ID) && (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency))
-    {
-        if (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency > u4Size)
-        {
-            _rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency -= u4Size;
-            return;
-        }
-        else
-        {
-            Printf("DSP start decoding\n");
-            _rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency = 0;
-        }
-    }
-
-#if defined(ALSA_AMIXER_PATH) || defined(ALSA_APROC_PATH) 
-#ifdef ALSA_AMIXER_PATH        
-	if (u1StreamID == ALSA_MIXSND_STREAM_ID)
-	{
-        if (((u4LoopCnt123) % SAMPLE_UNIT)==0)
-        {
-            vAprocCmdSet(APROC_SIG_IDX_DEC3, APROC_SIG_SET_UPDATE_WP, u4LoopCnt123/SAMPLE_UNIT);
-            _rAudMixSndStream[u1StreamID].u4Wp = u4LoopCnt123/SAMPLE_UNIT;
-        }
-        u4LoopCnt123 ++;
-        if ((u4LoopCnt123/SAMPLE_UNIT) >= SW_DEC_BLOCKS)
-        u4LoopCnt123 = 0;
-	}	
-#elif defined(ALSA_APROC_PATH)
-    #ifdef ALSA_PCMDEC_PATH
-      if (u1StreamID == ALSA_MIXSND_STREAM_ID+ALSA_DSPDEC_ID) //< -------- Stream ID from offload
-      {            
-           vSetAWritePnt(AUD_DEC_MAIN,(u4WritePtr&0xffffff00));	  
-      }  
-     else
-    #endif
-     {
-	if (u1AlsaStreamID != 0xff)
-	{
-        if (((u4LoopCnt123[u1AlsaStreamID]) % SAMPLE_UNIT)==0)
-        {
-            AUD_AprocMixSndUpdateWp(_u1AlsaAprocMixsndId[u1AlsaStreamID], u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT); 
-            _rAudMixSndStream[u1StreamID].u4Wp = u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT;
-        }
-        u4LoopCnt123[u1AlsaStreamID] ++;
-        if ((u4LoopCnt123[u1AlsaStreamID]/SAMPLE_UNIT) >= 
-			_gsAprocMixSndBufInfo[_u1AlsaAprocMixsndId[u1AlsaStreamID]].u4End)
-        u4LoopCnt123[u1AlsaStreamID] = 0;
-	}
-     	}	
-#endif
-    //else
-#else
-    //{
-        AUD_DspSetMixSndWritePtr(u1StreamID, (u4WritePtr&0xffffff00));
-    //}
-#endif        
+     		       
 #ifdef PRINT_TIME_MSG
     if (audio_mixsnd_log)
     {
@@ -1582,6 +1515,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
 
                 if (fgIsSoftTransferable(i))
                 {
+           
                     if (u1Endian_convert == 1)
                     {
                         do_BigEnd_to_LittleEnd((INT16*)(VIRTUAL(_rAudMixSndStream[i].u4StreamAddr)), _rAudMixSndStream[i].u4TransferSZ/2);
@@ -1691,7 +1625,8 @@ static void _AudFeedMixSndThread(const void* pvArg)
 #if defined(ALSA_AMIXER_PATH) || defined(ALSA_APROC_PATH) 
                         LOG(3," _rAudMixSndStream[%d].u4Wp=%d, 123=%d, Dest=0x%x\n", i, _rAudMixSndStream[i].u4Wp, u4LoopCnt123, _rAudMixSndStream[i].u4DesAddr);
 #endif
-                        vSoftTransfer(u4AFifoTA, _rAudMixSndStream[i].u4TransferSZ2,_rAudMixSndStream[i].u4DesAddr,
+
+                   vSoftTransfer(u4AFifoTA, _rAudMixSndStream[i].u4TransferSZ2,_rAudMixSndStream[i].u4DesAddr,
                                                _rAudMixSndStream[i].u4AFifoSA, _rAudMixSndStream[i].u4AFifoEA,i);
 
 #ifdef ALSA_AMIXER_PATH
@@ -1715,9 +1650,8 @@ static void _AudFeedMixSndThread(const void* pvArg)
 					if (i >= ALSA_MIXSND_STREAM_ID)
 					{
 	                    _rAudMixSndStream[i].u4DesAddr = _rAudMixSndStream[i].u4AFifoSA + 
-							(_rAudMixSndStream[i].u4Wp*(768*4)) + ((u4LoopCnt456[i-ALSA_MIXSND_STREAM_ID]%SAMPLE_UNIT)*(64*4));
-	                    u4LoopCnt456[i-ALSA_MIXSND_STREAM_ID]++;
-	                    if (u4LoopCnt456[i-ALSA_MIXSND_STREAM_ID] == SAMPLE_UNIT)  u4LoopCnt456[i-ALSA_MIXSND_STREAM_ID] = 0;
+							(_rAudMixSndStream[i].u4Wp*(768*4)) + ((768-u4LoopCnt123[i-ALSA_MIXSND_STREAM_ID])*4); 
+				
 					}
           	         }
 #else
@@ -2784,9 +2718,9 @@ static void AUD_AprocMixSndInfoInit(AUD_MIXSND_ID_T u1ID)
 #endif
 
     _gsAprocMixSndBufInfo[u1ID].u4Rp = 0;    
-    _gsAprocMixSndBufInfo[u1ID].u4Wp = 0;
+    _gsAprocMixSndBufInfo[u1ID].u4Wp = 1;
     _gsAprocMixSndBufInfo[u1ID].u4Rcurp = 0;    
-    _gsAprocMixSndBufInfo[u1ID].u4Wcurp = 1;
+    _gsAprocMixSndBufInfo[u1ID].u4Wcurp = 0;
 
     //Generate Test Pattern only once 
     if (!fgTestTone)
