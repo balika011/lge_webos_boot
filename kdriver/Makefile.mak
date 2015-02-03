@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #13 $
-# $Date: 2015/01/22 $
+# $Revision: #14 $
+# $Date: 2015/02/03 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -283,7 +283,8 @@ export LINUX_SOLUTION := true
 ifeq "$(LG_WEBOS_BUILD)" "true"
 export KERNEL_VER     := linux-3.10
 else
-export KERNEL_VER     := linux-3.10_turnkey
+#remove this folder for reducing release time
+#export KERNEL_VER     := linux-3.10_turnkey
 endif
 
 export VERSION        := IDTV1401_002306_12_001_37_001_8
