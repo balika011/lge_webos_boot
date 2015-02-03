@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #2 $
+ * $Revision: #3 $
 *************************************************************************/
 
 #ifndef _VDO_MISC_H_
@@ -267,6 +267,7 @@ BOOL fgIsVideoDone(UINT8 bPath);
 //PQ dump
 extern void CopyScalerDRAM(void);
 extern void vTriggerScalerDumpCopyDram(void);
+extern void vVdoInVIrqOnOff(UINT8 u1VdpId, UINT8 u1OnOff, UINT8 u1Module);
 
 //4k2k
 BOOL fgIs4k2kNativeTimingOut(UINT8 bPath);

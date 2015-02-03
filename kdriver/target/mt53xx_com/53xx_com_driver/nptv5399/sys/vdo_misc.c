@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #9 $
+ * $Revision: #10 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -4496,5 +4496,30 @@ void vDrvVideoForceDualMode(UINT8 u1OnOff)
     }
 }
 
+void vVdoInVIrqOnOff(UINT8 u1VdpId, UINT8 u1OnOff, UINT8 u1Module)
+{
+    static UINT32 u4IrqEn[SV_VP_NA] = {0,0};
+    if(u1VdpId > SV_VP_NA)
+    {
+        return;
+    }
+    if(u1OnOff == SV_ON)
+    {
+        u4IrqEn[u1VdpId] = u4IrqEn[u1VdpId] | u1Module;
+    }
+    else
+    {
+        u4IrqEn[u1VdpId] = u4IrqEn[u1VdpId] & (~u1Module);
+    }
 
+    if(u1VdpId == SV_VP_MAIN)
+    {
+        vIO32WriteFldAlign(SYS_03,(u4IrqEn[u1VdpId]==0),INTR_MAIN_V);
+    }
+    else
+    {
+        vIO32WriteFldAlign(SYS_03,(u4IrqEn[u1VdpId]==0),INTR_PIP_V);
+    }
+    
+}
 
