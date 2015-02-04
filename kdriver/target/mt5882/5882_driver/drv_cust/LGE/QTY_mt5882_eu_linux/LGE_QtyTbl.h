@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/02/04 $
  * $RCSfile: mtk_QtyTbl.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -718,7 +718,7 @@ tagDFT_QTY aDefaultQtyTbl[QUALITY_MAX] =
     {0x00, 0x00, 0x80, FROM_DFT, QUALITY_BLUE_STRETCH_GAIN_B},
     {0x00, 0x00, 0xA0, FROM_DFT, QUALITY_BLUE_STRETCH_LUMA_THD},
     {0x00, 0x00, 0x0A, FROM_DFT, QUALITY_BLUE_STRETCH_SAT_THD},    
-    {0x00, 0x00, 0x00, FROM_DFT, QUALITY_BLUE_STRETCH_GAIN2_ENABLE},
+    {0x00, 0x00, 0x01, FROM_DFT, QUALITY_BLUE_STRETCH_GAIN2_ENABLE},
     {0x00, 0x00, 0xC0, FROM_DFT, QUALITY_BLUE_STRETCH_BASE_1},
     {0x00, 0x00, 0x80, FROM_DFT, QUALITY_BLUE_STRETCH_GAIN_R_1},
     {0x00, 0x00, 0x80, FROM_DFT, QUALITY_BLUE_STRETCH_GAIN_G_1},

@@ -644,7 +644,6 @@ void DRVCUST_PeUiItem_CustInit(void)
         switch (i)
         {
             // List all the quality items that control by customer UI, no need to update.
-            /*
             case PE_ARG_BRIGHTNESS:
 			case PE_ARG_CONTRAST:
 			case PE_ARG_HUE:
@@ -654,23 +653,24 @@ void DRVCUST_PeUiItem_CustInit(void)
 			case PE_ARG_SHARPNESS_H:
 			case PE_ARG_SHARPNESS_V:
 			case PE_ARG_LTI:
-			*/
             case PE_ARG_R_GAIN:
 			case PE_ARG_G_GAIN:
 			case PE_ARG_B_GAIN:
 			case PE_ARG_R_OFFSET:
 			case PE_ARG_G_OFFSET:
 			case PE_ARG_B_OFFSET:
-				/*
 			case PE_ARG_NR:
 			case PE_ARG_BACK_LIGHT_LVL:
 			case PE_ARG_ADAPTIVE_BACK_LIGHT:
 			case PE_ARG_3D_NR:
 			case PE_ARG_LCDIM:
-			*/
 				//aUiQtyItemMinMax[i].i4Dft |= R_CUSTUI;
 				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
 				break;
+
+			case PE_ARG_BLUE_STRETCH:
+				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
+				vIO32WriteFldAlign(BLUESTCH_00, SV_OFF, C_BS_ONE_GAIN_MODE);
 				
             default:
                 break;
