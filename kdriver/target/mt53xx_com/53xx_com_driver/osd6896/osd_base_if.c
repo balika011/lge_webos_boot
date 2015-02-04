@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/04 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1359,6 +1359,7 @@ static UINT32* pm_save_fmt_regs;
 static UINT32* pm_save_osd1_regs;
 static UINT32* pm_save_osd2_regs;
 static UINT32* pm_save_osd3_regs;
+static UINT32* pm_save_osd1sc_regs;
 static UINT32* pm_save_osd2sc_regs;
 static UINT32* pm_save_osd3sc_regs;
 static UINT32* pm_save_csr_regs;
@@ -1373,6 +1374,7 @@ static UINT32 pm_save_pmx_regs[2];
 #define PMX_RRG_BASE 0xf0027984
 #define OSD2_REG_SIZE (4+(0x284-0x200))
 #define OSD3_REG_SIZE (4+(0x384-0x300))
+#define OSD1SC_REG_SIZE (4+(0x3d8-0x300))
 #define OSD2SC_REG_SIZE (4+(0x4d8-0x400))
 #define OSD3SC_REG_SIZE (4+(0x5d8-0x500))
 #define OSD_CSR_REG_SIZE (4+(0x73c-0x700))
@@ -1438,18 +1440,20 @@ void OSD_pm_suspend(void)
     pm_save_osd1_regs = x_mem_alloc(OSD1_REG_SIZE);
     pm_save_osd2_regs = x_mem_alloc(OSD2_REG_SIZE);
     pm_save_osd3_regs = x_mem_alloc(OSD3_REG_SIZE);
+    pm_save_osd1sc_regs = x_mem_alloc(OSD1SC_REG_SIZE);
     pm_save_osd2sc_regs = x_mem_alloc(OSD2SC_REG_SIZE);
     pm_save_osd3sc_regs = x_mem_alloc(OSD3SC_REG_SIZE);
     pm_save_csr_regs = x_mem_alloc(OSD_CSR_REG_SIZE);
 
     if(IS_NULLPTR(pm_save_fmt_regs) || IS_NULLPTR(pm_save_osd1_regs) || IS_NULLPTR(pm_save_osd2_regs)
-        || IS_NULLPTR(pm_save_osd3_regs) || IS_NULLPTR(pm_save_osd2sc_regs) || IS_NULLPTR(pm_save_osd3sc_regs)
-        || IS_NULLPTR(pm_save_csr_regs))
+        || IS_NULLPTR(pm_save_osd3_regs) || IS_NULLPTR(pm_save_osd1sc_regs) || IS_NULLPTR(pm_save_osd2sc_regs) 
+		|| IS_NULLPTR(pm_save_osd3sc_regs) || IS_NULLPTR(pm_save_csr_regs))
     {
             FREE_IS_VALID(pm_save_fmt_regs);
          FREE_IS_VALID(pm_save_osd1_regs);
          FREE_IS_VALID(pm_save_osd2_regs);
          FREE_IS_VALID(pm_save_osd3_regs);
+         FREE_IS_VALID(pm_save_osd1sc_regs);
          FREE_IS_VALID(pm_save_osd2sc_regs);
          FREE_IS_VALID(pm_save_osd3sc_regs);
          FREE_IS_VALID(pm_save_csr_regs);
@@ -1479,6 +1483,7 @@ void OSD_pm_suspend(void)
 #endif
         x_memcpy((void*)pm_save_osd2_regs,(void*)(OSD_BASE+0x200),OSD2_REG_SIZE);
         x_memcpy((void*)pm_save_osd3_regs,(void*)(OSD_BASE+0x300),OSD3_REG_SIZE);
+        x_memcpy((void*)pm_save_osd1sc_regs,(void*)(OSD_BASE+0x400),OSD1SC_REG_SIZE);
         x_memcpy((void*)pm_save_osd2sc_regs,(void*)(OSD_BASE+0x500),OSD2SC_REG_SIZE);
         x_memcpy((void*)pm_save_osd3sc_regs,(void*)(OSD_BASE+0x600),OSD3SC_REG_SIZE);
         x_memcpy((void*)pm_save_csr_regs,(void*)(OSD_BASE+0x700),OSD_CSR_REG_SIZE);
@@ -1531,6 +1536,7 @@ void OSD_pm_resume(void)
 #endif
     x_memcpy((void*)(OSD_BASE+0x200),(void*)(pm_save_osd2_regs),OSD2_REG_SIZE);
     x_memcpy((void*)(OSD_BASE+0x300),(void*)(pm_save_osd3_regs),OSD3_REG_SIZE);
+    x_memcpy((void*)(OSD_BASE+0x400),(void*)(pm_save_osd1sc_regs),OSD1SC_REG_SIZE);
     x_memcpy((void*)(OSD_BASE+0x500),(void*)(pm_save_osd2sc_regs),OSD2SC_REG_SIZE);
     x_memcpy((void*)(OSD_BASE+0x600),(void*)(pm_save_osd3sc_regs),OSD3SC_REG_SIZE);
     x_memcpy((void*)(OSD_BASE+0x700),(void*)(pm_save_csr_regs),OSD_CSR_REG_SIZE);
@@ -1558,6 +1564,7 @@ void OSD_pm_resume(void)
     x_mem_free(pm_save_osd1_regs);
     x_mem_free(pm_save_osd2_regs);
     x_mem_free(pm_save_osd3_regs);
+    x_mem_free(pm_save_osd1sc_regs);
     x_mem_free(pm_save_osd2sc_regs);
     x_mem_free(pm_save_osd3sc_regs);
     x_mem_free(pm_save_csr_regs);
@@ -1568,8 +1575,10 @@ void OSD_pm_resume(void)
     IO_WRITE32(OSD_BASE,0x0,0x1);
     bFastBootDriverLogo = TRUE;
     #else
-    //OSD_PLA_Enable(OSD_PLANE_2, pb_osd_enable[0]);
-    //OSD_PLA_Enable(OSD_PLANE_3, pb_osd_enable[1]);
+#if defined(CC_LG_SNAP_SHOT)
+    OSD_PLA_Enable(OSD_PLANE_2, pb_osd_enable[1]);
+    OSD_PLA_Enable(OSD_PLANE_3, pb_osd_enable[2]);
+#endif
     #endif
     IO_WRITE32(FSC_OSD_VSYNC_SEL, 0, IO_READ32(FSC_OSD_VSYNC_SEL, 0) | 0x400U);
     IO_WRITE32(FSC_OSD_POST_SCALER_SET, 0, IO_READ32(FSC_OSD_POST_SCALER_SET, 0) & (~0x800U));
