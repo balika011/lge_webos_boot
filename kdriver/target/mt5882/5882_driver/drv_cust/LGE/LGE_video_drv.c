@@ -660,9 +660,12 @@ void DRVCUST_PeUiItem_CustInit(void)
 			case PE_ARG_G_OFFSET:
 			case PE_ARG_B_OFFSET:
 			case PE_ARG_NR:
+			case PE_ARG_GAMMA:
 			case PE_ARG_BACK_LIGHT_LVL:
 			case PE_ARG_ADAPTIVE_BACK_LIGHT:
 			case PE_ARG_3D_NR:
+			case PE_ARG_MPEG_NR:
+			case PE_ARG_SHARPNESS_ON_OFF:
 			case PE_ARG_LCDIM:
 				//aUiQtyItemMinMax[i].i4Dft |= R_CUSTUI;
 				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
