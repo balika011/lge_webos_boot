@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/05 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -279,6 +279,7 @@ typedef struct
     UINT8 fgStop;
     UINT8 fgPause;
     UINT8 fgRepeat;
+    UINT8 fgClip;
 
     UINT8 u1ClipReadIndx;
     UINT8 u1ClipWriteIndx;
@@ -1117,7 +1118,7 @@ while(1)
 		
   	
 
-    	if ((u1StreamID >= ALSA_MIXSND_STREAM_ID) && (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency))
+        if ((_rAudMixSndStream[i].fgClip == 0) && (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency))
     	{
         	if (_rAudMixSndRingFifo[u1StreamID - ALSA_MIXSND_STREAM_ID].u4Latency > u4Size)
         	{
@@ -1206,36 +1207,16 @@ static void _AudFeedMixSndThread(const void* pvArg)
 {
     int i;
     UINT32 u4AFifoTA;
-    #ifndef NEW_MIXSOUND
-    UINT32 u4GainOld; //FLASHLITE_CONFLICT
-    UINT16 u2MixSndCfg; //FLASHLITE_CONFLICT
-    #endif
     AudDecNfyFct pfAudDecNfy = NULL;
-
     BOOL fgDataEmpty = FALSE;
-
-#ifdef CC_AUD_SUPPORT_OSS_ADAPTION_LAYER
-	AUD_OSS_ADAP_ST_TYPE_T status;
-	AUD_OSS_ADAP_SRC_TYPE_T source;
-	UINT32 u4tempStart;
-	UINT32 u4tempEnd;
-	UINT32 u4tempPtr;
-	UINT32 u4FreeSize;
-	
-	u4tempStart = _AudDataTransferGetStartAddr();
-	u4tempEnd = _AudDataTransferGetEndAddr();
-	u4FreeSize = _AudDataTransferGetFreeSize();
-	u4tempPtr = u4tempStart;
-#endif
     VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy));
 
     Printf("[FeedMixSndThread] Init - %s\n", AUD_MIXSND_VERSION_CODE);
 
     x_memset((VOID*)VIRTUAL((UINT32)_rAudMixSndStream), 0, sizeof(AUD_MIXSND_STREAM_TYPE_T) * MAX_AUD_MIXSND_STREAM_NUM);
     x_memset((VOID*)VIRTUAL((UINT32)_rAudMixSndClip), 0, sizeof(AUD_MIXSND_CLIP_TYPE_T) * MAX_AUD_MIXSND_STREAM_NUM * MAX_AUD_MIXSND_CLIP_NUM);
-    #ifdef ALSA_MIXSND_PATH
     x_memset((VOID*)VIRTUAL((UINT32)_rAudMixSndRingFifo), 0, sizeof(AUD_MIXSND_RINGFIFO_TYPE_T)* MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA);
-    #endif
+
     for (i=0;i<MAX_AUD_MIXSND_STREAM_NUM;i++)
     {
         #ifdef CC_AUD_DDI
@@ -1246,6 +1227,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
         _rAudMixSndStream[i].fgStop = 0;
         _rAudMixSndStream[i].fgPause = 0;
         _rAudMixSndStream[i].fgRepeat = 0;
+        _rAudMixSndStream[i].fgClip = 0;
 
         _rAudMixSndStream[i].u1ClipReadIndx = 0;
         _rAudMixSndStream[i].u1ClipWriteIndx = 0;
@@ -1277,7 +1259,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
         _rAudMixSndStream[i].t_out = 0;
         _rAudMixSndStream[i].t_in = -1;
     }
-    #ifdef ALSA_MIXSND_PATH
+
     for (i=0;i<MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA;i++)
     {
         _rAudMixSndRingFifo[i].u4SZ = u4GetMixSoundBufSize3()/MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA;
@@ -1285,7 +1267,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
         _rAudMixSndRingFifo[i].u4EA = _rAudMixSndRingFifo[i].u4SA + _rAudMixSndRingFifo[i].u4SZ;
         _rAudMixSndRingFifo[i].u4RP = _rAudMixSndRingFifo[i].u4WP = _rAudMixSndRingFifo[i].u4SA;
     }
-    #endif
 
     #ifdef ALSA_PCMDEC_PATH
     _rAudMixSndStream[ALSA_MIXSND_STREAM_ID+ALSA_DSPDEC_ID].u4AFifoSA = u4GetAFIFOStart(AUD_DSP0,AUD_DEC_MAIN); //< -------- Stream ID from offload
@@ -1303,7 +1284,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
 
     u4AFifoTA = _rAudMixSndStream[MAX_AUD_MIXSND_STREAM_NUM-1].u4AFifoEA;
 
-    #ifdef NEW_MIXSOUND
     if (!AUD_DspIsMixSndPlay())
     {
         AUD_DspSetMixSndLength(0);
@@ -1313,26 +1293,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
             x_thread_delay(1);
         }
     }
-    #else
-    {
-        //Pre-Init
-        Printf("[FeedMixSndThread] Init MixSnd DSP\n");
-        u4GainOld = u4ReadShmUINT32(D_MIXSOUND_GAIN); //FLASHLITE_CONFLICT
-        u2MixSndCfg = u2ReadShmUINT16(W_MIXSOUND_CFG); //FLASHLITE_CONFLICT
-
-        AUD_DspSetMixSndLength(0x10000);
-        AUD_DspSetMixSndGain(0x20000);
-        AUD_DspSetMixSndStereo(TRUE);
-        AUD_DspSetMixSndUpSampleRatio(0);
-        AUD_DspSetMixSndMemPlay(TRUE);
-        //AUD_DspMixSndControl(1);
-        _AUD_DspMixSndControl2(1); //FLASHLITE_CONFLICT
-        while (!AUD_DspIsMixSndPlay())
-        {
-            x_thread_delay(1);
-        }
-    }
-    #endif
 
     Printf("[FeedMixSndThread] Enter\n");
     fgAudFeedMixSndThreadEnable = TRUE;
@@ -1346,13 +1306,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
         //Check if force stop
         if (_fgForceStopMixSndDma)
         {
-            #ifdef NEW_MIXSOUND
             AUD_DspMixSndControl2(8); //disable mixsound
-            #else
-            //AUD_DspMixSndControl(2);
-            _AUD_DspMixSndControl2(2); //FLASHLITE_CONFLICT
-            AUD_DspSetMixSndMemPlay(FALSE);
-            #endif
             break;
         }
 
@@ -1361,15 +1315,13 @@ static void _AudFeedMixSndThread(const void* pvArg)
         {
             if (_rAudMixSndStream[i].fgStop)
             {
-              #ifdef ALSA_MIXSND_PATH
-                if (i>=ALSA_MIXSND_STREAM_ID)
+                if (_rAudMixSndStream[i].fgClip == 0)
                 {
                     _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP =
                         _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4WP =
                         _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4SA;
                 }
                 else
-              #endif
                 {
                     while (_rAudMixSndStream[i].u1ClipReadIndx != _rAudMixSndStream[i].u1ClipWriteIndx)
                     {
@@ -1388,16 +1340,17 @@ static void _AudFeedMixSndThread(const void* pvArg)
             }
         }
 
-      #ifdef ALSA_MIXSND_PATH
         for (i=0;i<MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA;i++)
         {
+            if (_rAudMixSndStream[i+ALSA_MIXSND_STREAM_ID].fgClip == 0)
+            {
             _rAudMixSndStream[ALSA_MIXSND_STREAM_ID+i].u4Residual =
                 ((_rAudMixSndRingFifo[i].u4WP >= _rAudMixSndRingFifo[i].u4RP) ?
                     (_rAudMixSndRingFifo[i].u4WP - _rAudMixSndRingFifo[i].u4RP) :
                     (_rAudMixSndRingFifo[i].u4SZ - _rAudMixSndRingFifo[i].u4RP + _rAudMixSndRingFifo[i].u4WP));
             _rAudMixSndStream[ALSA_MIXSND_STREAM_ID+i].u4StreamAddr = _rAudMixSndRingFifo[i].u4RP;
         }
-      #endif
+        }
 
         //Check if there is data need to send
         u1EmptyStreamNum = 0;
@@ -1409,10 +1362,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
                 {
                     //check if there is new clip
                     if ((_rAudMixSndClip[i][_rAudMixSndStream[i].u1ClipReadIndx].u4Size)
-                        #ifdef ALSA_MIXSND_PATH
-                        && (i < ALSA_MIXSND_STREAM_ID)
-                        #endif
-                        )
+                        && (_rAudMixSndStream[i].fgClip))
                     {
                         _rAudMixSndStream[i].u4Residual = (_rAudMixSndClip[i][_rAudMixSndStream[i].u1ClipReadIndx].u4Size & 0xffffff00); //Clipping to align multiple of 0x100
                         _rAudMixSndStream[i].u4StreamAddr = _rAudMixSndClip[i][_rAudMixSndStream[i].u1ClipReadIndx].u4Addr;
@@ -1503,7 +1453,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
                     }
                 }
 
-                #ifdef ALSA_MIXSND_PATH
                 if ((i >= ALSA_MIXSND_STREAM_ID) &&
                     ((_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP + _rAudMixSndStream[i].u4TransferSZ) > _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4EA))
                 {
@@ -1511,7 +1460,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
                              (VOID*)(VIRTUAL(_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4SA)),
                              (_rAudMixSndStream[i].u4TransferSZ - (_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4EA - _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP)));
                 }
-                #endif
 
                 if (fgIsSoftTransferable(i))
                 {
@@ -1589,38 +1537,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
                 }
                 else
                 {
-#ifdef CC_AUD_SUPPORT_OSS_ADAPTION_LAYER
-					status = _AudOssAdap_GetStatus();
-					source = _AudOssAdap_GetSourceType();
-					if ((i==ALSA_MIXSND_STREAM_ID) && ((AUD_OSS_ADAP_ST_WORKING == status) && (AUD_OSS_ADAP_MIXSOUND == source)))
-					{
-						
-						while(1){
-							u4FreeSize = _AudDataTransferGetFreeSize();
-							if(u4FreeSize > (0x100 + MIXSND_TRANSFER_SZ))
-							{
-								break;
-							}
-							x_thread_delay(1);
-						}
-
-						if((u4tempPtr + _rAudMixSndStream[i].u4TransferSZ2) <= u4tempEnd)
-						{
-							x_memcpy((VOID*)(u4tempPtr), (VOID*)(VIRTUAL(u4AFifoTA)), _rAudMixSndStream[i].u4TransferSZ2);
-							u4tempPtr += _rAudMixSndStream[i].u4TransferSZ2;
-						}
-						else
-						{
-							x_memcpy((VOID*)(u4tempPtr), (VOID*)(VIRTUAL(u4AFifoTA)), (u4tempEnd-u4tempPtr));
-							x_memcpy((VOID*)(u4tempStart), (VOID*)(VIRTUAL(u4AFifoTA + (u4tempEnd-u4tempPtr))), (_rAudMixSndStream[i].u4TransferSZ2 - (u4tempEnd-u4tempPtr)));
-							u4tempPtr = u4tempStart + (_rAudMixSndStream[i].u4TransferSZ2 - (u4tempEnd-u4tempPtr));
-						}
-
-						_AudDataTransferSetWritePtr(u4tempPtr);
-						_AudDataTransferUnlock();						
-					}
-					//else
-#endif
                     {
 #if defined(ALSA_AMIXER_PATH) || defined(ALSA_APROC_PATH) 
                         LOG(3," _rAudMixSndStream[%d].u4Wp=%d, 123=%d, Dest=0x%x\n", i, _rAudMixSndStream[i].u4Wp, u4LoopCnt123, _rAudMixSndStream[i].u4DesAddr);
@@ -1704,8 +1620,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
                     }
                     #endif
 
-                  #ifdef ALSA_MIXSND_PATH
-                    if (i>=ALSA_MIXSND_STREAM_ID)
+                    if (_rAudMixSndStream[i].fgClip == 0)
                     {
                         //Update RingFifo RP
                         _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP =
@@ -1719,7 +1634,6 @@ static void _AudFeedMixSndThread(const void* pvArg)
 						
                        LOG(3,"Update RingFifo RP:  _rAudMixSndRingFifo[%d].u4RP=%x \n", i, _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP);					   
                     }
-                  #endif
                     else
                     {
                         _rAudMixSndStream[i].u4Residual -= _rAudMixSndStream[i].u4TransferSZ;
@@ -1770,9 +1684,7 @@ static void _AudFeedMixSndThread(const void* pvArg)
     //flush clip pointer
     for (i=0;i<MAX_AUD_MIXSND_STREAM_NUM;i++)
     {
-      #ifdef ALSA_MIXSND_PATH
-        if (i < ALSA_MIXSND_STREAM_ID)
-      #endif
+        if (_rAudMixSndStream[i].fgClip)
         {
             while (_rAudMixSndStream[i].u1ClipReadIndx != _rAudMixSndStream[i].u1ClipWriteIndx)
             {
@@ -1912,18 +1824,45 @@ void AUD_DisableMixSndClip(void)
 //-----------------------------------------------------------------------------
 void AUD_PlayMixSndClip(UINT8 u1StreamID)
 {
+    UINT8 u1StrDd = u1StreamID + ALSA_MIXSND_STREAM_ID;
+    UINT8 u1MixId = _u1AlsaAprocMixsndId[u1StreamID]; 
+    
     if (_hAudFeedMixSndThread)
     {
-        _rAudMixSndStream[u1StreamID].fgEnable = 1;
-        _rAudMixSndStream[u1StreamID].i2DelayBuf[0] = 0;
-        _rAudMixSndStream[u1StreamID].i2DelayBuf[1] = 0;
+        AUD_AprocMixSndInfoInit(_u1AlsaAprocMixsndId[u1StreamID]);
 
-        _rAudMixSndStream[u1StreamID].segEnd[0] = 0;
-        _rAudMixSndStream[u1StreamID].segEnd[1] = 0;
-        _rAudMixSndStream[u1StreamID].segStart[0] = 0;
-        _rAudMixSndStream[u1StreamID].segStart[1] = 0;
-        _rAudMixSndStream[u1StreamID].t_out = 0;
-        _rAudMixSndStream[u1StreamID].t_in = -1;
+        _rAudMixSndStream[u1StrDd].u4AFifoSA = _gsAprocMixSndBufInfo[u1MixId].u4Str;
+        _rAudMixSndStream[u1StrDd].u4AFifoSZ = _gsAprocMixSndBufInfo[u1MixId].u4End*
+            _gsAprocMixSndBufInfo[u1MixId].u4Size*_gsAprocMixSndBufInfo[u1MixId].u4Ch;      
+        _rAudMixSndStream[u1StrDd].u4AFifoEA = _rAudMixSndStream[u1StrDd].u4AFifoSA+
+            _rAudMixSndStream[u1StrDd].u4AFifoSZ;
+        _rAudMixSndStream[u1StrDd].u4DesAddr = _rAudMixSndStream[u1StrDd].u4AFifoSA;
+        
+        Printf("\n SA=0x%x, SZ=%d, EA=0x%x, DestAddr=0x%x\n", _rAudMixSndStream[u1StrDd].u4AFifoSA, 
+           _rAudMixSndStream[u1StrDd].u4AFifoSZ, _rAudMixSndStream[u1StrDd].u4AFifoEA,
+           _rAudMixSndStream[u1StrDd].u4DesAddr);
+
+        u4LoopCnt123[u1StreamID]  = SAMPLE_UNIT;
+        u4LoopCnt456[u1StreamID]  = 0;
+        _rAudMixSndStream[u1StrDd].fgClip = 1;
+        
+        // Request ARM9 to reset mixsound buffer info.
+        AUD_AprocMixSndReset(u1MixId);
+        // Send MixSound Enable Command to ARM9    
+        x_thread_delay(20);        
+        AUD_AprocMixSndEnable(_u1AlsaAprocMixsndId[u1StreamID], TRUE);
+
+        _rAudMixSndStream[u1StrDd].fgEnable = 1;
+        _rAudMixSndStream[u1StrDd].i2DelayBuf[0] = 0;
+        _rAudMixSndStream[u1StrDd].i2DelayBuf[1] = 0;
+
+        _rAudMixSndStream[u1StrDd].segEnd[0] = 0;
+        _rAudMixSndStream[u1StrDd].segEnd[1] = 0;
+        _rAudMixSndStream[u1StrDd].segStart[0] = 0;
+        _rAudMixSndStream[u1StrDd].segStart[1] = 0;
+        _rAudMixSndStream[u1StrDd].t_out = 0;
+        _rAudMixSndStream[u1StrDd].t_in = -1;
+
         
         LOG(5, "[AUD_PlayMixSndClip] trigger %d\n", u1StreamID);
     }
@@ -1935,6 +1874,7 @@ void AUD_PlayMixSndClip(UINT8 u1StreamID)
 
 BOOL AUD_IsMixSndClipPlay(UINT8 u1StreamID)
 {
+    u1StreamID += ALSA_MIXSND_STREAM_ID; 
     return (BOOL)(_rAudMixSndStream[u1StreamID].fgEnable);
 }
 
@@ -1947,8 +1887,11 @@ BOOL AUD_IsMixSndClipPlay(UINT8 u1StreamID)
 //-----------------------------------------------------------------------------
 void AUD_StopMixSndClip(UINT8 u1StreamID)
 {
+    u1StreamID += ALSA_MIXSND_STREAM_ID;
+
     if (_hAudFeedMixSndThread)
     {
+        _rAudMixSndStream[u1StreamID].fgClip = 0; 
         _rAudMixSndStream[u1StreamID].fgStop = 1;
         LOG(5, "[AUD_StopMixSndClip] trigger %d\n", u1StreamID);
     }
@@ -1983,6 +1926,8 @@ void AUD_StopMixSndClip(UINT8 u1StreamID)
 //-----------------------------------------------------------------------------
 void AUD_PauseMixSndClip(UINT8 u1StreamID)
 {
+    u1StreamID += ALSA_MIXSND_STREAM_ID;
+
     if (_hAudFeedMixSndThread)
     {
         _rAudMixSndStream[u1StreamID].fgPause = 1;
@@ -2003,6 +1948,8 @@ void AUD_PauseMixSndClip(UINT8 u1StreamID)
 //-----------------------------------------------------------------------------
 void AUD_ResumeMixSndClip(UINT8 u1StreamID)
 {
+    u1StreamID += ALSA_MIXSND_STREAM_ID;
+
     if (_hAudFeedMixSndThread)
     {
         _rAudMixSndStream[u1StreamID].fgPause = 0;
@@ -2025,7 +1972,7 @@ void AUD_RepeatMixSndClip(UINT8 u1StreamID, UINT32 u1RepeatNum)
 {
     if (_hAudFeedMixSndThread)
     {
-        _rAudMixSndStream[u1StreamID].fgRepeat = u1RepeatNum;
+        _rAudMixSndStream[u1StreamID + ALSA_MIXSND_STREAM_ID].fgRepeat = u1RepeatNum;
         LOG(5, "[AUD_RepeatMixSndClip] trigger %d, u1RepeatNum %d\n", u1StreamID, u1RepeatNum);
     }
     else
@@ -2049,11 +1996,13 @@ void AUD_RepeatMixSndClip(UINT8 u1StreamID, UINT32 u1RepeatNum)
 //-----------------------------------------------------------------------------
 BOOL AUD_SetMixSndClip(UINT8 u1StreamID, UINT32 u4Addr, UINT32 u4Size, UINT32 u4Gain, UINT8 u1StereoOnOff, UINT32 u4SampleRate, UINT8 u1BitDepth, UINT8 u1Endian)
 {
+    UINT8 u1StrDd = u1StreamID + ALSA_MIXSND_STREAM_ID;
+
     if (_hAudFeedMixSndThread)
     {
-        if (_rAudMixSndStream[u1StreamID].u1ClipWriteIndx<MAX_AUD_MIXSND_CLIP_NUM)
+        if (_rAudMixSndStream[u1StrDd].u1ClipWriteIndx<MAX_AUD_MIXSND_CLIP_NUM)
         {
-            if (((_rAudMixSndStream[u1StreamID].u1ClipWriteIndx+1)%MAX_AUD_MIXSND_CLIP_NUM) == _rAudMixSndStream[u1StreamID].u1ClipReadIndx)
+            if (((_rAudMixSndStream[u1StrDd].u1ClipWriteIndx+1)%MAX_AUD_MIXSND_CLIP_NUM) == _rAudMixSndStream[u1StrDd].u1ClipReadIndx)
             {
                 LOG(5, "[AUD_SetMixSndClip] Stream %d Clip Full\n", u1StreamID);
                 return FALSE;
@@ -2062,14 +2011,14 @@ BOOL AUD_SetMixSndClip(UINT8 u1StreamID, UINT32 u4Addr, UINT32 u4Size, UINT32 u4
             LOG(5, "[AUD_SetMixSndClip] ID: %d u4Addr: 0x%08x Size: 0x%08x Gain: 0x%08x Stereo: %d SampleRate: %d u1BitDepth: %d u1Endian: %d\n",
                     u1StreamID, u4Addr, u4Size, u4Gain, u1StereoOnOff, u4SampleRate, u1BitDepth, u1Endian);
 
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u4Addr = u4Addr;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u4Size = u4Size;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u4Gain = u4Gain;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u1StereoOnOff = u1StereoOnOff;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u4SampleRate = u4SampleRate;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u1BitDepth= u1BitDepth;
-            _rAudMixSndClip[u1StreamID][_rAudMixSndStream[u1StreamID].u1ClipWriteIndx].u1Endian= u1Endian;
-            _rAudMixSndStream[u1StreamID].u1ClipWriteIndx = ((_rAudMixSndStream[u1StreamID].u1ClipWriteIndx+1)%MAX_AUD_MIXSND_CLIP_NUM);
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u4Addr = u4Addr;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u4Size = u4Size;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u4Gain = u4Gain;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u1StereoOnOff = u1StereoOnOff;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u4SampleRate = u4SampleRate;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u1BitDepth= u1BitDepth;
+            _rAudMixSndClip[u1StrDd][_rAudMixSndStream[u1StrDd].u1ClipWriteIndx].u1Endian= u1Endian;
+            _rAudMixSndStream[u1StrDd].u1ClipWriteIndx = ((_rAudMixSndStream[u1StrDd].u1ClipWriteIndx+1)%MAX_AUD_MIXSND_CLIP_NUM);
 
             return TRUE;
         }
@@ -2957,6 +2906,11 @@ static void _AudAprocFeedMixSndThread(const void* pvArg)
 
     // Init Mixsound for CA9
     AUD_AprocMixSndInfoInit(eMixSndId);
+
+    _gsAprocMixSndBufInfo[eMixSndId].u4Rp = 0;    
+    _gsAprocMixSndBufInfo[eMixSndId].u4Wp = 0;
+    _gsAprocMixSndBufInfo[eMixSndId].u4Rcurp = 0;    
+    _gsAprocMixSndBufInfo[eMixSndId].u4Wcurp = 1;    
     // Request ARM9 to reset mixsound buffer info.
     AUD_AprocMixSndReset(eMixSndId);    
 
