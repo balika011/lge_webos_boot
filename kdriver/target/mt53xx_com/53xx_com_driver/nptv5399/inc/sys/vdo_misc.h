@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #4 $
+ * $Revision: #5 $
 *************************************************************************/
 
 #ifndef _VDO_MISC_H_
@@ -243,7 +243,7 @@ void vDrvLoadRegTbl(REGTBL_T const * pRegTbl) reentrant;
 void vSetScposPatternGen(UINT8 u1Enable);
 UINT8 u1GetScposPtGenEnable(void); 
 #endif
-
+extern void vVdoInVIrqOnOff(UINT8 u1VdpId, UINT8 u1OnOff, UINT8 u1Module);
 UINT32 u43DGetOutputLR(void);
 void vDrvVideoQueryInputTimingInfo(UINT32 u4Path);
 UINT8 u1DrvVideoGetIs44PullDownInfo(void);

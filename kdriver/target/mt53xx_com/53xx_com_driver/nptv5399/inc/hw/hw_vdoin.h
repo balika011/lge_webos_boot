@@ -92,11 +92,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/27 1:22p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 ****************************************************************************/
 
 #ifndef _HW_VDOIN_
@@ -479,7 +479,17 @@ BOOL fgIsVdoinInt(UINT32 u4mask);
 		MPCLK_PIPCLK = 0x02,
 		MPCLK_MAINCLK = 0x03
 	} MPCLK_e;
+
+
 	
+typedef enum{
+    VDO_TYPE_TVD =    1<<0,
+    VDO_TYPE_VGA =    1<<1,
+    VDO_TYPE_HDTV =   1<<2,
+    VDO_TYPE_MPEG =   1<<3,
+    VDO_TYPE_DVI =    1<<4,
+    VDO_TYPE_MAX
+}VDO_TYPE_E;
 	//#define SET_VDOIN_MPCLK(x) vIO32WriteFldAlign(OMUX_00, (x), VDOIN_MPCLK_SEL)
 
 #endif //_HW_VDOIN_
