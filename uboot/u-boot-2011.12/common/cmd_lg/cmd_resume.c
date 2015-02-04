@@ -40,6 +40,7 @@ typedef struct _thread_arg
 	loff_t offset;
 	unsigned long image_size;
 }thread_arg_t;
+thread_arg_t argT;
 
 extern void DDI_NVM_SetMakeHib( unsigned char mode );
 extern unsigned char DDI_NVM_GetSnapShot_Support( void );
@@ -236,6 +237,8 @@ extern u64 arch_counter_get_ms(void);
 static int emmc_user_callback(int err, int bytes)
 {
 	g_read_bytes += bytes;
+	
+	tlog("g_read_bytes = %d\n",g_read_bytes);
 }
 static int read_emmc(void *arg)
 {
@@ -246,15 +249,16 @@ static int read_emmc(void *arg)
 	a.image_size = p->image_size;
 
 	emmc_register_callback(emmc_user_callback);
+	tlog("\n eMMC  : a.offse=%u, a.image_size%u\n",argT.offset,argT.image_size);
 
 	g_read_bytes = 0;
 	start_time = (u32)arch_counter_get_ms();
-	if (storage_read(a.offset, a.image_size, (void*)(decomp_buf)) < 0)
+	if (storage_read(argT.offset, argT.image_size, (void*)(decomp_buf)) < 0)
 	{
 		printf("Can't read compressed snapshot image image\n");
 		return -1;
 	}
-	if( g_read_bytes < a.image_size )
+	if( g_read_bytes < argT.image_size )
 		tlog("eMMC error : wrong read size in callback request size=%u, read=%u\n",a.image_size,g_read_bytes);
 	emmc_elapsed = (u32)arch_counter_get_ms() - start_time;
 	decomp_done[1] = 1;
@@ -400,7 +404,6 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	/* Multithread support */
 	char thread_name[15];
 	thread_t *decomp_2,*decomp_3,*emmc_thread;
-	thread_arg_t arg;
 	u32 start_time;
 	int cnt = 0;
 #endif
@@ -557,13 +560,13 @@ skip_full_verification:
 		decompress_routine((void *)decomp_print);
 		printf("single thread decomp time = %u\n",(u32)arch_counter_get_ms()-start_time);
 	} else {
-		arg.offset = offset_cur;
-		arg.image_size = snapshot_image_payload_size;
+		argT.offset = offset_cur;
+		argT.image_size = snapshot_image_payload_size;
 
 		//thread_cond_new(&g_decomp_cond);
 
 		sprintf(thread_name,sizeof(thread_name),"read_emmc");
-		emmc_thread = thread_create_ex(thread_name,read_emmc,&arg,0,1,THREAD_DEFAULT_PRIORITY,0);
+		emmc_thread = thread_create_ex(thread_name,read_emmc,NULL,0,1,THREAD_DEFAULT_PRIORITY,0);
 		sprintf(thread_name,sizeof(thread_name),"decomp[2]");
 		decomp_2 = thread_create_ex(thread_name,decompress_routine,(void *)decomp_print,0,2,THREAD_DEFAULT_PRIORITY,0);
 		sprintf(thread_name,sizeof(thread_name),"decomp[3]");
