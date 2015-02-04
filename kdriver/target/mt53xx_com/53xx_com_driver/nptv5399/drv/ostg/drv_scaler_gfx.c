@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/16 $
+ * $Date: 2015/02/04 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -556,7 +556,7 @@ void u1Scpip_GFX_Write_Freeze(UINT8 u1Freeze)
 	{
 		VssWriteFreeze = SV_TRUE;
 		//u1Scpip_GFX_Write_Enable(SV_FALSE);//because LG will set freeze in gfx write end ,so direct disable write enable
-		u1Scpip_GFX_Copy_Buffer();
+		//u1Scpip_GFX_Copy_Buffer();
 	}
 	else
 	{
