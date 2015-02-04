@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/04 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -865,23 +865,8 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 
     VDP_MUTEX_LOCK;
 
-#if SUPPORT_POP
-    if (ucVdpId == VDP_2)
-    {
-        if (ucEnable && !_u4ForceDispOff[VDP_2])
-        {
-            vDrvVrmSetAppFlag(VRM_APP_POP_PIP);
-        }
-        else
-        {
-            vDrvVrmClrAppFlag(VRM_APP_POP_PIP);
-        }
-    }    
-#endif
 
-#ifdef CC_SRM_ON
-    SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_ONOFF + (UINT32)ucVdpId), (UINT32)ucEnable, 0);
-#endif
+
 #ifdef CC_SCPOS_EN
 
     if(ucEnable == 0)
@@ -935,12 +920,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
                             sizeof(UCHAR));
 #endif
 
-    if(!ucEnable)
-    {
-#ifdef CC_SCPOS_EN
-        _ScposSetEnable(ucVdpId, ucEnable);
-#endif
-    }
+
 
 #ifndef CC_MT5882
     _B2rSetEnable(ucVdpId);
@@ -959,10 +939,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
     }
 
     // Signal status return to SV_VDO_NOSIGNAL when enable >> disable or disable >> enable
-    if(ucEnable)
-    {
-        _ScposSetEnable(ucVdpId, ucEnable);
-    }
+
 
 
 #endif

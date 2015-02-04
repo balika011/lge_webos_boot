@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/04 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1259,6 +1259,8 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
    }
       LOG(0,"LG_PipLineConnect\n");
 	  fgVdpModeChg[ucB2rId]=FALSE;
+	  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE); 
+	  LG_PipLineSwitch(ucVdpId,B2R_NS); 
 	  for(i=0;i<VDP_NS;i++)
 	  {
 	      #ifdef CC_SUPPORT_PIPELINE
