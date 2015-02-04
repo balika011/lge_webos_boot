@@ -442,6 +442,7 @@ unsigned int kmemsize = 0;
 unsigned int chb_kmemstart = 0;
 unsigned int chb_kmemsize = 0;
 unsigned int tzsize = 0;
+unsigned int tzcorestart =0;
 #define FLASH_BASE 0
 #define FLASH_TZFW_TOTAL_LEN 0x200000
 #define FLASH_KERMEM_TOTAL_LEN 0x20000
@@ -482,11 +483,12 @@ void get_kernel_size(ulong src)
 		 }
 		 
 		chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_SIZE - tzsize;
-
+        tzcorestart = TCMGET_CHANNELA_SIZE() * 0x100000 - tzsize + TRUSTZONE_CODE_BASE;
 		printf("[uboot debug] kernel memory size=0x%x\n", kmemsize);
 		printf("[uboot debug] FBM dram start addr=0x%x,  size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_SIZE);
 		printf("[uboot debug] FB/DFB dram size=0x%x\n", chb_kmemsize);
 		printf("[uboot debug] TZ dram size=0x%x\n", tzsize);
+		printf("[uboot debug] TZ dram core start=0x%x\n", tzcorestart);
 
 #if 0
 	printf(" 0x%x, 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x \n" ,FBM_SECURE_FEEDER_2K_SIZE , FBM_FEEDER_TVP_SIZE , FBM_DMX1_SIZE , FBM_SCPOS_MAIN_SIZE , FBM_MPEG_Y_SIZE  ,FBM_PQ_TOOL_POOL_SIZE , 

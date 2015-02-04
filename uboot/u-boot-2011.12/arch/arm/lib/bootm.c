@@ -137,7 +137,7 @@ extern int get_blkdev_idx(const char *name);
 //extern char buildVers[];
 extern uint8_t gDispType;
 extern int getFullVerifyOTP(void);
-
+extern unsigned int tzcorestart;
 
 void linux_param_set(char *kargs)
 {
@@ -214,6 +214,7 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "%s ", "usbpwrgpio=406:1,407:1,-1:-1,-1:-1 ");
 	sprintf(arg_next(kargs), "%s ", "usbocgpio=405:0,404:0,-1:-1,-1:-1 ");
 	sprintf(arg_next(kargs), "%s ", "tzsz=18m ");
+    sprintf(arg_next(kargs), "tzcorestart=0x%x ", tzcorestart);
 	
 	/* change vmalloc memory for increase low memory size ,  700M-->650M (1G) ,  700M--> 600M(768M) marked by   hongjun.chu*/	
 	if (TCMGET_CHANNELA_SIZE() == 0x300) /* 768M case */
