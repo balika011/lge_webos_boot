@@ -1035,6 +1035,7 @@ void DRVCUST_TDshpGMVYPatch(void)
 	 static UINT8 u1CombiGain;
 	 static UINT8 u1PreCombiGain;
 	 static UINT8 u1ModCombiGain;
+	 static UINT8 u1PreModCombiGain;
 
 
 	 static UINT16 u2HistCnt;	
@@ -1107,9 +1108,17 @@ void DRVCUST_TDshpGMVYPatch(void)
 				u1ModCombiGain = (u1ModCombiGain< u1PreCombiGain) ? u1ModCombiGain+1 : u1PreCombiGain;
 			}
 		}	
+		else
+		{
+			u1ModCombiGain = u1PreCombiGain;
+		}
 
-
-		vIO32WriteFldAlign(SHARP_27, u1ModCombiGain, SHP_COMBINED_GAIN);
+		//For avoid the HAL VPQ set tdsharpall_gain value be covered by this loop when change timing.
+		if(u1ModCombiGain != u1PreModCombiGain)
+		{
+			vIO32WriteFldAlign(SHARP_27, u1ModCombiGain, SHP_COMBINED_GAIN);
+			u1PreModCombiGain = u1ModCombiGain;
+		}
 		u1State =1;
 	}
 	else if(u1State ==1)
