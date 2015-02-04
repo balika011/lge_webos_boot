@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2739,6 +2739,7 @@ UINT32 VDP_SetGameMode(UINT32 u4VdpId, UINT8 u1OnOff)
 #ifdef CC_SRM_ON
     if (SRM_IsGameMode(u4VdpId) != u1OnOff)
     {
+        _vDrvVideoSetMute(MUTE_MODULE_GAMEMODE, VDP_1, 10, FALSE);
         SRM_SendEvent(SRM_DRV_SCPOS, SRM_SCPOS_EVENT_GAME_MODE, u4VdpId ,(UINT32)u1OnOff);
     }   
 #else
