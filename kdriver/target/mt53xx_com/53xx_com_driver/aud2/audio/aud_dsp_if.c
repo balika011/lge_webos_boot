@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/02/04 $
  * $RCSfile: aud_dsp_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2414,6 +2414,20 @@ void AUD_DspADModeSet(UINT8 u1DecId, UINT16 u2Value)
 void AUD_DspADEnable(UINT8 u1DecId, BOOL fgEnable)
 {
     //Audio Description
+    // Turn on AD Flag.    
+    UINT32 u4Reg1[2];
+   if(fgEnable == TRUE) 
+   {
+     u4Reg1[0] = 1;
+     u4Reg1[1] = 0;  
+   }
+   else
+   {
+     u4Reg1[0] = 0;
+     u4Reg1[1] = 0;    
+   }              
+    _vAUD_Aproc_Set(APROC_CONTROL_TYPE_AD, 0, u4Reg1, 1);
+    
     _AUD_DspADEnable(u1DecId,  fgEnable);
 }
 

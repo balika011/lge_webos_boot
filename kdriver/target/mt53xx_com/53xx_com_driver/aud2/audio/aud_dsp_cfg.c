@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11894,7 +11894,9 @@ void _AUD_DspADEnable(UINT8 u1DecId, BOOL fgEnable)
     UINT16 u2ShmIndex = B_ADFLAG;
     UINT32 u2UopIndex = UOP_DSP_AD_FLAG;
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)    
+#ifndef CC_AUD_DDI
     UINT32 u4Reg0;
+#endif
 #endif     
     
 #ifdef CC_AUD_DDI
@@ -11922,6 +11924,22 @@ void _AUD_DspADEnable(UINT8 u1DecId, BOOL fgEnable)
         }
     }
 #ifdef CC_AUD_ARM_RENDER
+#ifdef CC_AUD_DDI
+      // LOG(0, "-------Set u1DecId = %d, fgEnable = %d\n", u1DecId, fgEnable);
+       if((u1DecId == AUD_DEC_MAIN)&&(fgEnable==TRUE))
+        {       
+          vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_COMM_2, APROC_REG_AMIXER2_ADDEC_ENABLE), AUD_ADEC0_AD_ENABLE);
+          _AudAprocInputMute(AUD_DEC_AUX, FALSE);    
+        }
+       else if((u1DecId== AUD_DEC_AUX)&&(fgEnable==TRUE))
+        {
+         vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_COMM_2, APROC_REG_AMIXER2_ADDEC_ENABLE), AUD_ADEC1_AD_ENABLE);
+        }
+       else if(fgEnable== FALSE)
+        {       
+         vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_COMM_2, APROC_REG_AMIXER2_ADDEC_ENABLE), AUD_AD_DISABLE);
+        }
+#else
     if (fgEnable)
     {
         if ((u1OldAdFlag&0xA) == 2)
@@ -11955,6 +11973,7 @@ void _AUD_DspADEnable(UINT8 u1DecId, BOOL fgEnable)
             _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, APROC_REG_SEL_DSP_HP_IN, &u4Reg0, 1);      
         }          
     }
+#endif
 #endif    
 #endif
 #endif

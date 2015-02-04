@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/04 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7573,7 +7573,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
     
     UINT8 u1Category;
 
-    #ifdef CC_AUD_DDI
+    #if 0//def CC_AUD_DDI
     UINT8 u1PathID;
     #endif
 
@@ -7601,7 +7601,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
     u1DecId = prPes->u1DeviceId;
 #endif
 
-    #ifdef CC_AUD_DDI
+    #if 0//def CC_AUD_DDI
     if((_IsDualDecMode() && (AUD_DEC_AUX == u1DecId)) || (_IsTriOnlyDecMode() && (AUD_DEC_THIRD == u1DecId)))
     {
         u1PathID = 0;
@@ -8179,7 +8179,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
             }
         }        // Fixed ES id,
                  // Video always use ES id 0. Workaround for some POP case, middleware doesn't set av-sync mode correctly
-#ifdef CC_AUD_DDI
+#if 0//def CC_AUD_DDI
         else if ((0 == u1PathID) && (MPV_IsDisplay(u1PathID) || (VDP_GetTimeShfitStartPlay(0) || _fgPvrPause)))
 #else
         else if (MPV_IsDisplay(_u1VideoFrameFlag))          

@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/04 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -595,6 +595,14 @@ typedef enum
     AUD_PORT_LGSE,
     AUD_OUT_PORT_NUM
 } AUD_OUT_PORT_T;
+
+typedef enum
+{
+    AUD_ADEC0_AD_ENABLE = 0,
+    AUD_ADEC1_AD_ENABLE,
+    AUD_AD_DISABLE,
+} AUD_ADEC_AD_T;
+
 
 typedef enum
 {
@@ -4263,6 +4271,7 @@ typedef enum {
     APROC_REG_AMIXER2_ADMIX_FADE,
     
     APROC_REG_AMIXER2_ADMIX_PAN,
+    APROC_REG_AMIXER2_ADDEC_ENABLE,
     // cache meter
     APROC_REG_CACHEMETER_FLAG = 0x8,
     APROC_REG_CACHEMETER_IMISS,
