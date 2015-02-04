@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/04 $
  * $RCSfile: pcmcia_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
  
 #ifndef PCMCIA_IF_H
@@ -357,6 +357,8 @@ EXTERN INT32    PCMCIA_WaitForModuleStatus(UINT8 u1StatusBit, UINT16 u2TimeOut);
 EXTERN INT32    PCMCIA_ParseCis(UINT8* pu1CisMap, CIS_INFO_T* prInfo);
 EXTERN INT32    PCMCIA_CheckCIS(UINT8* pu1Cis, UINT16 *addrcor, UINT8 *cor);
 EXTERN INT32    PCMCIA_CheckCIPLUSCapability(UINT8 *pui1CIPlusCap);
+EXTERN INT32   PCMCIA_ReadCIPLUSVersion(UINT32 *pui4CIPlusVersion);
+EXTERN INT32   PCMCIA_ReadCIPLUSCiprof(UINT32 *pui4CIPlusCiprof);
 EXTERN UINT32   PCMCIA_GetBypass(void);
 EXTERN void     PCMCIA_SetBypass(BOOL fgBypass);
 EXTERN void     PCMCIA_SetBypassTsRouting(BOOL fgBypass);

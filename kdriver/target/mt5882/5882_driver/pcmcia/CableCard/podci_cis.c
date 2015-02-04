@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/04 $
  * $RCSfile: pod_cis.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file pod_cis.c
@@ -117,6 +117,8 @@ LINT_EXT_HEADER_END
 #ifndef CC_MTK_LOADER
 
 static UINT8 ui1CiplusCompId = 0;
+static int iCiplusVersion = 0;
+static int iCiplusProfile = 0;
 
 //-----------------------------------------------------------------------------
 // Static functions
@@ -1017,6 +1019,419 @@ static int _PODCI_PHYS_Tuple_CISTPL_CONFIG( unsigned char  * pcis,
     }
     return iFound;
 }
+typedef unsigned char          U8BIT;
+typedef char                   S8BIT;
+typedef unsigned short         U16BIT;
+typedef short                  S16BIT;
+typedef unsigned int           U32BIT;
+typedef int                    S32BIT;
+typedef bool                   BOOLEAN;
+
+/*!**************************************************************************
+ * @brief    Handle "ciplus" compatibilty item in compatiblity string
+ * @param    identity - item's identity
+ * @param    flag - compatibility flag
+ * @param    ci_plus_enabled - whether CI+ is enabled
+ ****************************************************************************/
+static void HandleCiplusCompatibilityItem(S_TOKEN *identity, int flag,
+                                          int *ci_plus_enabled)
+{
+   S32BIT number;
+   U16BIT i;
+
+  // FUNCTION_START(HandleCiplusCompatibilityItem);
+
+   number = 0;
+
+   /* Expected one or more decimal digits */
+   for (i = 0; i < identity->len; i++)
+   {
+      if (identity->data[i] >= '0' && identity->data[i] <= '9')
+      {
+         number *= 10;
+         number += identity->data[i] - '0';
+      }
+      else
+      {
+         number = -1;
+         break;
+      }
+   }
+   if ((flag == '-') && (number == 1))
+   {
+      /* CI+ "v1" not supported */
+      *ci_plus_enabled = 0;
+   }
+   else if ((flag == '+') && (number >= 1))
+   {
+      /* CI+ "v1" is supported */
+      *ci_plus_enabled = number;
+   }
+   else if ((flag == '*') && (number >= 1))
+   {
+      /* CI+ "v1" is supported */
+      *ci_plus_enabled = number;
+   }
+
+   //FUNCTION_START(HandleCiplusCompatibilityItem);
+}
+
+/*!**************************************************************************
+ * @brief    Handle "ciprof" compatibilty item in compatiblity string
+ * @param    identity - item's identity
+ * @param    flag - compatibility flag
+ * @param    ci_plus_profile - the value of ciprof
+ ****************************************************************************/
+static void HandleCiprofCompatibilityItem(S_TOKEN *identity, int flag,
+                                          U32BIT *ci_plus_profile)
+{
+   BOOLEAN valid;
+   U32BIT number;
+   U16BIT i;
+
+   //FUNCTION_START(HandleCiplusCompatibilityItem);
+
+   valid = TRUE;
+   number = 0;
+
+   /* Expected decimal or hexadecimal number (note: string is lowercase) */
+   if ((identity->len >= 2) &&
+       (identity->data[0] == '0') && (identity->data[1] == 'x'))
+   {
+      /* Hexadecimal prefix */
+      for (i = 2; (valid) && (i < identity->len); i++)
+      {
+         if (identity->data[i] >= '0' && identity->data[i] <= '9')
+         {
+            number *= 16;
+            number += identity->data[i] - '0';
+         }
+         else if (identity->data[i] >= 'a' && identity->data[i] <= 'f')
+         {
+            number *= 16;
+            number += identity->data[i] + 10 - 'a';
+         }
+         else
+         {
+            valid = FALSE;
+         }
+      }
+   }
+   else
+   {
+      /* Decimal expected */
+      for (i = 0; (valid) && (i < identity->len); i++)
+      {
+         if (identity->data[i] >= '0' && identity->data[i] <= '9')
+         {
+            number *= 10;
+            number += identity->data[i] - '0';
+         }
+         else
+         {
+            valid = FALSE;
+         }
+      }
+   }
+
+   if (valid)
+   {
+      *ci_plus_profile = number;
+   }
+
+   //FUNCTION_START(HandleCiplusCompatibilityItem);
+}
+
+/*!**************************************************************************
+ * @brief    Handle compatibilty item in compatiblity string
+ * @param    label - item's label
+ * @param    identity - item's identity
+ * @param    flag - compatibility flag
+ * @param    ci_plus_enabled - whether CI+ is enabled
+ * @param    ci_plus_profile - the value of ciprof
+ ****************************************************************************/
+static void HandleCompatibilityItem(S_TOKEN *label, S_TOKEN *identity,
+                                    int flag, int *ci_plus_enabled,
+                                    U32BIT *ci_plus_profile)
+{
+   //FUNCTION_START(HandleCompatibilityItem);
+
+   /* Check label and identity tokens */
+   if ((label->len == 6) && (strncmp(label->data, "ciplus", 6) == 0))
+   {
+      HandleCiplusCompatibilityItem(identity, flag, ci_plus_enabled);
+   }
+   else if ((label->len == 6) && (strncmp(label->data, "ciprof", 6) == 0))
+   {
+      HandleCiprofCompatibilityItem(identity, flag, ci_plus_profile);
+   }
+
+   //FUNCTION_FINISH(HandleCompatibilityItem);
+}
+
+/*!**************************************************************************
+ * @brief    Return next token from line
+ * @param    line - the line to tokenise
+ * @param    token - the next token
+ * @returns  A pointer to the character following the token, or NULL
+ ****************************************************************************/
+
+static char *GetNextToken(char *line, S_TOKEN *token)
+{
+   static const char *single = "$[]=+-* ";
+   static const char *word =
+      "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "0123456789._";
+   char *p;
+   size_t len;
+
+   //FUNCTION_START(GetNextToken);
+
+   token->data = line;
+   if (*line == '\0')
+   {
+      token->type = TOKEN_NULL;
+      token->len = 1;
+      line = NULL;
+	  LOG(0, "GetNextToken TOKEN_NULL\n");
+   }
+   else
+   {
+      p = strchr(single, *line);
+      if (p != NULL)
+      {
+         /* single character token */
+         token->type = (E_TOKEN_TYPE)*line;
+         token->len = 1;
+         line++;
+		 LOG(0, "GetNextToken line\n");
+      }
+      else if (strncmp(line, "compatible", 10) == 0)
+      {
+         /* "compatible" */
+         token->type = TOKEN_COMPATIBLE;
+         token->len = 10;
+         line += token->len;
+		 LOG(0, "GetNextToken TOKEN_COMPATIBLE\n");
+      }
+      else
+      {
+         len = strspn(line, word);
+         if (len > 0)
+         {
+            token->type = TOKEN_WORD;
+            token->len = len;
+            line += token->len;
+			LOG(0, "GetNextToken TOKEN_WORD\n");
+         }
+         else
+         {
+            token->type = TOKEN_UNKNOWN;
+            token->len = 1;
+            line++;
+			LOG(0, "GetNextToken TOKEN_UNKNOWN\n");
+         }
+      }
+   }
+
+   //FUNCTION_FINISH(GetNextToken);
+   
+   return line;
+}
+
+/*!**************************************************************************
+ * @brief    Parse Level 1 Version / Product Information line in CIS
+ * @param    line - product information line
+ *
+ ****************************************************************************/
+static void ParseVers1Line(char *line)
+{
+   S_TOKEN token;
+   S_TOKEN label;
+   S_TOKEN identity;
+   enum {
+      S_START           = 's',
+      S_START_DOLLAR    = '$',
+      S_COMPATIBLE      = 'c',
+      S_TERM            = 't',
+      S_LABEL           = 'l',
+      S_EQUAL           = '=',
+      S_FLAG            = 'f',
+      S_IDENTITY        = 'i',
+      S_END             = 'e'
+   } state = S_START;
+   char flag = '+';
+   char *p = line;
+   int ci_plus_enabled;
+   U32BIT ci_plus_profile;
+
+   //FUNCTION_START(ParseVers1Line);
+
+   ci_plus_enabled = FALSE;
+   ci_plus_profile = 0x0;
+     /* fix klocwork */
+   token.type = TOKEN_NULL;
+   token.data = NULL;
+   token.len = 0;
+   memcpy(&label, &token, sizeof(S_TOKEN)); 
+   memcpy(&identity, &token, sizeof(S_TOKEN));
+
+   /* convert to lowercase */
+   while (*p++)
+   {
+      if (*p >= 'A' && *p <= 'Z') *p += ('a' - 'A');
+   }
+
+   line = GetNextToken(line, &token);
+   LOG(0, "ParseVers1Line 1\n");
+   while (line != NULL)
+   {
+      switch (state)
+      {
+      case S_START:
+	  	LOG(0, "ParseVers1Line S_START\n");
+         if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_START_DOLLAR:
+	  	LOG(0, "ParseVers1Line S_START_DOLLAR\n");
+         ci_plus_enabled = FALSE;
+         state = S_START;
+         if (token.type == TOKEN_COMPATIBLE)
+         {
+            state = S_COMPATIBLE;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_COMPATIBLE:
+	  	LOG(0, "ParseVers1Line S_COMPATIBLE\n");
+         state = S_START;
+         if (token.type == TOKEN_LBRACKET)
+         {
+            state = S_TERM;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_TERM:
+	  	LOG(0, "ParseVers1Line S_TERM\n");
+         state = S_START;
+         if (token.type == TOKEN_WORD)
+         {
+            label = token;
+            state = S_LABEL;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_LABEL:
+	  	LOG(0, "ParseVers1Line S_LABEL\n");
+         state = S_START;
+         if (token.type == TOKEN_EQUAL)
+         {
+            flag = '+';
+            state = S_EQUAL;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+		 else if (token.type == TOKEN_SPACE)
+         {
+            state = S_TERM;
+         }
+         break;
+      case S_EQUAL:
+	  	LOG(0, "ParseVers1Line S_EQUAL\n");
+         state = S_START;
+         if ((token.type == TOKEN_MINUS) || (token.type == TOKEN_PLUS) ||
+             (token.type == TOKEN_STAR))
+         {
+            flag = token.type;
+            state = S_FLAG;
+         }
+         else if (token.type == TOKEN_WORD)
+         {
+            identity = token;
+            state = S_IDENTITY;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_FLAG:
+	  	LOG(0, "ParseVers1Line S_FLAG\n");
+         state = S_START;
+         if (token.type == TOKEN_WORD)
+         {
+            LOG(0, "ParseVers1Line S_END TOKEN_WORD\n");
+            identity = token;
+            state = S_IDENTITY;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            LOG(0, "ParseVers1Line S_END TOKEN_DOLLAR\n");
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_IDENTITY:
+	  	LOG(0, "ParseVers1Line S_IDENTITY\n");
+         state = S_START;
+         if (token.type == TOKEN_SPACE)
+         {
+            LOG(0, "ParseVers1Line S_IDENTITY TOKEN_SPACE\n");
+            HandleCompatibilityItem(&label, &identity, flag, &ci_plus_enabled,
+                                    &ci_plus_profile);
+            state = S_TERM;
+         }
+         else if (token.type == TOKEN_RBRACKET)
+         {
+            LOG(0, "ParseVers1Line S_IDENTITY TOKEN_SPACE TOKEN_RBRACKET\n");
+            HandleCompatibilityItem(&label, &identity, flag, &ci_plus_enabled,
+                                    &ci_plus_profile);
+            state = S_END;
+         }
+         else if (token.type == TOKEN_DOLLAR)
+         {
+            state = S_START_DOLLAR;
+         }
+         break;
+      case S_END:
+	  	LOG(0, "ParseVers1Line S_END\n");
+         state = S_START;
+         if (token.type == TOKEN_DOLLAR)
+         {
+            LOG(0, "ParseVers1Line S_END TOKEN_DOLLAR\n");
+            //cis_info->ci_plus_enabled = ci_plus_enabled;
+            iCiplusVersion = ci_plus_enabled;
+			LOG(0,"Fond CI Plus Compatibility iCiplusVersion: %d\n",iCiplusVersion);
+            if (ci_plus_enabled)
+            {
+               LOG(0,"Fond CI Plus Compatibility Identification\n");
+               //cis_info->ci_plus_profile = ci_plus_profile;
+               iCiplusProfile = ci_plus_profile;
+			   LOG(0,"Fond CI Plus Compatibility iCiplusProfile: %d\n",iCiplusProfile);
+            }
+         }
+         break;
+      }
+      line = GetNextToken(line, &token);
+   }
+
+   //FUNCTION_FINISH(ParseVers1Line);
+}
+
 /* ======================================================================== */
 /* NAME : PHYS_Tuple                                                        */
 /*                                                                          */
@@ -1070,6 +1485,11 @@ int _PODCI_PHYS_Tuple(unsigned char **pcis, int *len, int *first, int *itpcc_rad
         {
             unsigned char arr_ciplus_comp_id[MAX_CISLEN];
             unsigned char tuple_data[MAX_CISLEN];
+#ifdef CIPLUS_TEST
+			unsigned char* temp_data = "$compatible[ciplus=1 that ciprof=0x0104200]$ ";//$compatible[ciplus=*32]$ $compatible[ciplus=1 ciprof=190000]$ 
+			//$compatible[ciplus=1 ciprof=0x0104400]$ $compatible[ciplus=1 that ciprof=0x0104200]$ 
+			//$compatible[ciprof=0x0104300]$
+#endif
             BOOL b_first_sign = FALSE;
             BOOL b_end_sign = FALSE;
             unsigned char dollar_sign_start_idx = 0;
@@ -1091,11 +1511,28 @@ int _PODCI_PHYS_Tuple(unsigned char **pcis, int *len, int *first, int *itpcc_rad
             
             /* check CI Plus Compatibility Identification, from CI+ spec, G.3 CI Plus Compatibility Identification*/
             ui1CiplusCompId = 0;
+            iCiplusVersion = 0;
+            iCiplusProfile = 0;
             x_memset(arr_ciplus_comp_id, 0x00, sizeof(unsigned char)*(MAX_CISLEN));
             b_first_sign = FALSE;
             b_end_sign = FALSE;
             x_memcpy(tuple_data, *pcis, link);
-
+#ifdef CIPLUS_TEST
+			x_strncpy(tuple_data, temp_data, sizeof(unsigned char)*x_strlen(temp_data)); 
+#endif
+			LOG(5,"\nCI Plus data x\n");
+			for(i=0;i<link;i++)
+			{
+			    LOG(5,"  0x%x  ",tuple_data[i]);
+			}
+			LOG(5,"\n CI Plus data char \n");
+			for(i=0;i<link;i++)
+			{
+			    LOG(5," %c ",tuple_data[i]);
+			}
+			printf(" \n  ");
+			//ParseVers1Line(tuple_data);
+//LOG(0,"CI Plus data =			%s\n", tuple_data );
             for (i =0; i<link; i++)
             {
                 /* get the first dollar sign and end of dollar sign. */
@@ -1128,6 +1565,7 @@ int _PODCI_PHYS_Tuple(unsigned char **pcis, int *len, int *first, int *itpcc_rad
 					arr_ciplus_comp_id[ciplus_comp_len] = '\0';
 
                     LOG(0,"CI Plus Comp id =            %s\n", arr_ciplus_comp_id );
+			ParseVers1Line(arr_ciplus_comp_id);
                     _PODCI_PHYS_case_string((CHAR*)arr_ciplus_comp_id, ciplus_comp_len, TRUE);
                     LOG(0,"CI Plus Comp id lower case = %s\n", arr_ciplus_comp_id );                   
             
@@ -1681,6 +2119,18 @@ INT32 PODCI_CheckCIPLUSCapability(UINT8 *pui1CIPlusCap)
 {   
     *pui1CIPlusCap = ui1CiplusCompId;
     LOG(0, "PODCI_CheckCIPLUSCapability = %d\n", *pui1CIPlusCap);
+    return POD_OK;
+}
+INT32 PODCI_ReadCIPLUSVersion(UINT32 *pui4CIPlusVersion)
+{   
+    *pui4CIPlusVersion = iCiplusVersion;
+    LOG(0, "PODCI_ReadCIPLUSVersion = %d\n", *pui4CIPlusVersion);
+    return POD_OK;
+}
+INT32 PODCI_ReadCIPLUSCiprof(UINT32 *pui4CIPlusCiprof)
+{   
+    *pui4CIPlusCiprof = iCiplusProfile;
+    LOG(0, "PODCI_ReadCIPLUSCiprof = %d\n", *pui4CIPlusCiprof);
     return POD_OK;
 }
 #endif

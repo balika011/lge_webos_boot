@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/04 $
  * $RCSfile: pcmcia_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
  
  //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ LINT_EXT_HEADER_END
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Work Around
 /* Used only for driver build. Add an delay after resetting data channel */
 #define PCMCIA_WORK_AROUND_DRIVER_BUILD_FOR_CAM026_CAM023
-//#define LGE_CI
+#define LGE_CI
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -907,7 +907,33 @@ INT32 PCMCIA_CheckCIPLUSCapability(UINT8 *pui1CIPlusCap)
     INT32 i4Result;
     
     i4Result = PODCI_CheckCIPLUSCapability(pui1CIPlusCap);
-    LOG(1, "PODCI_CheckCIPLUSCapability : %d, %d\n", i4Result, *pui1CIPlusCap);
+    LOG(0, "PODCI_CheckCIPLUSCapability : %d, %d\n", i4Result, *pui1CIPlusCap);
+    return i4Result;
+}
+//-----------------------------------------------------------------------------
+/** PCMCIA_ReadCIPLUSVersion (For CLI & Linux MTAL)
+ *      This API read CI+ version  from CIS.
+ */
+//-----------------------------------------------------------------------------
+INT32 PCMCIA_ReadCIPLUSVersion(UINT32 *pui4CIPlusVersion)
+{
+    INT32 i4Result;
+    
+    i4Result = PODCI_ReadCIPLUSVersion(pui4CIPlusVersion);
+    LOG(0, "PCMCIA_ReadCIPLUSVersion : %d, %d\n", i4Result, *pui4CIPlusVersion);
+    return i4Result;
+}
+//-----------------------------------------------------------------------------
+/** PCMCIA_ReadCIPLUSCiprof (For CLI & Linux MTAL)
+ *      This API checks CI+ profile from CIS.
+ */
+//-----------------------------------------------------------------------------
+INT32 PCMCIA_ReadCIPLUSCiprof(UINT32 *pui4CIPlusCiprof)
+{
+    INT32 i4Result;
+    
+    i4Result = PODCI_ReadCIPLUSCiprof(pui4CIPlusCiprof);
+    LOG(0, "PCMCIA_ReadCIPLUSCiprof : %d, %d\n", i4Result, *pui4CIPlusCiprof);
     return i4Result;
 }
 
@@ -1432,6 +1458,8 @@ INT32   PCMCIA_WaitForModuleStatus(UINT8 u1StatusBit, UINT16 u2TimeOut){return 0
 INT32   PCMCIA_ParseCis(UINT8* pu1CisMap, CIS_INFO_T* prInfo){return 0;}
 INT32   PCMCIA_CheckCIS(UINT8* pu1Cis, UINT16 *addrcor, UINT8 *cor){return 0;}
 INT32   PCMCIA_CheckCIPLUSCapability(UINT8 *pui1CIPlusCap){return 0;}
+INT32   PCMCIA_ReadCIPLUSVersion(UINT32 *pui4CIPlusVersion){return 0;}
+INT32   PCMCIA_ReadCIPLUSCiprof(UINT32 *pui4CIPlusCiprof){return 0;}
 UINT32  PCMCIA_GetBypass(void){return 0;}
 void    PCMCIA_SetBypass(BOOL fgBypass){return;}
 void    PCMCIA_SetBypassTsRouting(BOOL fgBypass){return;};

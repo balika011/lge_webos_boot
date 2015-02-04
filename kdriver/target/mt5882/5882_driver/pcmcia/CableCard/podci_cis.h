@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/04 $
  * $RCSfile: pod_cis.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file pod_cis.h
@@ -226,6 +226,31 @@ struct dvb_entry_bundle
     unsigned char   EntryNumb;              /* Read value of Configuration Entry Number in TPCE_INDX */
     unsigned char   TPCE_IF_Value;          /* Read value of TPCE_IF field. */
 };
+
+typedef enum token_type
+{
+   TOKEN_DOLLAR        = '$',
+   TOKEN_COMPATIBLE    = 'c',
+   TOKEN_LBRACKET      = '[',
+   TOKEN_RBRACKET      = ']',
+   TOKEN_WORD          = 'w',
+   TOKEN_EQUAL         = '=',
+   TOKEN_PLUS          = '+',
+   TOKEN_MINUS         = '-',
+   TOKEN_STAR          = '*',
+   TOKEN_SPACE         = ' ',
+   TOKEN_NULL          = '\0',
+   TOKEN_UNKNOWN       = 'u'
+} E_TOKEN_TYPE;
+
+typedef struct token
+{
+   E_TOKEN_TYPE type;
+   char *data;
+   int len;
+} S_TOKEN;
+
+
 /* physical state */
 #define DRV_IDLE		1
 #define DRV_CONNECT		2
@@ -320,8 +345,8 @@ struct dvb_entry_bundle
 #define CIPLUS_COMP_S_STR         "$compatible["
 #define CIPLUS_COMP_E_STR         "]$"
 /* compatibility_sequence */
-#define CIPLUS_COMP_SEQ_STR_LEN 8
-#define CIPLUS_COMP_SEQ_STR         "ciplus=1"
+#define CIPLUS_COMP_SEQ_STR_LEN 7
+#define CIPLUS_COMP_SEQ_STR         "ciplus="
 
 //-----------------------------------------------------------------------------
 // Type definitions
@@ -368,6 +393,8 @@ EXTERN INT32 PODCI_WriteCor(UINT16 u2CorAddress, UINT8 u1CorValue);
 EXTERN INT32 PODCI_ReadCor(UINT16 u2CorAddress);
 EXTERN INT32 PODCI_CheckCIS(UINT8* pu1Cis, UINT16 *addrcor, UINT8 *cor);
 EXTERN INT32 PODCI_CheckCIPLUSCapability(UINT8 *pui1CIPlusCap);
+EXTERN INT32 PODCI_ReadCIPLUSVersion(UINT32 *pui4CIPlusVersion);
+EXTERN INT32 PODCI_ReadCIPLUSCiprof(UINT32 *pui4CIPlusCiprof);
 #endif
 #endif	/// PODCI_CIS_H
 

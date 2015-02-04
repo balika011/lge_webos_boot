@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/04 $
  * $RCSfile: podci_ctrl.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
   
  
@@ -234,7 +234,9 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
     {
         UINT16 u2TmpDataLen = 0;
         UINT8* pu1TmpData = pu1Data;
-        LOG(1, "DMA Read : size = %d : %d\n", u2DataLen, *pu2DataLen);
+
+        LOG(0, "DMA Read : size = %d : %d\n", u2DataLen, *pu2DataLen);
+
         while ( u2DataLen > 0 )
         {
             if ( u2DataLen > DATA_CH_BUF_SIZE )
@@ -245,6 +247,7 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
             {
                 u2TmpDataLen = u2DataLen;
             }
+			
             HalFlushInvalidateDCacheMultipleLine((UINT32)pu1DataBuf, u2DataLen);
             PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
             PCMCIAHW_WRITE32(REG_DRAM_ADDR, PHYSICAL((UINT32)pu1DataBuf));
@@ -255,8 +258,9 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
                 LOG(0, "_PCMCIAHW_DmaReadCard err3\n");
                 return POD_READ_ERROR;
             }
-            x_memcpy((void*)pu1TmpData, (void*)pu1DataBuf, u2DataLen);
 
+            x_memcpy((void*)pu1TmpData, (void*)pu1DataBuf, u2DataLen);
+			
             if ( u2DataLen > DATA_CH_BUF_SIZE )
             {
                 u2DataLen -= DATA_CH_BUF_SIZE;
@@ -340,7 +344,7 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
     {
         if (PODCI_WaitForModuleStatus((UINT8)DA, 1) == POD_OK)
         {
-            LOG(1, "_PCMCIAHW_WriteCard: POD_DATA_AVAILABLE 1\n");
+            LOG(0, "_PCMCIAHW_WriteCard: POD_DATA_AVAILABLE 1\n");
             return POD_DATA_AVAILABLE;
         }
     }
@@ -349,7 +353,7 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
         PODCI_GetDaFrIntStatus(eAccessMode, &pu1DaFrSts);
         if (pu1DaFrSts & DA)
         {
-            LOG(1, "_PCMCIAHW_WriteCard: POD_DATA_AVAILABLE 2\n");
+            LOG(0, "_PCMCIAHW_WriteCard: POD_DATA_AVAILABLE 2\n");
             return POD_DATA_AVAILABLE;
         }
     }
@@ -390,11 +394,51 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
         LOG(0, "_PCMCIAHW_WriteCard err4\n");
         return POD_WRITE_ERROR;
     }
-
+	
+    if ( u2DataLen > 64 )
+    {
+        bUseDMA = TRUE;
+    }
     if ( bUseDMA )
     {
-        LOG(0, "_PCMCIAHW_WriteCard err5\n");
-        return POD_WRITE_ERROR;
+        UINT16 u2TmpDataLen = 0;
+        const UINT8* pu1TmpData = pu1Data;
+        LOG(0, "DMA Write : size = %d : %d\n", u2DataLen, u2DataLen);
+        while ( u2DataLen > 0 )
+        {
+            if ( u2DataLen > DATA_CH_BUF_SIZE )
+            {
+                u2TmpDataLen = DATA_CH_BUF_SIZE;
+            }
+            else
+            {
+                u2TmpDataLen = u2DataLen;
+            }
+			x_memcpy((void*)pu1DataBuf, (void*)pu1TmpData, u2DataLen);
+			HalFlushInvalidateDCacheMultipleLine((UINT32)pu1DataBuf, u2DataLen);
+            LOG(1, "PODCI_WriteCardReg:Physical address=0x%x, virtual address=0x%x\n", PHYSICAL((UINT32)pu1DataBuf), (UINT32)pu1DataBuf);
+			PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
+            PCMCIAHW_WRITE32(REG_DRAM_ADDR, PHYSICAL((UINT32)pu1DataBuf));
+            PCMCIAHW_WRITE32(REG_BYTE_CNT, u2DataLen);
+            PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_DMA_WRITE | ICMD_IE | SWIA)); /* Lock device output address */
+            if ( PCMCIA_GetCmdStatusDone() != TRUE )
+            {
+                LOG(1, "PODCI_WriteCardReg err2\n");
+                return POD_WRITE_ERROR;
+            }
+			if ( u2DataLen > DATA_CH_BUF_SIZE )
+            {
+                u2DataLen -= DATA_CH_BUF_SIZE;
+                pu1TmpData += DATA_CH_BUF_SIZE;
+            }
+            else
+            {
+                break;
+            }
+        }
+    
+       // LOG(0, "_PCMCIAHW_WriteCard err5\n");
+        //return POD_WRITE_ERROR;
     }
     else
     {
@@ -778,7 +822,7 @@ static INT32 _PODCI_CheckCis(void)
 
 static void _PODCI_ChangePersonality(void)
 {
-    LOG(1, "_PODCI_ChangePersonality : %d %d\n", rCisInfo.u2CorAddr, rCisInfo.u1CorValue);
+    LOG(0, "_PODCI_ChangePersonality : %d %d\n", rCisInfo.u2CorAddr, rCisInfo.u1CorValue);
     VERIFY(PODCI_WriteCor(rCisInfo.u2CorAddr, rCisInfo.u1CorValue) == POD_OK);
 
     /* Configure hardware controller to support POD interface */
@@ -798,7 +842,7 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     UINT32              u4SizeRegMsAddr;
     UINT16*             pu2BufSize;
     UINT16              u2Tmp;
-    LOG(1, "_PODCI_NegotiateBufSize\n");
+    LOG(0, "_PODCI_NegotiateBufSize\n");
     VERIFY(PODCI_GetPodCiAccessMode(&eAccessMode) == POD_OK);
     switch (eAccessMode)
     {
@@ -826,6 +870,35 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     }
 
     *pu2Buf = 16;
+    
+    //
+	u1CmdRegister = RS|DAIE;
+	LOG(3,"[N] u1CmdRegister is 0x%x\n", u1CmdRegister);
+    /* Reset channel */
+    PCMCIAHW_WRITE32(REG_DEV_ADDR, u4CtrlStsRegAddr);
+    PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, u1CmdRegister); /* RS -> 1 */
+    PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_WRITE | ICMD_IE));
+    if ( PCMCIA_GetCmdStatusDone() != TRUE )
+    {
+        LOG(0, "PODCI_ResetChannel err1\n");
+        return FALSE;
+    }
+    x_thread_delay(5); /* At least 40us */
+
+    u1CmdRegister &= (0xFF-RS); 
+    PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, u1CmdRegister); /* RS -> 0 */
+    PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_WRITE | ICMD_IE));
+    if ( PCMCIA_GetCmdStatusDone() != TRUE )
+    {
+        LOG(0, "PODCI_ResetChannel err2\n");
+        return FALSE;
+    }
+    x_thread_delay(5); /* At least 40us */
+
+    if (PODCI_WaitForModuleStatus((UINT8)FR, (UINT16)WAIT_FOR_MODULE_STATUS_COUNT) != POD_OK) /* Test FR */
+    {
+        return FALSE;
+    }
 
     /* Size read */
     u1CmdRegister |= SR;
@@ -852,7 +925,7 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     }
     u2Tmp = (UINT16)(PCMCIAHW_READ8(REG_SDA_DATA_READ));
     u2DataLen = (u2Tmp & 0xFF);
-    LOG(1, "LS = %d\n", u2Tmp);
+    LOG(3, "LS = %d\n", u2Tmp);
 
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4SizeRegMsAddr); /* MS */
     PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_READ | ICMD_IE));
@@ -863,13 +936,13 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     }
     u2Tmp = (UINT16)PCMCIAHW_READ8(REG_SDA_DATA_READ);
     u2DataLen = u2DataLen | ((u2Tmp<<8) & 0xFF00);
-    LOG(1, "MS = %d\n", u2Tmp);
-    LOG(1, "Data Length = %d\n" ,u2DataLen);
+    LOG(3, "MS = %d\n", u2Tmp);
+    LOG(3, "Data Length = %d\n" ,u2DataLen);
 
     /* Data length cannot be more than 2 */
     if (u2DataLen > 2)
     {
-        LOG(1, "_PODCI_NegotiateBufSize: u2DataLen > 2\n");
+        LOG(0, "_PODCI_NegotiateBufSize: u2DataLen > 2\n");
         return FALSE;
     }
 
@@ -920,10 +993,10 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
         return FALSE;
     }
 
-    LOG(1, "Buffer size from CAM : %d\n", *pu2BufSize);
+    LOG(3, "Buffer size from CAM : %d\n", *pu2BufSize);
     /* Compare the buffer size with our buffer size */
     *pu2BufSize = MIN_VALUE(*pu2BufSize, 65535);//change nego buffsize to max for some CI+ issue
-    LOG(1, "Buffer size decided : %d\n", *pu2BufSize);
+    LOG(3, "Buffer size decided : %d\n", *pu2BufSize);
 
     /* Size write */
     u1CmdRegister |= SW;
@@ -1009,7 +1082,7 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
         return FALSE;
     }
 
-    LOG(1, "_PODCI_NegotiateBufSize end\n");
+    LOG(0, "_PODCI_NegotiateBufSize end\n");
     return TRUE;
 }
 
@@ -1169,7 +1242,7 @@ INT32 PODCI_LowLevelInit(void)
     if ( ePcmciaCardType == PCMCIA_CARD_TYPE_CI )
     {
         /* Reset data channel */
-        LOG(1, "Reset data channel\n");
+        LOG(0, "Reset data channel\n");
         VERIFY(PODCI_SetPodCiAccessMode(POD_DATA_CHANNEL) == POD_OK);
         #ifdef PCMCIA_WORK_AROUND_DRIVER_BUILD_FOR_CAM026_CAM023
         x_thread_delay(3000);
@@ -1186,7 +1259,7 @@ INT32 PODCI_LowLevelInit(void)
         if ( ePcmciaCardType == PCMCIA_CARD_TYPE_POD )
         {
             /* Reset extended channel */
-            LOG(1, "Reset extended channel\n");
+            LOG(0, "Reset extended channel\n");
             VERIFY(PODCI_SetPodCiAccessMode(POD_EXTENDED_CHANNEL) == POD_OK);
             if (!PODCI_ResetChannel())
             {
@@ -1197,7 +1270,7 @@ INT32 PODCI_LowLevelInit(void)
             x_thread_delay(1);
         }
     }
-    LOG(1, "Reset data channel done\n");
+    LOG(0, "Reset data channel done\n");
     /* Negotiate data channel buffer size */
     VERIFY(PODCI_SetPodCiAccessMode(POD_DATA_CHANNEL) == POD_OK);
     if (!_PODCI_NegotiateBufSize(&u2NegoBufSize))
@@ -1369,6 +1442,8 @@ BOOL PODCI_ResetChannel(void)
     POD_ACCESS_MODE_T   eAccessMode;
     UINT32              u4CtrlStsRegAddr;
 
+    LOG(0, "Enter LGE PODCI_ResetChannel!\n");
+    
     VERIFY(PODCI_GetPodCiAccessMode(&eAccessMode) == POD_OK);
     switch (eAccessMode)
     {
@@ -1635,7 +1710,7 @@ INT32 PODCI_WriteCardReg(POD_IO_STATE_T eIoState, UINT32 u4RegAddr,
         case POD_DMA:
             if ( ePcmciaChipType == PCMCIA_CHIP_TYPE_EXTERNAL )
             {
-                LOG(1, "TODO : External CI DMA \n");
+                LOG(0, "TODO : External CI DMA \n");
                 ASSERT(0);
             }
             else
