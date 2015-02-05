@@ -25,7 +25,7 @@
 #define USB_PORT1 1
 #define USB_PORT2 2
 #define USB_PORT3 4
-#define SNAPSHOT_IMAGE_LOAD_ADDR 0x20000000
+//#define SNAPSHOT_IMAGE_LOAD_ADDR 0x2E400000
 
 /*
  * These structures and MACROs must be synchronized with kernel/power/power.h

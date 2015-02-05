@@ -102,6 +102,9 @@ ulong monitor_flash_len;
 extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
+extern u32 SNAPSHOT_IMAGE_LOAD_ADDR;
+extern struct swsusp_info *info; 
+extern u32 Get_DecomAddr(void);
 volatile int LogEnable = 1;
 
 #if defined(CONFIG_HARD_I2C) || \
@@ -889,6 +892,8 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	debug("monitor flash len: %08lX\n", monitor_flash_len);
 	board_init();	/* Setup chipselects */
 
+	SNAPSHOT_IMAGE_LOAD_ADDR= Get_DecomAddr();
+    info = (struct swsusp_info *)SNAPSHOT_IMAGE_LOAD_ADDR;
 #ifdef CONFIG_SERIAL_MULTI
 	serial_initialize();
 #endif

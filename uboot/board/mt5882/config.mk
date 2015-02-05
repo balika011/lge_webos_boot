@@ -13,7 +13,8 @@ ifeq ($(PROJECT_X),y)
 CONFIG_SYS_TEXT_BASE = 0x00d00000
 else
 ifneq "$(BUILTIN)" "true"  
-CONFIG_SYS_TEXT_BASE = 0x01000000
+#CONFIG_SYS_TEXT_BASE = 0x01000000
+CONFIG_SYS_TEXT_BASE = 0x2DA00000
 else
 CONFIG_SYS_TEXT_BASE = 0x03000000	#zanyun.wang add, uboot image compressed address need to rearward movement with the builtin kernel size increase
 endif

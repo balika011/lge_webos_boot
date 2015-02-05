@@ -653,7 +653,8 @@ if (BIM_IS_SECURE_BOOT)
     UNUSED(u4IfSecondImage);
 
 	#ifndef CC_BUILTIN		//zanyun.wang add, uboot image compressed address need to rearward movement with the builtin kernel size increase
-	prLdrData->rLdrHdr.u4FirmwareExecAddr = u4FirmwareExecAddr = 0x1000000;
+	//prLdrData->rLdrHdr.u4FirmwareExecAddr = u4FirmwareExecAddr = 0x1000000;
+	prLdrData->rLdrHdr.u4FirmwareExecAddr = u4FirmwareExecAddr = 0x2DA00000;
 	#else
     prLdrData->rLdrHdr.u4FirmwareExecAddr = u4FirmwareExecAddr = 0x3000000;
     #endif

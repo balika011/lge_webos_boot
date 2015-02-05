@@ -157,7 +157,8 @@ static unsigned int get_signed_image_size(struct snapshot_header *header)
 	return size;
 }
 
-struct swsusp_info *info = (struct swsusp_info *)SNAPSHOT_IMAGE_LOAD_ADDR;
+u32 SNAPSHOT_IMAGE_LOAD_ADDR=0;
+struct swsusp_info *info = NULL;
 void *meta_page_ptr;
 void (*kernel_resume_func)(void);
 static char *decomp_buf;

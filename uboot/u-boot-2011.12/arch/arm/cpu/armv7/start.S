@@ -737,7 +737,7 @@ set_irq_sp:
 	mcr	p15, 0, r0, c1, c0, 0	@ Write CP15 SCTRL Register
 
 	/* Set vector address in CP15 VBAR register */
-	mov	r0, #0x1000000
+	ldr	r0, = 0x2DA00000
 	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR
 	 mov   pc, lr
 	 

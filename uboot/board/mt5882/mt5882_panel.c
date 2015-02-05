@@ -1914,9 +1914,14 @@ UINT32 LogoDemo(void)
 #ifdef CFG_LG_CHG
 u32 Get_DrawAddr(void)
 {
-    return TOTAL_MEM_SIZE - 0x2000000;
+    //return TOTAL_MEM_SIZE - 0x2000000;
+    return TOTAL_MEM_SIZE - 0x4600000;  //Total memory - 70M.
 }
 #endif
 
+u32 Get_DecomAddr(void)
+{
+    return TOTAL_MEM_SIZE - FBM_MEM_CFG_SIZE -TRUSTZONE_MEM_SIZE;
+}
 #endif // LOADER_LOGO_FLASHOFFSET
 
