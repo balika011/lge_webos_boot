@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/05 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -290,7 +290,8 @@ typedef enum {
 	HAL_APROC_LGSE_MAIN = 0,
 	HAL_APROC_LGSE_FN000,
 	HAL_APROC_LGSE_FN001,
-	HAL_APROC_LGSE_FN004,
+	HAL_APROC_LGSE_FN004_MODE1,
+	HAL_APROC_LGSE_FN004_MODE2,
 	HAL_APROC_LGSE_FN009,
 	HAL_APROC_LGSE_FN010,
 	HAL_APROC_LGSE_MODE,
@@ -16258,13 +16259,14 @@ typedef struct {
 
 APROC_LGSE_NO_PARAM_T Aproc_Lgse_ParamNo_Block[HAL_APROC_LGSE_NUM] = 
 {
-	{10, 0, 3, 0},
-	{195, 10, 1, 3},
-	{21, 305, 130, 4},
-	{0, 326, 25, 134},
-	{10, 326, 2, 159},
-	{10, 336, 1, 161},
-	{0, 346, 3, 162},
+	{10, 0, 3, 0},   // MAIN
+	{295, 10, 1, 3}, // FN000
+	{21, 305, 130, 4}, // FN001
+	{0, 326, 25, 134}, // FN004_mode1
+	{0, 326, 15, 159},  // FN004_mode2
+	{10, 326, 2, 174}, // FN009
+	{10, 336, 1, 176},  // FN010
+	{0, 346, 3, 177}, // MODE
 	{0, 0, 0, 0}
 };
 
@@ -16300,7 +16302,7 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 
 		if (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4InitNo)
 		{
-			Printf ("[LGSE] Number of init param not match. _argLgseFnPara[fNo].noParam=%d, Aproc_Lgse_ParamNo_Block[fNo].u4InitNo=%d\n", _argLgseFnPara[fNo].noParam, Aproc_Lgse_ParamNo_Block[fNo].u4InitNo);
+			Printf ("[LGSE][INIT] Number of init param not match. _argLgseFnPara[%d].noParam=%d, Aproc_Lgse_ParamNo_Block[%d].u4InitNo=%d\n", fNo, _argLgseFnPara[fNo].noParam, fNo, Aproc_Lgse_ParamNo_Block[fNo].u4InitNo);
 			return;
 		}
 	}
@@ -16310,7 +16312,7 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 
 		if (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4VarNo)
 		{
-			Printf ("[LGSE] Number of var param not match. _argLgseFnPara[fNo].noParam = %d, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo=%d\n", _argLgseFnPara[fNo].noParam, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo);
+			Printf ("[LGSE][VAR] Number of var param not match. _argLgseFnPara[%d].noParam = %d, Aproc_Lgse_ParamNo_Block[%d].u4VarNo=%d\n", fNo, _argLgseFnPara[fNo].noParam, fNo, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo);
 			return;
 		}
 		if(fNo == HAL_APROC_LGSE_MODE)
