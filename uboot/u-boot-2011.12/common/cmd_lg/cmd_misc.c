@@ -1124,7 +1124,7 @@ int storage_init(void)
 int storage_read(uint32_t offset, size_t len, void* buf)
 {
 #ifdef CC_EMMC_BOOT
-	return emmc_read((off_t)offset, (size_t)len, (u_char *)buf);
+	return emmc_read((uint32_t)offset, (size_t)len, (u_char *)buf);
 #else
 	return nand_read(&nand_info[0], (off_t)offset, (size_t *)&len, (u_char *)buf);
 #endif

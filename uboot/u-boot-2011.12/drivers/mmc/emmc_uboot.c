@@ -467,7 +467,7 @@ int emmc_write(off_t ofs, size_t len, u_char *buf)
 	return (n == len) ? 0 : 1;
 }
 
-int emmc_read(off_t ofs, size_t len, u_char *buf)
+int emmc_read(unsigned long ofs, size_t len, u_char *buf)
 {
 	int	devnum = CONFIG_SYS_MMC_ENV_DEV;
 	unsigned long n;
