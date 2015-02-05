@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/02/05 $
  * $RCSfile: dmx.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -320,6 +320,7 @@ EXTERN BOOL TZ_SEC_BUF_FLUSH(void *prKernParam         , UINT32 u4Size);
 EXTERN BOOL TZ_SEC_BUF_FRAGMENT_ALLOC(void *prKernParam , UINT32 u4Size);
 EXTERN BOOL TZ_SEC_BUF_FRAGMENT_FREE(void *prKernParam , UINT32 u4Size);
 EXTERN BOOL TZ_SEC_BUF_CPB_MOVEDATA(void *prKernParam  , UINT32 u4Size);
+EXTERN BOOL TZ_SEC_BUF_CPB_GETDATA(void *prKernParam  , UINT32 u4Size);
 
 EXTERN BOOL TZ_RPMB_LOAD_MAC_KEY(void *prKernParam         , UINT32 u4Size);
 EXTERN BOOL TZ_RPMB_GET_WCNT_REQ(void *prKernParam , UINT32 u4Size);
