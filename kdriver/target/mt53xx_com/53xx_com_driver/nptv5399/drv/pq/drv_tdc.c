@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/05 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -149,13 +149,13 @@ REGTBL_T const CODE REGTBL_COMB_NTSC_AV[] = {
 	{COMB_CTRL_0D, 0x00000004, 0xFFFFFFFF},
 	{COMB_CTRL_0E, 0x4E554E55, 0xFFFFFFFF},
 	{COMB2D_00, 0x314859C8, 0xFFFFFFFE},
-	{COMB2D_01, 0x809E2001, 0xFFFFFFFF},
-	{COMB2D_02, 0x08051020, 0x0FFFFFFF},
+	{COMB2D_01, 0x809E3001, 0xFFFFFFFF},
+	{COMB2D_02, 0x08001020, 0x0FFFFFFF},
 	{COMB2D_03, 0x08081E03, 0xFFFFFF7F},
 	{COMB2D_04, 0x00100008, 0xFFFF03FF},
 	{COMB2D_05, 0x14061210, 0xFFFFFFFF},
 	{COMB2D_06, 0x10101022, 0xFFFFFFFF},
-	{COMB2D_07, 0x20502214, 0x7FFFFFFF},
+	{COMB2D_07, 0x20502010, 0x7FFFFFFF},
 	{COMB2D_08, 0x3311001A, 0xFFFFFFFF},
 	{COMB2D_09, 0x1111046A, 0xFFFFFFFF},
 	{COMB2D_0A, 0x8000080A, 0xFC7FFFFF},
