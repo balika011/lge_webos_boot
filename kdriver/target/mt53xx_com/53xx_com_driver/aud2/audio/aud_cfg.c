@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/05 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1506,6 +1506,8 @@ void AUD_HwInit(void)
     // Laihui: Get bit hold issue
     AUD_SET_BIT(REG_BS_CFG(AUD_DSP0), CLR_BS);
     AUD_SET_BIT(REG_BS_CFG(AUD_DSP1), CLR_BS);
+    // Do not let 2nd decoder getbits default use parser.  
+	AUD_WRITE32(REG_BS_CFG(AUD_DSP0), (AUD_READ32(REG_BS_CFG(AUD_DSP0)) & (~PTR_SEL_BANK1_MASK))|PTR_SEL_BANK1_DMX);
     ADAC_ADCDown(TRUE); //sunman power down Line in AD    
 }
 
