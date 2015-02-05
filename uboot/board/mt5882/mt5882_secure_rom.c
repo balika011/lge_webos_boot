@@ -50,6 +50,8 @@ extern void writeFullVerifyOTP(void);
 #define CC_USE_MD5
 #endif // CC_A1_SECURE_BOOT
 
+unsigned int u4FragSize = 0;
+unsigned int u4FragNum = 0;
 
 // the customer public key is copied from CC_LDR_ENV_OFFSET in mt53xx_sif.c
 extern LDR_ENV_T *_prLdrEnv;
@@ -1266,6 +1268,8 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
     unsigned char *pu1Image;
     int ret = -1;
     unsigned char au1EncryptedSignature[SIG_SIZE];
+	
+    unsigned char au1Frag[8];
 
 	printf("full verify ~~ \n");
     // 0. check if partition exist
@@ -1274,6 +1278,7 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
         printf("partition name doesn't exist\n");
         return -1;
     }
+	image_size -=8;
 
     if (preloaded)
     {
@@ -1289,13 +1294,18 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
             return -1;
         }
     }
+		// 2. get fragment 
+		 memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
+		u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
+		u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+        dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
 
     // 2. get encrypted signature
      memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);
 
     // 3. verify signature
 #ifdef SIGN_USE_PARTIAL
-    ret = verifySignature((unsigned int)pu1Image, image_size - 21*(SIG_SIZE), au1EncryptedSignature);
+    ret = verifySignature((unsigned int)pu1Image, image_size - (u4FragNum+1)*(SIG_SIZE), au1EncryptedSignature);
 #else
 	ret = verifySignature((unsigned int)pu1Image, image_size - SIG_SIZE, au1EncryptedSignature);
 #endif
@@ -1309,9 +1319,10 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
     int ret = -1;
     unsigned char *pu1AllFrag;
     unsigned char au1EncryptedSignature[SIG_SIZE];
-	unsigned int u4FragSize = 4096;
-	unsigned int u4FragNum = 20;
+	
+    unsigned char au1test[512];
 	struct partition_info *pi = NULL;
+    unsigned char au1Frag[8];
 
 	pi = get_used_partition(szPartName);
 
@@ -1322,9 +1333,33 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
         printf("partition name doesn't exist\n");
         return -1;
     }
+	#if 1
+	ret = emmc_read((unsigned long)pi->offset + image_size - 512, 512, au1test);
+	if (ret)
+	{
+		printf("block read failed..\n");
+		return 1;
+	}
+	// 2. get fragment 
+	 memcpy((void*)au1Frag, (void*)(au1test+512 -8), 8);
+	u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
+	u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+	dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+#else
+u4FragNum = 20;
+u4FragSize = 4096;
 
+#endif
+	image_size -=8;
+
+	// 2. copy u4FragSize(4K) every u4FragSize*u4FragNum bytes
+	printf("preloaded = %d\n", preloaded);
+	printf("u4FragNum  = %d\n", u4FragNum);
+	printf("u4FragSize  = %d\n", u4FragSize);
     // if image size is smaller less than group size, do full verification
     group_num = (image_size - ((u4FragNum+1)*256)) / (u4FragNum*u4FragSize);
+	
+	printf("group_num = %d\n",group_num);
     if (group_num == 0)
     {
         return verifyPartition(szPartName, addr, preloaded);
@@ -1342,9 +1377,6 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
         return -1;
     }
 
-	// 2. copy u4FragSize(4K) every u4FragSize*u4FragNum bytes
-	printf("group_num = %d\n",group_num);
-	printf("preloaded = %d\n", preloaded);
 	printf("[%d]:%s read fragments start\n", readMsTicks(), pi->name);
 	if (preloaded)
 	{

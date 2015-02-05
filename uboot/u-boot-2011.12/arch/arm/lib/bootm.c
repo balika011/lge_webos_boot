@@ -601,17 +601,14 @@ static ulong get_sp(void)
 void display_boottime_log(void)
 {
 	char*	timelog = getenv("timelog");
+	
 
 	if(!strcmp("on", timelog))
 	{
 		enable_console();
 	    {
-		/* add to measure booting time */
-//		unsigned int u32Timer_b, u32Timer_c;
-//		u32Timer_c =
-//		u32Timer_b =
-//		printf("\033[0;31m[time] sboot takes %d.%03dms, mboot takes %d.%03dms \033[0m\n", u32Timer_b/12000, (u32Timer_b/12)%1000,
-//							(u32Timer_c - u32Timer_b)/12000, ((u32Timer_c - u32Timer_b)/12)%1000);
+			UINT32 TimeSpendOnLoader = (0xFFFFFFFF - BIM_GetTimeLog(2))/24000;
+			printf("\033[0;31m[time] loader takes %dms, uboot takes %d.%03dms \033[0m\n", TimeSpendOnLoader,readMsTicks() -TimeSpendOnLoader);
 	    }
 		disable_console();
 	}
