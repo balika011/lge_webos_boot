@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/05 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #29 $
+ * $Revision: #30 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -664,7 +664,11 @@ UINT8 bApiDecTypeMapping(UINT8 bSrc)
 	{
 		return SV_VD_MPEGHD;
 	}
-	else
+	else if(bSrc == VSC_DEC_JPEG)
+	{
+		return SV_VD_MPEGHD;
+	}
+	else 
 	{
 		return SV_VD_NA;
 	}
@@ -691,6 +695,10 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 			bApiVFESetMainSubSrc(_fVFEHDMISourceMainNew, SV_VS_NO_CHANGE);
 		}
 		else if(bSrc == VSC_DEC_VDEC)
+		{
+			bApiVFESetMainSubSrc(SV_VS_DTV1, SV_VS_NO_CHANGE);
+		}
+		else if(bSrc == VSC_DEC_JPEG)
 		{
 			bApiVFESetMainSubSrc(SV_VS_DTV1, SV_VS_NO_CHANGE);
 		}

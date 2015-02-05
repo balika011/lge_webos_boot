@@ -2082,14 +2082,13 @@ static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv)
 
     return 0;
 }
-
 static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv)
 {
     UINT32 u4Omux;
 
     if (i4Argc != 2)
     {
-    	printf("NA:1 TVD:0 ADC:2 HDMI:4 VDEC:8(HD)9(SD)\n");
+    	printf("NA:0 TVD:1 ADC:2 HDMI:4 VDEC:5(HD)6(SD)\n");
       
         return 0;
     }
@@ -2105,7 +2104,7 @@ static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv)
 
     if (i4Argc != 2)
     {
-       printf("NA:1 TVD:0 ADC:2 HDMI:4 VDEC:8(HD)9(SD)\n");
+       printf("NA:0 TVD:1 ADC:2 HDMI:4 VDEC:5(HD)6(SD)\n");
        return 0;
     }
     u4Omux = (UINT32) StrToInt(szArgv[1]);
