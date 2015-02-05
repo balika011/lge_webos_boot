@@ -13,7 +13,6 @@
 
 spin_lock_t init_done[NR_CPUS] ;
 spin_lock_t init_idle[NR_CPUS] ;
-
 spin_lock_t  smp_cpu_released[NR_CPUS];
 
 static unsigned int oneshot_timer_id[NR_CPUS];
@@ -66,51 +65,11 @@ int __release_smp_cpu(void)
 }
 static void *sub_init(void *arg)
 {
-#if 0		
-		char name[16];
-		int pri;
-		
-		
-		thread_t *t;
-		static int cpu_id = 0;
-		//for( i=0; i < 3;i++ )
-			{
-			//pri = random(THREAD_MAX_PRIORITY-THREAD_MIN_PRIORITY);
-			pri = THREAD_DEFAULT_PRIORITY;
-			//cpu_id = (cpu_id+1) % NR_CPUS;
-		#if 0
-		
-		if(init_idle[1].lock == 1)
-			{
-				
-				sprintf(name,"test-%d",1);
-				t = thread_create_ex(name,thread_test0, NULL, 0,1,pri,0);
-			}
-		if(init_idle[2].lock == 1)
-			{
-				sprintf(name,"test-%d",2);
-				t = thread_create_ex(name,thread_test0, NULL, 0,2,pri,0);
-			}
-		if(init_idle[3].lock == 1)
-			{
-				
-				sprintf(name,"test-%d",3);
-				t = thread_create_ex(name,thread_test0, NULL, 0,3,pri,0);
-			}
-		#endif
-		
-
-		
-		}
-	#else
-		
-		//printf("\n#######main_init#########\n");
-	#endif
-
 	dbg_print("Starting in sub thread main context\n");
 	thread_cond_timedwait(&g_sub_cond[get_current_cpu()],NO_TIMEOUT);
-	for(;;)
-		__release_smp_cpu();
+
+	secondary_start_uboot_cleanup();
+	//for(;;) __release_smp_cpu();
 }
 
 static void _thread_main(int (*func)(void *),void *arg, thread_t *thread)
@@ -364,6 +323,7 @@ static void *_idle_thread_start(void *arg)
 	//thread_t *me = get_current_thread(0);
 	while( 1 ) {
         // prepare for Kernel SMP pen_releases
+#if 0
                 if(BOOT_CPU != get_cpu_id() && megic_number_cleaned==1 && smp_cpu_released[get_cpu_id()].lock== 0)
                 {
                 	
@@ -371,7 +331,9 @@ static void *_idle_thread_start(void *arg)
 					asm volatile("dsb");
 					secondary_start_uboot_cleanup();
         }
-
+#endif
+		asm volatile("dsb");
+		asm volatile("wfi");
 	}
 	return NULL;
 }
@@ -704,12 +666,9 @@ thread_t *thread_init(void)
     //arch_create_timer(arch_period_timer_callback, 1, 1, "PERIOD TIMER",0);
 
 #if defined(CONFIG_MULTICORES_PLATFORM)
-
-#ifdef ENABLE_SMP
 	Core_Wakeup(smp_thread, 1);
 	Core_Wakeup(smp_thread, 2);
 	Core_Wakeup(smp_thread, 3);
-#endif
 #endif
 	init_done[cpu_id].lock= 1;
 	return thread;

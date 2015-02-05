@@ -103,8 +103,7 @@ static inline void irq_disable(void)
 {
 	asm volatile("cpsid i");
 }
-#define ENABLE_SMP
-#ifdef ENABLE_SMP
+#if defined(CONFIG_MULTICORES_PLATFORM)
 /* Below functions should be defined in arch */
 void arch_spin_lock(void *lock);
 int arch_try_lock(void *lock);

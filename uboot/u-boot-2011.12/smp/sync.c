@@ -24,9 +24,9 @@ void release_non_boot_core(void)
 	{
 	
 		megic_number_cleaned=1;
-		//thread_cond_signal(&g_sub_cond[1]);
-		//thread_cond_signal(&g_sub_cond[2]);
-		//thread_cond_signal(&g_sub_cond[3]);
+		thread_cond_signal(&g_sub_cond[1]);
+		thread_cond_signal(&g_sub_cond[2]);
+		thread_cond_signal(&g_sub_cond[3]);
 		
 		//secondary_start_uboot_cleanup();
 	}

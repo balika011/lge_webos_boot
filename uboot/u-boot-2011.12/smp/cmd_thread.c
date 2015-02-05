@@ -220,6 +220,34 @@ static int *mutex_test2(void *arg)
 	return NULL;
 }
 
+int *thread_test(void *arg)
+{
+	int i;
+	int cpu_id = get_cpu_id();
+	thread_t *me = get_current_thread(cpu_id);
+	u32 wakeup_time;
+	int rnd,rnd2;
+	if( nosleep ) {
+		me->start_sleep = arch_counter_get_ms();
+		for(i=0; i<1000000;i++) {
+			rnd2 = random(1000000);
+		}
+		wakeup_time = arch_counter_get_ms() - me->start_sleep;
+		tlog("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
+
+	} else {
+		while(1) {
+			rnd = random(9);
+			me->start_sleep = arch_counter_get_ms();
+			mtk_sleep(rnd);
+			wakeup_time = arch_counter_get_ms() - me->start_sleep;
+			tlog("Test thread=%s sleep=%d,executing,cpsr=%x,cpu=%d,Time gap=%d\n",me->name,rnd,get_cpsr(),get_cpu_id(),wakeup_time);
+		}
+	}
+
+	return NULL;
+}
+
  int *thread_test0(void *arg)
 {
 	int i;
@@ -323,13 +351,13 @@ void create_thread_test(void)
 
 	thread_t *t;
 	static int cpu_id = 0;
-	for( i=0; i < 3;i++ ) {
+	for( i=0; i < 100;i++ ) {
 		sprintf(name,"test-%d",i);
 		//pri = random(THREAD_MAX_PRIORITY-THREAD_MIN_PRIORITY);
 		pri = THREAD_DEFAULT_PRIORITY;
-		//cpu_id = (cpu_id+1) % NR_CPUS;
+		cpu_id = (cpu_id+1) % NR_CPUS;
 		printf("Creating test thread=%s,pri=%d,cpu=%d\n",name,pri,cpu_id);
-		t = thread_create_ex(name,thread_test0, NULL, 0,cpu_id,pri,0);
+		t = thread_create_ex(name,thread_test, NULL, 0,cpu_id,pri,0);
 		if( t == NULL ) break;
 	}
 }
@@ -346,11 +374,21 @@ void display_all_threads(void)
 		tlog("%d : thread(%p) name=%s,priority=%d,state=%s,cpu=%d\n",i++,thread,thread->name,thread->priority,thread_state_str[thread->state],thread->cpu_id);
 	}
 }
+
+void ipi_test_cb(unsigned int ipi_num)
+{
+	printf("[cpu%d] received ipi_num : %d\n", get_cpu_id(), ipi_num);
+}
+
 int do_thread_test(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	if(argc < 2) {
 		tlog ("Usage:\n%s\n", cmdtp->usage);
-		//tlog ("%s\n", cmdtp->help);
+		tlog("\n\tthread create\n");
+		tlog("\n\tthread self [ipi_num]\n");
+		tlog("\n\tthread send [ipi_num] [cpu_mask]\n");
+		tlog("\n\tthread broad [ipi_num]\n");
+		tlog("\n\tthread target [ipi_num] [cpu_id]\n");
 		return 1;
 	}
 
@@ -402,13 +440,24 @@ int do_thread_test(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		thread_t *join = thread_create_ex("join",join_test, NULL,0,1,THREAD_DEFAULT_PRIORITY,1);
 		mtk_sleep(2);
 		thread_join(join,NULL);
-	} else if( !strcmp(argv[1],"ipi") ) {
-		ipi_send_self(IPI_NEED_RESCHEDULE);
+	} else if( !strcmp(argv[1],"self") ) {
+		int ipi_num = simple_strtoul(argv[2], NULL, NULL);
+		Interrupt_request(ipi_num, ipi_test_cb, NULL);
+		ipi_send_self(ipi_num);
+	} else if( !strcmp(argv[1],"send") ) {
+		int ipi_num = simple_strtoul(argv[2], NULL, NULL);
+		int cpu_mask = simple_strtoul(argv[3], NULL, NULL);
+		Interrupt_request(ipi_num, ipi_test_cb, NULL);
+		ipi_send(cpu_mask, ipi_num);
 	} else if( !strcmp(argv[1],"broad") ) {
-		ipi_broadcast(IPI_TEST_1);
+		int ipi_num = simple_strtoul(argv[2], NULL, NULL);
+		Interrupt_request(ipi_num, ipi_test_cb, NULL);
+		ipi_broadcast(ipi_num);
 	} else if( !strcmp(argv[1],"target") ) {
-		int cpu = simple_strtoul(argv[2], NULL, NULL);
-		ipi_send_target(cpu,IPI_TEST_2);
+		int ipi_num = simple_strtoul(argv[2], NULL, NULL);
+		int cpu_id = simple_strtoul(argv[3], NULL, NULL);
+		Interrupt_request(ipi_num, ipi_test_cb, NULL);
+		ipi_send_target(cpu_id, ipi_num);
 	} else if( !strcmp(argv[1],"mem") ) {
 		//char * p =malloc(300);
 		//p = realloc(p,400);
