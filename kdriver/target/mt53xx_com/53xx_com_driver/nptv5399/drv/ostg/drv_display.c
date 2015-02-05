@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/05 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1677,7 +1677,9 @@ void vDrvSetLCDTiming_SETDATA(void)
 	OSD_Base_SetHStart();
 
 #ifdef CC_LGE_PROTO_PCBA
+	#ifndef CC_MTK_LOADER
 	vDrvPWM_ApplyParamSet();
+	#endif
 #else
 	// update dimming frequency
 #ifdef SUPPORT_PANEL_SCAN_PWM
@@ -2319,10 +2321,10 @@ void vDrvDisplayInit(void)
     u4DrvSetCustFRC(SUPPORT_50TO60_3D);
     #endif
     vDrvOutputStageInit();
-    vDrvInitSCANPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort));
-	#ifdef CC_LGE_PROTO_PCBA//bringup_test  because default use 1
-	vDrvInitSCANPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort)+1);
+#if  !defined(CC_LGE_PROTO_PCBA)
+		vDrvInitSCANPWM(DRVCUST_PanelGet(ePanelBacklightPwmPort));
 #endif
+
 	
 	fgBLCustomCtrl = 1;
 
