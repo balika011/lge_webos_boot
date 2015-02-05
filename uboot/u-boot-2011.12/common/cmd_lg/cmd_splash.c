@@ -1072,8 +1072,7 @@ extern UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 
 extern UINT32 PmxDisplay_PDP(UINT32 u4Background, UINT8 colordepth, UINT8 fhd); //modified by LG
 extern const SYS_DB_T gSysNvmDB;
 extern unsigned int readMsTicks(void);
-extern void DDI_PWM_Init(UINT8 sys_type, PANEL_PWM_T *ppanel_pwm, UINT8 frctype);
-extern int DDI_PWM_PostInit(PANEL_PWM_T *ppanel_pwm);
+extern void DDI_PWM_Init(PANEL_PWM_T panel_pwm);
 extern int DDI_FRC_Reset(uint frctype, uint mode);
 
 #define		IMAGE_OFFSET	0x500000
@@ -1231,7 +1230,7 @@ void BootSplash(void)
 
 	curTime = readMsTicks();
 
-	DDI_PWM_Init(systype, &pnlpwm, Get_modelOpt(FRC_OPT_SEL));
+	DDI_PWM_Init(pnlpwm);
 	printf("[%d]:PWM1/2 ON \n", readMsTicks());
 
 	/* LVDS */
@@ -1300,8 +1299,6 @@ void BootSplash(void)
 			u1SetFlipMirrorConfig(TRUE, TRUE);
 		}
 	}
-
-	DDI_PWM_PostInit(&pnlpwm);
 
 	printf("[%d]:DRAW LOGO \n",readMsTicks());
 

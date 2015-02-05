@@ -377,6 +377,8 @@ extern int verify_apps(int boot_mode);
 	printf("[%4d] fast boot check \n", readMsTicks());
 	/* delay 10 * 1us */
 
+	BootSplash();
+
 #if 0 // temporary disable	
 #ifndef UNSECURE
 	if ((DDI_NVM_GetDebugStatus() != RELEASE_LEVEL))
@@ -401,7 +403,6 @@ extern int verify_apps(int boot_mode);
 
 	if(key != 0x60) {
 	//if(key != 0x0d && key != 0x60) {
-		BootSplash();
 
 #ifdef SIGN_USE_PARTIAL
 		verify_apps(IS_SNAPSHOTBOOT);

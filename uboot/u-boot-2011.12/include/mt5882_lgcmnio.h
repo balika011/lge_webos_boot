@@ -238,6 +238,28 @@ typedef struct modelopt_t
 	MODELOPT_HDMI_DIRECTION_T	direction_HDMI;
 }MODELOPT_T;
 
+/**
+ *	PWM Driving mode
+ *	(from os/common_linux/dil/include/dil_lcdport.h)
+ */
+typedef enum{
+	PWM_DRIVING_LED_CURRENT		= 0,	/* PWM1(global dimming )+ PWM2(led current) */
+	PWM_DRIVING_2CH_PHASE_SAME	= 1,	/* PWM1(global dimming) + PWM2(global dimming) : same phase */
+	PWM_DRIVING_2CH_PHASE_DIFF	= 2,	/* PWM1(global dimming) + PWM2(global dimming) : diffrent phase */
+	PWM_DRIVING_MODE_MAX		= 3
+}PWM_DRIVING_MODE_T;
+
+/**
+ * PWM INDEX FOR SCANNING
+ *  (from os/common_linux/dil/include/dil_lcdport.h)
+ */
+typedef enum
+{
+	PWM_SCANNING_IDX_0		= 0,	// main
+	PWM_SCANNING_IDX_1		= 1,	// sub
+	PWM_SCANNING_IDX_MAX	= 2
+} PWM_SCANNING_IDX_T;
+
 extern char aHW_model_opt[];
 extern char strModelOpt[];
 extern char strHWOption[];
@@ -258,6 +280,8 @@ extern int DDI_CMNIO_PWM_SetDutyCycle(uint pwmIndex, uint data);
 extern int DDI_CMNIO_PWM_SetPulseWidth(uint pwmIndex, uint data);
 extern int DDI_CMNIO_PWM_SetVsyncAlign(uint pwmIndex, uint data);
 extern int DDI_CMNIO_SPI_Init(uint idx, uint u4double);
+//extern int DDI_CMNIO_PWM_PreInit(void);
+//extern int DDI_CMNIO_PWM_ApplyParamSet(uint8_t pwmIndex, uint8_t m_pwm_enable, uint8_t m_pwm_duty, uint m_pwm_frequency, uint m_pwm_lock, uint m_pwm_pos_start, uint pwm_scanning_enable);
 
 #ifdef CFG_LG_CHG
 extern int DDI_GPIO_SetDefault(void);
