@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/06 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1678,7 +1678,7 @@ void vDrvSetLCDTiming_SETDATA(void)
 
 #ifdef CC_LGE_PROTO_PCBA
 	#ifndef CC_MTK_LOADER
-	vDrvPWM_ApplyParamSet();
+	//vDrvPWM_ApplyParamSet();
 	#endif
 #else
 	// update dimming frequency
