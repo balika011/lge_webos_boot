@@ -9047,11 +9047,11 @@ UINT8 u1HDMI_SetEdidDataByPort(UINT8 port, UINT8 * pData)
     #ifdef CC_HDMI_CONFIG_BOARD
 	if((eHDMIBoardType() == ATSC_EXT_EDID)||(eHDMIBoardType() == DVB_EXT_EDID))
 	{
-        vIO32WriteFldAlign(PDWNC_EDID_DEV0, 1, FLD_EDID2_DIS);
+        vIO32WriteFldAlign(PDWNC_EDID_DEV0, 1, FLD_EDID0_DIS);
 	}
 	else
 	{
-		vIO32WriteFldAlign(PDWNC_EDID_DEV0, 0, FLD_EDID2_DIS);
+		vIO32WriteFldAlign(PDWNC_EDID_DEV0, 0, FLD_EDID0_DIS);
 	}
 	vIO32WriteFldAlign(PDWNC_EDID_DEV1, 0, FLD_EDID1_DIS);
 	vIO32WriteFldAlign(PDWNC_EDID_DEV2, 0, FLD_EDID2_DIS);
