@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/06 $
  * $RCSfile: ostg_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -306,6 +306,9 @@ void vApiSetScanningPWM(UINT16 u2HTotal, UINT16 u2VTotal, UINT32 u4Start, UINT32
 
 void BACKLT_SetDimming(UINT32 u4Frequency, UINT32 u4Dimming)
 {
+	//Don't use this function in LGE Project.
+	//Just for turnkey solution.
+#if 0
 #ifndef SUPPORT_PANEL_SCAN_PWM
     if(u4Frequency == 0)
     {
@@ -404,6 +407,7 @@ void BACKLT_SetDimming(UINT32 u4Frequency, UINT32 u4Dimming)
 
     vDrvScanPWMDataFire();
 #endif  // SUPPORT_PANEL_SCAN_PWM
+#endif
 }
 
 
