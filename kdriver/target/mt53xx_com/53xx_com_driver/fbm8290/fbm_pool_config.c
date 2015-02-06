@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/29 $
+ * $Date: 2015/02/06 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2967,7 +2967,11 @@ u4AheadType = FBM_POOL_TYPE_TOTAL2;
 #define CALCULATE_PSCAN_NR_NUM()\
 	do {\
     if (u4MddiMode & FBM_POOL_MODE_MDDI_DISP)\
-    u1NRNum = 2;\
+    {\
+    	u1NRNum = 2;\
+        if(u1IsMpeg)\
+   	    u1NRNum+=1;\
+    }\
     else if ((u4MddiMode & FBM_POOL_MODE_MDDI_HYBRID) || (u4MddiMode & FBM_POOL_MODE_MDDI_DUAL_HYBRID))\
     {\
         u1NRNum = FBM_POOL_HYBRID_DRAM_FRAME_NUM;\
@@ -3198,7 +3202,7 @@ static inline void v3DWxHAlign(const UINT32 u4DIMode, UINT32* pu4Width, UINT32* 
 
 static inline void vCalcInterlaceFldNum(UINT32 u4VdpId, 
     UINT32 u4MddiMode, UINT32 u4flip, UINT8* u1Ynum, UINT8* u1Cnum,
-    UINT32 u4PscanModeEx)
+    UINT32 u4PscanModeEx,UINT8 u1IsMpeg)
 {
     if (u4MddiMode & FBM_POOL_MODE_MDDI_FULL)
     {
@@ -3233,6 +3237,11 @@ static inline void vCalcInterlaceFldNum(UINT32 u4VdpId,
             *u1Ynum += 1;
             *u1Cnum += 1;
         }        
+		if(u1IsMpeg)//for epg mode
+    	{
+            *u1Ynum += 1;
+            *u1Cnum += 1;
+    	}
     }
 
     if(E_TDTV_DI_DRAM_DOUBLE==u4PscanModeEx)
@@ -3255,7 +3264,7 @@ static inline void vCalcInterlaceFldNum(UINT32 u4VdpId,
 
 inline UINT32 u4AllocMIBSizeProgressive(const UINT32 u4VdpId, 
     const UINT32 u4MddiMode,const UINT32 u4FlipModule,
-    const UINT32 u4Width,const UINT32 u4Height,const UINT32 u4PscanModeEx, const UINT8 fgIsMpeg)
+    const UINT32 u4Width,const UINT32 u4Height,const UINT32 u4PscanModeEx, const UINT8 u1IsMpeg)
 {
     UINT32 u4Size;
     UINT8 u1NRNum;
@@ -3266,7 +3275,7 @@ inline UINT32 u4AllocMIBSizeProgressive(const UINT32 u4VdpId,
     //No 420 Support for Line interleave Src
     if((u4MddiMode & FBM_POOL_MODE_MDDI_NR_OFF)||(E_TDTV_DI_DRAM_DOUBLE==u4PscanModeEx))
     {
-        if(fgIsMpeg&&!(E_TD_IN_LI_P==TD_MIB_IN(u4DIMode)))
+        if(u1IsMpeg&&!(E_TD_IN_LI_P==TD_MIB_IN(u4DIMode)))
         {
             if (u4MddiMode & FBM_POOL_MODE_10BIT)
             {
@@ -3291,7 +3300,7 @@ inline UINT32 u4AllocMIBSizeProgressive(const UINT32 u4VdpId,
     }
     else
     {
-        if(fgIsMpeg&&!(E_TD_IN_LI_P==TD_MIB_IN(u4DIMode)))
+        if(u1IsMpeg&&!(E_TD_IN_LI_P==TD_MIB_IN(u4DIMode)))
         {
             if (u4MddiMode & FBM_POOL_MODE_10BIT)
             {
@@ -3328,7 +3337,7 @@ static inline UINT32 u4AllocMIBSizeInterlace(const UINT32 u4VdpId,
     UINT8 u1Ynum, u1Cnum;
     UINT32 u4Size = 0;
     
-    vCalcInterlaceFldNum(u4VdpId, u4MddiMode, u4FlipModule, &u1Ynum, &u1Cnum,u4PscanModeEx);
+    vCalcInterlaceFldNum(u4VdpId, u4MddiMode, u4FlipModule, &u1Ynum, &u1Cnum,u4PscanModeEx,fgIsMpeg);
    
     if(VDP_1==u4VdpId)
     {
@@ -3491,6 +3500,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
     FBM_POOL_T* prPool;
     UINT32 u4EPGWidth;
     UINT32 u4EPGHeight;
+    UINT8 u1IsMpeg =env->u1IsMPEG[u4VdpId];
     
     UINT32 u4DIMode = u4DrvTDTVDIModeQuery();
     static UINT32 u4PreMainScalerWidth = 0, u4PreMainScalerHeight = 0;
@@ -3504,7 +3514,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
     u4MddiMode = SRM_GetMddiMode(u4VdpId);
     u4ScalerMode = SRM_GetScposMode(u4VdpId);
     u4HPDSize = SRM_GetScposHPDSize(u4VdpId); //Miss Nameing, it's Panel Display Size
-    u4FlipModule = u4DecideFlipModule(u4VdpId, u4ScalerMode, env->u1IsMPEG[u4VdpId], env);
+    u4FlipModule = u4DecideFlipModule(u4VdpId, u4ScalerMode, u1IsMpeg, env);
 
     u4NextDramAddr = u4BaseDramAddr;
     UPDATE_DI_FIFO_WIDTH(u4VdpId);
@@ -3608,7 +3618,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         v3DWxHAlign(u4DIMode,&u4Width,&u4Height);
 
         u4Size = u4AllocMIBSizeInterlace(u4VdpId,u4MddiMode,u4FlipModule
-            ,u4Width,u4Height,u4PscanModeEx,env->u1IsMPEG[u4VdpId]);
+            ,u4Width,u4Height,u4PscanModeEx,u1IsMpeg);
                 
         if (u4VdpId == VDP_1)
         {
@@ -3647,7 +3657,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
 // keep untouched for saving QA effort, 
 // This Definition check should be removed in next generation for unify system flow
             u4Size = u4AllocMIBSizeProgressive(u4VdpId,u4MddiMode,u4FlipModule
-                ,u4Width,u4Height,u4PscanModeEx,env->u1IsMPEG[u4VdpId]);
+                ,u4Width,u4Height,u4PscanModeEx,u1IsMpeg);
 #else            
             //No 420 Support for Line interleave Src
             if (E_TD_IN_LI_P==TD_MIB_IN(u4DIMode))
