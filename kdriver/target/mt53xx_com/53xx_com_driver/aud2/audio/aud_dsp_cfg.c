@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/07 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2339,7 +2339,7 @@ static void _AudDspChannelVolChangeNew(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eC
 
         u4HdmiChgMute = _aafgChlHdmiChgFmtMute[u1DecId][eChl] ? 0 : 1;
 
-        u1DecPlayMute = _aafgChDecPlayMute[u1DecId][eChl] ? 0 : 1;
+        //u1DecPlayMute = _aafgChDecPlayMute[u1DecId][eChl] ? 0 : 1;
 
         if (eStreamSrc == AUD_STREAM_FROM_HDMI)
         {
@@ -8642,7 +8642,7 @@ void _AUD_DspChannelVolumeNew(UINT8 u1DecId, AUD_CH_T eChannel, UINT8 u1Value, U
     AUD_DEC_ID_VALIDATE_3(u1DecId);
 #endif
 
-    LOG(2,"CMD: set Channel Volume: Dec(%d) CH(%d) u1Value(%d) u1Value(%d)\n",
+    LOG(9,"CMD: set Channel Volume: Dec(%d) CH(%d) u1Value(%d) u1Value(%d)\n",
         u1DecId, (UINT8)eChannel, u1Value, u1Value1);
 
     VOL_CTL_SEMA_LOCK(u1DecId);

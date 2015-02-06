@@ -1966,11 +1966,7 @@ static const AUD_INTER_DAC_CFG_T _arMtkInterDacUsage =
 {
 #ifndef CC_AUDIO_EU_PWM_OUTPUT_AUXDEC
     AUD_CHL_DOWNMIX,    // AL0,AR0: Headphone
-#ifdef CC_LGE_PROTO_PCBA    
-    AUD_CHL_AUX,     // AL1,AR1: SCART1-Lineout
-#else
-AUD_CHL_BYPASS, 	// AL1,AR1: SCART1-Lineout
-#endif
+    AUD_CHL_EXTCH,     // AL1,AR1: SCART1-Lineout
     AUD_CHL_AUX,        // AL2,AR2: SCART2-TV Bypass
     AUD_CHL_L_R,
 #else

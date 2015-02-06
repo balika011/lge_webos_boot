@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/07 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7154,7 +7154,7 @@ void AUD_SetUiSpkOnOff(BOOL fgEnable)
 void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
             UINT32 u4Arg1, UINT32 u4Arg2, UINT32 u4Arg3, UINT32 u4Arg4)
 {
-    LOG(2, "%s, type = %d index = %d \n", __FUNCTION__, u4CmdType, u4Index);
+    LOG(8, "%s, type = %d index = %d \n", __FUNCTION__, u4CmdType, u4Index);
     switch (u4CmdType)
     {
 #ifdef CC_AUD_DDI 
