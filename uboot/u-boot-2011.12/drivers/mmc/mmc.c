@@ -378,26 +378,30 @@ static ulong mmc_bread(int dev_num, ulong start, lbaint_t blkcnt, void *dst)
 		 */
 		cur = (blocks_todo > 65535) ? 65535 : blocks_todo;
 		if(mmc_read_blocks(mmc, dst, start, cur) != cur)
+		{
+		    printf("mmc_read_blocks read error!\n");
 			return 0;
+		}
+		if(NULL != pemmc_user_callback_internal)
+		{ 
+			int err = 0;
+			if(cur != 0)
+			{
+				err = 0;
+			}
+			else
+			{
+				err = -1;
+			}
+			pemmc_user_callback_internal(err,cur*512);
+			//printf("+++++++++++++++++g_read_bytes(0x%x)+++++++++++++++\n",pemmc_user_callback_internal(err,blkcnt*512));
+		}	
+		
 		blocks_todo -= cur;
 		start += cur;
 		dst += cur * mmc->read_bl_len;
 	} while (blocks_todo > 0);
 
-	if(NULL != pemmc_user_callback_internal)
-	{ 
-		int err = 0;
-		if(blkcnt != 0)
-		{
-			err = 0;
-		}
-		else
-		{
-			err = -1;
-		}
-		pemmc_user_callback_internal(err,blkcnt*512);
-		//printf("+++++++++++++++++g_read_bytes(0x%x)+++++++++++++++\n",pemmc_user_callback_internal(err,blkcnt*512));
-	}
 	return blkcnt;
 }
 
