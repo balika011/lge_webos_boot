@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/07 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1369,6 +1369,9 @@ typedef enum
     AUD_FMT_OMX_ULAW = 0x83,
     AUD_FMT_WMA10LOSSLESS,//0x84, reserved for future development
     AUD_FMT_WMA10SPEECH,//0x85, reserved for future development    
+    AUD_FMT_OMX_LPCM_TS,
+    AUD_FMT_OMX_LPCM_PRIVATE1,
+    AUD_FMT_OMX_LPCM_TSDVD,
 }   AUD_FMT_T;
 
 /* Move AUD_DEC_STREAM_FROM_T to drv_cust/drvcust_if.h */
