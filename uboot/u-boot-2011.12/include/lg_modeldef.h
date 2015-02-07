@@ -9,6 +9,13 @@
 
 extern int	DDI_NVM_GetDebugStatus( void );
 
+#define VERIFY_RETRY_MAX    (1)
+
+#define VERIFY_APPS_DONE 		(0x0001)
+#define VERIFY_KERNEL_DONE		(0x0010)
+#define VERIFY_TZFW_DONE		(0x0100)
+
+extern int	verify_done;
 
 #endif /*_LG_MODELDEF_H_ */
 

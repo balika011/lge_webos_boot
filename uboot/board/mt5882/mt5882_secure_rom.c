@@ -56,6 +56,8 @@ unsigned int u4FragNum = 0;
 // the customer public key is copied from CC_LDR_ENV_OFFSET in mt53xx_sif.c
 extern LDR_ENV_T *_prLdrEnv;
 
+int verify_done = 0;
+
 int IsRunOnUsb(char* uenv, int uenv_size)
 {
     static int run_on_usb = 0;
@@ -1278,7 +1280,6 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
         printf("partition name doesn't exist\n");
         return -1;
     }
-	image_size -=8;
 
     if (preloaded)
     {
@@ -1294,6 +1295,8 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
             return -1;
         }
     }
+	
+	image_size -=8;
 		// 2. get fragment 
 		 memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
 		u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
@@ -1309,6 +1312,133 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 #else
 	ret = verifySignature((unsigned int)pu1Image, image_size - SIG_SIZE, au1EncryptedSignature);
 #endif
+
+    return ret;
+}
+int sbverifyPartition(unsigned long long offset,unsigned int image_size)
+{
+    unsigned char *pu1Image;
+    int ret = -1;
+    unsigned char au1EncryptedSignature[SIG_SIZE];
+	ulong 		addr = 0x8000000;
+    unsigned char au1Frag[8];
+
+	printf("full verify ~~ \n");
+
+        // 1. copy image
+        pu1Image = (unsigned char *)addr;
+        if (emmc_read(offset, image_size,pu1Image) != 0)
+        {
+            printf("copy image fail\n");
+            return -1;
+        }
+		
+		image_size -=8;
+		// 2. get fragment 
+		 memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
+		u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
+		u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+        dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+
+    // 2. get encrypted signature
+     memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);
+
+    // 3. verify signature
+#ifdef SIGN_USE_PARTIAL
+    ret = verifySignature((unsigned int)pu1Image, image_size - (u4FragNum+1)*(SIG_SIZE), au1EncryptedSignature);
+#else
+	ret = verifySignature((unsigned int)pu1Image, image_size - SIG_SIZE, au1EncryptedSignature);
+#endif
+
+    return ret;
+}
+int sbverifyPartialPartition(unsigned long long offset,unsigned int image_size)
+{
+    unsigned int i = 0, seed = 0, group_num;
+    int ret = -1;
+    unsigned char *pu1AllFrag;
+    unsigned char au1EncryptedSignature[SIG_SIZE];
+	ulong 		addr = 0x8000000;
+    unsigned char au1test[512];
+    unsigned char au1Frag[8];
+
+
+	printf("partial verify ~~ \n");
+	#if 1
+	ret = emmc_read((unsigned long)offset + image_size - 512, 512, au1test);
+	if (ret)
+	{
+		printf("block read failed..\n");
+		return 1;
+	}
+	// 2. get fragment 
+	 memcpy((void*)au1Frag, (void*)(au1test+512 -8), 8);
+	u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
+	u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+	dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+#else
+u4FragNum = 20;
+u4FragSize = 4096;
+
+#endif
+	image_size -=8;
+
+	// 2. copy u4FragSize(4K) every u4FragSize*u4FragNum bytes
+	printf("u4FragNum  = %d\n", u4FragNum);
+	printf("u4FragSize  = %d\n", u4FragSize);
+    // if image size is smaller less than group size, do full verification
+    group_num = (image_size - ((u4FragNum+1)*256)) / (u4FragNum*u4FragSize);
+	
+	printf("group_num = %d\n",group_num);
+    if (group_num == 0)
+    {
+        return sbverifyPartition(offset,image_size+8);
+    }
+
+    // 1. generate a random number and allocate buffer
+    seed = random() % u4FragNum;
+    printf("part=%d\n", seed);
+
+	pu1AllFrag = (unsigned char *)addr;
+
+    if (pu1AllFrag == 0)
+    {
+        printf("malloc fail\n");
+        return -1;
+    }
+
+	printf("[%d] read fragments start\n", readMsTicks());
+	
+	{
+	    for (i = 0; i < group_num; i++)
+	    {
+	        // this is flash offset
+			ret = emmc_read((unsigned long)( offset + ((i*u4FragNum + seed) * u4FragSize)), u4FragSize, pu1AllFrag+(u4FragSize*i));
+			if (ret)
+			{
+				printf("block read failed..\n");
+				return 1;
+			}
+	    }
+	}
+	printf("[%d]:%s read fragments end\n", readMsTicks());
+
+	// 3. get encrypted signature
+	{
+	    offset = image_size - SIG_SIZE*(u4FragNum + 1 - seed);
+
+		ret = emmc_read((unsigned long)(offset + ((i*u4FragNum + seed) * u4FragSize)), SIG_SIZE, au1EncryptedSignature);
+		if (ret)
+		{
+			printf("block read failed..\n");
+			return 1;
+		}
+	}
+
+	dumpBinary((unsigned char*)pu1AllFrag, u4FragSize, "before verfiysiganture start");
+
+    // 4. verify signature
+    ret = verifySignature((unsigned int)pu1AllFrag, u4FragSize*group_num, au1EncryptedSignature);
 
     return ret;
 }
@@ -1569,92 +1699,105 @@ static int is_verify_part(int idx, int boot_mode)
 
 	return 0;
 }
+int sb_verify_image(const char *szPartName, ulong addr, unsigned int flag)
+{
+	if(flag == 1)
+		return verifyPartition(szPartName,addr, 0);
+	else
+		return verifyPartialPartition(szPartName,addr, 0);
+}
 
 extern int do_cp2ramz (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);
 int verify_apps(int boot_mode)
 {
-	int			idx, ret;
-	ulong		offset;
-	uint32_t	filesize, imgsize;
-	uint32_t	flags;
+    int         idx;
+    uint64_t    offset;
+    unsigned int    filesize, imgsize;
+    uint8_t*    sign;
+    uint32_t    sign_size;
+    uint32_t    flags = 0;
+    uint32_t    loop_cnt;
+    int         IsFullverify = 0;
+    int         ret = 0;
+    int         retry_cnt = 0;
 	ulong 		addr = 0x8000000;
-	uint32_t	loop_cnt;
-	uint32_t	i;
-	char* pargs[4] = {"cp2ramz", "kernel", "0x7000000", "0x7FC0"};
-	struct partition_info *pi = NULL;
+
+    struct partition_info * pi = NULL;
+    
 
 	loop_cnt = sizeof(verify_list)/sizeof(verify_list_t);
 
-	printf("verify_apps: loop_cnt = %d\n", loop_cnt);
-	printf("verify_apps: boot_mode = %d\n", boot_mode);
+    IsFullverify = DDI_NVM_GetFullVerifyFlag();
 
-	for (i = 0; i < loop_cnt; i++)
+    if (IsFullverify)
+        flags = 1;
+    else
+        flags = 0;
+
+    printf("\033[0;32m flags for verifying application is 0x%x \033[0m\n",flags);
+
+
+    for(idx=0; idx<loop_cnt; idx++)
+    {
+        if( IsFullverify || is_verify_part(idx, boot_mode) )
+        {
+            pi = get_used_partition(verify_list[idx].part_name);
+
+//          if( !get_swumode() && !strcmp(verify_list[idx].part_name,"swue") ) //not swum on case
+//          {
+//              printf("\033[0;32m skip swue verification ... \033[0m\n");
+//              continue;
+//          }
+            
+            printf("\033[0;32m[%d]Verifying image in the '%s' partition idx[%d] \033[0m\n", readMsTicks(), pi->name, idx);
+            printf("\033[0;32m[%d] %s start \n", readMsTicks(), __FUNCTION__);
+
+            offset = pi->offset;
+            filesize = pi->filesize;
+            imgsize = filesize;                 
+            printf("\033[0;32m[%d]Verifying image offset 0x%x  partition size [%d] \033[0m\n", offset,filesize);
+
+            do {            
+                ret = sb_verify_image(pi->name, addr, flags);
+                retry_cnt++;
+                printf("\033[0;32msb_verify_application check %d time \033[0m\n",retry_cnt);
+                if (ret < 0)
+                    udelay(200000);
+            } while (ret < 0 && retry_cnt < VERIFY_RETRY_MAX);
+
+            if (ret < 0)
+            {
+                printf("\033[0;32m %s verification failed in %d check ... fullverify flag will be set and System will stop \033[0m\n",verify_list[idx].part_name, retry_cnt);
+                DDI_NVM_SetFullVerifyFlag(1);
+                goto verify_error;
+            }
+
+            retry_cnt = 0;      
+            printf("\033[0;32m[%d]Completed... \033[0m\n",readMsTicks());
+
+        }
+    }
+
+    printf("\033[0;32m Application integrity verified \033[0m\n");
+    verify_done |= VERIFY_APPS_DONE;
+
+	//Clear full verify flag on this point in resume mode
+	if (IsFullverify)
 	{
-		if (getFullVerifyOTP() || is_verify_part(i, boot_mode))
+		if ( verify_done == (VERIFY_APPS_DONE | VERIFY_TZFW_DONE) )
 		{
-			pi = get_used_partition(verify_list[i].part_name);
-
-			printf("Verifying image in the '%s' partition\n", pi->name);
-
-			// Load image
-			printf("Loading address = 0x%x emmc offset = 0x%01x%08x filesize = 0x%x\n",
-			    addr, U64_UPPER(pi->offset), U64_LOWER(pi->offset), pi->filesize);
-
-			if (!get_swumode() && !strcmp(verify_list[i].part_name, "swue")) //not swum on case
-			{
-				printf("skip swue verification ...\n");
-				continue;
-			}
-
-			if (!getFullVerifyOTP() && !DDI_NVM_GetInstopStatus())
-			{
-                if (!strcmp(verify_list[i].part_name,"patch")     ||
-                    !strcmp(verify_list[i].part_name,"emanual")   ||
-                    !strcmp(verify_list[i].part_name,"estreamer") ||
-                    !strcmp(verify_list[i].part_name,"extra"))
-				{
-					printf("skip %s verification ...\n",verify_list[i].part_name);
-					continue;
-				}
-			}
-
-			// Verify image
-			printf("[%d]:%s verification start\n", readMsTicks(), pi->name);
-			if (getFullVerifyOTP())
-			{
-				verifyPartition(pi->name, addr, 0);
-			}
-			else
-			{
-				verifyPartialPartition(pi->name, addr, 0);
-			}
-			printf("[%d]:%s verification end\n", readMsTicks(), pi->name);
-		}
+			printf("\033[0;31m Full Verify is all ok, Full Verify will be clear to partial \033[0m\n");
+			IsFullverify = 0;
+			DDI_NVM_SetFullVerifyFlag(0);
+		}	
 	}
+	
+    return 0;
 
-	gSecureFlag |= SECURE_FLG_OTHERS;
-	printf("Application integrity verified\n");
-	return 0;
-}
-
-void writeFullVerifyOTP(void)
-{
-	printf("start set full verify OTP\n");
-	if (DDI_NVM_GetInstopStatus() && (DDI_NVM_GetDebugStatus() == RELEASE_LEVEL))
-	{
-		DDI_OTP_WR_Enable(0);
-		udelay(200000);
-		setFullVerifyOTP();
-		udelay(20000);
-		DDI_OTP_WR_Enable(1);
-		printf("!!!! full verify OTP is set!!!!\n");
-	}
-	else
-	{
-		printf("full verify OTP will be set, after instop and in release level\n");
-	}
-
-	printf("end set full verify OTP\n");
+verify_error:
+    printf("\033[0;32m Verify error !!!\033[0m\n");
+    //while(1);
+    return -1;
 }
 
 #endif // CC_A1_SECURE_BOOT

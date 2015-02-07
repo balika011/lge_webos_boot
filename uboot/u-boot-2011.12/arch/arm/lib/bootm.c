@@ -262,6 +262,22 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");
 	if(MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus())
 		sprintf(arg_next(kargs), "%s ", "factory");
+		
+#if defined(LG_CHG)
+    if ( DDI_NVM_GetFullVerifyFlag() )
+    {
+        printf("verify_done = 0x%x \n",verify_done);
+        sprintf(arg_next(kargs), "fullverify ");
+        if ( verify_done == (VERIFY_APPS_DONE | VERIFY_TZFW_DONE) )
+        {
+            printf("although current fullverify was ON, all apps and kernel is verified in full, we set full verify flag off \n");
+            DDI_NVM_SetFullVerifyFlag(0);
+        }
+    }
+#else
+    sprintf(arg_next(kargs), "fullverify ");
+#endif
+
 	sprintf(arg_next(kargs), "%s ", "cmdEnd");
 
 	
