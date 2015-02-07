@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/02/07 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1912,7 +1912,6 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
     }
 
     FBM_GetSyncStc(prFrcPrm->ucFbgId, &ucAvSyncMode, &ucStcSrc);
-    
     if (ucAvSyncMode != VID_SYNC_MODE_NONE)
     {
         STC_CLOCK rStcClk;
@@ -1972,6 +1971,12 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
                         // [LOG] AVSYNC, V-PTS faster than STC
                         _B2R_ProcFrameDrop(this, u4Delta, i4Delta, u4ZeroPtsNs, rStcClk.u4Base);
                     }
+
+                    // DTV picture information callback when frame start to display.
+                    FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                    /*-------------------------------------*/
+                    //callback 
+                    /*---------------------------------------*/
                 }
             }
         }

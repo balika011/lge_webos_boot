@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/07 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -989,18 +989,9 @@ static VOID _B2R_SeamlessJob(B2R_OBJECT_T* this)
                     #endif
                     B2R_HAL_Set(this->hB2r, B2R_HAL_ADDR_LEN, &tFrmAddr_len);
                 }
-
-                // DTV picture information callback when frame start to display.
-                 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-                 /*-------------------------------------*/
-                 //callback 
-                 /*---------------------------------------*/
             }
-
-            
-
         }
-        }while (FALSE);
+    }while (FALSE);
 
 }
 
