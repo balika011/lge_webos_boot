@@ -689,6 +689,8 @@ void board_init_f(ulong bootflag)
 	/* compiler optimization barrier needed for GCC >= 3.4 */
 	__asm__ __volatile__("": : :"memory");
 
+	BIM_SetTimeLog(2);
+
 	memset((void *)gd, 0, sizeof(gd_t));
 
 	gd->mon_len = _bss_end_ofs;

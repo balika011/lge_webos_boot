@@ -199,8 +199,6 @@ int board_init (void)
 
     DECLARE_GLOBAL_DATA_PTR;
 
-    BIM_SetTimeLog(2);
-
     /* Enable unaligned access, disable alignment trap */
     u4Val = arm_read_ctrl_reg();
     u4Val |= (1 << 22);
