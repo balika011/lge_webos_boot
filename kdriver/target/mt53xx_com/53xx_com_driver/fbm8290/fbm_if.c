@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/07 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2058,7 +2058,7 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
 			
 		// Clear Flag
 		_arFbg[u4FbgId].u4FbgFlag = 0;
-
+        _arFbg[u4FbgId].fgPtsSync = FALSE;
 		// Determine number of frame buffer, later
 		_arFbg[u4FbgId].ucFbNs = FBM_MAX_FB_NS_PER_GROUP;
 
@@ -2978,6 +2978,7 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
 #else
     VDEC_FbgReleaseHdlr();
 #endif
+    _arFbg[ucFbgId].u1DecoderSrcId=0xff;
 }
 
 
