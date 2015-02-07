@@ -104,6 +104,9 @@
 #include "mute_if.h"
 #include "b2r_if.h"
 #include "vdp_if.h"
+#ifdef CC_SUPPORT_PIPELINE
+#include "vdo_if.h"
+#endif
 
 /******************************************************************************
 * local definition, TVE configuration
@@ -773,7 +776,12 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
 	                {
 	                    VDP_SetInput(VDP_2, 0, 0); 
 	                }
-	                bApiVideoSetVideoSrc(SV_VP_PIP, *u1SrcType); 
+					#ifdef CC_SUPPORT_PIPELINE
+					bApiSetScartOutStatus(SV_ON);
+					bApiVSCConnectVideoSrc(SV_VP_PIP, VSC_DEC_VDEC, 0, 1);
+					#else
+	                bApiVideoSetVideoSrc(SV_VP_PIP, *u1SrcType);
+					#endif
 
 	                rRegion.u4X = 0; 
 	                rRegion.u4Y = 0;

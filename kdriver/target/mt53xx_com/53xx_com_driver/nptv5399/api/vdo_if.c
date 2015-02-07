@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/07 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #30 $
+ * $Revision: #31 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -514,6 +514,19 @@ UINT8 bApiQuearyVSCConnectStatus(UINT8 bPath)
 	return u1VSCConnectStatus[bPath];
 }
 
+UINT8 u1ScartOutEnable = SV_OFF;
+
+UINT8 bApiQuearyScartOutStatus(void)
+{
+	return u1ScartOutEnable;
+}
+
+UINT8 bApiSetScartOutStatus(UINT8 u1Enable)
+{
+	u1ScartOutEnable = u1Enable;
+}
+
+
 //only for AVD connet and disconnect
 UINT8 bApiVFEAVDISConnect(UINT8 bSrc, UINT8 u4Port, UINT8 bEnable,UINT8 bType)
 {
@@ -678,7 +691,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 {
 	UINT8 bStatus;
 	
-	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
+	LOG(2, "Pipeline input bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
 
 	if(bPath ==  SV_VP_MAIN)
 	{
@@ -701,6 +714,33 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 		else if(bSrc == VSC_DEC_JPEG)
 		{
 			bApiVFESetMainSubSrc(SV_VS_DTV1, SV_VS_NO_CHANGE);
+		}
+		else
+		{
+			
+		}
+	}
+	else
+	{
+		if(bSrc == VSC_DEC_AVD)
+		{
+			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE ,_fVFEAVDSourceMainNew);
+		}
+		else if(bSrc == VSC_DEC_ADC)
+		{
+			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE, _fVFEYPbPrSourceMainNew);
+		}
+		else if(bSrc == VSC_DEC_HDMI)
+		{
+			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE, _fVFEHDMISourceMainNew);
+		}
+		else if(bSrc == VSC_DEC_VDEC)
+		{
+			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE, SV_VS_DTV1);
+		}
+		else if(bSrc == VSC_DEC_JPEG)
+		{
+			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE, SV_VS_DTV1);
 		}
 		else
 		{
@@ -736,7 +776,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 	        bStatus = bApiVSCMainSubSrc(SV_VD_MAX, SV_VD_NA, u1SrcIdx);
 	    }	
 	}
-	LOG(2, "Pipeline bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
+	LOG(2, "Pipeline output bApiVSCConnectVideoSrc(%d, %d, %d, %d)\n", bPath, bSrc,u1SrcIdx,u4Type);
 	return SV_SUCCESS;
 
 }
