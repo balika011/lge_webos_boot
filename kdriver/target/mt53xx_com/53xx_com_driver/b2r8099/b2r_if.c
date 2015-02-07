@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/07 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1232,6 +1232,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	   	   return;
 	   }
 	   B2R_HAL_Set(this->hB2r, B2R_HAL_OMUX, &tOmux);
+	   fgVdpModeChg[ucB2rId]= TRUE;
 	   vMpegModeChg(ucVdpId);
        vMpegModeDetDone(ucVdpId);
    }
