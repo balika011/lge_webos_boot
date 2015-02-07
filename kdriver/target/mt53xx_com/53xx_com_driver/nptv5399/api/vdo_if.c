@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/07 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #31 $
+ * $Revision: #32 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -524,6 +524,7 @@ UINT8 bApiQuearyScartOutStatus(void)
 UINT8 bApiSetScartOutStatus(UINT8 u1Enable)
 {
 	u1ScartOutEnable = u1Enable;
+	return 1;
 }
 
 
