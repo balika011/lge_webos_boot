@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/02/07 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1134,9 +1134,9 @@ void vDrvNRSetBNRFWMode(UINT8 u1FWMode)
 void vDrvNRSet3DNRParam(void)
 {
     // Strength
-    NR_W(MCNR_00, wReadQualityTable(QUALITY_3DNR_TNR_ACNR_STRENGTH), MCNR_ACNR_STRENGTH);
+    //NR_W(MCNR_00, wReadQualityTable(QUALITY_3DNR_TNR_ACNR_STRENGTH), MCNR_ACNR_STRENGTH);
     //NR_W(MCNR_01, wReadQualityTable(QUALITY_3DNR_TNR_DCNR_ALPHA), MCNR_DCNR_ALPHA);
-    vDrvMCNRSetDftDcnrAlpha();
+    //vDrvMCNRSetDftDcnrAlpha();
 
     // LUT
     _SWWM(NR_PQ_12, _P3D(NR_NL_THD_MIN)|_P3D(NR_NL_THD_MAX));
@@ -1145,6 +1145,7 @@ void vDrvNRSet3DNRParam(void)
     _SWWM(NR_PQ_10, _P3D(NR_TBL_THD_E_1)|_P3D(NR_TBL_THD_E_2)|_P3D(NR_TBL_THD_E_3)|_P3D(NR_TBL_THD_E_4));
     _SWWM(NR_PQ_11, _P3D(NR_TBL_THD_E_5)|_P3D(NR_TBL_THD_E_6)|_P3D(NR_TBL_THD_E_7)|_P3D(NR_TBL_THD_E_8));
 
+/*
     _SWWM(NR_PQ_00, _P3D(NR_TBL_MA_0)|_P3D(NR_TBL_MA_1)|_P3D(NR_TBL_MA_2)|_P3D(NR_TBL_MA_3)|_P3D(NR_TBL_MA_4));
     _SWWM(NR_PQ_01, _P3D(NR_TBL_MA_5)|_P3D(NR_TBL_MA_6)|_P3D(NR_TBL_MA_7));
     _SWWM(NR_PQ_0C, _P3D(NR_TBL_C_0)|_P3D(NR_TBL_C_1)|_P3D(NR_TBL_C_2)|_P3D(NR_TBL_C_3)|_P3D(NR_TBL_C_4));
@@ -1170,11 +1171,13 @@ void vDrvNRSet3DNRParam(void)
         P_Fld(wReadQualityTable(QUALITY_3DNR_TNR_CHROMA_MOVINGTXR_SUB_WEI_MAX), MCNR_CHROMA_MOVINGTXR_SUB_WEI_MAX)|
         P_Fld(wReadQualityTable(QUALITY_3DNR_TNR_CHROMA_DC_ADD_WEI_MAX), MCNR_CHROMA_DC_ADD_WEI_MAX)|
         P_Fld(wReadQualityTable(QUALITY_3DNR_TNR_CHROMA_DC_DIFF_BND), MCNR_CHROMA_DC_DIFF_BND));
+*/
 }
 
 void vDrvNRSetSNRParam(void)
 {
     // SNR gain
+    /*
     NR_WM(NXNR_04, _P2D(NX_SNR_GAIN_C));
     _SWW(NR_PQ_09, wReadQualityTable(QUALITY_2DNR_NX_SNR_GAIN_Y), NR_SNR_GAIN);
     // SNR threshold setting
@@ -1190,10 +1193,10 @@ void vDrvNRSetSNRParam(void)
     //_SWWM(NR_PQ_0B, _P2D(SNR_MAX_RTO_LVL_5)|_P2D(SNR_MAX_RTO_LVL_6)|_P2D(SNR_MAX_RTO_LVL_7)|_P2D(SNR_MAX_RTO_LVL_8)|_P2D(SNR_MAX_RTO_LVL_9));
     // SNR C
     NR_WM(NXNR_12, _P2D(NX_SNR_CHROMA_PRESERVATION)|_P2D(NX_SNR_DEAD_ZONE_TRANSITION)|_P2D(NX_SNR_DEAD_ZONE_DARK)|_P2D(NX_SNR_DEAD_ZONE_BRIGHT));
-
+	*/
     // RNR Thd
-    NR_WM(NXNR_3F, _P2D(NX_RNR_SNR_THD_RATIO));
-    _SWWM(NR_PQ_13, _P2D(RNR_MAX_TH)|_P2D(BNR_RNR_TH));
+    //NR_WM(NXNR_3F, _P2D(NX_RNR_SNR_THD_RATIO));
+    //_SWWM(NR_PQ_13, _P2D(RNR_MAX_TH)|_P2D(BNR_RNR_TH));
     // SNR Gain
     _SWWM(NR_PQ_12, _P2D(SNR_NL_THD_MIN)|_P2D(SNR_NL_THD_MAX));
     _SWWM(NR_PQ_14, _P2D(SNR_NL_GAIN_MIN)|_P2D(SNR_NL_GAIN_MAX));
@@ -1201,6 +1204,7 @@ void vDrvNRSetSNRParam(void)
 
 void vDrvNRSetMpegNRParam(void)
 {
+/*
     NR_WM(NXNR_04, _P2D(NX_BNR_GAIN)|_P2D(NX_MNR_GAIN));
     // BNR
     #ifndef BNR_NEW_FW
@@ -1210,6 +1214,7 @@ void vDrvNRSetMpegNRParam(void)
     NR_WM(NXNR_0E, _P2D(NX_MNR_EDGE_TH)|_P2D(NX_MNR_GROUPING_STR));
     NR_WM(NXNR_0F, _P2D(NX_MNR_LERE_GAIN)|_P2D(NX_MNR_LERF_GAIN)|_P2D(NX_MNR_LFRE_GAIN)|_P2D(NX_MNR_UEDE_GAIN)|_P2D(NX_MNR_UEDF_GAIN)|_P2D(NX_MNR_UFDE_GAIN));
     NR_WM(NXNR_10, _P2D(NX_MNR_STR_GAIN));
+*/
 }
 
 void vDrvNRSet2DNRBNROnOff(UINT8 u1OnOff)
