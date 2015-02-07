@@ -585,7 +585,8 @@ void vHalVideoSharpnessParam(UINT8 bPath)
         return;
     }
 
-    vDrvPreSharpParam(bPath);
+	//No need to set Hsharp param, this registers all contro by LGE HAL VPQ.
+    //vDrvPreSharpParam(bPath);
 	if (bPath == SV_VP_MAIN)
 	{
 	    vDrvPostSharpParam();

@@ -377,6 +377,9 @@ void vDrvCTIFInit(void)
 
 void vDrvCTIFParam(void)
 {
+	//No need to set this registers by quality table, this control by LGE HAL VPQ.
+	return;
+	
 	vIO32WriteFldAlign(ECTIF_00, wReadQualityTable(QUALITY_CTIF_ENA),
 	                  ECTIF_ENA);
 	vIO32WriteFldAlign(ECTIF_00, wReadQualityTable(QUALITY_CTIF_HD),
@@ -428,6 +431,9 @@ void vDrvCTIRInit(void)
 
 void vDrvCTIRParam(void)
 {
+	//No need to set this registers by quality table, this control by LGE HAL VPQ.
+	return;
+	
 	vIO32WriteFldAlign(CTIR_00, wReadQualityTable(QUALITY_CTIR_ENA),
 	                  CTIR_ENA);
 	vIO32WriteFldAlign(CTIR_00, wReadQualityTable(QUALITY_CTIR_HD),
@@ -827,6 +833,9 @@ void vDrvLTIOnOff(UINT8 bOnOff)
 
 void vDrvLTIParam(void)
 {
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	return;
+	
 	vIO32WriteFldMulti(SHARP_00, P_Fld(wReadQualityTable(QUALITY_LTI_FLT_LTI_H1), TDS_FLT_LTI_H1)|
 								 P_Fld(wReadQualityTable(QUALITY_LTI_FLT_LTI_H2), TDS_FLT_LTI_H2)|
 								 P_Fld((IO32ReadFldAlign(SHARP_00, TDS_FLT_V_3D)==0?wReadQualityTable(QUALITY_LTI_FLT_LTI_V):2), TDS_FLT_LTI_V));
@@ -887,6 +896,8 @@ void vDrvPreSharpInit(void)
 
 void vDrvPreSharpParam(UINT8 bPath)
 {
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	return;
 //  Global Gain
 	vIO32WriteFldAlign(HSHARP_00 ,
 	                  wReadQualityTable(QUALITY_HSHARP_HIGH), SHARP_HIGH);
@@ -1185,7 +1196,7 @@ void vDrvPostSharpParam(void)
     E_TD_OUT eSCLOut= TD_SCL_OUT(u4SCL);
     E_TD_IN  eSCLIn = TD_SCL_IN(u4SCL);
 
-	vDrvTDSConstraint();
+	//vDrvTDSConstraint();
 
     //scaler out line interleave or not
     bLineInterleave = ((E_TD_OUT_3D_LI==eSCLOut) ||
@@ -1195,6 +1206,8 @@ void vDrvPostSharpParam(void)
     VRMGetModuleVRMInfo(SV_VP_MAIN, VRM_MODULE_FSC, &in, &out);
     bNoVSHP = (out.u2Width > 1920);
 
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	/*
 	//PBC
     vIO32WriteFldAlign(CDS_00, wReadQualityTable(QUALITY_PBC_PBC1_EN)&& (!bForceAllPQOff) && wReadQualityTable(QUALITY_MODULE_ONOFF_SHARPNESS), CDS1_EN);                                                                                                                   
     vIO32WriteFldAlign(CDS_03, wReadQualityTable(QUALITY_PBC_PBC1_EDGE_EN), CDS1_EDGE_EN);                                                                                                          
@@ -1277,12 +1290,15 @@ void vDrvPostSharpParam(void)
 		vIO32WriteFldAlign(CDS_2E, wReadQualityTable(QUALITY_PBC_PBC2_LPF_EN), CDS2_LPF_EN);
 		vIO32WriteFldAlign(CDS_58, wReadQualityTable(QUALITY_PBC_PBC3_LPF_EN), CDS3_LPF_EN);
 	}
-
+	*/
     // Y Level 
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADAP_ENA), TDS_YLEV_ADAP_ENA);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADL_ENA), TDS_YLEV_ADL_ENA);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_APL_ENA), TDS_YLEV_APL_ENA);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADL_GAIN), TDS_YLEV_ADL_GAIN);
+	
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	/*
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_APL_ZERO), TDS_YLEV_APL_ZERO);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_APL_THR), TDS_YLEV_APL_THR);	
     vIO32WriteFldAlign(TDPROC_YLEV_01, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_P1),  TDS_YLEV_P1);
@@ -1293,6 +1309,7 @@ void vDrvPostSharpParam(void)
     vIO32WriteFldAlign(TDPROC_YLEV_02, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_G2), TDS_YLEV_G2);
     vIO32WriteFldAlign(TDPROC_YLEV_02, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_G3), TDS_YLEV_G3);
     vIO32WriteFldAlign(TDPROC_YLEV_02, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_G4), TDS_YLEV_G4);
+    */
 	
     // TDSHARP_3D
 	vIO32WriteFldAlign(SHARPNESS_3D_00, u4DrvTDTV3DModeQuery(), SHARPNESS_3D_MODE); 
@@ -1366,6 +1383,10 @@ void vDrvPostSharpParam(void)
 
 void vDrvPostSharpParamHorizontal(void)
 {
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	return;
+
+	#if 0
 	UINT8 b3DHGain = IO32ReadFldAlign(SHARPNESS_3D_13, SHARPNESS_3D_HGAIN);
 	UINT8 bH1Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_H1), b3DHGain);
 	UINT8 bH2Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_H2), b3DHGain);
@@ -1392,10 +1413,14 @@ void vDrvPostSharpParamHorizontal(void)
 	vIO32WriteFldAlign(TDSHP_LIMIT_03, wReadQualityTable(QUALITY_TDSHARP_BOUND_H1), TDSHARP_BOUND_H1); 
 	vIO32WriteFldAlign(TDSHP_LIMIT_03, wReadQualityTable(QUALITY_TDSHARP_BOUND_H2), TDSHARP_BOUND_H2); 
 	vIO32WriteFldAlign(TDSHP_LIMIT_03, wReadQualityTable(QUALITY_TDSHARP_BOUND_H3), TDSHARP_BOUND_H3); 
+	#endif
 }
 
 void vDrvPostSharpParamVertical(void)
 {     
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	return;
+	#if 0
 	UINT8 b3DVGain = IO32ReadFldAlign(SHARPNESS_3D_13, SHARPNESS_3D_VGAIN);
 	UINT8 bV1Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_V1), b3DVGain);
     UINT8 bV2Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_V2), b3DVGain);
@@ -1422,10 +1447,14 @@ void vDrvPostSharpParamVertical(void)
     vIO32WriteFldAlign(TDSHP_LIMIT_04, wReadQualityTable(QUALITY_TDSHARP_BOUND_V1), TDSHARP_BOUND_V1); 
     vIO32WriteFldAlign(TDSHP_LIMIT_04, wReadQualityTable(QUALITY_TDSHARP_BOUND_V2), TDSHARP_BOUND_V2); 
     vIO32WriteFldAlign(TDSHP_LIMIT_06, wReadQualityTable(QUALITY_TDSHARP_BOUND_V3), TDSHARP_BOUND_V3); 
+	#endif
 }
 
 void vDrvPostSharpParamDiagonal(void)
 {
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+	return;
+	#if 0
 	UINT8 b3DDGain = IO32ReadFldAlign(SHARPNESS_3D_13, SHARPNESS_3D_DGAIN);
 	UINT8 bD1Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_D1), b3DDGain);
 	UINT8 bD2Gain = wDrvGetTDShp3DGain(wReadQualityTable(QUALITY_TDSHARP_GAIN_D2), b3DDGain);
@@ -1452,10 +1481,13 @@ void vDrvPostSharpParamDiagonal(void)
     vIO32WriteFldAlign(TDSHP_LIMIT_03, wReadQualityTable(QUALITY_TDSHARP_BOUND_D1), TDSHARP_BOUND_D1); 
     vIO32WriteFldAlign(TDSHP_LIMIT_04, wReadQualityTable(QUALITY_TDSHARP_BOUND_D2), TDSHARP_BOUND_D2); 
     vIO32WriteFldAlign(TDSHP_LIMIT_04, wReadQualityTable(QUALITY_TDSHARP_BOUND_D3), TDSHARP_BOUND_D3);
+	#endif
 }
 
 void vDrvPostSharpParamPBC(void)
 {
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+/*
     vIO32WriteFldAlign(TDSHP_GAIN_05, wReadQualityTable(QUALITY_PBC_PBC1_GAIN_H1), TDSHP_GAIN_PBC1_H1);
     vIO32WriteFldAlign(TDSHP_GAIN_05, wReadQualityTable(QUALITY_PBC_PBC1_GAIN_H2), TDSHP_GAIN_PBC1_H2);
     vIO32WriteFldAlign(TDSHP_GAIN_05, wReadQualityTable(QUALITY_PBC_PBC1_GAIN_H3), TDSHP_GAIN_PBC1_H3);
@@ -1485,7 +1517,7 @@ void vDrvPostSharpParamPBC(void)
     vIO32WriteFldAlign(TDSHP_GAIN_0B, wReadQualityTable(QUALITY_PBC_PBC3_GAIN_D1), TDSHP_GAIN_PBC3_D1);
     vIO32WriteFldAlign(TDSHP_GAIN_0B, wReadQualityTable(QUALITY_PBC_PBC3_GAIN_D2), TDSHP_GAIN_PBC3_D2);
     vIO32WriteFldAlign(TDSHP_GAIN_0B, wReadQualityTable(QUALITY_PBC_PBC3_GAIN_D3), TDSHP_GAIN_PBC3_D3);
-
+*/
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_05, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC1_H1);
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_05, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC1_H2);
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_05, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC1_H3);
@@ -1515,7 +1547,9 @@ void vDrvPostSharpParamPBC(void)
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_0B, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC3_D1);
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_0B, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC3_D2);
     vIO32WriteFldAlign(TDSHP_CORING_RATIO_0B, COR_RATIO_UNIT, TDSHP_CORE_RATIO_PBC3_D3);
-
+	
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+/*
     vIO32WriteFldAlign(TDSHP_CORE_05, wReadQualityTable(QUALITY_PBC_PBC1_CORING_H1), TDSHP_CORE_PBC1_H1);
     vIO32WriteFldAlign(TDSHP_CORE_05, wReadQualityTable(QUALITY_PBC_PBC1_CORING_H2), TDSHP_CORE_PBC1_H2);
     vIO32WriteFldAlign(TDSHP_CORE_05, wReadQualityTable(QUALITY_PBC_PBC1_CORING_H3), TDSHP_CORE_PBC1_H3);
@@ -1545,7 +1579,7 @@ void vDrvPostSharpParamPBC(void)
     vIO32WriteFldAlign(TDSHP_CORE_0B, wReadQualityTable(QUALITY_PBC_PBC3_CORING_D1), TDSHP_CORE_PBC3_D1);
     vIO32WriteFldAlign(TDSHP_CORE_0B, wReadQualityTable(QUALITY_PBC_PBC3_CORING_D2), TDSHP_CORE_PBC3_D2);
     vIO32WriteFldAlign(TDSHP_CORE_0B, wReadQualityTable(QUALITY_PBC_PBC3_CORING_D3), TDSHP_CORE_PBC3_D3);
-
+*/
     vIO32WriteFldAlign(TDSHP_CORETH_05, 0, TDSHP_CORETH_PBC1_H1);
     vIO32WriteFldAlign(TDSHP_CORETH_05, 0, TDSHP_CORETH_PBC1_H2);
     vIO32WriteFldAlign(TDSHP_CORETH_05, 0, TDSHP_CORETH_PBC1_H3);
@@ -1606,6 +1640,8 @@ void vDrvPostSharpParamPBC(void)
     vIO32WriteFldAlign(TDSHP_LIMIT_RATIO_0B, 0, TDSHP_LIMIT_RATIO_PBC3_D2);
     vIO32WriteFldAlign(TDSHP_LIMIT_RATIO_0B, 0, TDSHP_LIMIT_RATIO_PBC3_D3);
 
+	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
+/*
     vIO32WriteFldAlign(TDSHP_LIMIT_05_2, wReadQualityTable(QUALITY_PBC_PBC1_LIMIT_H1), TDSHP_LIMIT_PBC1_H1);
     vIO32WriteFldAlign(TDSHP_LIMIT_05_2, wReadQualityTable(QUALITY_PBC_PBC1_LIMIT_H2), TDSHP_LIMIT_PBC1_H2);
     vIO32WriteFldAlign(TDSHP_LIMIT_05_2, wReadQualityTable(QUALITY_PBC_PBC1_LIMIT_H3), TDSHP_LIMIT_PBC1_H3);
@@ -1665,6 +1701,7 @@ void vDrvPostSharpParamPBC(void)
     vIO32WriteFldAlign(TDSHP_BOUND_0B, wReadQualityTable(QUALITY_PBC_PBC3_LIMIT_D1), TDSHP_BOUND_PBC3_D1);
     vIO32WriteFldAlign(TDSHP_BOUND_0B, wReadQualityTable(QUALITY_PBC_PBC3_LIMIT_D2), TDSHP_BOUND_PBC3_D2);
     vIO32WriteFldAlign(TDSHP_BOUND_0B, wReadQualityTable(QUALITY_PBC_PBC3_LIMIT_D3), TDSHP_BOUND_PBC3_D3);
+*/
 }
 
 #if 0

@@ -1094,7 +1094,8 @@ void vUi_3D_NR(UINT8 u1VidPath, UINT8 bOnOff, UINT8 u1Auto, INT16 i2Cur)
     {
         vHalVideo3DNRParam(bOnOff);
         vHalVideo3DAutoNROnOff(u1Auto);
-        vHalVideo3DNRStrength(u1Auto ? 4 : i2Cur);
+		//No need for LGE
+        //vHalVideo3DNRStrength(u1Auto ? 4 : i2Cur);
     }
 }
 
@@ -1212,7 +1213,7 @@ void vUi_SHARPNESS(UINT8 u1VidPath, UINT8 bOnOff)
 	vHalVideoLTIOnOff(u1VidPath, bOnOff);
 	vHalVideoSharpnessOnOff(u1VidPath, bOnOff);
 
-	vHalVideoLTIParam(u1VidPath);
+	//vHalVideoLTIParam(u1VidPath);
 	vHalVideoSharpnessParam(u1VidPath);
 }
 

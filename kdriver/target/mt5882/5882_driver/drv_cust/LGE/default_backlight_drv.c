@@ -388,7 +388,7 @@ void DRVCUST_AdaptiveBacklightInit(void)
     wAutoContrastModifyCount = LUMA_MODIFY_COUNT;
     wAutoContrastLongTime = LUMA_LONG_TIME;
 
-  	DRVCUST_SetBacklightDuty(VDP_ARG_BACKLT_DBL, 0xFF);
+  	//DRVCUST_SetBacklightDuty(VDP_ARG_BACKLT_DBL, 0xFF);
 }
 
 void DRVCUST_AdaptiveBacklightProc(void)

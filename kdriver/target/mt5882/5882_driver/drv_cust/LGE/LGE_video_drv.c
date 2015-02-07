@@ -643,37 +643,29 @@ void DRVCUST_PeUiItem_CustInit(void)
     {
         switch (i)
         {
-            // List all the quality items that control by customer UI, no need to update.
-            case PE_ARG_BRIGHTNESS:
+            // List all the quality items that whole control by customer UI, no need to update at all
+			//the items which fully controlled by LGE HAL VPQ, disconnect peui in init, and partial controlled by HAL VPQ set in DRVCUST_PqModeChange and peui.c
+			case PE_ARG_BRIGHTNESS:
 			case PE_ARG_CONTRAST:
 			case PE_ARG_HUE:
 			case PE_ARG_SATURATION:
-			case PE_ARG_CTI:
-			case PE_ARG_SHARPNESS:
-			case PE_ARG_SHARPNESS_H:
-			case PE_ARG_SHARPNESS_V:
-			case PE_ARG_LTI:
-            case PE_ARG_R_GAIN:
+			case PE_ARG_R_GAIN:
 			case PE_ARG_G_GAIN:
 			case PE_ARG_B_GAIN:
 			case PE_ARG_R_OFFSET:
 			case PE_ARG_G_OFFSET:
 			case PE_ARG_B_OFFSET:
-			case PE_ARG_NR:
 			case PE_ARG_GAMMA:
 			case PE_ARG_BACK_LIGHT_LVL:
 			case PE_ARG_ADAPTIVE_BACK_LIGHT:
-			case PE_ARG_3D_NR:
-			case PE_ARG_MPEG_NR:
-			case PE_ARG_SHARPNESS_ON_OFF:
 			case PE_ARG_LCDIM:
-				//aUiQtyItemMinMax[i].i4Dft |= R_CUSTUI;
 				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
 				break;
 
 			case PE_ARG_BLUE_STRETCH:
 				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
 				vIO32WriteFldAlign(BLUESTCH_00, SV_OFF, C_BS_ONE_GAIN_MODE);
+				break;
 				
             default:
                 break;
@@ -686,7 +678,7 @@ void DRVCUST_VideoInit(void)
 {
 	DRVCUST_DitherInit();
     DRVCUST_AdaptiveBacklightInit();
-	//DRVCUST_PeUiItem_CustInit();
+	DRVCUST_PeUiItem_CustInit();
 #ifdef SUPPORT_LCDIM_AVG_DEMO
     DRVCUST_LcDimBlkInit(10,6);
 #endif
@@ -1570,51 +1562,29 @@ void DRVCUST_GetLcdimPanelDimGain(UINT8 *u1PanelDimGain, UINT8 u1BlockNum)
 void DRVCUST_PqModeChange(UINT8 bPath)
 {
     UINT32 i;
-    static UINT8 fgUiRangeDft_CUSTUI = SV_FALSE;
     
     for (i=0; i < (UINT8)PE_ARG_NS; i++)
     {
+    	//the items which fully controlled by LGE HAL VPQ, disconnect peui in init, and partial controlled by HAL VPQ set in DRVCUST_PqModeChange and peui.c
         switch (i)
         {
             // List all the quality items that do not update after mode change done.
-            case PE_ARG_BRIGHTNESS:
-			case PE_ARG_CONTRAST:
-			case PE_ARG_HUE:
-			case PE_ARG_SATURATION:
+			//this items, part of settings control by LGE VPQ HAL, but still need peui to control on/off and other registers.
 			case PE_ARG_CTI:
-			case PE_ARG_SHARPNESS:
+			case PE_ARG_SHARPNESS:				
 			case PE_ARG_SHARPNESS_H:
 			case PE_ARG_SHARPNESS_V:
 			case PE_ARG_LTI:
-            case PE_ARG_R_GAIN:
-			case PE_ARG_G_GAIN:
-			case PE_ARG_B_GAIN:
-			case PE_ARG_R_OFFSET:
-			case PE_ARG_G_OFFSET:
-			case PE_ARG_B_OFFSET:
+			case PE_ARG_SHARPNESS_ON_OFF:
 			case PE_ARG_NR:
-			case PE_ARG_GAMMA:
-			case PE_ARG_BACK_LIGHT_LVL:
-			case PE_ARG_ADAPTIVE_BACK_LIGHT:
 			case PE_ARG_3D_NR:
 			case PE_ARG_MPEG_NR:
-			case PE_ARG_SHARPNESS_ON_OFF:
-			case PE_ARG_LCDIM:
-				if(SV_FALSE == fgUiRangeDft_CUSTUI)
-				{
-					bApiVideoProc(bPath, (PE_ARG_TYPE)i);
-					SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
-				}
-                break;
-			case PE_ARG_BLUE_STRETCH:
-				SetPeUiRangeDft_CUSTUI((PE_ARG_TYPE)i);
-				vIO32WriteFldAlign(BLUESTCH_00, SV_OFF, C_BS_ONE_GAIN_MODE);
+
             default:
                 UNUSED(bApiVideoProc(bPath, (PE_ARG_TYPE)i));
                 break;
         }
     }
-	fgUiRangeDft_CUSTUI = SV_TRUE;
 }
 #ifdef SCE_BY_SOURCE
 void DRVCUST_vMappingSCETiming(void)
