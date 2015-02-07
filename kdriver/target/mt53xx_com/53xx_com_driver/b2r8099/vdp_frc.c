@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/07 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6747,8 +6747,13 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
 
                        LOG(3,"========B2R ready to play 1st Frame===eGameMode=%d,DisplayQ Num=%d\n",eGameMode[ucB2rId],FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
 #endif                     
+#ifdef CC_SUPPORT_PIPELINE
 
-                       
+                          if(bApiQuearyScartOutStatus())
+                         {
+                              LG_PipLineVdpConnect(VDP_2,prVdpConf->ucInputPort[0]);
+                         }
+#endif
 #ifdef TIME_MEASUREMENT
                         TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R ready to play 1st Frame");
 #endif
