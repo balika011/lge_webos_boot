@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/07 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -224,7 +224,7 @@ typedef struct
     BOOL   afgIsOwner[FBM_MAX_FB_NS_PER_GROUP]; // Is fb owned by FBM or by others, like OMX
     BOOL   fgCreateFromInst;                 // Init fbg from external FBM inst
     BOOL   fgSendEOS;
-
+    BOOL   fgPtsSync;
     UINT8 u1DecoderSrcId;
     UINT8 u1FbgAppMode;
     BOOL  fgEnableH264V5Support;
@@ -354,7 +354,6 @@ extern void _FBM_PutFrameBufferToEmptyResize2Q(UCHAR ucFbgId, UCHAR ucFbId);
 extern UCHAR FBM_GetLatestEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay);
 
 extern BOOL _FBM_2FBsChkDynamicDone(UCHAR ucFbgId);
-
 
 //---------------------------------------------------------------------------
 // Public functions

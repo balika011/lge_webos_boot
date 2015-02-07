@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/01/23 $
+ * $Date: 2015/02/07 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -1954,6 +1954,7 @@ typedef struct
 	INT32 i4AudioChannel;
 	INT32 i4HalDisplayDelay;
 	INT32 i4HalLipsyncMaster;
+    UINT32 u4DecErrMbCnt;
 } VDEC_ES_INFO_T;
 
 
@@ -2224,7 +2225,7 @@ EXTERN void VDEC_GetDecStatus(UCHAR ucEsId, BOOL* pfgLock
     , UCHAR* pucPicType, UCHAR* pucPicStruture, UCHAR* pucTemporalRef
     , UINT32* pu4ReceiveNs, UINT32* pu4DecOkNs);
 
-EXTERN void VDEC_GetDecErrInfo(UCHAR ucEsId, BOOL* pfgError, BOOL* pfgDisplayStatus);
+EXTERN void VDEC_GetDecErrInfo(UCHAR ucEsId, BOOL* pfgError, BOOL* pfgDisplayStatus,UINT32 *pu4ErrMbCnt);
 
 EXTERN BOOL VDEC_RegDecErrCb(PFN_VDEC_DECERR_CB pfDecErrCb, UINT32 u4ErrDuration);
 EXTERN BOOL VDEC_RegPicTypeCb(PFN_VDEC_PIC_TYPE_CB pfnPicTypeCb);

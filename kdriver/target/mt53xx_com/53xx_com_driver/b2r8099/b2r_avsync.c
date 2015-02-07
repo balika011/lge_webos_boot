@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/07 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1458,7 +1458,7 @@ static BOOL _B2R_IsPtsDrift(B2R_OBJECT_T *this, UINT32 u4Delta, INT32 i4Delta,
         }
     }
 
-
+    FBM_SetPtsSync(prFrcPrm->ucFbgId,TRUE);
     return FALSE;
 }
 
@@ -1655,6 +1655,7 @@ static BOOL _B2R_ProcFrameRepeat(B2R_OBJECT_T *this, UINT32 u4Delta, UINT32 u4St
                     _B2R_PostNotify(this, VDP_MSG_REPEAT_DROP_CB, prFrcPrm->prFbCounter->u4SyncMode, 0);
 
                     LOG(3, "AVS-R B2R(%d) Fbg(%d) %d PTS(0x%x) STC(0x%x)\n", prFrcPrm->ucB2rId, prFrcPrm->ucFbgId, prFrcPrm->u2TargetNs, prFrcPrm->u4Pts, u4Stc);
+                    FBM_SetPtsSync(prFrcPrm->ucFbgId,FALSE);
                 }
 
 #ifdef CC_FAST_CHANGE_CHANNEL
@@ -1761,6 +1762,7 @@ static BOOL _B2R_ProcFrameDrop(B2R_OBJECT_T* this, UINT32 u4Delta, INT32 i4Delta
                 ucRet = B2R_FAIL;
             }
 #endif
+             FBM_SetPtsSync(prFrcPrm->ucFbgId,FALSE);
             if ((u4ZeroPtsNs != 0) && (u4Delta > prFrcPrm->u4PtsDelta) &&
                 !prFrcPrm->t_wfd_prm.fgDblClk)
             {
@@ -1908,6 +1910,7 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
 
     if (_B2R_IsSkipAVSync(this))
     {
+        FBM_SetPtsSync(prFrcPrm->ucFbgId,FALSE);
         return;
     }
 

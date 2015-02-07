@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/02/07 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1883,6 +1883,9 @@ EXTERN UCHAR FBM_GetFbgByEs(UCHAR ucEsId);
 
 EXTERN BOOL FBM_GetFixedImgRzBuffer(UINT32 *pu4AddrY, UINT32 *pu4AddrC);
 EXTERN BOOL FBM_FreeFixedImgRzBuffer(UINT32 u4AddrY, UINT32 u4AddrC);
+EXTERN void FBM_SetPtsSync(UCHAR ucFbgId,BOOL fgAvsync);
+EXTERN BOOL FBM_GetPtsSync(UCHAR ucFbgId);
+
 #ifdef CC_B2R_RES_SUPPORT
 EXTERN UINT8 FBM_B2rResIdAccess(UCHAR ucFbgId, 
                                           UINT32 u4Mask,

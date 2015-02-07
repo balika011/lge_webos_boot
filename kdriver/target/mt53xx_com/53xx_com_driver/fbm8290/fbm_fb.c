@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/28 $
+ * $Date: 2015/02/07 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5190,6 +5190,8 @@ BOOL FBM_FlushEmptyBufToDispQ(UCHAR ucFbgId)
     return TRUE;
 }
 
+
+
 BOOL FBM_ReleaseFBFlush(UCHAR ucFbgId)
 {
     UCHAR i;
@@ -6471,4 +6473,23 @@ VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
     return;
 }
 
+void FBM_SetPtsSync(UCHAR ucFbgId,BOOL fgAvsync)
+{
+    if((VERIFY_FBG(ucFbgId)))
+    {
+           return;
+    }
+    
+    _prFbg[ucFbgId].fgPtsSync = fgAvsync;
+    return;
+}
 
+BOOL FBM_GetPtsSync(UCHAR ucFbgId)
+{
+    if((VERIFY_FBG(ucFbgId)))
+    {
+           return FALSE;
+    }
+
+    return _prFbg[ucFbgId].fgPtsSync;
+}
