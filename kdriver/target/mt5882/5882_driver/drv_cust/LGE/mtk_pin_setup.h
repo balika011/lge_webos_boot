@@ -103,7 +103,7 @@ UINT32 _gu4SysPinmuxInit[][2] =
 //    {PIN_OSDA2, 0},
 
     // UART 0
-    {PIN_U0TX, 0},
+    //{PIN_U0TX, 0},//disable by nolog request 
     {PIN_U0RX, 0},
     
     // Demod ATD

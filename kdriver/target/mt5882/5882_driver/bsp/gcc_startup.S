@@ -247,7 +247,10 @@ NoRemapPPort:
 
     @ Enable ITCM and Setup Stack to ITCM.
     BL      ARM_StackITCM
-
+    
+    @  tx disable
+    BL     CHIP_Tx_Disable
+    
     @ Call CHIP_BootupInit
     BL      CHIP_RS232Init
     MOV     r1, #0
