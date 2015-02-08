@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/08 $
  * $RCSfile: pcmcia_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
  
  //-----------------------------------------------------------------------------
@@ -247,7 +247,8 @@ void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard)
     BOOL fgIsInternalCi = TRUE;
 	
 #ifdef LGE_CI
-	_rTsFmt.SerOrPar = SP_PARALLEL;
+    _rTsFmt.SerOrPar = SP_SERIAL;           //for LGE A5RL, we change to serial ts mode
+    //_rTsFmt.SerOrPar = SP_PARALLEL;
 #endif
 
     fgCamConnected   = PCMCIA_DetectCableCard();
