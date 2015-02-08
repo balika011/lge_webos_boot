@@ -278,6 +278,22 @@ void linux_param_set(char *kargs)
     sprintf(arg_next(kargs), "fullverify ");
 #endif
 
+	if((check_snapshot_mode() == LGSNAP_MAKING_IMAGE))
+	{
+		sprintf(arg_next(kargs), "snapshot ");
+	}
+	sprintf(arg_next(kargs), "resume=/dev/%s%d ", get_blkdev_name(), get_blkdev_idx(SNAP_PART_NAME));
+
+	{
+		unsigned char art = DDI_NVM_GetSnapShotART();
+		if( art == 'A' )
+			sprintf(arg_next(kargs), "art=auto art_period=20 ");
+		else if( art == 'R' )
+			sprintf(arg_next(kargs), "art=resume art_period=20 ");
+		else if( art == 'M' )
+			sprintf(arg_next(kargs), "art=making art_period=20 ");
+	}
+
 	sprintf(arg_next(kargs), "%s ", "cmdEnd");
 
 	
