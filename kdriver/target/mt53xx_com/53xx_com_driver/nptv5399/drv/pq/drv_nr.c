@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/08 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1278,19 +1278,25 @@ void vDrvNRSet3DNRMaxNoiseLvl(UINT8 u1MaxLvl)
 
 void vDrvNRSet2DNRAuto(UINT8 u1OnOff)
 {
+	//always enable auto 2DNR for LGE
+#if 0
     u1OnOff = (u1OnOff && (NR_NM_SAD_HIST == u1DrvNRGetNoiseMeterSupport()) ? 1 : 0);
     _SWW(NR_CTRL_00, u1OnOff, EN_ADAP_SNR_THM);
     _SWW(NR_CTRL_00, u1OnOff, EN_RNR_TH_ADAP);
     //_SWW(NR_CTRL_00, u1OnOff && (!_SWR(NR_CTRL_01, ANR_SEL)), EN_RNR_TH_ADAP);
+#endif
 }
 
 void vDrvNRSet3DNRAuto(UINT8 u1OnOff)
 {
+	//always enable auto 3DNR for LGE
+#if 0
     u1OnOff = (u1OnOff && (NR_NM_SAD_HIST == u1DrvNRGetNoiseMeterSupport()) ? 1 : 0);
     _SWWM(NR_CTRL_00,
         P_Fld(u1OnOff, EN_AUTO_XNR)|
         P_Fld(u1OnOff || (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport()), EN_ADAP_WEIGHT)|
         P_Fld(u1OnOff, EN_MOTION_ANR));
+#endif
 }
 
 void vDrvNRSet3DNRAutoStrength(INT8 bStrength)
