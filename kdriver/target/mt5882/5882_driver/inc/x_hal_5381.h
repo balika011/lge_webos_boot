@@ -321,6 +321,7 @@ extern UINT32 PHYSICAL(UINT32);
 #define IC_VER_5882_AA      0x58820001         // 5882 AA
 #define IC_VER_5882_AB      0x58820002         // 5882 AB
 #define IC_VER_5882_AC      0x58820003         // 5882 AC
+#define IC_VER_5882_AD      0x58820004         // 5882 AD
 
 #define IC_VER_5399_AA      0x53990001         // 5399 AA
 #define IC_VER_5399_AB      0x53990002         // 5399 AB
@@ -360,6 +361,8 @@ extern UINT32 PHYSICAL(UINT32);
 
 #define IS_IC_5882_ES1()    ((BSP_GetIcVersion() == IC_VER_5882_AA))
 #define IS_IC_5882_ES2()    ((BSP_GetIcVersion() == IC_VER_5882_AB))
+#define IS_IC_5882_ES3()    ((BSP_GetIcVersion() == IC_VER_5882_AC))
+#define IS_IC_5882_ES4()    ((BSP_GetIcVersion() == IC_VER_5882_AD))
 
 #define IS_IC_5399_ES1()    ((BSP_GetIcVersion() == IC_VER_5399_AA))
 #define IS_IC_5399_ES2()    ((BSP_GetIcVersion() == IC_VER_5399_AB))

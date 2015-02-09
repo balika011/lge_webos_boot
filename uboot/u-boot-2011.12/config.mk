@@ -360,6 +360,7 @@ endif
 
 ifeq ($(TARGET_IC),mt5882)
 CFLAGS := $(CFLAGS) -DCC_MT5882
+CFLAGS += -I$(COMMON_INC) -I$(OSAI_INC)
 endif
 
 ifeq ($(TARGET_IC),mt5883)

@@ -42,7 +42,7 @@
 #include <cmnio_type.h>
 #include "x_dram.h"
 #include <swum.h>
-
+#include <asm/io.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -639,8 +639,10 @@ void display_boottime_log(void)
 	{
 		enable_console();
 	    {
-			UINT32 TimeSpendOnLoader = (0xFFFFFFFF - BIM_GetTimeLog(2))/24000;
-			printf("\033[0;31m[time] loader takes %dms, uboot takes %d.%03dms \033[0m\n", TimeSpendOnLoader,readMsTicks() -TimeSpendOnLoader);
+			UINT32 TimeSpendOnLoader = (0xFFFFFFFF - BIM_GetTimeLog(2));
+			UINT32 regval = (0xFFFFFFFF -__raw_readl(0xf0008000+ REG_RW_TIMER2_LOW));
+			UINT32 regc = regval - TimeSpendOnLoader;
+			printf("\033[0;31m[time] loader takes %dms, uboot takes %d.%03dms \033[0m\n", TimeSpendOnLoader/24000,(regc)/24000,(regc/24)%1000);
 	    }
 		disable_console();
 	}
