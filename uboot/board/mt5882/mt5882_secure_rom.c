@@ -1168,7 +1168,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
     BYTE au1ExtractMsg[SHA1HashSize];
     BYTE au1MessageDigest[SHA1HashSize];
     LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)0xfb005000;
-#if 1//def 	SECURE_DEBUG
+#ifdef 	SECURE_DEBUG
 
     UINT8 au4CustKey[256] = {
 		0x99, 0xc4, 0xcd, 0x15, 0xaf, 0x54, 0xe0, 0xf6, 0x0f, 0x70, 0x25, 0x12, 
@@ -1209,7 +1209,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
         printf("verifySignature u4StartAddr=%x, u4Size=%x\n", u4StartAddr, u4Size);
 #endif
 
-#if 0//ndef 	SECURE_DEBUG
+#ifndef SECURE_DEBUG
         memcpy((void*)au4CheckSum, (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
 #else  //use vendor public key
         memcpy((void*)au4CheckSum, (void*)au4CustKey, 256);

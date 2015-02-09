@@ -96,9 +96,12 @@ endif
 CFLAGS= -std=c99 -pedantic -Wall -Wpointer-arith -Wstrict-prototypes -O0 -g
 CC= gcc
 
-SIGGEN_KEY := $(shell if [ -e $(SIGN_TOOL_DIR)/public_key2 -a -e $(SIGN_TOOL_DIR)/private_key2 ]; then echo "$(SIGN_TOOL_DIR)/public_key2 $(SIGN_TOOL_DIR)/private_key2"; else echo "";fi)
-AES_KEY2 := $(SIGN_TOOL_DIR)/aes_key_set2
 
+
+SIGGEN_KEY := $(shell if [ -e $(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key -a -e $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key ]; then echo "$(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key"; else echo "";fi)
+AES_KEY2 := $(SIGN_TOOL_DIR)/aes_key_set2\
+#$(warning SIGN_TOOL_DIR = $(SIGN_TOOL_DIR))
+#$(error SIGGEN_KEY = $(SIGGEN_KEY))
 T_MTK = $(SIGN_TOOL_DIR)/sign
 
 clean distclean:
