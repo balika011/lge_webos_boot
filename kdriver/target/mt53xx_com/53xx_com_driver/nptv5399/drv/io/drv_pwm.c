@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_pwm.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -111,6 +111,8 @@
 EXTERN UINT8 bSI_DISPLAY_DCLK_TYPE;
 UINT8 _bPWMSrc;
 extern BOOL fgIsVsyncIsrStart;
+static UINT8 u1FlagSetPwm =0;
+
 
 #define PWMSCAN_MAX_CH SrcPWM2
 typedef struct
@@ -150,11 +152,14 @@ static DRV_PWM_PARAM_T _gPWMSetting[PWM_DEV_MAX];
 void vDrvPWM_Init(void)
 {
 	memset((void *)_gPWMSetting,0,sizeof(_gPWMSetting));
+	u1FlagSetPwm=0;
 }
 void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 {
 	UINT32 u4BusClk;
 	UINT32 u4PwmP,u4PwmH,u4PwmRsn,u4Frequency;
+	if (u1FlagSetPwm==0) return;
+	
 	u4BusClk = BSP_GetDomainClock(SRC_BUS_CLK);
 	u4PwmRsn = 0xff;
 	if(_gPWMSetting[pwmIndex].pwm_enable && (!_gPWMSetting[pwmIndex].pwm_scanning_enable))//OPWM
@@ -187,6 +192,7 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 		{
 			u4Frequency = _gPWMSetting[pwmIndex].pwm_frequency;
 		}
+		LOG(0, "_|-|_  opwm[%d] freq:%dHz,duty:%d, lock:%d, adaptive:%d\n",pwmIndex, u4Frequency, _gPWMSetting[pwmIndex].pwm_duty,_gPWMSetting[pwmIndex].pwm_lock,_gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwm_adapt_freq_enable);
 		if(u4Frequency == 0)
 		{
 			u4PwmP = 0;
@@ -275,13 +281,16 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 }
 void vDrvPWM_SetParam(DRV_PWM_PIN_SEL_T pwmIndex,DRV_PWM_PARAM_T *prPwmSetting)
 {
+	 u1FlagSetPwm = 1;  
+
 	 memcpy(&_gPWMSetting[pwmIndex], prPwmSetting, sizeof(DRV_PWM_PARAM_T));
 	 vDrvPWM_ApplyParam(pwmIndex);
 }
 void vDrvPWM_ApplyParamSet()
 {
 	INT32 i;
-	for(i=1;i<=SrcPWM2;i++) //OPWM
+	if (u1FlagSetPwm==0) return;                                                        ;
+	for(i=1;i<=SrcPWM2;i++)
 	{	if(_gPWMSetting[i].pwm_enable && (_gPWMSetting[i].pwm_scanning_enable))
 			vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
 		vDrvPWM_ApplyParam(PWM_DEV_PIN0+i);
