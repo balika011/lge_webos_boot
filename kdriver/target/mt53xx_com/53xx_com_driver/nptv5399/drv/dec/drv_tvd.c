@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #16 $
+* $Revision: #17 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -183,7 +183,7 @@
 #define TVD_AntiTrs        1
 #define TVD_PHALT_WA    1
 #define TVD_PHALT_MN_WA2 	0
-#define TVD_MODE_Deglitch 	1
+#define TVD_MODE_Deglitch 	0
 #define TVD_MODESWITCH_PROTECT 0 //new add
 #define TVD_MAX_CLAMP_TABLE	1
 #define TVD_SERRTYPE_ONE	1
@@ -209,7 +209,7 @@
 // ---------- Sony bug patchs ---------------------//
 #define TVD_PICTURE_WHITE_FLASH	0
 #define TVD_BURST_ONOFF_TEST_WA 0
-#define TVD_RTM1_CM 0
+#define TVD_RTM1_CM 1
 // ---------- Sony bug patchs end -----------------//
 
 // ----------  LG bug patchs ----------------------//
@@ -231,13 +231,13 @@
 #define TVD_FAST_CHCHG 1
 #define TVD_NOBURST_SLOW_V625_WA 1
 #define TVD_LIM_HERR_WA 1
-#define TVD_BP_ATV_MODECHG 0
+#define TVD_BP_ATV_MODECHG 1
 #define TVD_ADAP_VPRES_SETTING 1
 #define TVD_RESET_MODE_CHCHG 1
 #define TVD_VMASK_HEAD_SHAKING  1
 #define TVD_SMALL_HWIDTH_SHAKING 1
 #ifdef CC_LGE_PROTO_PCBA
-#define TVD_CTRL_STABLE_MCNT 0
+#define TVD_CTRL_STABLE_MCNT 0// modechange  time to 6vsync
 #else
 #define TVD_CTRL_STABLE_MCNT 1
 #endif
@@ -257,7 +257,7 @@
 #define TVD_VMASK_HEAD_SHAKING  0
 #define TVD_SMALL_HWIDTH_SHAKING 0
 #ifdef CC_LGE_PROTO_PCBA
-#define TVD_CTRL_STABLE_MCNT 0      // Modify TVD modechange>modechangedone 12v to 6v   zuyu.liao 2013.12.20
+#define TVD_CTRL_STABLE_MCNT 1     // Modify TVD modechange>modechangedone 12v to 6v   zuyu.liao 2013.12.20
 #else
 #define TVD_CTRL_STABLE_MCNT 1
 #endif
@@ -2566,7 +2566,7 @@ static void _svDrvTvdCochAdj(BOOL fgCoChannel,UINT16 wAGCTargetSyncHeight)
 		vDrvTvdRstHsyncPosDetCnt();
         if(fgDrvTvdIsCOCHDeCnt(TVD_COCHDe_CNT-1))
         {
-#ifdef TVD_RTM1_CM
+#if (!TVD_RTM1_CM)
             vIO32WriteFldAlign(DFE_0D, 0, CLAMP_ATD_GAIN);
             vIO32WriteFldAlign(DFE_0A, 0x6, CLAMP_FINE_RATIO);
 #endif
@@ -2582,7 +2582,7 @@ static void _svDrvTvdCochAdj(BOOL fgCoChannel,UINT16 wAGCTargetSyncHeight)
 
         if(fgDrvTvdIsCOCHDeCnt(TVD_COCHDe_CNT2+1))
         {
-#ifdef TVD_RTM1_CM
+#if( !TVD_RTM1_CM)
             vIO32WriteFldAlign(DFE_0D, DFE_CLAMP_ATD_GAIN, CLAMP_ATD_GAIN);
             vIO32WriteFldAlign(DFE_0A, 0xF, CLAMP_FINE_RATIO);
 #endif
@@ -2991,6 +2991,8 @@ static void _svDrvTvdRstNSTStatus(BOOL fgIs525, RTvdNSTDStatus *pRTvdNSTDStatus)
  * @retval : VPRES status.
  */
 #if TVD_VPRES_STATE
+
+/*
 static UINT8 _sbDrvTvdVpresStateMachine(UINT8 *pVpresState)
 {
     UINT8 bCurVpresState = *pVpresState;
@@ -3126,6 +3128,7 @@ static UINT8 _sbDrvTvdVpresStateMachine(UINT8 *pVpresState)
 
     return fgRetVpres;
 }
+*/
 #endif
 
 /**
@@ -5933,12 +5936,16 @@ BOOL fgHwTvdVPres(void)
     else
     {
         #ifdef CC_SUPPORT_PIPELINE
-		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+		//if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+	       if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV))&&((!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV))))
+
         #else
 		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
         #endif
         {
-            return ((IO32ReadFldAlign(DFE_STA_00, VPRES4_ON_FLAG))||(IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D)));
+           // return ((IO32ReadFldAlign(DFE_STA_00, VPRES4_ON_FLAG))||(IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D)));
+	     return (IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D));
+
         }
         else
         {
@@ -7047,12 +7054,16 @@ void vTvd3dVSyncISR(void)
 #if TVD_VPRES_STATE
     
 #ifdef CC_SUPPORT_PIPELINE
-    if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+    //if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV))&&((!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV))))
+
 #else
     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
 #endif
     {
-		fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
+		//fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
+		fgPreVPres_0 = fgHwTvdVPres();
+
     }
     else
     {
@@ -8220,7 +8231,7 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     //other
     vIO32WriteFldAlign(VSRC_08, SV_ON, VPRES_COCH_EN);
 #ifdef TVD_RTM1_CM
-    vIO32WriteFldAlign(VSRC_08, 0xA, COCH_VLD_TH);
+    vIO32WriteFldAlign(VSRC_08, 0x10, COCH_VLD_TH);
 #endif
     /*if (bTvdCtrl(TCTL_MCNT,TC_GETEN,0) == 0)
     {
@@ -8299,6 +8310,7 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         else
         {
             _sbTvd_McDone_cnt = bTvdCtrl(TCTL_MCNT, TC_GETVAL, 0);
+	     _sbTvd_McDone_cnt=12;
         }
 
 #if	TVD_AntiTrs
@@ -8558,16 +8570,33 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
  */
 UINT8 bTvd3dGetColorSystem(void)
 {
-    if((fgIsMainTvd3d()||fgIsPipTvd3d()) && _rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE)
+     LOG(3,"ljg--> TVD vcr =%d,comb = %d\n",fgHwTvdVCR(),fgHwCombVCR());
+    //if((fgIsMainTvd3d()||fgIsPipTvd3d()) && _rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE&&!fgHwTvdVCR()&&!fgHwCombVCR())
+    //static UINT8 _bHWColorsystem;
+   // static UINT8 _bColorburstLock;
+    //static UINT8 _bcolorsystemmcnt;
+    
+    if((fgIsMainTvd3d()||fgIsPipTvd3d()) && (_rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE)&&(_sbTvdModeCnt>25))
     {
+        
         if(fgHwTvdIsMMode())
         {
             return (bHwTvdMMode());
         }
         else
         {
-            return (bHwTvdMode());
+          /*
+           if(((bHwTvdMode()!=_bHWColorsystem)||(fgHwTvdBLock4DET()!=_bColorburstLock))&&(bGetSignalTypeAVD(0)==SV_ST_AV))
+           {
+               //vUtDelay10ms(20);//need dealy some times
+               _bHWColorsystem=bHwTvdMode();
+		_bColorburstLock=fgHwTvdBLock4DET();
+		LOG(0,"colosystem HW change.\n");
+	    }
+	    */
+            return bHwTvdMode();
         }
+
     }
     else
     {
@@ -8810,7 +8839,7 @@ void vTvd3dReset(void)
     vTvd3dResetOff();
     _svDrvTvdRstVpresState();
     x_crit_end(csState);
-   // vUtDelay10ms(10);  remove dealy 100ms by zuyu for reduce boot time 2013.11.15
+    vUtDelay10ms(10); //  remove dealy 100ms by zuyu for reduce boot time 2013.11.15
 }
 
 

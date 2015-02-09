@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/09 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1104,8 +1104,9 @@ UINT32 VDP_GetEnable(UCHAR ucVdpId, UCHAR *pucEnable)
  */
 UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 {
+	UINT8 _bCount=9;
     VERIFY_VDP_ID(ucVdpId);
-
+ 
     if(ucMode >= VDP_MODE_UNKNOWN)
     {
         return VDP_SET_ERROR;
@@ -1129,7 +1130,7 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 
     VDP_MUTEX_LOCK;
 #ifdef CC_SCPOS_EN
-
+    
     if(ucMode == VDP_MODE_BG)
     {
         #if ENABLE_PRBS_BY_DRIVER
@@ -1150,6 +1151,10 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
         }
         // only unmute when vdp is enable,
         // else you will see some garbage frame buffer
+		if(bGetSignalType(ucVdpId)<=SV_ST_AV)
+		{
+         _bCount=30;
+		}
         #if ENABLE_PRBS_BY_DRIVER
         _bEnablePrbsByAPMute=FALSE;
         #endif
@@ -1159,7 +1164,7 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 		    if((SRM_IsPipVideo() ==1)||(SRM_IsPopVideo()== 1))//change 5 to 10 when change need to check CR DTV00612212 DTV00583481
           _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?10:0, FALSE); 
 		    else
-		      _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?9:0, FALSE); 
+		      _vDrvVideoSetMute(MUTE_MODULE_API_FORCE, ucVdpId, (_u4DrvVideoGetMute(ucVdpId))?_bCount:0, FALSE); 
 
     }
 
