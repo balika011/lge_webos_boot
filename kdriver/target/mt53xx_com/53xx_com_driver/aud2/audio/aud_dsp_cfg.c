@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -16270,6 +16270,16 @@ APROC_LGSE_NO_PARAM_T Aproc_Lgse_ParamNo_Block[HAL_APROC_LGSE_NUM] =
 	{0, 0, 0, 0}
 };
 
+typedef enum
+{
+	AUDIO_LGSE_MODE_VARIABLES0	= 0, // "VARIABLES_00"will be written
+	AUDIO_LGSE_MODE_VARIABLES1	= 1, // "VARIABLES_01"will be written
+	AUDIO_LGSE_MODE_VARIABLES2	= 2, // "VARIABLES_02"will be written
+	AUDIO_LGSE_MODE_VARIABLES3	= 3, // "VARIABLES_03"will be written
+	AUDIO_LGSE_MODE_VARIABLES4	= 4, // "VARIABLES_04"will be written
+	AUDIO_LGSE_MODE_VARIABLESALL= 5  // All "VARIABLES" will be written simultaneously. Data will be arranged from 0 to 4.
+} AUDIO_LGSE_VARIABLE_MODE_T;
+
 void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataOption, UINT8 varOption)
 {
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -16310,7 +16320,17 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 	{
 		u4StartAddr = APROC_ASM_ADDR(APROC_ASM_ID_LGSE_VAR, 0);
 
-		if (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4VarNo)
+		if ((_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4VarNo) && (fNo != 3))
+		{
+			Printf ("[LGSE][VAR] Number of var param not match. _argLgseFnPara[%d].noParam = %d, Aproc_Lgse_ParamNo_Block[%d].u4VarNo=%d\n", fNo, _argLgseFnPara[fNo].noParam, fNo, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo);
+			return;
+		}
+		if ((fNo == 3) && (_argLgseFnPara[fNo].varOption != AUDIO_LGSE_MODE_VARIABLESALL) && (_argLgseFnPara[fNo].noParam != 5))
+		{
+			Printf ("[LGSE][VAR] Number of var param not match. _argLgseFnPara[%d].noParam = %d\n", fNo, _argLgseFnPara[fNo].noParam);
+			return;
+		}
+		if ((fNo == 3) && (_argLgseFnPara[fNo].varOption == AUDIO_LGSE_MODE_VARIABLESALL) && (_argLgseFnPara[fNo].noParam != Aproc_Lgse_ParamNo_Block[fNo].u4VarNo))
 		{
 			Printf ("[LGSE][VAR] Number of var param not match. _argLgseFnPara[%d].noParam = %d, Aproc_Lgse_ParamNo_Block[%d].u4VarNo=%d\n", fNo, _argLgseFnPara[fNo].noParam, fNo, Aproc_Lgse_ParamNo_Block[fNo].u4VarNo);
 			return;
@@ -16328,14 +16348,24 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 	pu4Value = (UINT32 *)_argLgseFnPara[fNo].pParams;
 	for (i = 0; i < _argLgseFnPara[fNo].noParam; i++)
 	{
-		
 		if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_INIT_ONLY)
 		{
 			vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4InitOffset + i), pu4Value[i]);
 		}
 		else if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_VARIABLES)
 		{
-			vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4VarOffset + i), pu4Value[i]);
+			if ((fNo == 3) && (_argLgseFnPara[fNo].varOption == AUDIO_LGSE_MODE_VARIABLESALL)) // 25 vars
+			{
+				vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4VarOffset + i), pu4Value[i]);
+			}
+			else if ((fNo == 3) && (_argLgseFnPara[fNo].varOption != AUDIO_LGSE_MODE_VARIABLESALL)) // 5vars
+			{
+				vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4VarOffset + (5 * _argLgseFnPara[fNo].varOption)+ i), pu4Value[i]);
+			}
+			else
+			{
+				vAprocReg_Write ((u4StartAddr + Aproc_Lgse_ParamNo_Block[fNo].u4VarOffset + i), pu4Value[i]);
+			}
 		}
 	}
 
