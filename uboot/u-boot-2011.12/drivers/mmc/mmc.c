@@ -376,7 +376,7 @@ static ulong mmc_bread(int dev_num, ulong start, lbaint_t blkcnt, void *dst)
 		 * The 65535 constraint comes from some hardware has
 		 * only 16 bit width block number counter
 		 */
-		cur = (blocks_todo > 65535) ? 65535 : blocks_todo;
+		cur = (blocks_todo > 8191) ? 8191 : blocks_todo;
 		if(mmc_read_blocks(mmc, dst, start, cur) != cur)
 		{
 		    printf("mmc_read_blocks read error!\n");
