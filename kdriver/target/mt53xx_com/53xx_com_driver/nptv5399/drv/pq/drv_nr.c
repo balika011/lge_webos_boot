@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/08 $
+ * $Date: 2015/02/10 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1222,7 +1222,7 @@ void vDrvNRSet2DNRBNROnOff(UINT8 u1OnOff)
     UINT8 bModuleOnOff = u1OnOff && (!bForceAllPQOff) && wReadQualityTable(QUALITY_MODULE_ONOFF_BNR);    
     NR_W(NXNR_00, (bModuleOnOff ? 1 : 0), NX_BNR);
     //_SWW(NR_CTRL_00, u1OnOff&&u1DrvNRGetBlockMeterSupport(), EN_ADAP_SNR_BLK);
-    _SWW(NR_CTRL_00, (bModuleOnOff ? 1 : 0), EN_BNR_RNR_ADAP);
+    //_SWW(NR_CTRL_00, (bModuleOnOff ? 1 : 0), EN_BNR_RNR_ADAP);
 
     if (bModuleOnOff&&u1DrvNRGetBlockMeterSupport())
         vDrvNRSet2DNRSNROnOff(SV_ON);
