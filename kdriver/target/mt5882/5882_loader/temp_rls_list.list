@@ -1,0 +1,13 @@
+bsp/arm_cpu.h
+bsp/bsp_shadow.c
+bsp/chip_txt.c
+bsp/chip_txt.h
+bsp/dram/ddr.c
+bsp/dram/ddr.h
+bsp/main_boot.c
+bsp/msdcboot.c
+bsp/msdcboot.h
+bsp/nandboot.c
+bsp/nandboot.h
+bsp/pcie_if.h
+bsp/rs232.h

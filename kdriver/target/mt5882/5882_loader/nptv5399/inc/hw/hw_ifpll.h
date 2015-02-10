@@ -1,0 +1,47 @@
+#ifndef _HW_IFPLL_H_
+#define _HW_IFPLL_H_
+
+//Page HISTORY
+#define IO_IFPLL_BASE (IO_VIRT + 0x61000)
+
+//Page TABLE
+#define REG_IFPLL_CFG0 (IO_IFPLL_BASE + 0x600)
+    #define FLD_RG_IFPLL_PWD Fld(1,31,AC_MSKB3)//[31:31]
+    #define FLD_RG_IFPLL_FBKDIV Fld(7,24,AC_MSKB3)//[30:24]
+    #define FLD_RG_IFPLL_FBKSEL Fld(2,22,AC_MSKB2)//[23:22]
+    #define FLD_RG_IFPLL_POSDIV Fld(2,20,AC_MSKB2)//[21:20]
+    #define FLD_RG_IFPLL_CKCTRL Fld(2,18,AC_MSKB2)//[19:18]
+    #define FLD_RG_IFPLL_PREDIV Fld(2,16,AC_MSKB2)//[17:16]
+    #define FLD_RG_IFPLL_ACCEN Fld(1,15,AC_MSKB1)//[15:15]
+    #define FLD_RG_IFPLL_DIVEN Fld(3,12,AC_MSKB1)//[14:12]
+    #define FLD_RG_IFPLL_BIR Fld(4,8,AC_MSKB1)//[11:8]
+    #define FLD_RG_IFPLL_BR Fld(3,5,AC_MSKB0)//[7:5]
+    #define FLD_RG_IFPLL_BC Fld(2,3,AC_MSKB0)//[4:3]
+    #define FLD_RG_IFPLL_BIC Fld(3,0,AC_MSKB0)//[2:0]
+#define REG_IFPLL_CFG1 (IO_IFPLL_BASE + 0x604)
+    #define FLD_RG_IFPLL_BP Fld(4,28,AC_MSKB3)//[31:28]
+    #define FLD_RG_IFPLL_VODEN Fld(1,27,AC_MSKB3)//[27:27]
+    #define FLD_RG_IFPLL_BAND Fld(6,21,AC_MSKW32)//[26:21]
+    #define FLD_RG_IFPLL_AUTOK_EN Fld(1,20,AC_MSKB2)//[20:20]
+    #define FLD_RG_IFPLL_AUTOK_LOAD Fld(1,19,AC_MSKB2)//[19:19]
+    #define FLD_RG_IFPLL_MONVC_EN Fld(1,18,AC_MSKB2)//[18:18]
+    #define FLD_RG_IFPLL_MONCK_EN Fld(1,17,AC_MSKB2)//[17:17]
+    #define FLD_RG_IFPLL_MONREF_EN Fld(1,16,AC_MSKB2)//[16:16]
+    #define FLD_RG_IFPLL_BIAS_LPF_ENB Fld(1,15,AC_MSKB1)//[15:15]
+    #define FLD_RG_IFPLL_BIAS_PWD Fld(1,14,AC_MSKB1)//[14:14]
+    #define FLD_RG_IFPLL_ANACK_SEL Fld(1,13,AC_MSKB1)//[13:13]
+    #define FLD_RG_IFPLL_ANACK_EN Fld(1,12,AC_MSKB1)//[12:12]
+    #define FLD_RG_IFPLL_DIGCK_EN Fld(1,11,AC_MSKB1)//[11:11]
+    #define FLD_RG_IFPLL_CVBSCK_EN Fld(1,10,AC_MSKB1)//[10:10]
+    #define FLD_RG_IFPLL_PWMCK_EN Fld(1,9,AC_MSKB1)//[9:9]
+    #define FLD_RG_IFPLL_XTAL1_EN Fld(1,8,AC_MSKB1)//[8:8]
+    #define FLD_RG_IFPLL_OD_27M_EN Fld(1,7,AC_MSKB0)//[7:7]
+    #define FLD_RG_IFPLL_EXT_SEL Fld(1,6,AC_MSKB0)//[6:6]
+    #define FLD_RG_IFPLL_TSTCK_EN Fld(1,5,AC_MSKB0)//[5:5]
+    #define FLD_RG_IFPLL_RESERVE Fld(5,0,AC_MSKB0)//[4:0]
+#define REG_IFPLL_CFG2 (IO_IFPLL_BASE + 0x608)
+    #define FLD_RGS_IFPLL_AUTOK_CPLT Fld(1,31,AC_MSKB3)//[31:31]
+    #define FLD_RGS_IFPLL_AUTOK_FAIL Fld(1,30,AC_MSKB3)//[30:30]
+    #define FLD_RGS_IFPLL_AUTOK_BAND Fld(7,23,AC_MSKW32)//[29:23]
+
+#endif /* _HW_IFPLL_H_ */
