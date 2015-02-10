@@ -1676,18 +1676,15 @@ typedef struct
 /* Only For Test in Citrix */
 static verify_list_t verify_list[] =
 {
-	{"lginit",		BOOT_COLD | BOOT_SNAPSHOT},
-	//{"rootfs",		BOOT_COLD | BOOT_SNAPSHOT},
+	{"swsu",		BOOT_COLD | BOOT_SNAPSHOT},
 	{"vendor",		BOOT_COLD},
-	{"patch",		BOOT_COLD},
+	{"tvservice",	BOOT_COLD},
 	{"opensrc",		BOOT_COLD},
-	{"swue",		BOOT_COLD},
-	{"lglib",		BOOT_COLD},
+	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
+	{"otncabi",		BOOT_COLD},
 	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
-	{"emanual",		BOOT_COLD},
-	{"estreamer",	BOOT_COLD},
-	{"base",		BOOT_COLD},
-	{"extra",		BOOT_COLD},
+	{"otycabi",		BOOT_COLD},
+	{"smartkey",	BOOT_COLD},
 };
 
 static int is_verify_part(int idx, int boot_mode)
