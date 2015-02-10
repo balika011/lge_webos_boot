@@ -1,4 +1,0 @@
-chip/chip_bim.c
-chip/chip_id.c
-chip/prot_cli.c
-private_inc/x_chip_id.h
