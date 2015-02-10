@@ -891,7 +891,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
     init_fnc_t **init_fnc_ptr;
 #endif
 #if (CONFIG_ENABLE_MMU)
-		HalInitMMU(0x1F00000);
+		HalInitMMU(0x2e900000);
 #endif
 	LogEnable = 2;
 

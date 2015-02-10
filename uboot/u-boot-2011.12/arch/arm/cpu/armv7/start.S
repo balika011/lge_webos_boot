@@ -749,7 +749,7 @@ set_irq_sp:
 	 
     .globl secondary_setup_mmu
     secondary_setup_mmu:
-    mov  r1, #0x1f00000   /* r1 = Address of TTB0*/
+    	ldr	r1, = 0x2e900000   /* r1 = Address of TTB0*/
 
     /* setup mmu*/
     mov r0, #1 //domain 0 set 1
