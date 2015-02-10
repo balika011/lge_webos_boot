@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -115,6 +115,7 @@ LINT_EXT_HEADER_BEGIN
 #include "x_aud_dec.h"
 #include "sif_if.h"
 #include "codec_AD82581.h"
+#include "dsp_intf.h"
 
 #ifdef CHANNEL_CHANGE_LOG
 #include "x_timer.h"
@@ -6086,7 +6087,8 @@ void AUD_OpenGamePcm(UINT8 u1DecId, AUD_FMT_T u1DecFmt, SAMPLE_FREQ_T SampleRate
     //AUD_PcmSetting(u1DecId, (const AUD_PCM_SETTING_T *)&rPcmSetting);
     //_AUD_IgnoreDecNotify(u1DecId, TRUE);
     //AUD_DSPCmdPlay(u1DecId);
-    PSR_RiscSetAudioWp(AUD_DSP0, u1DecId, PHYSICAL(u4AFifoWp));
+    //PSR_RiscSetAudioWp(AUD_DSP0, u1DecId, PHYSICAL(u4AFifoWp));  
+    _AUD_DMX_UpdateWritePtr(u1DecId, PHYSICAL(u4AFifoWp));
     //_AUD_IgnoreDecNotify(u1DecId, FALSE);
 }
 
@@ -6117,7 +6119,9 @@ void AUD_GetPcmDelay(UINT32 u1DecId, UINT32* pdelay2)
 
     u4AFifoSize = u4GetAFIFOEnd(AUD_DSP0, u1DecId) - u4GetAFIFOStart(AUD_DSP0, u1DecId);
     u4AFifoRp = VIRTUAL(DSP_GetDspReadPtrPhysicalAddr(AUD_DSP0, u1DecId));
-    u4AFifoWp = VIRTUAL(DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0)));
+    //u4AFifoWp = VIRTUAL(DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0)));    
+    _AUD_DMX_GetAudWrtPtr(u1DecId, &u4AFifoWp);
+    u4AFifoWp = VIRTUAL(u4AFifoWp);
 
     u4AFfioFreeSize = ((u4AFifoWp > u4AFifoRp) ?
                        (u4AFifoWp - u4AFifoRp) : (u4AFifoSize + u4AFifoWp - u4AFifoRp));
@@ -6186,7 +6190,9 @@ UINT32 AUD_FillPcmBufer(UINT8 u1DecId, UINT32* lpBuffer2, UINT32 size2)
 
     u4AFifoSize = u4GetAFIFOEnd(AUD_DSP0, u1DecId) - u4GetAFIFOStart(AUD_DSP0, u1DecId);
     u4AFifoRp = VIRTUAL(DSP_GetDspReadPtrPhysicalAddr(AUD_DSP0, u1DecId));
-    u4AFifoWp = VIRTUAL(DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0)));
+    //u4AFifoWp = VIRTUAL(DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0)));
+    _AUD_DMX_GetAudWrtPtr(u1DecId, &u4AFifoWp);
+    u4AFifoWp = VIRTUAL(u4AFifoWp);
 
     u4AFfioFreeSize = ((u4AFifoWp < u4AFifoRp) ?
                        (u4AFifoRp - u4AFifoWp) : (u4AFifoSize + u4AFifoRp - u4AFifoWp));
@@ -6198,7 +6204,8 @@ UINT32 AUD_FillPcmBufer(UINT8 u1DecId, UINT32* lpBuffer2, UINT32 size2)
 
     u4AFifoWp = ((u4AFifoWp + size2) < VIRTUAL(u4GetAFIFOEnd(AUD_DSP0, u1DecId))) ? 
                     (u4AFifoWp + size2) : (u4AFifoWp + size2 - u4AFifoSize);
-        PSR_RiscSetAudioWp(AUD_DSP0, u1DecId, PHYSICAL(u4AFifoWp));
+        //PSR_RiscSetAudioWp(AUD_DSP0, u1DecId, PHYSICAL(u4AFifoWp));
+        _AUD_DMX_UpdateWritePtr(u1DecId, PHYSICAL(u4AFifoWp));
         return size2;
     }
     else

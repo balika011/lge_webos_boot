@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/10 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -966,7 +966,7 @@ void _AUD_DMX_GetAudPtr(UINT8 u1DecId, UINT32* pu4ReadPtr, UINT32* pu4WritePtr)
 #else
         if (u1DecId == AUD_DEC_MAIN)
         {
-            *pu4WritePtr = DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0));
+            *pu4WritePtr = DSP_PHYSICAL_ADDR(AUD_READ32(REG_USER1_WP));
         }
         else if (u1DecId == AUD_DEC_AUX)
         {
@@ -1016,7 +1016,7 @@ void _AUD_DMX_GetAudWrtPtr(UINT8 u1DecId, UINT32* pu4WritePtr)
 #else
         if (u1DecId == AUD_DEC_MAIN)
         {
-            *pu4WritePtr = DSP_PHYSICAL_ADDR(PSR_SoftGetAudioWp(AUD_DSP0));
+            *pu4WritePtr = DSP_PHYSICAL_ADDR(AUD_READ32(REG_USER1_WP));
         }
         else if (u1DecId == AUD_DEC_AUX)
         {
@@ -1067,7 +1067,11 @@ BOOL _AUD_DMX_UpdateWritePtr(UINT8 u1DecId, UINT32 u4WritePtr)
         PSR_RiscSetAudioWp(AUD_DSP0,u1DecId, DSP_INTERNAL_ADDR(u4WritePtr));
     }
 #else
-    if (u1DecId == AUD_DEC_AUX)
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        AUD_WRITE32(REG_USER1_WP, DSP_INTERNAL_ADDR(u4WritePtr));
+    }
+    else if (u1DecId == AUD_DEC_AUX)
     {
         AUD_WRITE32(REG_DMX_WRITE_PNT, DSP_INTERNAL_ADDR(u4WritePtr));
     }
@@ -1077,11 +1081,7 @@ BOOL _AUD_DMX_UpdateWritePtr(UINT8 u1DecId, UINT32 u4WritePtr)
     }
     else
     {
-        #ifdef CC_DUAL_AUD_DEC_SUPPORT
         AUD_WRITE32(REG_USER1_WP, DSP_INTERNAL_ADDR(u4WritePtr));
-        #else    
-        PSR_RiscSetAudioWp(AUD_DSP0,u1DecId, DSP_INTERNAL_ADDR(u4WritePtr));
-        #endif
     }
 #endif
 
@@ -1184,34 +1184,9 @@ BOOL AUD_BitStrSelPolicy(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eSt
                 eAudBitStr = AUD_BS_SEL_PSR;
             }
 #else
-            if (u1DecId == AUD_DEC_AUX)
-            {
-                eAudBitStr =  AUD_BS_SEL_DMX;
-            }
-            else if (u1DecId == AUD_DEC_THIRD)
-            {
-                eAudBitStr =  AUD_BS_SEL_USER0;
-            }
-            else
-            { 
-                #ifdef CC_DUAL_AUD_DEC_SUPPORT
-                eAudBitStr = AUD_BS_SEL_USER1;                
-                #else            
-                eAudBitStr =  AUD_BS_SEL_PSR; 
-                #endif
-            }
-#endif // CC_MT5391_AUD_3_DECODER
-            break;
-
-        case AUD_STREAM_FROM_MEMORY:
-#ifdef CC_ENABLE_AOMX
-        case AUD_STREAM_FROM_GST:
-#endif
-        case AUD_STREAM_FROM_FEEDER:
-#ifdef CC_ENABLE_AOMX
             if (u1DecId == AUD_DEC_MAIN)
             {
-                eAudBitStr =  AUD_BS_SEL_PSR;
+                eAudBitStr = AUD_BS_SEL_USER1; 
             }
             else if (u1DecId == AUD_DEC_AUX)
             {
@@ -1221,10 +1196,37 @@ BOOL AUD_BitStrSelPolicy(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eSt
             {
                 eAudBitStr =  AUD_BS_SEL_USER0;
             }
-#else
-            eAudBitStr =  AUD_BS_SEL_PSR; 
-#endif
+            else
+            { 
+                eAudBitStr = AUD_BS_SEL_USER1;                
+            }
+#endif // CC_MT5391_AUD_3_DECODER
             break;
+
+        case AUD_STREAM_FROM_MEMORY:
+        case AUD_STREAM_FROM_FEEDER:
+            eAudBitStr =  AUD_BS_SEL_PSR; 
+            break;
+            
+#ifdef CC_ENABLE_AOMX
+        case AUD_STREAM_FROM_GST:
+            if (u1DecId == AUD_DEC_MAIN)
+            {
+                eAudBitStr =  AUD_BS_SEL_USER1;
+            }
+            else if (u1DecId == AUD_DEC_AUX)
+            {
+                eAudBitStr =  AUD_BS_SEL_DMX;
+            }
+            else if (u1DecId == AUD_DEC_THIRD)
+            {
+                eAudBitStr =  AUD_BS_SEL_USER0;
+            }else
+            {
+                eAudBitStr =  AUD_BS_SEL_USER1;
+            }
+            break;
+#endif
 
 #ifdef CC_AUD_HDMI_PARSER_2_0_SUPPORT
         case AUD_STREAM_FROM_HDMI:
@@ -1605,11 +1607,20 @@ void AUD_StrInputEnable(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStr
         switch (eStreamFrom)
         {
             case AUD_STREAM_FROM_MEMORY:
+            case AUD_STREAM_FROM_FEEDER:
+                if ((eStreamFrom == AUD_STREAM_FROM_MEMORY) && 
+                    (AUD_GetBitStrSel(u1DspId, u1DecId) == AUD_BS_SEL_PSR))
+                {
+                    PSR_RiscSetAudioWp(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId));
+                }                
+                vDspSetFifoReadPtr(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId));
+                if (!fgDspReadPtrSet(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId)))
+                {
+                    LOG(5, "DspReadPtrSet time out\n");
+                }
+                break;
 #ifdef CC_ENABLE_AOMX
             case AUD_STREAM_FROM_GST:
-#endif
-            case AUD_STREAM_FROM_FEEDER:
-#ifdef CC_ENABLE_AOMX
                 if(u1DecId == AUD_DEC_THIRD)
                 {
                     if (u4ReceivePesCnt == 0)    //write pointer is not updated in SendAudPes
@@ -1617,20 +1628,13 @@ void AUD_StrInputEnable(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStr
                         VERIFY(_AUD_DMX_UpdateWritePtr(u1DecId, u4GetAFIFOStart(AUD_DSP0, u1DecId)));
                     }
                 }
-				PSR_SoftInit(u1DspId);
-#endif
-                if ((eStreamFrom == AUD_STREAM_FROM_MEMORY) && 
-                    (AUD_GetBitStrSel(u1DspId, u1DecId) == AUD_BS_SEL_PSR))
-                {
-                    PSR_RiscSetAudioWp(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId));
-                }
                 vDspSetFifoReadPtr(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId));
                 if (!fgDspReadPtrSet(u1DspId, u1DecId, u4GetAFIFOStart(u1DspId, u1DecId)))
                 {
                     LOG(5, "DspReadPtrSet time out\n");
                 }
-                break;
-
+#endif
+            break;
             case AUD_STREAM_FROM_LINE_IN:
                 // Turn off input when config format
                 AUD_AinEnable(u1DecId, eStreamFrom, FALSE);
@@ -1767,10 +1771,11 @@ void AUD_StrInputEnable(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStr
         switch (eStreamFrom)
         {
             case AUD_STREAM_FROM_MEMORY:
+                break;
 #ifdef CC_ENABLE_AOMX
             case AUD_STREAM_FROM_GST:
-#endif
                 break;
+#endif
             case AUD_STREAM_FROM_LINE_IN:
                 
                 AUD_AinEnable(u1DecId, eStreamFrom, FALSE);

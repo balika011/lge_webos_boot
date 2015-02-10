@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/10 $
  * $RCSfile: adsp_task.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -486,9 +486,9 @@ extern BOOL PSR_RiscSetAudioWp(UINT8 u1PsrId, UINT8 u1DeviceId, UINT32 u4WritePo
 void vSetAWritePnt(UINT8 uDecIndex, UINT32 u4WritePointer)
 {
     if (uDecIndex == AUD_DEC_MAIN)
-{
-    PSR_RiscSetAudioWp(AUD_DSP0, AUD_DEC_MAIN, u4WritePointer);
-}
+    {
+        AUD_WRITE32(REG_USER1_WP, u4WritePointer);
+    }
     else if (uDecIndex == AUD_DEC_AUX) //AOMX2_TEST_TODO
     {
         AUD_WRITE32(REG_DMX_WRITE_PNT, u4WritePointer);
