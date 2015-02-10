@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6386,6 +6386,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
     B2R_PRM_T *  ptVdpPrm;
     UCHAR ucB2rId;
     UINT32 u4Ret = 0;
+	UCHAR i;
     #ifdef CC_B2R_SUPPORT_GAME_MODE
     BOOL fgGameModeStart =FALSE;
     #endif
@@ -6744,6 +6745,15 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                          {
                               LG_PipLineVdpConnect(VDP_2,prVdpConf->ucInputPort[0]);
                          }
+
+						   for(i=0;i<VDP_NS;i++)
+						   {
+						   	  if(bApiQuearyVSCConnectStatus(i)==SV_VD_MPEGHD)
+							   {
+							       LG_PipLineVdpConnect(i, prVdpConf->ucInputPort[0]);
+								   break;
+							   }
+						   }
 #endif
 #ifdef TIME_MEASUREMENT
                         TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R ready to play 1st Frame");

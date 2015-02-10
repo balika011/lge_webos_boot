@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/10 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1302,9 +1302,12 @@ UCHAR  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId)
       
        LOG(0,"LG_PipLineDisconnect\n");
 	 //  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
-	 VDP_SetInput(ucVdpId,6,0);
 	 vMpegHdConnect(ucVdpId,SV_OFF);
 	 LG_PipLineSwitch(ucVdpId,B2R_NS); 
+	 B2R_MUTEX_UNLOCK(ucVdpId);
+	 VDP_SetInput(ucVdpId,6,0);
+	 LOG(0,"LG_PipLineDisconnect end.\n");
+	 
 	   
  }
 
