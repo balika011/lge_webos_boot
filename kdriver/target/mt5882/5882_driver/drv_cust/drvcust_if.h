@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/02/10 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -384,9 +384,9 @@ C Total size:
 
 #if defined(CC_TRUSTZONE_SUPPORT)&& defined(CC_SVP_SUPPORT)
 #ifdef CC_FBM_TWO_FBP
-#define FBM_REDUCE_FBM_DMX_SIZE (0x700000 +FBM_DMX_ADD_SIZE)// 2M for dmx,5M for dmx2
+#define FBM_REDUCE_FBM_DMX_SIZE (0xa00000 +FBM_DMX_ADD_SIZE)// 5M for dmx,5M for dmx2
 #else
-#define FBM_REDUCE_FBM_DMX_SIZE 0x200000
+#define FBM_REDUCE_FBM_DMX_SIZE 0x500000
 #endif
 #else
 #define FBM_REDUCE_FBM_DMX_SIZE 0

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/06 $
+ * $Date: 2015/02/10 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1177,7 +1177,7 @@ u4AheadType = FBM_POOL_TYPE_FEEDER4;
     prPoolArrangeInfo[FBM_POOL_TYPE_DMX].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_DMX].ePool1 = u4AheadType;   
 #if defined(CC_TRUSTZONE_SUPPORT)&& defined(CC_SVP_SUPPORT)
-    prPoolList[FBM_POOL_TYPE_DMX].u4PoolSize = FBM_ALIGN_MASK((0x300000), FBM_DMX_SIZE_ALIGMENT);
+    prPoolList[FBM_POOL_TYPE_DMX].u4PoolSize = 0;
 #endif
 	u4AheadType = FBM_POOL_TYPE_DMX;
 
