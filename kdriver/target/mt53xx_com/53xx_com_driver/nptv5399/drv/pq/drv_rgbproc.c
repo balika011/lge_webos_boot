@@ -1003,6 +1003,8 @@ void vDrvSetBlueStretchOnOff(UINT8 bPath, UINT8 bOnOff)
 
 void vDrvSetBlueStretchParam(void)
 {
+	return;
+#if 0
     vIO32WriteFldMulti(BLUESTCH_00, P_Fld(wReadQualityTable(QUALITY_BLUE_STRETCH_LUMA_THD), C_BS_Y_THD) | 
                                     P_Fld(wReadQualityTable(QUALITY_BLUE_STRETCH_SAT_THD), C_BS_SAT_THD) |
                                     P_Fld(!wReadQualityTable(QUALITY_BLUE_STRETCH_GAIN2_ENABLE), C_BS_ONE_GAIN_MODE) |
@@ -1025,32 +1027,30 @@ void vDrvSetBlueStretchParam(void)
                                     P_Fld(wReadQualityTable(QUALITY_BLUE_STRETCH_GAIN_B_4), C_BS_GAIN_B_4));                       
 #endif                                    
     vDrvSetBlueStretchBase();
+#endif
 }
 
 void vDrvSetBlueStretchBase(void)
 {
     INT32 i4Val, i4Ofst = IO32ReadFldAlign(RGBOFFSET_00, R_OFFSET_MAIN);
-#ifndef CC_MT5882    
     UINT32 u4PrevStageBase = 0;
-#endif    
+
     i4Ofst = ((i4Ofst & 0x400) ? (i4Ofst - 0x800) : (i4Ofst)) / 4;    // express in 8 bit
     i4Val = ((IO32ReadFldAlign(YCBCR2RGB_00, Y2R_MATRIX00) * IO32ReadFldAlign(BLUESTCH_00, C_BS_Y_THD) + 0x200) >> 10) + i4Ofst + 1;
     i4Val = UINT8_CLIP(i4Val, 0, 255);
     vIO32WriteFldAlign(BLUESTCH_01, i4Val, C_BS_BASE);
-    vIO32WriteFldAlign(BLUESTCH_00, ((UINT32)wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_1)>i4Val) ? 
-                        wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_1) : i4Val, C_BS_BASE_1);
-#ifndef CC_MT5882
-    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_00, C_BS_BASE_1);
-    vIO32WriteFldAlign(BLUESTCH_03, ((UINT32)wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_2)>u4PrevStageBase) ? 
-                    wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_2) : u4PrevStageBase, C_BS_BASE_2);
-    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_03, C_BS_BASE_2);
-    vIO32WriteFldAlign(BLUESTCH_04, ((UINT32)wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_3)>u4PrevStageBase) ? 
-                    wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_3) : u4PrevStageBase, C_BS_BASE_3);
-    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_04, C_BS_BASE_3);
-    vIO32WriteFldAlign(BLUESTCH_05, ((UINT32)wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_4)>u4PrevStageBase) ? 
-                    wReadQualityTable(QUALITY_BLUE_STRETCH_BASE_4) : u4PrevStageBase, C_BS_BASE_4);
-#endif
+    vIO32WriteFldAlign(BLUESTCH_00, ((UINT32)IO32ReadFldAlign(BLUESTCH_00, C_BS_BASE_1)>i4Val) ? 
+                        IO32ReadFldAlign(BLUESTCH_00, C_BS_BASE_1) : i4Val, C_BS_BASE_1);
 
+    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_00, C_BS_BASE_1);
+    vIO32WriteFldAlign(BLUESTCH_03, ((UINT32)IO32ReadFldAlign(BLUESTCH_03, C_BS_BASE_2)>u4PrevStageBase) ? 
+                    IO32ReadFldAlign(BLUESTCH_03, C_BS_BASE_2) : u4PrevStageBase, C_BS_BASE_2);
+    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_03, C_BS_BASE_2);
+    vIO32WriteFldAlign(BLUESTCH_04, ((UINT32)IO32ReadFldAlign(BLUESTCH_04, C_BS_BASE_3)>u4PrevStageBase) ? 
+                    IO32ReadFldAlign(BLUESTCH_04, C_BS_BASE_3) : u4PrevStageBase, C_BS_BASE_3);
+    u4PrevStageBase = IO32ReadFldAlign(BLUESTCH_04, C_BS_BASE_3);
+    vIO32WriteFldAlign(BLUESTCH_05, ((UINT32)IO32ReadFldAlign(BLUESTCH_05, C_BS_BASE_4)>u4PrevStageBase) ? 
+                    IO32ReadFldAlign(BLUESTCH_05, C_BS_BASE_4) : u4PrevStageBase, C_BS_BASE_4);
 }
 
 

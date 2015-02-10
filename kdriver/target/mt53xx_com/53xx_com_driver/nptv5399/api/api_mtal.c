@@ -163,6 +163,7 @@ typedef enum
     VDO_PQ_SET_FB_ENABLE,
     VDO_PQ_SET_PCID_ENABLE,
     VDO_PQ_SET_FB_TABLE,
+    VDO_PQ_SET_BS_BASE,
     VDO_PQ_NS           // total pq items
 } VDO_PQ_TYPE_T;
 
@@ -1031,6 +1032,12 @@ static INT32 _PE_SetLCDIMGainTable(UCHAR ucVdpId, UINT16* prData, UINT32 u4Size)
 #endif    
 }
 
+static INT32 _PE_SetBSBase(UCHAR ucVdpId, UINT16* prData, UINT32 u4Size)
+{
+	vDrvSetBlueStretchBase();
+	return PQ_OK;
+}
+
 static INT32 _PE_GetVdoPqMotionLevel(UCHAR ucVdpId, UINT32* prData, UINT32 u4Size)
 {
     if (u4Size != sizeof(UINT32))
@@ -1198,6 +1205,9 @@ INT32 PE_SetPqInfo(UCHAR ucVdpId, UINT32 u4PqType, const void* pkvPqSetInfo, UIN
             break;
         case VDO_PQ_LCDIM_GAIN_TABLE:
             i4Ret = _PE_SetLCDIMGainTable(ucVdpId, (UINT16*) pkvPqSetInfo, u4Size);
+            break;
+		case VDO_PQ_SET_BS_BASE:
+            i4Ret = _PE_SetBSBase(ucVdpId, (UINT16*) pkvPqSetInfo, u4Size);
             break;
         default:
             i4Ret = PQ_NOT_SUPPORTED;
