@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -2077,6 +2077,7 @@ typedef struct
     #ifdef CC_ITIMING_ALWAYS
     BOOL fgFixFHDInterlaceDisplay;  //for Sharp EU, DTV-T2 model special bitstream
     #endif
+	UINT32 u4CompressedDataSzie;
 } VDEC_ES_INFO_KEEP_T;
 
 typedef struct
