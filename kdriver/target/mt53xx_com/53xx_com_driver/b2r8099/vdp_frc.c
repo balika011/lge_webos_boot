@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/11 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -314,6 +314,7 @@ static __TIMING_TBL_T VB1TimingTab[] =
    
 };
 BOOL fgVB1Byass=FALSE;
+static UINT32 u4FrameCount;
 //#endif
 //extern BOOL fgPhotoRasterModeIn4k;
 
@@ -1415,7 +1416,12 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
                 UINT32 u4AddrY;
                 UINT32 u4AddrC;
 
-
+                 u4FrameCount++;
+				 if(u4FrameCount>=prFrcPrm->ucInFrameRate)
+				 {
+				    u4FrameCount=0;
+					 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+				 }
                 // update VSYNC Ns
                 FRC_SET_VSYNC_NS(prFrcPrm, prFrcPrm->u2TargetNs, prFrcPrm->u2ChangeFieldNs);
 
@@ -2603,8 +2609,16 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     if (!prSeqHdr->fgB2R3DEnable)
 #endif
     {
-        u4SeqWidth = ((u4SeqWidth > 3840) ? 3840 : u4SeqWidth);
-        u4SeqHeight = ((u4SeqHeight > 2160) ? 2160 : u4SeqHeight);
+		#ifdef CC_SUPPORT_PIPELINE
+    	u4SeqWidth = ((u4SeqWidth > 1920) ? 1920 : u4SeqWidth);
+		if((u4SeqWidth == 1920) &&(u4SeqHeight > 1080) )
+		{
+        	u4SeqHeight = 1080;
+		}
+		#else
+		u4SeqWidth = ((u4SeqWidth > 3840) ? 3840 : u4SeqWidth);
+		u4SeqHeight = ((u4SeqHeight > 2160) ? 2160 : u4SeqHeight);
+		#endif
     }
     
 #ifdef CC_B2R_3D_SUPPROT
@@ -6735,6 +6749,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                             (prFrcPrm->ucNotSupport == 0))
 #endif
                     {
+                       u4FrameCount=0;
 #ifdef CC_B2R_SUPPORT_GAME_MODE
 
                        LOG(3,"========B2R ready to play 1st Frame===eGameMode=%d,DisplayQ Num=%d\n",eGameMode[ucB2rId],FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
