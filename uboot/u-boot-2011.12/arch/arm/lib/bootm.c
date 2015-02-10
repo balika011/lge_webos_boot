@@ -43,6 +43,7 @@
 #include "x_dram.h"
 #include <swum.h>
 #include <asm/io.h>
+#include <x_hal_5381.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -149,6 +150,8 @@ void linux_param_set(char *kargs)
 	//char *malimem, *umpmem;
 	int swumode = get_swumode();
 	unsigned int soc_rev = 0;
+	struct mmc	*mmc = find_mmc_device(CONFIG_SYS_MMC_ENV_DEV);
+	
 #ifdef SIGN_USE_PARTIAL	
     LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)0xfb005000;
 #endif
@@ -259,10 +262,20 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "modelName=%s ", gModelInfoDB.aModelName);
 	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
 	sprintf(arg_next(kargs), "%s ", "sver=3.00.00 bver=3.00.00");
-	sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");
+
+	if(IS_IC_5882_ES3() == 1)
+		sprintf(arg_next(kargs), "%s ", "chip=A5LRB0");
+	else
+		sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");
+
 	if(MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus())
 		sprintf(arg_next(kargs), "%s ", "factory");
-		
+
+	if(!mmc)
+		printf("No mmc device at slot %x\n", CONFIG_SYS_MMC_ENV_DEV);
+	else
+		sprintf(arg_next(kargs), "emmc_size=0x%01lx%08lx ", U64_UPPER(mmc->capacity), U64_LOWER(mmc->capacity));
+
 #if defined(LG_CHG)
     if ( DDI_NVM_GetFullVerifyFlag() )
     {
