@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1957,6 +1957,22 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
 #ifdef ENABLE_MULTIMEDIA
                 _B2R_RTAVsyncProc(this);
 #endif
+                if(i4Delta<0)
+              	{
+              	    if(i4Delta>(-u4OutFrameStc))
+              	    {
+              	         FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+						 LOG(2,"avsync callback fbid=%d,i4Delta=%d,u4OutFrameStc%d\n",prFrcPrm->ucFbId,i4Delta,(-u4OutFrameStc));
+              	    }
+              	}
+				else
+			    {
+			          if(i4Delta<u4OutFrameStc)
+			          {
+			              FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+						   LOG(2,"avsync callback fbid=%d,i4Delta=%d,u4OutFrameStc%d\n",prFrcPrm->ucFbId,i4Delta,(-u4OutFrameStc));
+			          }
+			    }
 
                 if (!_B2R_IsPtsDrift(this, u4Delta, i4Delta, u4ZeroPtsNs, ucAvSyncMode))
                 {
@@ -1976,7 +1992,7 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
                     }
 
                     // DTV picture information callback when frame start to display.
-                    FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                   
                     /*-------------------------------------*/
                     //callback 
                     /*---------------------------------------*/
