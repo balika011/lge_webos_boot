@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/02/10 $
  * $RCSfile: vdp_vsync.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -410,6 +410,10 @@ static UINT32 _B2R_CmdSrcOutRegion(UCHAR ucB2rId)
     B2R_OBJECT_T *this;
     UCHAR ucVdpId = _B2R_GetVdpId(ucB2rId);
     ASSERT(ucB2rId < B2R_NS && ucVdpId < VDP_NS);
+	
+	LOG(0,"_B2R_CmdSrcOutRegion (%d,%d)\n",ucB2rId,ucVdpId);
+	LOG(0,"main status (%d,%d)\n",_prVdpCfg[0]->ucVdpId,_prVdpCfg[0]->ucB2rId);
+	LOG(0,"sub sratus(%d,%d)\n",_prVdpCfg[1]->ucVdpId,_prVdpCfg[1]->ucB2rId);
     if(ucB2rId >= B2R_NS || ucVdpId >= VDP_NS)
     {
         return VDP_EVENT_NONE;    
@@ -447,7 +451,7 @@ static UINT32 _B2R_CmdSrcOutRegion(UCHAR ucB2rId)
     }
    
     _B2R_PostNotify(this, VDP_MSG_NOTIFY, VDP_B2R_SOURCE_CHG, 0);
-
+    LOG(0, "Return VDP_EVENT_RECONFIG \n");
     return VDP_EVENT_RECONFIG;
 }
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1906,6 +1906,8 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
 #ifdef CC_SUPPORT_PIPELINE
 
     UCHAR ucB2rId     = B2R_NS;
+    UCHAR ucVdpId     = VDP_NS;
+
 #endif
     FBP_LIST_T* prFbpList;
     
@@ -2622,8 +2624,8 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     VERIFY(x_sema_unlock(_hFbgMutex) == OSR_OK);
 	#ifdef CC_SUPPORT_PIPELINE
 	ucB2rId= FBM_B2rResIdAccess(u4FbgId, RES_R, NULL);
-    LG_PipLineConnect(VDP_1,ucB2rId);
-	VDP_SetInput(VDP_1,_arFbg[u4FbgId].u1DecoderSrcId,0);
+    ucVdpId= LG_PipLineConnect(VDP_1,ucB2rId);
+	VDP_SetInput(ucVdpId,_arFbg[u4FbgId].u1DecoderSrcId,0);
 	#endif
     return FBM_BYTE(u4FbgId);
 }
@@ -6113,7 +6115,7 @@ UINT8 FBM_B2rResIdAccess(UCHAR ucFbgId,
 		 #endif
                 FBM_B2rResHdrVdpId(ucFbgId, pt_src);
 
-            LOG(0,"B2r Res get VdpId(%d)!,fgPipLine=%d\n", pt_src->u1VdpId);
+            LOG(0,"B2r Res get VdpId(%d)!,fgPipLine=%d\n", pt_src->u1VdpId, fgPipLine);
             
             u1B2rId = FBM_B2rResAlloc(pt_src);
             

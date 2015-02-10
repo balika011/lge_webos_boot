@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/10 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -991,12 +991,13 @@ UINT32 VDP_SetInput(UCHAR ucVdpId, UCHAR ucEsId, UCHAR ucPort)
         return VDP_SET_ERROR;
     }
 
-    LOG(1,"Set input with vdpid(%d) esid = %d\n",ucVdpId,ucEsId);
+    LOG(0,"Set input with vdpid(%d) esid = %d,ucPort=%d\n",ucVdpId,ucEsId,ucPort);
     if (_prVdpCfg[ucVdpId]->ucInputPort[ucPort] == ucEsId)
     {
         LOG(1,"Equal return\n");
         return VDP_SET_OK;
     }
+    
 
     B2R_MUTEX_LOCK(ucVdpId);
 
@@ -1007,7 +1008,9 @@ UINT32 VDP_SetInput(UCHAR ucVdpId, UCHAR ucEsId, UCHAR ucPort)
 
 #ifdef CC_B2R_RES_SUPPORT
     /*handle scart out case*/
+   #ifndef CC_SUPPORT_PIPELINE
     _B2R_HandleScartOut(ucVdpId,ucEsId,ucPort);
+   #endif
 #endif
 
     VDP_VsyncSendCmd(ucVdpId, VDP_CMD_SET_INPUT);
@@ -1205,8 +1208,10 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	B2R_OBJECT_T *this;
     UCHAR i;//for test
     UCHAR ucB2rId;
+
+	
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
-    LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d\n",ucVdpId,ucEsId,ucOrgVdpId);
+    
 	vMpegHdConnect(ucVdpId,SV_ON);
 	
 	//if(ucVdpId!=ucOrgVdpId)
@@ -1225,7 +1230,8 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	   ucB2rId=VDP_Vdp2B2rId(ucVdpId);
 	  
 	 
-	   this = _B2R_GetObj(ucB2rId);
+	   this = _B2R_GetObj(ucOrgVdpId);
+	   LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d,ucB2rId=%d\n",ucVdpId,ucEsId,ucOrgVdpId,ucB2rId);
 	    if(this==NULL)
 	   {
 	       LOG(0,"LG_PipLineVdpConnect failed 2\n");
@@ -1250,18 +1256,21 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
     LOG(0,"LG_PipLineTest(ucVdpId=%d,ucEsId=%d)\n",ucVdpId,ucEsId);
  }
 
- void  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId)
+UCHAR  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId)
 {
     UCHAR i;
 	
     if(!fgLGPipLine||ucB2rId>=B2R_NS)
    {
-	   return;
+	   return B2R_NS;
    }
-      LOG(0,"LG_PipLineConnect\n");
+      LOG(0,"LG_PipLineConnect [%d][%d]\n", ucVdpId, ucB2rId);
 	  fgVdpModeChg[ucB2rId]=FALSE;
 	  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE); 
-	  LG_PipLineSwitch(ucVdpId,B2R_NS); 
+	  LG_PipLineSwitch(ucVdpId,B2R_NS);
+	  LOG(0, "[%s][%d]--VS path0[%d],path1[%d]\n", __FUNCTION__, __LINE__,
+		  bApiQuearyVSCConnectStatus(0), bApiQuearyVSCConnectStatus(1));
+
 	  for(i=0;i<VDP_NS;i++)
 	  {
 	      #ifdef CC_SUPPORT_PIPELINE
@@ -1282,8 +1291,10 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 			}
 		   #endif
 	  }
+	   LOG(0,"LG_PipLineSwitch(%d,%d)\n",ucVdpId,ucB2rId);
 	  LG_PipLineSwitch(ucVdpId,ucB2rId); 
       LG_PipLine_VDP_SetEnable(ucVdpId,TRUE); 
+	  return ucVdpId;
 
 }
   void	LG_PipLineDisconnect(UCHAR ucVdpId)
@@ -1291,6 +1302,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
       
        LOG(0,"LG_PipLineDisconnect\n");
 	 //  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
+	 VDP_SetInput(ucVdpId,6,0);
 	 vMpegHdConnect(ucVdpId,SV_OFF);
 	 LG_PipLineSwitch(ucVdpId,B2R_NS); 
 	   
@@ -1306,10 +1318,11 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 #endif
 		
 		// if ucB2rId = B2R_NS, it means that video plane switch to non-DTV video input
+		LOG(0, "Switch VdpId(%d) with B2rId(%d)!\n",ucVdpId, ucB2rId);
 		VERIFY_VDP_ID_RET_VOID(ucVdpId);
 		
 #ifdef CC_B2R_RES_SUPPORT
-		LOG(1, "Switch VdpId(%d) with B2rId(%d)!\n",ucVdpId, ucB2rId);
+		
 
 		ucRetB2rid = _B2R_ChkHwConflict(ucVdpId,ucB2rId);
 		if(ucRetB2rid != B2R_NS)
@@ -1327,7 +1340,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	
 		this = _B2R_RegDP(ucB2rId, ptDP);
 	
-		LOG(1, "VdpId(%d) switch to B2rId(%d)!\n",ucVdpId, ucB2rId);
+		LOG(0, "VdpId(%d) switch to B2rId(%d),vdpId%d,B2Rid=%d\n",ucVdpId, ucB2rId,_prVdpCfg[ucVdpId]->ucVdpId,_prVdpCfg[ucVdpId]->ucB2rId);
 #ifdef CC_SCPOS_EN
 		vMpegInitB2rConf();
 #endif
