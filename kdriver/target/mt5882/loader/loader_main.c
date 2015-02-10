@@ -153,7 +153,6 @@ VOID CMain()
 	UINT32 u4prityL, rst_prityL, i;
 	UINT32 u4val, u4temp1, u4temp2, u4temp;
 #endif 
-	
 	#ifdef CC_FPGA
 	UINT32 u4Offset, u4Size;
 	#endif
@@ -161,7 +160,8 @@ VOID CMain()
 #if 0
     PFN_JumpAddr pfnJump;
 #endif
-
+    //pull down  PIN_OPWM0
+    GPIO_SetOut(GPIO(79),0);
 #if defined(CC_DISABLE_UART_UPGRADE)
     // turn off UART into RX off
     //vIO32Write4B(0xf000c020, 0x0000005a);
@@ -177,6 +177,7 @@ VOID CMain()
     // enable MMU, cache
     HalInitMMU(TCMGET_CHANNELA_SIZE() * 0x100000 - 0x4000);
 #endif
+   
 
     // Initialize some setting at the beginning.
     LDR_PreInit();
