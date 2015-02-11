@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/09 $
+ * $Date: 2015/02/12 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -847,26 +847,8 @@ void VDP_QueryStatus(void)
 UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 {
     VERIFY_VDP_ID(ucVdpId);
-#ifdef CHANNEL_CHANGE_LOG
-    HAL_TIME_T dt;
 
-    if(ucEnable != 0)
-    {
-        HAL_GetTime(&dt);
-        LOG(0, " %u.%06u s [AV SYNC] 7 VDP Enable VDP(%d) On(%d)\n", dt.u4Seconds, dt.u4Micros, ucVdpId, ucEnable);
-    }
-
-#endif
-
-    if((_arVdpConf[ucVdpId].ucVdpEnable == ucEnable))
-    {
-        return VDP_SET_OK;
-    }
-
-    VDP_MUTEX_LOCK;
-
-
-
+   
 #ifdef CC_SCPOS_EN
 
     if(ucEnable == 0)
@@ -875,7 +857,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 
         if(_ucSameB2rVdp == VDP_NS)
         {
-            _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
+         //   _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
             LOG(3, "Mute VDP(%d)\n", ucVdpId);
         }
 
@@ -912,7 +894,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
     }
 
 #endif
-    _arVdpConf[ucVdpId].ucVdpEnable = ucEnable;
+  
 #if defined(CC_MT5882)
     VDP_B2R_SetCfgParam(ucVdpId,
                             B2R_CFG_VDP_ENABLE,
@@ -943,7 +925,7 @@ UINT32 LG_PipLine_VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 
 
 #endif
-    VDP_MUTEX_UNLOCK;
+ 
     return VDP_SET_OK;
 }
 #endif
@@ -992,58 +974,7 @@ UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 #ifdef CC_SRM_ON
     SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_ONOFF + (UINT32)ucVdpId), (UINT32)ucEnable, 0);
 #endif
-#ifdef CC_SCPOS_EN
-
-    if(ucEnable == 0)
-    {
-#if 1//def CC_SUPPORT_TVE
-
-        if(_ucSameB2rVdp == VDP_NS)
-        {
-            _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
-            LOG(3, "Mute VDP(%d)\n", ucVdpId);
-        }
-
-#else
-        _VDP_StatusNotify(ucVdpId, VDP_B2R_NO_SIGNAL);
-        LOG(3, "Mute VDP(%d)\n", ucVdpId);
-#endif
-#if 0
-#ifdef CC_SRM_ON
-        SRM_SendEvent(SRM_DRV_SCPOS, (SRM_SCPOS_EVENT_MPEG_SIZE + (UINT32)ucVdpId),
-                      0, 0);
-#endif
-#endif
-    }
-    else
-    {
-        UCHAR ucStatus;
-#if defined(CC_MT5882)
-        B2R_STATUS_T  t_b2r_status;
-#endif
-        
-#ifndef CC_MT5882
-        ucStatus = _arVdpConf[ucVdpId].ucStatus;
-#else
-        x_memset(&t_b2r_status, 0, sizeof(B2R_STATUS_T));
-        VDP_B2R_GetInfo(ucVdpId, B2R_GET_TYPE_B2R_STATUS, &t_b2r_status, sizeof(B2R_STATUS_T));
-        ucStatus = t_b2r_status.ucStatus;
-#endif
-        if((B2R_GetImgConnect(ucVdpId)!= 0) &&
-           (ucStatus == VDP_STATUS_NOSIGNAL))
-        {
-            _VDP_StatusNotify(ucVdpId, VDP_B2R_START_PLAY);
-        }
-    }
-
-#endif
     _arVdpConf[ucVdpId].ucVdpEnable = ucEnable;
-#if defined(CC_MT5882)
-    VDP_B2R_SetCfgParam(ucVdpId,
-                            B2R_CFG_VDP_ENABLE,
-                            &ucEnable,
-                            sizeof(UCHAR));
-#endif
 
     if(!ucEnable)
     {
@@ -1052,11 +983,6 @@ UINT32 VDP_SetEnable(UCHAR ucVdpId, UCHAR ucEnable)
 #endif
     }
 
-#ifndef CC_MT5882
-    _B2rSetEnable(ucVdpId);
-#else
-    VDP_SetB2rEnable(ucVdpId);
-#endif
 
 #ifdef CC_SCPOS_EN
 

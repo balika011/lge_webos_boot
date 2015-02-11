@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/12 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1211,7 +1211,27 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 
 	
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
-    
+    if(ucEsId != 0xff)    
+	{        
+		UCHAR ucFbgId;       
+		ucFbgId=FBM_GetFbgByEs(ucEsId);    
+		LOG(0,"Video path connect to Vdec  get Fbg id=%d\n",ucFbgId);
+		if(ucFbgId != FBM_FBG_ID_UNKNOWN)        
+		{        
+		   LOG(2,"LG_PipLineVdpConnect(%d,%d) connected to a runing vdec \n");           
+		   ucB2rId= FBM_B2rResIdAccess(ucFbgId, RES_R, NULL); 
+		   LG_PipLineSwitch(ucVdpId,ucB2rId);  
+		   LG_PipLine_VDP_SetEnable(ucVdpId,TRUE);
+		   VDP_SetInput(ucVdpId,ucEsId,0);           
+		   FBM_SetFrameBufferFlag(ucFbgId, FBM_FLAG_SEQ_CHG);      
+		   FBM_FbgChgNotify(ucFbgId, ucEsId);   
+		   //fgLGPipeConnect= TRUE;
+		}        
+		else       
+		{            
+		   LOG(2,"LG_PipLineVdpConnect(%d,%d) connected to a stoped vdec \n");       
+		}   
+	}    
 	vMpegHdConnect(ucVdpId,SV_ON);
 	
 	//if(ucVdpId!=ucOrgVdpId)
@@ -1300,11 +1320,11 @@ UCHAR  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId)
   void	LG_PipLineDisconnect(UCHAR ucVdpId)
  {
       
-       LOG(0,"LG_PipLineDisconnect\n");
-	 //  LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
+     LOG(0,"LG_PipLineDisconnect\n");
+	 B2R_MUTEX_UNLOCK(ucVdpId);
+     LG_PipLine_VDP_SetEnable(ucVdpId,FALSE);
 	 vMpegHdConnect(ucVdpId,SV_OFF);
 	 LG_PipLineSwitch(ucVdpId,B2R_NS); 
-	 B2R_MUTEX_UNLOCK(ucVdpId);
 	 VDP_SetInput(ucVdpId,6,0);
 	 LOG(0,"LG_PipLineDisconnect end.\n");
 	 
