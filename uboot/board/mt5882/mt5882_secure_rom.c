@@ -52,7 +52,12 @@ extern void writeFullVerifyOTP(void);
 
 unsigned int u4FragSize = 0;
 unsigned int u4FragNum = 0;
+typedef struct{
+	unsigned int frag_num;
+	unsigned int frag_size;
 
+	
+}signature_header;
 // the customer public key is copied from CC_LDR_ENV_OFFSET in mt53xx_sif.c
 extern LDR_ENV_T *_prLdrEnv;
 
@@ -1167,7 +1172,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
 {
     BYTE au1ExtractMsg[SHA1HashSize];
     BYTE au1MessageDigest[SHA1HashSize];
-    LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)0xfb005000;
+    LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 #ifdef 	SECURE_DEBUG
 
     UINT8 au4CustKey[256] = {
@@ -1270,7 +1275,7 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
     unsigned char *pu1Image;
     int ret = -1;
     unsigned char au1EncryptedSignature[SIG_SIZE];
-	
+	signature_header header;
     unsigned char au1Frag[8];
 
 	printf("full verify ~~ \n");
@@ -1298,10 +1303,16 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 	
 	image_size -=8;
 		// 2. get fragment 
-		 memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
-		u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
-		u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
-        dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+		 memcpy((void*)&header, (void*)(pu1Image+image_size), 8);
+		//u4FragNum = au1Frag[0]|(au1Frag[1]<<8)|(au1Frag[2]<<16)|(au1Frag[3]<<24);
+			//u4FragSize = au1Frag[4]|(au1Frag[5]<<8)|(au1Frag[6]<<16)|(au1Frag[7]<<24);
+		dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+		
+		printf("header.frag_num  = %d\n", header.frag_num);
+		printf("header.frag_size  = %d\n", header.frag_size);
+
+	u4FragNum = header.frag_num;
+	u4FragSize = header.frag_size;
 
     // 2. get encrypted signature
      memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);
@@ -1336,9 +1347,10 @@ int sbverifyPartition(unsigned long long offset,unsigned int image_size)
 		image_size -=8;
 		// 2. get fragment 
 		 memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
-		u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
-		u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+		u4FragNum = au1Frag[0]|(au1Frag[1]<<8)|(au1Frag[2]<<16)|(au1Frag[3]<<24);
+		u4FragSize = au1Frag[4]|(au1Frag[5]<<8)|(au1Frag[6]<<16)|(au1Frag[7]<<24);
         dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+		
 
     // 2. get encrypted signature
      memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);
@@ -1373,8 +1385,8 @@ int sbverifyPartialPartition(unsigned long long offset,unsigned int image_size)
 	}
 	// 2. get fragment 
 	 memcpy((void*)au1Frag, (void*)(au1test+512 -8), 8);
-	u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
-	u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+	u4FragNum = au1Frag[0]|(au1Frag[1]<<8)|(au1Frag[2]<<16)|(au1Frag[3]<<24);
+		u4FragSize = au1Frag[4]|(au1Frag[5]<<8)|(au1Frag[6]<<16)|(au1Frag[7]<<24);
 	dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
 #else
 u4FragNum = 20;
@@ -1449,7 +1461,7 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
     int ret = -1;
     unsigned char *pu1AllFrag;
     unsigned char au1EncryptedSignature[SIG_SIZE];
-	
+	signature_header header;
     unsigned char au1test[512];
 	struct partition_info *pi = NULL;
     unsigned char au1Frag[8];
@@ -1471,10 +1483,14 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
 		return 1;
 	}
 	// 2. get fragment 
-	 memcpy((void*)au1Frag, (void*)(au1test+512 -8), 8);
-	u4FragNum = au1Frag[0]|(au1Frag[1]<<8);
-	u4FragSize = au1Frag[4]|(au1Frag[5]<<8);
+	 memcpy((void*)&header, (void*)(au1test+512 -8), 8);
+	//u4FragNum = au1Frag[0]|(au1Frag[1]<<8)|(au1Frag[2]<<16)|(au1Frag[3]<<24);
+		//u4FragSize = au1Frag[4]|(au1Frag[5]<<8)|(au1Frag[6]<<16)|(au1Frag[7]<<24);
 	dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+	u4FragNum = header.frag_num;
+	u4FragSize = header.frag_size;
+	printf("header.frag_num  = %d\n", header.frag_num);
+	printf("header.frag_size  = %d\n", header.frag_size);
 #else
 u4FragNum = 20;
 u4FragSize = 4096;
@@ -1676,13 +1692,11 @@ typedef struct
 /* Only For Test in Citrix */
 static verify_list_t verify_list[] =
 {
-	{"swsu",		BOOT_COLD | BOOT_SNAPSHOT},
-	{"vendor",		BOOT_COLD},
-	{"tvservice",	BOOT_COLD},
-	{"opensrc",		BOOT_COLD},
-	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
+		{"rootfs", BOOT_COLD},
+//	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
+//	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
+	{"tvservice",	BOOT_COLD | BOOT_SNAPSHOT},
 	{"otncabi",		BOOT_COLD},
-	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
 	{"otycabi",		BOOT_COLD},
 	{"smartkey",	BOOT_COLD},
 };

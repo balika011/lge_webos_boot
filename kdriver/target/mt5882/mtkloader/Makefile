@@ -107,12 +107,12 @@ LZHSENC = $(TOOL_ROOT)/mt5391_pack/lzhsenc
 endif
 
 ifeq "$(LG_SIGN_FLOW)" "true"
-T_MTK_15K = $(SIGN_TOOL_DIR)/t_mtk_15k
-T_MTK =     $(SIGN_TOOL_DIR)/t_mtk
+T_MTK_15K = $(MTK_SIGN_TOOL_DIR)/t_mtk_15k
+T_MTK =     $(MTK_SIGN_TOOL_DIR)/t_mtk
 else
 ifeq ($(SECURE_BOOT_V2), true)
 ifeq "$(L_ENV)" "true"
-T_MTK = $(SIGN_TOOL_DIR)/sign
+T_MTK = $(MTK_SIGN_TOOL_DIR)/sign
 else
 T_MTK = $(TOOL_ROOT)/image-tools/sign
 endif
@@ -147,14 +147,14 @@ endif
 
 ifeq "$(LG_SIGN_FLOW)" "true"
 #LG_CHG
-SECURE_KEY_DIR = $(SIGN_KEY_DIR)
+SECURE_KEY_DIR = $(MTK_SIGN_KEY_DIR)
 SIGGEN_KEY := $(SECURE_KEY_DIR)/public_key $(SECURE_KEY_DIR)/private_key
 else
 ifeq "$(L_ENV)" "true"
-SIGGEN_KEY := $(shell if [ -e $(SIGN_TOOL_DIR)/public_key -a -e $(SIGN_TOOL_DIR)/private_key ]; then echo "$(SIGN_TOOL_DIR)/public_key $(SIGN_TOOL_DIR)/private_key"; else echo "";fi)
-SIGGEN_KEY2 := $(shell if [ -e $(SIGN_TOOL_DIR)/public_key2 -a -e $(SIGN_TOOL_DIR)/private_key2 ]; then echo "$(SIGN_TOOL_DIR)/public_key2 $(SIGN_TOOL_DIR)/private_key2"; else echo "";fi)
-AES_KEY := $(SIGN_TOOL_DIR)/aes_key_set
-AES_KEY2 := $(SIGN_TOOL_DIR)/aes_key_set2
+SIGGEN_KEY := $(shell if [ -e $(MTK_SIGN_TOOL_DIR)/public_key -a -e $(MTK_SIGN_TOOL_DIR)/private_key ]; then echo "$(MTK_SIGN_TOOL_DIR)/public_key $(MTK_SIGN_TOOL_DIR)/private_key"; else echo "";fi)
+SIGGEN_KEY2 := $(shell if [ -e $(MTK_SIGN_TOOL_DIR)/public_key2 -a -e $(MTK_SIGN_TOOL_DIR)/private_key2 ]; then echo "$(MTK_SIGN_TOOL_DIR)/public_key2 $(MTK_SIGN_TOOL_DIR)/private_key2"; else echo "";fi)
+AES_KEY := $(MTK_SIGN_TOOL_DIR)/aes_key_set
+AES_KEY2 := $(MTK_SIGN_TOOL_DIR)/aes_key_set2
 else
 SIGGEN_KEY := $(shell if [ -e $(THIS_ROOT)/data/public_key -a -e $(THIS_ROOT)/data/private_key ]; then echo "$(THIS_ROOT)/data/public_key $(THIS_ROOT)/data/private_key"; else echo "";fi)
 SIGGEN_KEY2 := $(shell if [ -e $(THIS_ROOT)/data/public_key2 -a -e $(THIS_ROOT)/data/private_key2 ]; then echo "$(THIS_ROOT)/data/public_key2 $(THIS_ROOT)/data/private_key2"; else echo "";fi)

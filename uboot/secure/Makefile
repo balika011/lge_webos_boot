@@ -129,7 +129,9 @@ package: preprocess packimg siggen
 	chmod +x ./lzhsenc
 #	chmod +x ./t_mtk
 #	chmod +x ./siggen
+ifneq "$(LG_SIGN_FLOW)" "true"
 	chmod +x $(T_MTK)
+endif
 	rm -f 14KB_preloader.bin Customer_Key_Encrypt_Data Customer_Key_Signature SHA1_Signature
 	rm -f u-boot_pack.bin
 	rm -f u-boot_pack_secure.lzhs

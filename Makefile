@@ -12,7 +12,7 @@
 #                                                                              #
 #	FILE NAME	:	makefile                                                   #
 #	VERSION		:	1.0                                                        #
-#	AUTHOR		:	Baekwon, Choi(ÃÖ¹è±Ç, bk1472@lge.com)                      #
+#	AUTHOR		:	Baekwon, Choi(ï¿½Ö¹ï¿½ï¿½ï¿½, bk1472@lge.com)                      #
 #	DATE        :	2008/06/32                                                 #
 #	DESCRIPTION	:	This is global making for CFE Boot Project                 #
 #******************************************************************************#
@@ -60,6 +60,7 @@ TOOL_CHAIN=4.8.2
 ifeq ($(LG_CONFIG), y)
 	TOOL_DIR ?= "/opt/crosstool/webostv/arm-lg115x-linux-gnueabi-4.8-2014.11-i686"
     SIGN_DIR ?= $(PWD)/uboot/tools/sign_dir
+    MTK_SIGN_DIR = $(PWD)/uboot/tools/sign_dir
 	TOOL_CHAIN_ROOT=${TOOL_DIR}
 	export CROSS_TOOLCHAIN_SYSROOT ?= $(TOOL_CHAIN_ROOT)/arm-lg115x-linux-gnueabi/sysroot/usr
 	export CROSS_TOOLCHAIN_SYSROOT_LIB ?= $(TOOL_CHAIN_ROOT)/arm-lg115x-linux-gnueabi/sysroot/lib
@@ -77,7 +78,8 @@ ifeq "$(TOOL_CHAIN)" "4.8.2"
 		endif	
     TOOL_CHAIN_ROOT=${TOOL_DIR}
    #SIGN_DIR=~/secureboot_a2_dist
-    SIGN_DIR=$(PWD)/uboot/tools/sign_dir
+    SIGN_DIR?=$(PWD)/uboot/tools/sign_dir
+    MTK_SIGN_DIR=$(PWD)/uboot/tools/sign_dir
     export CROSS_TOOLCHAIN_SYSROOT ?= $(TOOL_CHAIN_ROOT)/sysroot/usr
     export CROSS_TOOLCHAIN_SYSROOT_LIB ?= $(TOOL_CHAIN_ROOT)/sysroot/lib
     export TOOL_CHAIN_BIN_PATH				:= $(TOOL_CHAIN_ROOT)/bin
@@ -107,7 +109,8 @@ else
     TOOL_CHAIN_ROOT=$(word 1, $(subst /BUILD-MTK,/BUILD-MTK , $(shell pwd)))/sysroots/MTK
     export TOOL_CHAIN_BIN_PATH=$(word 1, $(subst /BUILD-MTK,/BUILD-MTK , $(shell pwd)))/sysroots/x86_64-linux/usr/bin/armv7a-vfp-neon-webos-linux-gnueabi
     #SIGN_DIR=$(PWD)/../tools/sign_dir
-    SIGN_DIR=$(PWD)/uboot/tools/sign_dir
+    SIGN_DIR?=$(PWD)/uboot/tools/sign_dir
+    MTK_SIGN_DIR=$(PWD)/uboot/tools/sign_dir
     export CROSS_TOOLCHAIN_SYSROOT ?= $(TOOL_CHAIN_ROOT)/usr
     export CROSS_TOOLCHAIN_SYSROOT_LIB ?= $(TOOL_CHAIN_ROOT)/lib
 endif
@@ -128,8 +131,9 @@ SDE_BIN=/opt/toolchains/sde5/bin/SDE_BIN_NOT_DEFNIE
 
 
 SIGN_TOOL_DIR?=${SIGN_DIR}/tool
+MTK_SIGN_TOOL_DIR=${MTK_SIGN_DIR}/tool
 SIGN_KEY_DIR?=${SIGN_DIR}/key
-SIGN_SCRIPT?=${SIGN_TOOL_DIR}/sign.sh
+MTK_SIGN_KEY_DIR=${MTK_SIGN_DIR}/key
 SIGN_USE_PARTIAL=YES
 
 
@@ -150,7 +154,8 @@ export DEST_OS TARGET TARGET_CPU TARGET_TOOL CROSS_COMPILE
 export TOOL_DIR TOOL_BIN TOOL_LIB IMG_TOOL_BIN TOOL_CHAIN_ROOT SDE_BIN DIST_REV_NO
 export PROJECT_NAME PLATFORM_CHIP PLATFORM_CHIP_REV PLATFORM_NAME PLATFORM PLATFORM_ALLOW
 export TOOL_CHAIN USE_EMMC USE_EMMC_HYNIX USE_EMMC_4GB USE_KERNEL_V3
-export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR SIGN_SCRIPT SIGN_DIST SIGN_USE_PARTIAL
+export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR  SIGN_DIST SIGN_USE_PARTIAL
+export MTK_SIGN_DIR MTK_SIGN_TOOL_DIR MTK_SIGN_KEY_DIR
 
 ##############end purplearrow add
 #==============================================================================

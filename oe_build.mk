@@ -12,7 +12,7 @@
 #                                                                              #
 #	FILE NAME	:	makefile                                                   #
 #	VERSION		:	1.0                                                        #
-#	AUTHOR		:	Baekwon, Choi(ÃÖ¹è±Ç, bk1472@lge.com)                      #
+#	AUTHOR		:	Baekwon, Choi(ï¿½Ö¹ï¿½ï¿½ï¿½, bk1472@lge.com)                      #
 #	DATE        :	2008/06/32                                                 #
 #	DESCRIPTION	:	This is global making for CFE Boot Project                 #
 #******************************************************************************#
@@ -61,6 +61,7 @@ export TOOL_DIR = /mtkoss/gnuarm/arm-lg115x-linux-gnueabi-4.8-2014.08-1-x86_64
 TOOL_CHAIN_ROOT=${TOOL_DIR}
 #SIGN_DIR=~/secureboot_a2_dist
     SIGN_DIR=$(PWD)/uboot/tools/sign_dir
+MTK_SIGN_DIR=$(PWD)/uboot/tools/sign_dir
 
 #SIGN_DIR=~/secureboot_a2_dist
 export CROSS_TOOLCHAIN_SYSROOT ?= $(TOOL_CHAIN_ROOT)/usr
@@ -85,9 +86,10 @@ IMG_TOOL_BIN=${TOOL_DIR}/image-tools/IMG_TOOL_BIN_NOT_DEFINE
 SDE_BIN=/opt/toolchains/sde5/bin/SDE_BIN_NOT_DEFNIE
 
 
-SIGN_TOOL_DIR=${SIGN_DIR}/tool
-SIGN_KEY_DIR=${SIGN_DIR}/key
-SIGN_SCRIPT=${SIGN_TOOL_DIR}/sign.sh
+SIGN_TOOL_DIR?=${SIGN_DIR}/tool
+MTK_SIGN_TOOL_DIR=${MTK_SIGN_DIR}/tool
+SIGN_KEY_DIR?=${SIGN_DIR}/key
+MTK_SIGN_KEY_DIR=${MTK_SIGN_DIR}/key
 SIGN_USE_PARTIAL=YES
 
 
@@ -108,7 +110,8 @@ export DEST_OS TARGET TARGET_CPU TARGET_TOOL CROSS_COMPILE
 export TOOL_DIR TOOL_BIN TOOL_LIB IMG_TOOL_BIN TOOL_CHAIN_ROOT SDE_BIN DIST_REV_NO
 export PROJECT_NAME PLATFORM_CHIP PLATFORM_CHIP_REV PLATFORM_NAME PLATFORM PLATFORM_ALLOW
 export TOOL_CHAIN USE_EMMC USE_EMMC_HYNIX USE_EMMC_4GB USE_KERNEL_V3
-export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR SIGN_SCRIPT SIGN_DIST SIGN_USE_PARTIAL
+export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR  SIGN_DIST SIGN_USE_PARTIAL
+export MTK_SIGN_DIR MTK_SIGN_TOOL_DIR MTK_SIGN_KEY_DIR
 
 ##############end purplearrow add
 #==============================================================================
