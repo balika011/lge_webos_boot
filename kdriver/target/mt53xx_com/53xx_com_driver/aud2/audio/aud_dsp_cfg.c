@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/11 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27377,7 +27377,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
         }
         else
         {
-            vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 0); 
+            vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 1); 
         }
     }
     if (fgMute && !_fgInputMute[u1DecId])

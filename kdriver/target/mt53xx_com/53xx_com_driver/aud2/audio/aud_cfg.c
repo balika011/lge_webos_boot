@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/11 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1621,6 +1621,7 @@ void AUD_StrInputEnable(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStr
                 break;
 #ifdef CC_ENABLE_AOMX
             case AUD_STREAM_FROM_GST:
+                PSR_SoftInit(u1DspId);
                 if(u1DecId == AUD_DEC_THIRD)
                 {
                     if (u4ReceivePesCnt == 0)    //write pointer is not updated in SendAudPes
