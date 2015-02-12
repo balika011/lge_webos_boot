@@ -1977,7 +1977,7 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define TDS_ADAP_GAIN_MAX         Fld(8, 24, AC_FULLB3) //31:24
 #define TDS_ADAP_02 u4SWReg(0x2808)
     #define TDS_ADAP_GMV_CNT_TH     Fld(8, 0, AC_FULLB0) //7:0
-    #define TDS_ADAP_GMVY_CNT_TH    Fld(8, 8, AC_FULLB1) //15:8
+    #define TDS_ADAP_GMV_CNT        Fld(8, 8, AC_FULLB1) //15:8
     #define TDS_ADAP_GAIN           Fld(8, 16, AC_FULLB2) //23:16
 
 #define VI_SHP_EXT_OFST_00			          0x2900

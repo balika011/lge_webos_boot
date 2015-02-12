@@ -351,7 +351,7 @@ static void DRVCUST_AnrProc(const NR_NM_STA_T* prNmSta, const NR_NM_ANA_T* prNmA
 {
     UINT32 u4NoiseLvl;
     UINT32 u4MaxNL;
-
+    
     u4MaxNL = _SWR(NR_NM_03, MAX_NOISE_LVL);
     u4NoiseLvl = ((_SWR(NR_NM_00, FORCE_NOISE_LVL_EN)) ? _SWR(NR_NM_00, FORCE_NOISE_LVL) : prNmAna->u1NoiseLevel);
     u4NoiseLvl = MIN(u4NoiseLvl, u4MaxNL);
@@ -1023,61 +1023,69 @@ UINT8 DRVCUST_GetRealCinema(void)
 
 void DRVCUST_TDshpGMVYPatch(void)
 {
-	 static UINT8 u1State;
-	 static UINT8 u1GmvX;
-	 static UINT8 u1GmvY;
-	 static UINT8 u1GmvCnt;
-	 static UINT8 u1CombiGain;
-	 static UINT8 u1PreCombiGain;
-	 static UINT8 u1ModCombiGain;
-	 static UINT8 u1PreModCombiGain;
+    static UINT8 u1State;
+    static UINT8 u1GmvX;
+    static UINT8 u1GmvY;
+    static UINT8 u1GmvCnt;
+    static UINT8 u1PreCombiGain;
+    static UINT8 u1ModCombiGain;
+    static UINT8 u1PreModCombiGain;     
+    static UINT8 u1PreFlickerTH;
+    static UINT8 u1ModFlickerTH;
+    static UINT8 u1PreModFlickerTH;
 
+    UINT8 u1CombiGain;
+    UINT8 u1FlickerTH;
+    UINT32 u4GmvCntTH;    
 
-	 static UINT16 u2HistCnt;	
-	 static UINT16 u2NonZeroCnt;
-
-	 static UINT32 u4CbValue;
-	 static UINT32 u4CrValue;
-	 static UINT32 u4GmvCntTH;
-	 static UINT32 u4HEdgeCnt;
-	 static UINT32 u4VEdgeCnt;
-	 static UINT32 u4EdgeSum;
 
 	if(IO32ReadFldAlign(TDS_ADAP_00, TDS_ADAP_GMV_EN))
 	{
-		u4GmvCntTH = IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GMV_CNT_TH);
-		u1CombiGain =IO32ReadFldAlign(SHARP_27,SHP_COMBINED_GAIN);
+        UINT32 u4CbValue, u4CrValue, u4VEdgeCnt, u4EdgeSum, u4HEdgeCnt;
+        UINT16 u2HistCnt, u2NonZeroCnt;
+		 
+        u4GmvCntTH = IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GMV_CNT_TH);
+        u1CombiGain = IO32ReadFldAlign(SHARP_27,SHP_COMBINED_GAIN);       
+        u4CbValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CB);
+        u4CrValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CR);        
+        u4HEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_HOR_EDGE_CNT);
+        u4VEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_VER_EDGE_CNT);
+        u4EdgeSum =  u4HEdgeCnt + u4VEdgeCnt;
+        u2NonZeroCnt = IO32ReadFldAlign(MCVP_CS_29, CS_NON_ZERO_CNT);
+        u2HistCnt = IO32ReadFldAlign(MCVP_CS_27, HIST_CNT);
+        u1FlickerTH = MDDI_READ_FLD(VDP_1,MCVP_FUSION_0D, IF_RA_CLIP_FLICKER_TH); 
 
-		u1GmvX = IO32ReadFldAlign(MCVP_CS_28, GMV_MVX);
-		u2HistCnt = IO32ReadFldAlign(MCVP_CS_27, HIST_CNT);
-		u4HEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_HOR_EDGE_CNT);
-		u4VEdgeCnt = IO32ReadFldAlign(MCVP_FUSION_19, IF_VER_EDGE_CNT);
-		u4EdgeSum =  u4HEdgeCnt + u4VEdgeCnt ;
-		u2NonZeroCnt = IO32ReadFldAlign(MCVP_CS_29, CS_NON_ZERO_CNT);
-		u4CbValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CB);
-		u4CrValue = IO32ReadFldAlign(MCVP_FUSION_16, IF_AVG_CR);
 		
 		if(u1ModCombiGain != u1CombiGain)
 		{
 			u1PreCombiGain = u1CombiGain;
 		}
-
-		if(u1GmvY !=IO32ReadFldAlign(MCVP_CS_28, GMV_MVY))
+		if(u1ModFlickerTH != u1FlickerTH)
 		{
-
-			u1GmvY = IO32ReadFldAlign(MCVP_CS_28, GMV_MVY);
-			u1GmvCnt=0;   
+			u1PreFlickerTH = u1FlickerTH;
 		}
-		else
+		
+        if (u1GmvX != IO32ReadFldAlign(MCVP_CS_28, GMV_MVX))
+        {
+            u1GmvX = IO32ReadFldAlign(MCVP_CS_28, GMV_MVX);
+            u1GmvCnt = 0;   
+        }
+        else
+        {
+            u1GmvCnt = (u1GmvCnt < u4GmvCntTH) ? u4GmvCntTH : u1GmvCnt+1 ;
+        }
+
+		if(u1GmvY != IO32ReadFldAlign(MCVP_CS_28, GMV_MVY))
 		{
-			u1GmvCnt = (u1GmvCnt < u4GmvCntTH) ? u4GmvCntTH : u1GmvCnt+1 ;
+			u1GmvY = IO32ReadFldAlign(MCVP_CS_28, GMV_MVY);			 
 		}
 
-		vIO32WriteFldAlign(TDS_ADAP_02, u1GmvCnt, TDS_ADAP_GMVY_CNT_TH);
+		vIO32WriteFldAlign(TDS_ADAP_02, u1GmvCnt, TDS_ADAP_GMV_CNT); 
 
 		if(IS_SD_TIMING(VDP_1)) 
-		{//SD
-			if((u1GmvY >10))
+		{
+		    //LG power tower SD
+			if((u1GmvY > 10))
 			{
 				u1ModCombiGain = (u1ModCombiGain > (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN))) ?
 								  u1ModCombiGain-1 : (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN));
@@ -1089,18 +1097,23 @@ void DRVCUST_TDshpGMVYPatch(void)
 		}
 		else if((bDrvVideoGetTiming(VDP_1) == MODE_1080i) 
 				|| (bDrvVideoGetTiming(VDP_1) == MODE_1080i_50))
-		{//HD
-			if((u1GmvX != 0) && (u2NonZeroCnt>15) && (u2NonZeroCnt<26) && (u2HistCnt > 1500)
-			&&(u4VEdgeCnt > 4000) && (u4EdgeSum > 6000)
-			&&((u4CbValue>520) && (u4CbValue<550) && (u4CrValue>470) && (u4CrValue<500)))
+		{
+		    //LG power tower HD 
+			if(((u1GmvX == 0) && (u2NonZeroCnt > 20) && (u2NonZeroCnt < 32) 
+			&& (u2HistCnt > 1500)&&(u4VEdgeCnt > 3800) && (u4EdgeSum > 4500)
+			&&((u4CbValue > 520) && (u4CbValue < 550) && (u4CrValue > 470) && (u4CrValue < 500)))
+			//LG moving monoscope 
+			||((u1GmvX > 10)&& (u1GmvCnt >= u4GmvCntTH)))
+
 			{
 				u1ModCombiGain = (u1ModCombiGain > (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN))) ?
 								 u1ModCombiGain-1 : (IO32ReadFldAlign(TDS_ADAP_02, TDS_ADAP_GAIN));
-
+                u1ModFlickerTH = 0x20;	
 			}
 			else
 			{  
 				u1ModCombiGain = (u1ModCombiGain< u1PreCombiGain) ? u1ModCombiGain+1 : u1PreCombiGain;
+				u1ModFlickerTH = u1PreFlickerTH;
 			}
 		}	
 		else
@@ -1114,12 +1127,18 @@ void DRVCUST_TDshpGMVYPatch(void)
 			vIO32WriteFldAlign(SHARP_27, u1ModCombiGain, SHP_COMBINED_GAIN);
 			u1PreModCombiGain = u1ModCombiGain;
 		}
-		u1State =1;
+		
+	    if(u1ModFlickerTH != u1PreModFlickerTH)
+        {
+            MDDI_WRITE_FLD(VDP_1,MCVP_FUSION_0D, u1ModFlickerTH, IF_RA_CLIP_FLICKER_TH);  
+            u1PreModFlickerTH = u1ModFlickerTH;
+        }
+		u1State = 1;
 	}
-	else if(u1State ==1)
+	else if(u1State == 1)
 	{
 		vIO32WriteFldAlign(SHARP_27, u1PreCombiGain,SHP_COMBINED_GAIN);
-		u1State=0;
+		u1State = 0;
 	} 
 	
 
