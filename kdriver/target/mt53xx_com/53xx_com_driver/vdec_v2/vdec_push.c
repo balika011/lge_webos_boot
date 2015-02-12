@@ -4698,11 +4698,13 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
         return FALSE;
     }
     prVdec = (VDEC_T*)prdec;
+
     if(!prVdec)
     {
         LOG(3, "%s(%d): prVdec null\n", __FUNCTION__, __LINE__);
         return FALSE;
     }
+    
     if(!prVdecSetInfo)
     {
         LOG(3, "%s(%d): prVdecSetInfo null\n", __FUNCTION__, __LINE__);
@@ -5234,7 +5236,7 @@ BOOL _VPUSH_GetFeederInfo(VOID* prdec, VDEC_FEEDER_INTO_T *prFeederInfo)
         return FALSE;
     }
     prVdec = (VDEC_T*)prdec;
-    if (prVdec->fgIsSecureInput)
+    if (prVdec->fgIsSecureInput && !prVdec->fgGstPlay)
     {
 	#if defined(CC_FBM_SECURE_FEEDER)
         UINT32 u4size = 0;
@@ -5496,7 +5498,7 @@ BOOL _VPUSH_AllocVFifo(VOID* prdec,
         }
     }
 
-    if(prVdec->fgIsSecureInput)
+    if(prVdec->fgIsSecureInput && !prVdec->fgGstPlay)
     {
 #ifdef LINUX_TURNKEY_SOLUTION
         prVdec->u4AllocBufCnt ++;
@@ -5542,7 +5544,7 @@ BOOL _VPUSH_FreeVFifo(VOID* prdec, UINT32 u4BufSA)
     }
     prVdec = (VDEC_T*)prdec;
 
-    if(prVdec->fgIsSecureInput)
+    if(prVdec->fgIsSecureInput && !prVdec->fgGstPlay)
     {
 #ifdef LINUX_TURNKEY_SOLUTION
         if(bSecureBufferFree((UINT32)u4BufSA))
