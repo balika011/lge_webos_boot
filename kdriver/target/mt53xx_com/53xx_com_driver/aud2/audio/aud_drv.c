@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/12 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3361,7 +3361,7 @@ static void _ChkAudioOnlyControl(UINT8 u1DecId, BOOL fgReset)
                 fgFreeRun = TRUE;
             }
             u4LastRetrieveNs = _prMPV[0].u4RetrieveNs;
-
+#ifndef CC_AUD_DDI
             if (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)
             {
                 if ((fgFreeRun) && (_arAudDecoder[AUD_DSP0][u1DecId].eSynMode != AV_SYNC_FREE_RUN)
@@ -3384,12 +3384,12 @@ static void _ChkAudioOnlyControl(UINT8 u1DecId, BOOL fgReset)
                     AUD_SetAvSynMode(u1DecId, AV_SYNC_SLAVE);
                 }
             }
-
+#endif
             if (fgFreeRun == AUD_DspIsWithVideo(u1DecId))
             {
-            AUD_DspSetWithVideo(u1DecId, (!fgFreeRun));
+                AUD_DspSetWithVideo(u1DecId, (!fgFreeRun));
+            }
         }
-    }
     }
 }
 

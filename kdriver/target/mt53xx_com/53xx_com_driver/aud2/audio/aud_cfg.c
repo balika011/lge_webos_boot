@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/11 $
+ * $Date: 2015/02/12 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1411,6 +1411,13 @@ void AUD_HwInit(void)
     {
         AudPllInit();
     }
+    //parser HW init
+#ifndef CC_AUD_SUPPORT_DUAL_DSP
+    PSR_SoftInit();
+#else
+    PSR_SoftInit(AUD_DSP0);
+    PSR_SoftInit(AUD_DSP1);
+#endif
 
     // module control for 2 DSP/ARM11 systems
     #ifdef CC_AUD_ARM_RENDER
