@@ -511,6 +511,7 @@ not_used:
 
 	.align	5
 irq:
+	get_irq_stack
 	sub sp, sp, #S_FRAME_SIZE
   stmia   sp, {r0 - r11}          @ Calling r0-r11
   add r8, sp, #S_PC               @ !! R8 NEEDS to be saved !!
