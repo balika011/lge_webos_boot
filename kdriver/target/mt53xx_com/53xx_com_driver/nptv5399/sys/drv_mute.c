@@ -743,7 +743,11 @@ VOID _vDrvVideoForceUnMute(UINT32 u4Path, BOOL bOnOff)
         _vDrvVideoSetMuteInvalidFlag((MUTE_MODULE_ID)u4Module, u4Path, bOnOff, MUTE_INVALID_CLI_FORCE);
     }
 
+#if !SUPPORT_HDTV_HARDWARE_MUTE 
     vOSTGVideoPlaneHWMute(u4Path,(!bOnOff));
+#endif
+
+
     x_crit_end(rCritState);
 }
 
