@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/12 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -906,7 +906,7 @@ void vDrvNRSetQuality(UINT8 u1Interlace, UINT16 u2Width, UINT16 u2Height)
     UINT32 u4BKNLMaxStr = 0;
     UINT32 u4BkNLGain = 0;
 	UINT8  u1MeFhdp = 0;
-    //UINT8  u1UseMoAnr = 0;
+    UINT8  u1UseMoAnr = 1;
     UINT32 u4DCR_En;
 
     E_BNM_MODE eBnmMode = E_BNM_DFT;
@@ -1084,7 +1084,7 @@ void vDrvNRSetQuality(UINT8 u1Interlace, UINT16 u2Width, UINT16 u2Height)
     _SWWM(NR_BK_METER_01, P_Fld(u4BKNLMaxStr, NR_BK_NL_MAX_STR)|P_Fld(u4BkNLGain, NR_BK_NL_GAIN));
 
     _SWW(NR_NM_06, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() ? 3 : 0), NM_SC_Q_NL_MODE);
-    _SWW(NR_NM_03, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() ? 1 : 0), UPDATE_NL_SC);
+    _SWW(NR_NM_03, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() || u1UseMoAnr ? 1 : 0), UPDATE_NL_SC);
     //_SWW(NR_NM_03, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() || u1UseMoAnr ? 1 : 0), UPDATE_NL_SC);
     //_SWW(NR_NM_10,   u1UseMoAnr ? 0 : 1, NM_ADJ_BY_MOFBK);
     //_SWW(NR_CTRL_01, u1UseMoAnr, ANR_SEL);

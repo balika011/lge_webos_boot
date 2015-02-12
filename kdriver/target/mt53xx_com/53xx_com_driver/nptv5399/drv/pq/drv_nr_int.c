@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/12 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1331,7 +1331,7 @@ void vDrvNRPQInit(void)
     _SWW(NR_NM_07, 0x0, NM_SC_MO_EN);
     _SWW(NR_NM_07, 0x1, NM_SC_MO_MTHD2_EN);
     _SWW(NR_NM_08, 0xA, NM_SC_MO_TH);
-    _SWW(NR_NM_07, 1, NR_NM_LPF_TVD);
+    _SWW(NR_NM_07, 0, NR_NM_LPF_TVD);
 
     //_SWW(NR_NM_0C, 0x3E00, CLEAN_DF_LVL_PDSUM_TH);
 
@@ -1352,7 +1352,7 @@ void vDrvNRPQInit(void)
 #endif
     _SWW(NR_NM_03,   0, UPDATE_NL_SC);
     _SWW(NR_NM_0F,   0, NM_ADJ_BY_FATTAIL);
-    _SWW(NR_NM_10,   0, NM_ADJ_BY_MOFBK);
+    _SWW(NR_NM_10,   1, NM_ADJ_BY_MOFBK);
     _SWW(NR_NM_10,  16, NM_ADJ_BY_MOFBK_OFST);
     _SWW(NR_NM_10,  0x20, NM_FWDREW_CNT_TH);
     _SWW(NR_NM_10,  0x10, NM_FWDREW_WAIT_CNT);
