@@ -263,10 +263,10 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
 	sprintf(arg_next(kargs), "%s ", "sver=3.00.00 bver=3.00.00");
 
-	if(IS_IC_5882_ES3() == 1)
-		sprintf(arg_next(kargs), "%s ", "chip=A5LRB0");
-	else
+	if(IS_IC_5882_ES1() || IS_IC_5882_ES2())
 		sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");
+	else
+		sprintf(arg_next(kargs), "%s ", "chip=A5LRB0");
 
 	if(MICOM_IsPowerOnly() || !DDI_NVM_GetInstopStatus())
 		sprintf(arg_next(kargs), "%s ", "factory");

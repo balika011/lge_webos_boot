@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/12 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1247,7 +1247,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	   x_memcpy(B2R_GetVdpConf(ucVdpId),&_arVdpPipLineCfg,sizeof(_arVdpPipLineCfg));
 	   tOmux.ucPath = ucVdpId;
 	   tOmux.fgScartOut =FALSE;
-	   ucB2rId=VDP_Vdp2B2rId(ucVdpId);
+	   ucB2rId=VDP_Vdp2B2rId(ucOrgVdpId);
 	  
 	 
 	   this = _B2R_GetObj(ucOrgVdpId);

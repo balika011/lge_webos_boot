@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #17 $
+* $Revision: #18 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -7822,6 +7822,30 @@ void vTvd3dVSyncISR(void)
     {
         _pfnTVDCLINotify(&_rTvd3dStatus);
     }
+	//this is for LGE A5LR change channel ,the stream will become shaking and noise is not smooth 
+#if 1
+	if ((_svDrvTvdCheckSignalStatus((UINT8)SV_VDO_STABLE))
+				&& (_rTvd3dStatus.eSourceType == SV_ST_TV) && (_rTvd3dStatus.bTvdMode == SV_CS_NTSC358)
+				&& !fgHwTvdTrick()&&fgHwTvdVCRBV()
+				&&(IO32ReadFldAlign(TG_STA_00, SERR_WIDTH)<0x70)
+				&&	fgHwTvdVLock()&&fgHwTvdBLock()
+				&& !fgHwTvdFHPos() && !fgHwTvdFHNeg()
+				&& !IO32ReadFldAlign(STA_CDET_00, V525_TVD3D)
+				&&	!IO32ReadFldAlign(TG_STA_05, LINE_STDFH_FLAG)&&!IO32ReadFldAlign(TG_STA_05, FRAME_STDFH_FLAG)
+				&&(IO32ReadFldAlign(STA_CDET_01, CAGC_STA)>0xA0)
+				&& !fgHwTvdCoChannel()
+				)
+	
+	{
+		 vIO32WriteFldAlign(TG_0B, SV_OFF, AUTO_MLLOCK);
+		 vIO32WriteFldAlign(TG_04, SV_OFF, LF_AUTO);
+		 vIO32WriteFldAlign(DFE_02, DFE_BLANK_LPF_BW_CCI, BLANK_BW);
+		 vIO32WriteFldAlign(DFE_02, 0x1, Y4H_BW);
+		 LOG(1,"[TVD_DBG_MSG]change channel issue.\n");
+	}
+				
+#endif
+
 }
 
 

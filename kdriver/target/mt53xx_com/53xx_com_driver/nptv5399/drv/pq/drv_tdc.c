@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/12 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -107,6 +107,9 @@
 #include "util.h"
 #include "drvcust_if.h"
 
+#include "hw_di_int.h"
+#include "hw_di.h"
+#include "hw_ycproc.h"
 #ifndef  CC_UP8032_ATV
 #include "fbm_drvif.h"
 EXTERN UINT32 TDC_DRAM_BASE;
@@ -129,6 +132,15 @@ EXTERN UINT8  u1MajorMvX0;
 EXTERN UINT8  u1MajorMvY0;
 EXTERN UINT16 u2TotalCnt;
 EXTERN UINT8 u1IF_MAX_MOTION_C_Value;
+static void vTdc3DStable(void);
+static void vTdcRNRSetting(void);
+static void vTdcCrossColorReduce2(void);
+void vTdcDotCrawlReduce(void);
+void vTdcAdaptiveFW2DSoftswitch(void);
+void CheckSPCAndWeakC(void);
+void vTdcCCSPatch(void);
+void vTdcMainMenuTransition(void);
+void vTdcSharpness(void);
 #endif
 UINT8 _bTDCEnable;
 
@@ -148,14 +160,14 @@ REGTBL_T const CODE REGTBL_COMB_NTSC_AV[] = {
 	{COMB_CTRL_0C, 0x0000CCBD, 0x01FFFFFF},
 	{COMB_CTRL_0D, 0x00000004, 0xFFFFFFFF},
 	{COMB_CTRL_0E, 0x4E554E55, 0xFFFFFFFF},
-	{COMB2D_00, 0x314859C8, 0xFFFFFFFE},
-	{COMB2D_01, 0x809E3001, 0xFFFFFFFF},
-	{COMB2D_02, 0x08001020, 0x0FFFFFFF},
+	{COMB2D_00, 0x304859C8, 0xFFFFFFFE},   //bypass y2d_cshap_en
+	{COMB2D_01, 0x809E2001, 0xFFFFFFFF},
+	{COMB2D_02, 0x08051020, 0x0FFFFFFF},
 	{COMB2D_03, 0x08081E03, 0xFFFFFF7F},
 	{COMB2D_04, 0x00100008, 0xFFFF03FF},
 	{COMB2D_05, 0x14061210, 0xFFFFFFFF},
 	{COMB2D_06, 0x10101022, 0xFFFFFFFF},
-	{COMB2D_07, 0x20502010, 0x7FFFFFFF},
+	{COMB2D_07, 0x20502214, 0x7FFFFFFF},
 	{COMB2D_08, 0x3311001A, 0xFFFFFFFF},
 	{COMB2D_09, 0x1111046A, 0xFFFFFFFF},
 	{COMB2D_0A, 0x8000080A, 0xFC7FFFFF},
@@ -960,6 +972,7 @@ void vDrvTDCSet(void)
     case SV_CS_PAL:
         vDrvLoadRegTbl(REGTBL_COMB_PAL_AV);
         vIO32WriteFldAlign(CTG_00, SV_OFF, BST_0DEG);     // Change TVD CGen color 45 degree .
+        vIO32WriteFldAlign(TDC_FW_01, 0x4000, COLOR_EDGE_TH);
         break;
     case SV_CS_PAL_M:
         vDrvLoadRegTbl(REGTBL_COMB_PAL_M_AV);
@@ -990,6 +1003,13 @@ void vDrvTDCSet(void)
     }
 
     vIO32WriteFldAlign(TDC_FW_00, SV_ON, TDC_CCS_ADAP_EN);
+	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&(bHwTvdMode()==SV_CS_NTSC358))  // for ATV FSC change color bar issue.
+	{		
+		vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
+		
+		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENBOUND);
+		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENUNIFORM_SPCLR);
+	}
     // Re-enable TDC.        
     if (fgTDCEnabled)    
 	{        
@@ -1172,6 +1192,19 @@ void vTdc3dProc(void)
 	}
 	vTdcCrossColorProc();
     vAdaptive3DCombGain();
+#if SUPPORT_PQ_FINETUNE
+	if((_rTvd3dStatus.eSourceType==SV_ST_AV))
+	{
+		vTdc3DStable();
+		vTdcRNRSetting();
+		vTdcCrossColorReduce2();
+		vTdcDotCrawlReduce();
+		vTdcAdaptiveFW2DSoftswitch();
+		CheckSPCAndWeakC();
+		vTdcCCSPatch();
+		vTdcMainMenuTransition();
+	}	
+#endif
 
 }
 
@@ -1424,4 +1457,761 @@ void vTdcCrossColorProc(void)
 		}
 	}
 }
+
+#if SUPPORT_PQ_FINETUNE
+static void vTdc3DStable(void)
+{
+    UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA);        
+    UINT32 dwTdc3dLumasum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
+    UINT32 dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+    //UINT32 dwTdc3dLumaEdgeSum = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+
+    if (bHwTvdMode()==SV_CS_PAL)
+    {
+        if (((dwTdc3dMBPixCnt>0x600)&&(dwTdc3dMBPixCnt<0x800))
+            &&((dwTdc3dLumasum>0xD800000)&&(dwTdc3dLumasum<0xE800000))
+            &&((dwTdc3dColorSum>0x1200000)&&(dwTdc3dColorSum<0x1400000))
+            &&((dwTdc3dColorEdgeSum>0x180000)&&(dwTdc3dColorEdgeSum<0x280000))
+        )//7
+        {
+            vRegWriteFldAlign(COMB3D_0B, MIN(0xB0, RegReadFldAlign(COMB3D_0B, REG_D3BIGTH)+0x4), REG_D3BIGTH);
+        }
+        else
+        {
+            vRegWriteFldAlign(COMB3D_0B, MAX(0x8A, RegReadFldAlign(COMB3D_0B, REG_D3BIGTH)-0x4), REG_D3BIGTH);
+        }
+
+    }
+    if (bHwTvdMode()==SV_CS_NTSC358)//some still pattern have flicker
+    {
+        if (u4MotionPixelCnt <= 0x120)
+        {
+            vRegWriteFldAlign(COMB3D_03, MIN(20, 0x120 - u4MotionPixelCnt)+0xAA, REG_CVBS_DIFF_TH); // need to check the register*****
+        }
+        else
+        {
+            vRegWriteFldAlign(COMB3D_03, 0xAA, REG_CVBS_DIFF_TH);
+        }
+    }
+}
+
+static void vTdcRNRSetting(void)
+{
+    //UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA);        
+    UINT32 dwTdc3dLumasum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
+    UINT32 dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+    UINT32 dwTdc3dLumaEdgeSum = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+
+    if (bHwTvdMode()==SV_CS_PAL)
+    {
+        if (((dwTdc3dMBPixCnt>0x350)&&(dwTdc3dMBPixCnt<0x480))
+            &&((dwTdc3dLumasum>0xD000000)&&(dwTdc3dLumasum<0xD900000))
+            &&((dwTdc3dColorSum>0x1C00000)&&(dwTdc3dColorSum<0x1E00000))
+            &&((dwTdc3dLumaEdgeSum>0x100000)&&(dwTdc3dLumaEdgeSum<0x128000))
+            &&((dwTdc3dColorEdgeSum>0x700000)&&(dwTdc3dColorEdgeSum<0x8C0000))
+        )//46
+        {
+            //vIO32WriteFldAlign(NR_CTRL_00, 1, EN_RNR_TH_ADAP);
+        }
+        else
+        {
+            //vIO32WriteFldAlign(NR_CTRL_00, 0, EN_RNR_TH_ADAP);
+        }
+    }
+
+    
+}
+
+static void vTdcCrossColorReduce2(void)
+{
+    UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA);        
+    UINT32 dwTdc3dLumasum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
+    UINT32 dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dLumaEdgeSum = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+    UINT32 dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+	UINT16 u2DIHistCnt = IO32ReadFldAlign(MCVP_CS_27,HIST_CNT);
+	UINT16 u2DIHistCntMax = IO32ReadFldAlign(MCVP_CS_27,STA_MAX_CNT1);
+	UINT16 u2DIHistCntDiff;
+   /// UINT16 u2MjcMvZeroCnt = IO32ReadFldAlign(MJC_STA_MH_1A, MJC_STA_MV_ZERO);  need find another status.
+    static UINT8 bPre2DGain = 0x4;
+    UINT8 bTarget2DGain;
+    UINT8 b3DGainC;
+    UINT8 u1IsHammock = 0;
+	
+	u2DIHistCntDiff = (u2DIHistCnt >= u2DIHistCntMax) ? (u2DIHistCnt - u2DIHistCntMax) :(u2DIHistCntMax - u2DIHistCnt);
+
+	if(IO32ReadFldAlign(TDC_FW_00, TDC_CCRD2_DEBUG))
+	{
+		Printf("\n***vTdcCrossColorR u4MotionPixelCnt=%x,dwTdc3dLumasum=%x,dwTdc3dMBPixCnt=%x ,dwTdc3dColorEdgeSum=%x\n",
+			u4MotionPixelCnt,dwTdc3dLumasum,dwTdc3dMBPixCnt,dwTdc3dColorEdgeSum);
+		Printf("dwTdc3dColorSum=%x, u2DIHistCnt=%x, u2DIHistCntMax=%x,u2DIHistCntDiff=%x\n",
+			dwTdc3dColorSum,u2DIHistCnt,u2DIHistCnt,u2DIHistCntDiff);
+	}
+	
+	if (bHwTvdMode()==SV_CS_PAL)
+    {
+        b3DGainC = 4;
+        if((u4MotionPixelCnt<=0xE00)
+           //  &&(u2MjcMvZeroCnt > 0x6500)  need to check.
+           &&(u2DIHistCnt>=1650)&&(u2DIHistCnt<=2250)&&(u2DIHistCntDiff>=80)&&(u2DIHistCntDiff<=500)
+            &&((dwTdc3dLumasum>=0xF400000)&&(dwTdc3dLumasum<=0x10200000))
+            //&&((dwTdc3dMBPixCnt>0x1200)&&(dwTdc3dMBPixCnt<0x1300))
+            &&((dwTdc3dColorEdgeSum>1700000)&&(dwTdc3dColorEdgeSum<5800000))
+            &&((dwTdc3dColorSum>5000000)&&(dwTdc3dColorSum<9200000)))//for hammock
+        {
+            //vRegWriteFldAlign (COMB_3D_0E, MIN(0x10, (0x2000-u4MotionPixelCnt)>>7), CB_3D_FW_2D_COST);
+            //vRegWriteFldAlign(MCVP_FUSION_21, 0, IF_MAX_MOTION_C);
+            u1fgPatternHammock = 1;
+            u1IF_MAX_MOTION_C_Value = 0;
+            vRegWriteFldAlign(COMB2D_07, 0x20, VWY2CHROMATH);
+            vRegWriteFldAlign(COMB3D_0A, 0x8A, REG_D3BIGTH1);
+            
+        }
+        else if (_bK4ChromaThByCans == 4)
+        {
+            u1fgPatternHammock = 0;
+            u1IF_MAX_MOTION_C_Value = 0;
+            vRegWriteFldAlign(COMB2D_07, 0x12, VWY2CHROMATH);
+            vRegWriteFldAlign(COMB3D_0A, 0x90, REG_D3BIGTH1);
+        }
+        else if (_fgMovingcolorCharacter == 1)
+        {
+            u1fgPatternHammock = 0;
+            u1IF_MAX_MOTION_C_Value = 0;
+            vRegWriteFldAlign(COMB2D_07, 0xD, VWY2CHROMATH);
+            vRegWriteFldAlign(COMB3D_0A, 0xA0, REG_D3BIGTH1);
+        }
+        else if (_bPatchInPattern107 == 1)
+        {
+            u1fgPatternHammock = 0;
+            b3DGainC = 1;
+            u1IF_MAX_MOTION_C_Value = 8;
+            vRegWriteFldAlign(COMB2D_07, 0xD, VWY2CHROMATH);
+            vRegWriteFldAlign(COMB3D_0A, 0x71, REG_D3BIGTH1);
+            
+        }
+        else
+        {
+            //vRegWriteFldAlign (COMB_3D_0E, 0, CB_3D_FW_2D_COST);
+            //vRegWriteFldAlign(MCVP_FUSION_21, 8, IF_MAX_MOTION_C);
+            u1fgPatternHammock = 0;
+            if(IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE)>=4)
+            {
+                u1IF_MAX_MOTION_C_Value = 8 - IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE);
+            }
+            else
+            {
+                u1IF_MAX_MOTION_C_Value = 8;
+            }
+            
+            vRegWriteFldAlign(COMB2D_07, 0xD, VWY2CHROMATH);
+            vRegWriteFldAlign(COMB3D_0A, 0x71, REG_D3BIGTH1);
+            
+        }
+        
+        if ((dwTdc3dColorEdgeSum>26000000)
+            &&(dwTdc3dColorSum>48000000)
+            )
+        {
+            vRegWriteFldAlign(COMB3D_06, 0, REG_UNIFORMTH);
+        }
+        else
+        {
+            vRegWriteFldAlign(COMB3D_06, 0x10, REG_UNIFORMTH);
+        }
+        vRegWriteFldAlign (COMB3D_0F, b3DGainC, REG_D3GAINC);
+    }
+    else if (_rTvd3dStatus.bTvdMode==SV_CS_NTSC358)
+    {
+        if ((u4MotionPixelCnt<=0x4F00)//&&(u2MjcMvZeroCnt > 0x6500)   ++++++++  need to find another register. +++++
+			&&(u2DIHistCnt>=1650)&&(u2DIHistCnt<=2250)&&(u2DIHistCntDiff>=80)&&(u2DIHistCntDiff<=500)
+            //&&((dwTdc3dLumasum>=0xA800000)&&(dwTdc3dLumasum<=0xB000000))
+            &&((dwTdc3dLumasum>=0xA000000)&&(dwTdc3dLumasum<=0xB700000))
+            &&((dwTdc3dMBPixCnt>0x300)&&(dwTdc3dMBPixCnt<0x900))
+            //&&((dwTdc3dColorEdgeSum>0x1A0000)&&(dwTdc3dColorEdgeSum<0x310000))
+            &&((dwTdc3dColorEdgeSum>0x100000)&&(dwTdc3dColorEdgeSum<0x250000))
+            //&&((dwTdc3dColorSum>0x500000)&&(dwTdc3dColorSum<0x700000))
+            &&((dwTdc3dColorSum>0x400000)&&(dwTdc3dColorSum<0x580000)))//for hammock
+        {
+            //vRegWriteFldAlign (C_COMB_1B, 3, REG_D3GAINY);
+            //vRegWriteFldAlign (C_COMB_1B, 4-MIN(((0x4800 - u4MotionPixelCnt)>>9),4), REG_D3GAINCV);
+            u1IsHammock = 1;
+            vRegWriteFldAlign (COMB3D_0C, 8, CHROMA3D_OFFSET);
+            vRegWriteFldAlign (COMB3D_0C, 0xA, CHROMA3D_SLOP);
+            
+            bTarget2DGain = MIN(((0x4800 - u4MotionPixelCnt)>>8)+4, 0xF);
+
+            vRegWriteFldAlign (COMB3D_0B, 0x84 - MIN((0x4800 - u4MotionPixelCnt)>>4, 0x84), REG_D3BIGTH);
+            vRegWriteFldAlign (COMB3D_0A, 0x78 - MIN((0x4800 - u4MotionPixelCnt)>>4, 0x78), REG_D3BIGTH1);
+
+            vRegWriteFldAlign (COMB3D_02, 1, REG_ENCVMO);
+            vRegWriteFldAlign (COMB3D_0A, 1, REG_ENLOCALSTILLG_B);
+
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D3GAINCV);
+            vRegWriteFldAlign (COMB3D_0F, 8, REG_D3GAINC);
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D3GAINY);
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D2GAINCV);
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D2GAINC);
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D2GAINY);
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D2GAINCV_MB);  //need to check register.
+        }
+       
+        else 
+        {
+            if ((dwTdc3dColorSum>38000000)
+                &&(dwTdc3dColorEdgeSum>20000000)
+                &&(u4MotionPixelCnt<4000)// //resolution still color mulitburst pattern not still
+                )
+
+            {
+                vRegWriteFldAlign (COMB3D_0F, 0, REG_D3GAINY);
+                vRegWriteFldAlign (COMB3D_02, 0, REG_ENCVMO);
+                vRegWriteFldAlign (COMB3D_0B, 0x84, REG_D3BIGTH);
+                vRegWriteFldAlign (COMB3D_0A, 0x40, REG_D3BIGTH1);
+                vRegWriteFldAlign (COMB3D_0A, 0, REG_ENLOCALSTILLG_B);
+                bTarget2DGain = 0x9;
+                
+            }
+            else if(((dwTdc3dLumasum>=0xA000000)&&(dwTdc3dLumasum<=0xAA00000))
+            &&(dwTdc3dMBPixCnt<0x800)
+            &&((dwTdc3dLumaEdgeSum>0x2C000)&&(dwTdc3dLumaEdgeSum<0x45000))
+            &&((dwTdc3dColorEdgeSum>0x3A0000)&&(dwTdc3dColorEdgeSum<0x4A0000))
+            &&((dwTdc3dColorSum>0x3500000)&&(dwTdc3dColorSum<0x4100000)))
+                {
+                vRegWriteFldAlign (COMB3D_0F, 4, REG_D3GAINY);
+                vRegWriteFldAlign (COMB3D_02, 1, REG_ENCVMO);
+                vRegWriteFldAlign (COMB3D_0B, 0x84, REG_D3BIGTH);
+                vRegWriteFldAlign (COMB3D_0A, 0xA0, REG_D3BIGTH1);
+                vRegWriteFldAlign (COMB3D_0A, 1, REG_ENLOCALSTILLG_B);
+                bTarget2DGain = 4;
+            }
+            else
+            {
+                vRegWriteFldAlign (COMB3D_0F, 4, REG_D3GAINY);
+                vRegWriteFldAlign (COMB3D_02, 1, REG_ENCVMO);
+                vRegWriteFldAlign (COMB3D_0B, 0x84, REG_D3BIGTH);
+                vRegWriteFldAlign (COMB3D_0A, 0x78, REG_D3BIGTH1);
+                vRegWriteFldAlign (COMB3D_0A, 1, REG_ENLOCALSTILLG_B);
+                bTarget2DGain = 4;
+            }
+            
+            //vRegWriteFldAlign (C_COMB_1B, 4, REG_D3GAINCV);
+
+            vRegWriteFldAlign (COMB3D_0C, 0x1E, CHROMA3D_OFFSET);
+            vRegWriteFldAlign (COMB3D_0C, 0xF, CHROMA3D_SLOP);
+        }
+        //.................................................................
+        if (((IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE)>=4)
+            &&(u4MotionPixelCnt<=0x6500)
+            //&&((dwTdc3dLumasum>=0xB000000)&&(dwTdc3dLumasum<=0xC000000))
+            &&((dwTdc3dLumasum>=0xA000000)&&(dwTdc3dLumasum<=0xC000000))
+            //&&((dwTdc3dMBPixCnt>0xB00)&&(dwTdc3dMBPixCnt<0xC00))
+            &&((dwTdc3dMBPixCnt>0xA00)&&(dwTdc3dMBPixCnt<0xD00))
+            &&((dwTdc3dColorEdgeSum>0x150000)&&(dwTdc3dColorEdgeSum<0x400000))
+            //&&((dwTdc3dColorSum>0xF80000)&&(dwTdc3dColorSum<0x1180000)))
+            &&((dwTdc3dColorSum>0xE00000)&&(dwTdc3dColorSum<0x1100000)))
+            ||(u1IsHammock == 1) || _fgMovingCans)//pattern 107 need more 3d
+        {
+            vRegWriteFldAlign (COMB3D_0F, 2, REG_D3GAINCV);
+			vRegWriteFldAlign (COMB3D_0F, 8, REG_D3GAINC);
+        }
+        else
+        {
+            vRegWriteFldAlign (COMB3D_0F, 4, REG_D3GAINCV);
+			vRegWriteFldAlign (COMB3D_0F, 1, REG_D3GAINC);
+        }
+
+        if (bPre2DGain < bTarget2DGain)
+        {
+            bPre2DGain++;
+        }
+        else if (bPre2DGain > bTarget2DGain)
+        {
+            bPre2DGain--;
+        }
+
+        if(u1IsHammock == 0)
+        {
+            vRegWriteFldAlign (COMB3D_0F, bPre2DGain, REG_D2GAINY);
+            vRegWriteFldAlign (COMB3D_0F, bPre2DGain, REG_D2GAINC);
+            vRegWriteFldAlign (COMB3D_0F, bPre2DGain, REG_D2GAINCV);
+            vRegWriteFldAlign (COMB3D_0F, bPre2DGain, REG_D2GAINCV_MB);
+        }
+    }
+}
+
+// for moving can dot carwl redction
+void vTdcDotCrawlReduce(void)
+{
+    UINT8 u1DCR_En = IO32ReadFldAlign(TDC_FW_00, TDC_FW_DOTCRAWL_RD);
+    static UINT8 _u1PreDCR_En;
+    static UINT8 K2THValue = 7;
+    UINT8 bcs_state = IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE);
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dLumasum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
+    UINT32 dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+    UINT32 dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+    UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA); 
+    UINT32 dwTdc3dLumaEdgeSum = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);    
+    UINT8 bEdgeSum = MIN(0xFF, dwTdc3dLumaEdgeSum>>14);
+    UINT8 bK4_V_Gain;
+    UINT8 bK1Gain = 0x8;
+    UINT8 bK4_HDGAIN_HFY2 = 0x2;
+    UINT8 bK2_TBTH_CVAR = 0x0;
+		
+	if(IO32ReadFldAlign(TDC_FW_00, TDC_CCRD_DEBUG))
+	{
+		Printf("\n vTdcDotCrawlReduce bcs_state=%x dwTdc3dColorEdgeSum=%xdwTdc3dColorSum=%x\n",bcs_state,dwTdc3dColorEdgeSum,dwTdc3dColorSum);
+		Printf("dwTdc3dMBPixCnt=%x u4MotionPixelCnt=%x dwTdc3dLumaEdgeSum=%x bEdgeSum=%x\n",
+			dwTdc3dMBPixCnt,u4MotionPixelCnt,dwTdc3dLumaEdgeSum,bEdgeSum);
+	}
+    if ((bHwTvdMode()==SV_CS_NTSC358))
+    {
+        _fgCornPattern = 0;
+		_fgMovingCans = 0;
+        if ((bcs_state>=4)
+            && ((dwTdc3dColorEdgeSum >= 2200000)&&(dwTdc3dColorEdgeSum <= 4000000))
+            && ((dwTdc3dColorSum >= 11000000)&&(dwTdc3dColorSum <= 18500000))
+            && ((dwTdc3dMBPixCnt >= 500)&&(dwTdc3dMBPixCnt <= 3400))//cans pattern
+            )
+        {
+            if (u4MotionPixelCnt>50000)//cans pattern
+            {
+                vRegWriteFldAlign(COMB2D_07, MAX(0x28, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)-0x10), VWY2CHROMATH);
+                vRegWriteFldAlign(COMB2D_09, 0x4, HDGAIN_HFY2);
+                vRegWriteFldAlign(COMB2D_05, 0x1, TBTH_CVAR);
+
+                vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
+                vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);				
+                
+                _fgMovingCans = 1;
+            }
+            else //107
+            {
+                vRegWriteFldAlign(COMB2D_07, MAX(0x28, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)-0x10), VWY2CHROMATH);
+                vRegWriteFldAlign(COMB2D_09, MAX(0x2, RegReadFldAlign(COMB2D_09, HDGAIN_HFY2)-0x1), HDGAIN_HFY2);
+                vRegWriteFldAlign(COMB2D_05, 3, TBTH_CVAR); 
+                
+                vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
+                vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);
+                
+            }
+            
+        }
+        else if (((dwTdc3dColorEdgeSum >= 2000000)&&(dwTdc3dColorEdgeSum <= 12000000))
+            && ((dwTdc3dColorSum >=12000000)&&(dwTdc3dColorSum <= 34000000))
+            && ((dwTdc3dMBPixCnt >= 100)&&(dwTdc3dMBPixCnt <= 2400))// Corn(sorghum) and sunflower
+            && (u4MotionPixelCnt>4500)
+            )
+        {
+            vRegWriteFldAlign(COMB2D_05, 0x05, TBTH_CVAR);
+            vRegWriteFldAlign(COMB2D_07, MIN(0x88, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)+0x10), VWY2CHROMATH);
+            vRegWriteFldAlign(COMB2D_09, MIN(0x6, RegReadFldAlign(COMB2D_09, HDGAIN_HFY2)+0x1), HDGAIN_HFY2);
+
+            vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
+            vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);
+            
+            _fgCornPattern = 1;
+        }
+        else if(((dwTdc3dLumasum>=0xA000000)&&(dwTdc3dLumasum<=0xAA00000))
+        &&(dwTdc3dMBPixCnt<0x800)
+        &&((dwTdc3dLumaEdgeSum>0x2C000)&&(dwTdc3dLumaEdgeSum<0x45000))
+        &&((dwTdc3dColorEdgeSum>0x3A0000)&&(dwTdc3dColorEdgeSum<0x4A0000))
+        &&((dwTdc3dColorSum>0x3500000)&&(dwTdc3dColorSum<0x4100000))
+        )
+            {
+            vRegWriteFldAlign(COMB2D_05, 0x2, TBTH_CVAR);
+            vRegWriteFldAlign(COMB2D_07, MAX(0x50, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)-0x10), VWY2CHROMATH);
+            vRegWriteFldAlign(COMB2D_09, MIN(0x6, RegReadFldAlign(COMB2D_09, HDGAIN_HFY2)+0x1), HDGAIN_HFY2);
+            
+            vRegWriteFldAlign (COMB3D_0B, 0x4, REG_D2D3SMALLTH);
+            vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);
+            
+        }
+        else if(IO32ReadFldAlign(STA_COMB_0C, NONVCR3D) == 0)
+            {
+            vRegWriteFldAlign(COMB2D_05, 2, TBTH_CVAR);
+            vRegWriteFldAlign(COMB2D_07, MAX(0x50, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)-0x10), VWY2CHROMATH);
+            vRegWriteFldAlign(COMB2D_09, MIN(0x6, RegReadFldAlign(COMB2D_09, HDGAIN_HFY2)+0x1), HDGAIN_HFY2);
+            
+            vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
+            vRegWriteFldAlign(COMB2D_06, 0x17, PVCVBSVERTH);
+        }
+        else
+        {
+            vRegWriteFldAlign(COMB2D_05, 4, TBTH_CVAR);
+            vRegWriteFldAlign(COMB2D_07, MAX(0x50, RegReadFldAlign(COMB2D_07, VWY2CHROMATH)-0x10), VWY2CHROMATH);
+            vRegWriteFldAlign(COMB2D_09, MIN(0x6, RegReadFldAlign(COMB2D_09, HDGAIN_HFY2)+0x1), HDGAIN_HFY2);
+           // vRegWriteFldAlign(COMB2D_00, 0x0, ENSHARP);// check register address. not found?
+           //vIO32Write4B(COMB2D_08, 0x1444000A);
+            vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
+            vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);
+        }
+    }
+    else if ((bHwTvdMode()==SV_CS_PAL))//Cans pattern check
+    {
+    
+        UINT32 u4SCEHueHist0 = IO32ReadFldAlign(HUE_HIST_1_0_MAIN, HUE_HIST_0);
+        UINT32 u4SCEHueHist2 = IO32ReadFldAlign(HUE_HIST_3_2_MAIN, HUE_HIST_2);
+        UINT32 u4SCEHueHist5 = IO32ReadFldAlign(HUE_HIST_5_4_MAIN, HUE_HIST_5);
+        _bPatchInPattern107 = 0;
+        _bK4ChromaThByCans =0;
+        _fgMovingcolorCharacter =0;
+        bK4_V_Gain = 3;
+        if (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE) > 4)
+        {
+            bEdgeSum = bEdgeSum - MIN(bEdgeSum, (RegReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE)-4)<<3);
+        }
+        
+        if (u1fgPatternHammock == 1)
+        {
+            bK4_V_Gain = 3;
+            K2THValue = 6;
+        }
+        else if ((u1MajorMvX0>=0)&&(u1MajorMvY0 == 0)
+            &&((dwTdc3dColorEdgeSum >= 0x800000)&&(dwTdc3dColorEdgeSum <= 0x10F0000))
+            && ((dwTdc3dColorSum >= 0x3000000)&&(dwTdc3dColorSum <= 0x3600000))
+            && ((dwTdc3dMBPixCnt >= 0xA00)&&(dwTdc3dMBPixCnt <= 0x2000))
+            && ((u4MotionPixelCnt >= 0x2B0)&&(u4MotionPixelCnt <= 0x18000))
+            && (u4SCEHueHist0<=0x50)
+            && ((u4SCEHueHist2<=0x1600)&&(u4SCEHueHist2>=0x1300))
+            && ((u4SCEHueHist5<=0x2500)&&(u4SCEHueHist5>=0x2000))
+            )//leaf pattern
+        {
+            
+            bK4_V_Gain = 3;
+            K2THValue = 3;
+            _fgMovingcolorCharacter = 1;
+        }
+        else if ((bcs_state>=4) && (u1MajorMvX0>=1)
+            && ((dwTdc3dColorEdgeSum >= 2800000)&&(dwTdc3dColorEdgeSum <= 5950000))
+            && ((dwTdc3dColorSum >= 15000000)&&(dwTdc3dColorSum <= 25500000))
+            && ((dwTdc3dMBPixCnt >= 500)&&(dwTdc3dMBPixCnt <= 3500))//cans
+            )
+        {
+            K2THValue = (K2THValue>3)?(K2THValue-1):3;
+            bK4_V_Gain = 3;
+            _bK4ChromaThByCans = 4;
+        }
+        else if((bEdgeSum>0x68) && 
+            (dwTdc3dColorSum > 0x1000000) && (dwTdc3dColorSum < 0x3500000)
+            && (u4MotionPixelCnt > 0x800))//corn and sunflower
+        {
+            K2THValue = (K2THValue<8)?(K2THValue+1):8;
+            bK1Gain = 0xF;
+            bK4_HDGAIN_HFY2 = 0x8;
+            bK2_TBTH_CVAR = 0x5; 
+            _fgCornPattern = 1;            
+        }
+        else if ((dwTdc3dColorSum>29000000)&&(dwTdc3dColorSum<40000000)
+            &&(dwTdc3dLumaEdgeSum>800000)&&(dwTdc3dLumaEdgeSum<2000000)
+            &&(dwTdc3dColorEdgeSum>8200000)&&(dwTdc3dColorEdgeSum<13000000)
+            &&(dwTdc3dMBPixCnt>500)&&(dwTdc3dMBPixCnt<1200)//Thailand woman
+            )
+        {
+            K2THValue = 2;
+        }
+        else if ((bcs_state>=4) &&(u4MotionPixelCnt<16000)
+            && ((dwTdc3dColorSum >=17000000)&&(dwTdc3dColorSum <= 29000000))
+            && ((dwTdc3dColorEdgeSum >= 2100000)&&(dwTdc3dColorEdgeSum <= 4100000))
+            && ((dwTdc3dMBPixCnt >= 2700)&&(dwTdc3dMBPixCnt <= 4800))//107
+            )
+        {
+            //K2THValue = (K2THValue>1)?(K2THValue-1):1;
+            K2THValue = (K2THValue<3)?(K2THValue+1):3;
+            _bPatchInPattern107 =1;
+        }
+
+        else
+        {
+            K2THValue = (K2THValue<3)?(K2THValue+1):3;
+        }
+        vRegWriteFldAlign(COMB2D_0A, MIN(0x8, MAX(1, _bK2ValueByCSS+K2THValue-_bK2ValueByWeakC)), TBTH_K2B);
+        vRegWriteFldAlign(COMB2D_08, bK4_V_Gain, REG_HFY_VYD_GAIN);
+        vRegWriteFldAlign(COMB2D_08, bK4_V_Gain, REG_HFY_VCD_GAIN);
+        vRegWriteFldAlign(COMB2D_03, bK1Gain, MK1);
+        vRegWriteFldAlign(COMB2D_09, bK4_HDGAIN_HFY2, HDGAIN_HFY2);
+        vRegWriteFldAlign(COMB2D_05, bK2_TBTH_CVAR, TBTH_CVAR);
+    }
+    else if (u1DCR_En !=_u1PreDCR_En)
+    {
+        vRegWriteFldAlign(COMB2D_00, 0, ENMK2);
+        vRegWriteFldAlign(COMB2D_03, 0, MK2);
+    }
+    _u1PreDCR_En = u1DCR_En;
+}
+
+void vTdcAdaptiveFW2DSoftswitch(void)  // check begin  here.
+{
+    //UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA);        
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dLumaEdgeSum = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+    //UINT8 bK2THValue;
+    UINT8 bK4HGain;
+    UINT8 bEdgeSum;	
+
+    if (bHwTvdMode()==SV_CS_PAL)
+    {
+        //bEdgeSum = MIN(0xFF, MIN(dwTdc3dColorEdgeSum>>16, dwTdc3dLumaEdgeSum>>14));
+        bEdgeSum = MIN(0xFF, dwTdc3dLumaEdgeSum>>14);
+        if (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE) > 4)
+        {
+            bEdgeSum = bEdgeSum - MIN(bEdgeSum, (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE)-4)<<3);
+        }
+        /*
+        if ((RegReadFldAlign(COMB_3D_15, CB_3D_CHROMA_EDGE_SUM)<0x5)&&(RegReadFldAlign(COMB_3D_15, CB_3D_MOTION_PIXEL_CNT)>=0x3000))// for pattern 152 flicker
+        {
+            bUsefulBandSum = bUsefulBandSum + ((0x5 - RegReadFldAlign(COMB_3D_15, CB_3D_CHROMA_EDGE_SUM))<<4);
+        }
+            */
+
+        if (u1fgPatternHammock == 1)//hammock
+        {
+            bK4HGain = 0x5;
+        }
+        else if(_fgMovingcolorCharacter == 1)
+        {
+            bK4HGain = 0x0;
+        }
+        else if (bEdgeSum>0x68)//for corn and sunflower
+        {
+            //bK2THValue = 0xA;
+            bK4HGain = 0x8;
+        }
+        else if (_bK4ChromaThByCans == 4)
+        {
+            bK4HGain = 1;
+        }
+        else if (dwTdc3dColorEdgeSum < 0x500000)//shop
+        {
+            bK4HGain = 1;
+        }
+        else if (bEdgeSum<0x58)
+        {
+            //bK2THValue = 7;
+            bK4HGain = 0x0;
+        }
+        else
+        {
+            //bK2THValue = 7;///2 + ((bEdgeSum - 0x60)>>2);
+            bK4HGain = (bEdgeSum - 0x58)>>2;
+        }
+
+        bK4HGain = MIN(bK4HGain, 0x8);
+        vRegWriteFldAlign(COMB2D_00, bK4HGain+1, REG_HFY_HDGAIN);
+        vRegWriteFldAlign(COMB2D_00, bK4HGain, REG_HFY_HYD_GAIN);
+        vRegWriteFldAlign(COMB2D_00, bK4HGain, REG_HFY_HCD_GAIN);
+        
+    }
+    
+}
+
+void CheckSPCAndWeakC(void)// Test Pattern
+{
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+    UINT32 u4MotionPixelCnt = RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA); 
+    UINT32 dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+    UINT32 dwColorStatus = (dwTdc3dColorEdgeSum>>14) + (dwTdc3dColorSum>>16);
+    UINT8 bSpcHorSmoothTH;
+    UINT8 bWeakC_Tbth_K2;
+    UINT8 bWeakC_Tbth_K1V;
+    UINT8 bWeakC_Tbth_K1H;
+    UINT8 b3D_D3Gain_CV;
+    UINT8 bK3Value;
+	
+    if (bHwTvdMode()==SV_CS_NTSC358)
+    {
+        if (dwTdc3dColorSum>=0x2000000)
+        {
+            bSpcHorSmoothTH = 0x88;
+            bWeakC_Tbth_K2 = 0x7F;
+
+            //bypass weakC
+            vRegWriteFldAlign(COMB2D_01, 1, DISCFIRINCBG);
+            //K4
+            //vRegWriteFldAlign(COMB2D_01, 0, REG_MHFYK);
+            //vRegWriteFldAlign(COMB2D_01, 1, REG_ENMHFY);
+        }
+        else if (dwTdc3dColorSum<0x1C00000)
+        {
+            bSpcHorSmoothTH = 0x8;
+            bWeakC_Tbth_K2 = 0x2;
+
+            vRegWriteFldAlign(COMB2D_01, 0, DISCFIRINCBG);
+            //vRegWriteFldAlign(COMB2D_01, 0, REG_ENMHFY);
+        }
+        else
+        {
+            bSpcHorSmoothTH = 0x8+ ((dwTdc3dColorSum-0x1C00000)>>15);
+            bWeakC_Tbth_K2 = MIN(0x7F, 0x2+ ((dwTdc3dColorSum-0x1C00000)>>15));
+
+            vRegWriteFldAlign(COMB2D_01, 0, DISCFIRINCBG);
+            //vRegWriteFldAlign(COMB2D_01, 0, REG_ENMHFY);
+        }
+    
+        vRegWriteFldAlign(COMB2D_02, bSpcHorSmoothTH, REG_VDGYHORSMOOTHTH);
+        vRegWriteFldAlign(COMB2D_0E, bWeakC_Tbth_K2, TBTH_K2);
+    
+    }
+    else if (bHwTvdMode()==SV_CS_PAL)
+    {
+        bSpcHorSmoothTH = 0x10;
+        bWeakC_Tbth_K2 = 0x3;
+        bWeakC_Tbth_K1V = 0xA;
+        bWeakC_Tbth_K1H = 0x10;
+        b3D_D3Gain_CV = 0x4;
+        bK3Value = 0x8;
+        
+        _bK2ValueByWeakC =0;
+        if ((u4MotionPixelCnt<10000)||(dwTdc3dMBPixCnt>200))
+        {
+            //do nothing
+        }
+        else if (dwColorStatus >= 0x980)
+        {
+            b3D_D3Gain_CV = 9;
+            bK3Value = 0;
+            _bK2ValueByWeakC = 2;
+            
+        }
+        else if (dwColorStatus<=0x700)
+        {   
+            //do nothing
+        }
+        else if(_fgCornPattern == 1)
+        {
+            bK3Value = 0xF;
+        }
+        else
+        {
+            
+            b3D_D3Gain_CV = MIN(9, b3D_D3Gain_CV + ((dwColorStatus-0x700)>>7));
+            bK3Value = MIN(8, (980-dwColorStatus)>>6);
+        }
+        //......................................................................................
+        if (dwTdc3dColorSum>=0x3000000)//pattern moving char bars in leaf disc
+        {
+            bSpcHorSmoothTH = 0x60;
+            bWeakC_Tbth_K2 = 0x53;
+            bWeakC_Tbth_K1V = 0;
+            bWeakC_Tbth_K1H = 0;
+            
+        }
+        else if (dwTdc3dColorSum <=0x2800000 )
+        {
+            
+            //do nothing
+        }
+        else
+        {
+            bSpcHorSmoothTH = bSpcHorSmoothTH + ((dwTdc3dColorSum-0x2800000)>>17);
+            bWeakC_Tbth_K2 = bWeakC_Tbth_K2 + ((dwTdc3dColorSum-0x2800000)>>17);
+            bWeakC_Tbth_K1V = bWeakC_Tbth_K1V - MIN((dwTdc3dColorSum-0x2800000)>>19, bWeakC_Tbth_K1V);
+            bWeakC_Tbth_K1H = bWeakC_Tbth_K1H - MIN((dwTdc3dColorSum-0x2800000)>>19, bWeakC_Tbth_K1H);
+            
+        }
+
+        vRegWriteFldAlign(COMB2D_02, bSpcHorSmoothTH, REG_VDGYHORSMOOTHTH);
+        vRegWriteFldAlign(COMB2D_0E, bWeakC_Tbth_K2, TBTH_K2);
+        vRegWriteFldAlign(COMB2D_0E, bWeakC_Tbth_K1V, TBTH_K1V);
+        vRegWriteFldAlign(COMB2D_0E, bWeakC_Tbth_K1H, TBTH_K1H);
+        vRegWriteFldAlign(COMB2D_03, bK3Value, MK3);
+        vRegWriteFldAlign(COMB3D_0F, b3D_D3Gain_CV, REG_D3GAINCV);
+        
+    }
+    
+}
+
+void vTdcCCSPatch(void)  // not use 
+{
+    //UINT16 u2Sat = IO32ReadFldAlign(GLOBAL_ADJ_02, SAT_DUMMY);
+    UINT32 u4CCState = IO32ReadFldAlign(METER_INFO_17, METER_CC_STATE);
+    UINT32 u4MoPix = IO32ReadFldAlign(MCVP_STATUS_0F, OLD_FRAME_MO_Q_STATUS);
+    UINT32 u4Rto = 16;
+    static UINT8 _u1Cnt = 0;
+
+    u4MoPix = ((MAX(u4MoPix, 6000) - 6000) >> 10);
+    u4MoPix = MIN(u4MoPix, 8);
+    u4CCState = u4CCState * u4MoPix;
+
+    if (u4CCState >= 768)
+    {
+        _u1Cnt = (_u1Cnt < 32) ? _u1Cnt+1 : _u1Cnt;
+    }
+    else
+    {
+        UINT8 u1Dec = ((768 - u4CCState) >> 6);
+        _u1Cnt = _u1Cnt - MIN(_u1Cnt, u1Dec);
+    }
+
+    u4Rto = MIN((MAX(_u1Cnt,12) - 12), 16);
+    _bK2ValueByCSS = u4Rto>>2;
+    u4Rto = 16 - u4Rto;
+        
+    //u2Sat = (u4Rto*u2Sat) >> 4;
+
+    if (IO32ReadFldAlign(METER_CFG_00, METER_CC_ADAP_EN))
+    {
+        vIO32WriteFldAlign(METER_INFO_17, u4Rto, METER_CC_RATIO);
+    }
+    else
+    {
+        vIO32WriteFldAlign(METER_INFO_17, u4Rto, METER_CC_RATIO);
+    }
+}
+
+void vTdcMainMenuTransition(void)
+{
+    UINT32 dwTdc3dColorEdgeSum = IO32ReadFldAlign(STA_COMB_0B, COLOREDGESTA);
+    UINT32 dwThresholdColorEdge = IO32ReadFldAlign(TDC_FW_01, COLOR_EDGE_TH);
+    static UINT8 bPreMbVTh = 0;
+    UINT8 bMbVTh =0;
+    dwTdc3dColorEdgeSum = dwTdc3dColorEdgeSum>>8;
+    
+    if (bHwTvdMode()==SV_CS_PAL)
+    {
+        if (dwTdc3dColorEdgeSum < dwThresholdColorEdge)
+        {
+            bMbVTh = MIN(0x20,(dwThresholdColorEdge-dwTdc3dColorEdgeSum)>>6);
+            //vRegWriteFldAlign(COMB2D_00, MIN(0x20,(dwThresholdColorEdge-dwTdc3dColorEdgeSum)>>6),REG_HFY_MBVTH);
+        }
+        else 
+        {
+            bMbVTh = 0;
+            //vRegWriteFldAlign(COMB2D_00, 0,REG_HFY_MBVTH);
+        }
+
+        if ((RegReadFldAlign(STA_COMB_05, MOPIXCNTSTA)< 0x180)&&(bPreMbVTh < bMbVTh))
+        {
+            bPreMbVTh = bPreMbVTh+1;
+        }
+        else if(bPreMbVTh>0)
+        {
+            bPreMbVTh = bPreMbVTh - 1;
+        }
+        vRegWriteFldAlign(COMB2D_08, bPreMbVTh, REG_HFY_MBVTH);
+    }
+}
+void vTdcSharpness(void)
+{
+    if(_fgMovingCans == 1)
+    {
+       // vRegWriteFldAlign(COMB2D_07, 0x1, ENSHARP);        check register.
+      //  vIO32Write4B(COMB2D_08, 0x44446666); 
+    }
+    else
+    {
+       // vRegWriteFldAlign(COMB2D_07, 0x0, ENSHARP);        
+       // vIO32Write4B(COMB2D_08, 0x1234444); 
+    }
+}
+
+#endif
+
 

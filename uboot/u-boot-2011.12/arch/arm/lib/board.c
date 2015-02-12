@@ -408,8 +408,12 @@ extern int verify_apps(int boot_mode);
 	//if(key != 0x0d && key != 0x60) {
 
 #ifdef SIGN_USE_PARTIAL
+char *bootmode = getenv("bootmode");
+if(!strcmp(bootmode,"auto"))
+{
 		verify_apps(IS_SNAPSHOTBOOT);
 //		BOOTLOG("verify_apps();\n");
+}
 #endif
 
 #ifdef	CONFIG_HIBERNATION
