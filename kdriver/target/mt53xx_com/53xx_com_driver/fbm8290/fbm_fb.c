@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/12 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6465,7 +6465,7 @@ VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
     if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START],
                                  _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
     {
-         LOG(2,"FBM_FrameDisplayStart(%d,%d)\n",ucFbgId,ucFbId);
+         LOG(7,"FBM_FrameDisplayStart(%d,%d)\n",ucFbgId,ucFbId);
         ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
             _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
     }

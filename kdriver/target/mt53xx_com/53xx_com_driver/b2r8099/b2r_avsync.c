@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/12 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1962,7 +1962,6 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
               	    if(i4Delta>(-u4OutFrameStc))
               	    {
               	         FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-						 LOG(2,"avsync callback fbid=%d,i4Delta=%d,u4OutFrameStc%d\n",prFrcPrm->ucFbId,i4Delta,(-u4OutFrameStc));
               	    }
               	}
 				else
@@ -1970,7 +1969,6 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
 			          if(i4Delta<u4OutFrameStc)
 			          {
 			              FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-						   LOG(2,"avsync callback fbid=%d,i4Delta=%d,u4OutFrameStc%d\n",prFrcPrm->ucFbId,i4Delta,(-u4OutFrameStc));
 			          }
 			    }
 

@@ -2039,7 +2039,6 @@ BOOL _VPUSH_DmxMoveData(VOID* prdec, DMX_MM_DATA_T *prDmxMMData)
 
     // TODO: lock sema for multi-instance support
     _VPUSH_SetVideoFormat(prdec);
-    LOG(2, "Call _VPUSH_DmxMoveData\n");
     fgRet = DMX_MUL_MoveData(prVdec->u1DmxId, prDmxMMData);
 
     if (fgRet && prDmxMMData->u4FrameSize)
@@ -5740,7 +5739,7 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
             {
                 if (fgEsmQEmpty)
                 {
-                    LOG(0, "Auto flush dmx vfifo!\n");
+                    LOG(4, "Auto flush dmx vfifo!\n");
                     UNUSED(_VPUSH_GetMsgCountInQ(prVdec));
                     DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                     _VPUSH_FlushEsmQ(prVdec->ucVdecId);
