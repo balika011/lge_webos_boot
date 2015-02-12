@@ -1225,14 +1225,6 @@ void BootSplash(void)
 	if(toolOpt3.flags.bLocalDimming == 0)
 		printf("[%d]:Not support Local dimming \n",readMsTicks());
 
-	/* PWM	*/
-	// 60inch sharp module T2 spec max 20ms 이므로 delay 아래 조건에서 제외시킴 
-
-	curTime = readMsTicks();
-
-	DDI_PWM_Init(pnlpwm);
-	printf("[%d]:PWM1/2 ON \n", readMsTicks());
-
 	/* LVDS */
 	curTime = readMsTicks();
 
@@ -1268,6 +1260,12 @@ void BootSplash(void)
 	{
 		PmxDisplay(0x212121, toolOpt1.flags.nLVDSBit, Get_modelOpt(EPI_OPT_SEL), Get_modelOpt(FRC_OPT_SEL), OSA_MD_GetModuleInch(), Get_modelOpt(PANEL_TYPE_OPT_SEL), Get_modelOpt(PANEL_RES_OPT_SEL));
 	}
+
+	/* PWM	*/
+	// 60inch sharp module T2 spec max 20ms 이므로 delay 아래 조건에서 제외시킴 
+	DDI_PWM_Init(pnlpwm);
+	printf("[%d]:PWM1/2 ON \n", readMsTicks());
+
 	_gTimeLvdsOut = readMsTicks();
 #if 0
 	printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
