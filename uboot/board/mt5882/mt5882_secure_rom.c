@@ -1795,7 +1795,7 @@ int verify_apps(int boot_mode)
 	//Clear full verify flag on this point in resume mode
 	if (IsFullverify)
 	{
-		if ( verify_done == (VERIFY_APPS_DONE | VERIFY_TZFW_DONE) )
+		if ( verify_done == VERIFY_APPS_DONE )
 		{
 			printf("\033[0;31m Full Verify is all ok, Full Verify will be clear to partial \033[0m\n");
 			IsFullverify = 0;
