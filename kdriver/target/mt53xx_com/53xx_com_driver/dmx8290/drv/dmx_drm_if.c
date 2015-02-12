@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/12 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -293,11 +293,32 @@ BOOL DMX_Decrypt_Snapshot(UINT8 *u1HashValue_Encrypt, UINT32 u4HashValueSize, UI
 extern void readMMCblock(u32* buffer, u32 offset, u32 size);
 extern void writeMMCblock(u8* buffer, u32 offset, u32 size);
 #else
+#include "drvcust_if.h"
+
 void readMMCblock(UINT32* buffer, UINT32 offset, UINT32 size) {}
 void writeMMCblock(UINT8* buffer, UINT32 offset, UINT32 size) {}
-#endif
+INT32 GetPartIDByName(char *szPartName, UINT32  *pu4PartId)
+{
+    UINT32 u4PartId;
+    char *szName;
 
-int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
+    for (u4PartId = 0; u4PartId < 64; u4PartId++)
+    {
+        szName = (char *)DRVCUST_InitGet((QUERY_TYPE_T)(eNANDFlashPartName0 + u4PartId));
+        if (strcmp(szPartName, szName) == 0)
+        {
+            *pu4PartId = u4PartId;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+#endif
+extern int Loader_ReadMsdc(UINT32 u4PartId, UINT32 u4Offset, void *pvMemPtr, UINT32 u4MemLen);
+extern int Loader_WriteMsdc(UINT32 u4PartId, UINT32 u4Offset, void *pvMemPtr, UINT32 u4MemLen);
+
+int sign_snapshot( char* blkdev, int size, unsigned int snapoffset)
 {
     UINT8 u1HashValue[32], u1HashValueOut[32];
     UINT32 u4HashValueSize;
@@ -310,6 +331,12 @@ int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
     UINT32 u4MidEnd;
 
     UINT32 u4ImageSize;
+	UINT32	u4PartId;
+	if(GetPartIDByName(blkdev, &u4PartId)!=0)
+		{
+			LOG(0,"\n get partition id failed \n");
+			return 0;
+		}
 
     x_memset(u1HashValueOut, 0x0, 32);
     x_memset(u1AesKey, 0x0, 16);
@@ -324,7 +351,7 @@ int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
 
     // begin
     ASSERT((bufsize & (0x40-1)) == 0);
-    readMMCblock((UINT32*)buffer, u4Offset, bufsize);
+    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
     DMX_SHA1_Manytimes(TRUE, FALSE, (UINT32*)buffer, bufsize, u1HashValue , &u4HashValueSize);
     u4Offset += bufsize;
 
@@ -332,7 +359,7 @@ int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
     while (u4Offset < u4MidEnd)
     {
         ASSERT((bufsize & (0x40-1)) == 0);
-        readMMCblock((UINT32*)buffer, u4Offset, bufsize);
+		Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
         DMX_SHA1_Manytimes(FALSE, FALSE, (UINT32*)buffer, bufsize, u1HashValue , &u4HashValueSize);
         u4Offset += bufsize;
         LOG(0,".");
@@ -340,7 +367,7 @@ int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
 
     // end
     ASSERT((bufsize & (0x40-1)) == 0);
-    readMMCblock((UINT32*)buffer, u4Offset, bufsize);
+    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
     DMX_SHA1_Manytimes(FALSE, TRUE, (UINT32*)buffer, bufsize, u1HashValue , &u4HashValueSize);
     //u4Offset += bufsize;
 
@@ -374,7 +401,7 @@ int sign_snapshot(const char* blkdev, int size, unsigned int snapoffset)
     x_memcpy(buffer, u1AesKey, u4AesKeySize);
     x_memcpy(buffer+u4AesKeySize, u1HashValueOut, u4HashValueSize);
 
-    writeMMCblock(buffer, snapoffset, bufsize);
+    Loader_WriteMsdc(u4PartId,snapoffset,buffer,bufsize);
 
     x_mem_free(buffer);
 
