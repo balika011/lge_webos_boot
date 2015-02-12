@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/12 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3551,14 +3551,21 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         UPDATE_PRPOOL(FBM_POOL_TYPE_SCPOS_DYN_SUB, SCPOS);
     }
 
-    if (env->u1IsTDC[u4VdpId]
-		#ifdef CC_SUPPORT_PIPELINE
-		|| bTvd3dSignalStatus()
-		#endif
-		)
+#ifdef CC_SUPPORT_PIPELINE
+    if (env->u1IsTDC[u4VdpId]|| bTvd3dSignalStatus())
+    {
+        u4Width = 780;
+        u4Height = 578;
+        u4Mode = FBM_POOL_MODE_10BIT;
+        u4Size = FBM_TDC_POOL_SIZE;
+        UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
+    }
+#else
+    if (env->u1IsTDC[u4VdpId])
     {
         UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
     }
+#endif
 
     if ((env->u1mode[u4VdpId] == FBM_MODE_1080I) || (env->u1mode[u4VdpId] == FBM_MODE_576I))
     {   
@@ -3630,12 +3637,9 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         }
         
 #ifndef CC_SUPPORT_RECORD_AV
+#ifndef CC_SUPPORT_PIPELINE
         // tdc
-        if(env->u1IsTDC[u4VdpId]
-			#ifdef CC_SUPPORT_PIPELINE
-			|| bTvd3dSignalStatus()
-			#endif
-			)
+        if(env->u1IsTDC[u4VdpId])
         {
             u4Width = 780;
             u4Height = 578;
@@ -3643,6 +3647,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
             u4Size = FBM_TDC_POOL_SIZE;
             UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
         }
+#endif		
 #endif
     }
     else if (env->u1mode[u4VdpId] == FBM_MODE_1080P_422)
