@@ -104,7 +104,7 @@ _end_ofs:
 /* IRQ stack memory (calculated at run-time) */
 .globl IRQ_STACK_START
 IRQ_STACK_START:
-	.word	0x200000
+	.word	0x2d300000
 
 /* IRQ stack memory (calculated at run-time) */
 .globl FIQ_STACK_START
@@ -115,7 +115,7 @@ FIQ_STACK_START:
 /* IRQ stack memory (calculated at run-time) + 8 bytes */
 .globl IRQ_STACK_START_IN
 IRQ_STACK_START_IN:
-	.word	0x100000
+	.word	0x2d300008
 
 /*
  * the actual reset code
@@ -467,7 +467,14 @@ cpu_init_crit:
 	.endm
 
 	.macro get_irq_stack			@ setup IRQ stack
-	ldr	sp, IRQ_STACK_START
+	
+	  ldr   r0, IRQ_STACK_START
+    mrc   p15, 0, r1, c0, c0, 5  
+    and   r1, r1, #0x03                                 /*r1 = cpu id*/
+    ldr   r2, =0x4000     /*STACK size*/
+    mul   r3,r1,r2                                  
+    sub   r0,r3
+    mov   sp, r0    /*r0 = stack pointer*/
 	.endm
 
 	.macro get_fiq_stack			@ setup FIQ stack
