@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/13 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #33 $
+ * $Revision: #34 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1571,10 +1571,12 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 		_fVSCConnectAVDSubDEC= SV_VD_TVD3D;
        
     }
-	LOG(0, "11111bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
+	LOG(0, "bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
      _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
     if(fgMainCh)
     {
+        vDrvCvbsVfePD();  //for scart out issue
+        vDrvAvMux(0);
         vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
     }
 

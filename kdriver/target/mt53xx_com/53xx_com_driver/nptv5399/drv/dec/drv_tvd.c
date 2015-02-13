@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #19 $
+* $Revision: #20 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -237,7 +237,7 @@
 #define TVD_VMASK_HEAD_SHAKING  1
 #define TVD_SMALL_HWIDTH_SHAKING 1
 #ifdef CC_LGE_PROTO_PCBA
-#define TVD_CTRL_STABLE_MCNT 0// modechange  time to 6vsync
+#define TVD_CTRL_STABLE_MCNT 1// modechange  time to 6vsync
 #else
 #define TVD_CTRL_STABLE_MCNT 1
 #endif
