@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #18 $
+* $Revision: #19 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8594,7 +8594,7 @@ void vDrvTvd3dSetColorSystem(UINT8 bColSys)
  */
 UINT8 bTvd3dGetColorSystem(void)
 {
-     LOG(3,"ljg--> TVD vcr =%d,comb = %d\n",fgHwTvdVCR(),fgHwCombVCR());
+     //LOG(3,"ljg--> TVD vcr =%d,comb = %d\n",fgHwTvdVCR(),fgHwCombVCR());
     //if((fgIsMainTvd3d()||fgIsPipTvd3d()) && _rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE&&!fgHwTvdVCR()&&!fgHwCombVCR())
     //static UINT8 _bHWColorsystem;
    // static UINT8 _bColorburstLock;
