@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/13 $
  * $RCSfile: $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 //-----------------------------------------------------------------------------
@@ -607,6 +607,7 @@ static void _PCMCIA_OverCurrentMonitorThreadMain(void * pvArg)
 
 static void _PCMCIA_StartOverCurrentMonitorThread(void)
 {
+#if 0	
     UINT32 u4OCGpio;
     
     if ( DRVCUST_OptQuery(eCI5VOcGpio, &u4OCGpio) == 0 )
@@ -624,6 +625,7 @@ static void _PCMCIA_StartOverCurrentMonitorThread(void)
             fgPcmciaOverCurrentMonitorThreadStarted = TRUE;
         }
     }
+#endif
 }
 
 static void _PCMCIA_Delay(void * pvArg)
