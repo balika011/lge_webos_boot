@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/13 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1205,7 +1205,7 @@ void LG_pipLineScartConnect(UCHAR ucVdpId,UCHAR ucEsId)
     UCHAR ucOrgVdpId;
     B2R_HAL_OMUX_T tOmux = {0};
 	B2R_OBJECT_T *this;
-    UCHAR i;//for test
+    //UCHAR i;//for test
     UCHAR ucB2rId;
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
 	{
