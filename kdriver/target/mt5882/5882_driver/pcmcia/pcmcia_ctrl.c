@@ -76,7 +76,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/13 $
  * $RCSfile: $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
 
 //-----------------------------------------------------------------------------
@@ -283,11 +283,13 @@ extern GPIO_TYPE            ar8295_GpioType[TOTAL_8295_GPIO_NUM];
 static HANDLE_T sema_ExternalIcIntrq = (HANDLE_T)NULL;
 static HANDLE_T hCmdDoneSema = (HANDLE_T)NULL;
 static HANDLE_T hExternalIcIntrqThread;
-static HANDLE_T hPcmciaOcThread;
 static BOOL     fgCamPwrManualControl = FALSE;
 static BOOL     fgThreadNoAssert = FALSE;
-static BOOL     fgExternalIcThreadStarted = FALSE;
+static BOOL     fgExternalIcThreadStarted = false;
+#if 0
+static HANDLE_T hPcmciaOcThread;
 static BOOL     fgPcmciaOverCurrentMonitorThreadStarted = FALSE;
+#endif
 static BOOL     fgPcmciaInit = FALSE;
 static BOOL     fgExternalIcIntrqThreadKeepRunning = FALSE;
 static BOOL     fgExternalIcIntrqThreadTerminated = TRUE;
@@ -547,6 +549,7 @@ static void _PCMCIA_OnOffCamStream(BOOL fgOn)
     }
 }
 
+#if 0
 static void _PCMCIA_OverCurrentMonitorThreadMain(void * pvArg)
 {
     UINT32 u4OCGpio;
@@ -604,6 +607,7 @@ static void _PCMCIA_OverCurrentMonitorThreadMain(void * pvArg)
         }
     }
 }
+#endif
 
 static void _PCMCIA_StartOverCurrentMonitorThread(void)
 {
