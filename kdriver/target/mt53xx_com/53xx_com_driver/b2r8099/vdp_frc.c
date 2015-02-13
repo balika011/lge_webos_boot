@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/11 $
+ * $Date: 2015/02/13 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6758,7 +6758,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
 
                           if(bApiQuearyScartOutStatus())
                          {
-                              LG_PipLineVdpConnect(VDP_2,prVdpConf->ucInputPort[0]);
+                              LG_pipLineScartConnect(VDP_2,prVdpConf->ucInputPort[0]);
                          }
 
 						   for(i=0;i<VDP_NS;i++)

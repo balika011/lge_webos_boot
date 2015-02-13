@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/13 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1200,6 +1200,42 @@ VOID _B2R_ProcDPs(B2R_OBJECT_T *this, VDP_CFG_T* ptDP)
  * @return void
  */
 #ifdef CC_SUPPORT_PIPELINE
+void LG_pipLineScartConnect(UCHAR ucVdpId,UCHAR ucEsId)
+{
+    UCHAR ucOrgVdpId;
+    B2R_HAL_OMUX_T tOmux = {0};
+	B2R_OBJECT_T *this;
+    UCHAR i;//for test
+    UCHAR ucB2rId;
+	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
+	{
+       x_memset(&_arVdpPipLineCfg,0x0,sizeof(_arVdpPipLineCfg));
+	   x_memcpy(&_arVdpPipLineCfg,B2R_GetVdpConf(ucOrgVdpId),sizeof(_arVdpPipLineCfg));
+	   _arVdpPipLineCfg.ucVdpId=ucVdpId;
+	   if(B2R_GetVdpConf(ucVdpId) == NULL)
+	   	{
+	   	  LOG(0,"LG_PipLineVdpConnect failed 1\n");
+	   	  return;
+	   	}
+	   x_memcpy(B2R_GetVdpConf(ucVdpId),&_arVdpPipLineCfg,sizeof(_arVdpPipLineCfg));
+	   tOmux.ucPath = ucVdpId;
+	   tOmux.fgScartOut =FALSE;
+	   ucB2rId=VDP_Vdp2B2rId(ucOrgVdpId);
+	  
+	 
+	   this = _B2R_GetObj(ucOrgVdpId);
+	   LOG(0,"Scart out VdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d,ucB2rId=%d\n",ucVdpId,ucEsId,ucOrgVdpId,ucB2rId);
+	    if(this==NULL)
+	   {
+	       LOG(0,"LG_PipLineVdpConnect failed 2\n");
+	   	   return;
+	   }
+	   B2R_HAL_Set(this->hB2r, B2R_HAL_OMUX, &tOmux);
+	   fgVdpModeChg[ucB2rId]= TRUE;
+	   vMpegModeChg(ucVdpId);
+       vMpegModeDetDone(ucVdpId);
+   }
+}
 
 void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 {
@@ -1211,7 +1247,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 
 	
 	ucOrgVdpId=VDP_Es2Vdp(ucEsId);
-    if(ucEsId != 0xff)    
+    if((ucEsId != 0xff)&&(_prVdpCfg[ucVdpId]->ucInputPort[0]==6))    
 	{        
 		UCHAR ucFbgId;       
 		ucFbgId=FBM_GetFbgByEs(ucEsId);    
