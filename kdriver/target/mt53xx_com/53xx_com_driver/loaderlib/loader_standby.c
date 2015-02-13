@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/13 $
  * $RCSfile: loader_standby.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2428,7 +2428,22 @@ static INT32 VLDJPG_InitScan(void)
 // start hardware decoder, init data structure (allocate vld0)
 static INT32 VLDJPG_New(const JPEGHANDLE hInstance)
 {
-    IO_WRITE32(CKGEN_BASE, JPG_CLKGEN_OFFSET, 2);
+	UINT32 u4SysClock=2;
+
+	#if defined(CC_MT5882)    
+    u4SysClock = 7; // 288
+    #elif defined(CC_MT5890)
+    if(IS_IC_5861())
+    {        
+        u4SysClock = 7; // 288 gazelle
+    }
+    else
+    {
+        u4SysClock = 2; //216 oryx
+    }
+	#endif
+	
+    IO_WRITE32(CKGEN_BASE, JPG_CLKGEN_OFFSET, u4SysClock);
 
     VLDJPG_SetPowerOn();
     VERIFY(VLDJPG_SoftwareReset() == (INT32)E_HWJPG_OK);
@@ -4475,8 +4490,20 @@ void vImgResz(void * pvSclParam)
 {
     UINT32 qw;
     UINT32 u4Value;
+    UINT32  u4ImgRzClk = 7;
     RZ_JPG_SCL_PARAM_SET_T* prJpgParam = (RZ_JPG_SCL_PARAM_SET_T*)pvSclParam ;
-    IO_WRITE32(CKGEN_BASE, IMGRZ_CLKGEN_OFFSET, 7);
+	#if defined(CC_MT5399)
+	if (BSP_GetIcVersion() == IC_VER_5399_AB) // 5399 ES2
+	{		
+        u4ImgRzClk = 12; // 400MHZ
+	}
+	#elif defined(CC_MT5882)
+    u4ImgRzClk = 12;
+	#elif defined(CC_MT5890)
+    u4ImgRzClk = 3; //480MHZ
+	#endif        
+
+	IO_WRITE32(CKGEN_BASE, IMGRZ_CLKGEN_OFFSET, u4ImgRzClk);
 
     u4Value = RISCRead(IMG_RESZ_BASE + IMG_RESZ_START*4);
     u4Value = (u4Value & (~(0x3<<2)));
