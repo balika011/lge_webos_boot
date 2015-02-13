@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/02/13 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -2162,6 +2162,10 @@ static void _vDrvDIFavorCS(void)
         u1sawtoothst_update = u4Cost;
     }
 
+	if(_fgCornPattern)
+	{
+		u1sawtoothst_update = 0x5;
+	}
     if (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_EN))
     {
         MDDI_WRITE_FLD(VDP_1, MCVP_FUSION_04, MIN(8-DiPar.CsPar.bFavorCS,u4sawtooth_mc), IF_W_SAWTOOTH_MC);
