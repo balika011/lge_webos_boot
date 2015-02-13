@@ -38,8 +38,11 @@
 #endif
 
 #ifdef CC_A1_SECURE_BOOT
-#define CC_USE_SHA1
-#define CC_USE_HW_SHA1
+//#define CC_USE_SHA1
+//#define CC_USE_HW_SHA1
+#define CC_USE_SHA256
+#define CC_USE_HW_SHA256
+
 
 #include <partinfo.h>
 #include "lg_modeldef.h"
@@ -409,6 +412,61 @@ void X_CalculateMD5(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 u4Size)
 //-----------------------------------------------------------------------------
 // Static variables
 //-----------------------------------------------------------------------------
+int X_CalculateSHA256(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 u4Size)
+{
+    int err;
+    
+#ifdef CC_USE_HW_SHA256
+    MD_PARAM_T rParam;
+    UINT32 u4BufStart;
+
+    GCPU_Init(0);
+
+    if((StartAddr == 0) || (u4Size == 0))
+    {
+        return -1;
+    }
+
+    if(((StartAddr & 0xf0) >> 4) % 4 != 0)
+{
+        return -1;
+    }
+
+    rParam.u4SrcStartAddr = (UINT32)StartAddr;
+    rParam.u4SrcBufStart = GCPU_LINER_BUFFER_START(StartAddr);
+    rParam.u4SrcBufEnd = GCPU_LINER_BUFFER_END(StartAddr + u4Size);
+    rParam.u4DatLen = u4Size;
+    rParam.fgFirstPacket = TRUE;
+    rParam.fgLastPacket = TRUE;
+    rParam.u8BitCnt = 0;
+
+    err = GCPU_Cmd(0, GCPU_SHA_256, &rParam);
+    
+    memcpy(pu1MessageDigest, rParam.au1Hash, 32);
+#else
+    SHA1Context sha;
+
+    err = SHA1Reset(&sha);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Reset Error.\n");
+    }
+
+    err = SHA1Input(&sha, (const unsigned char *)StartAddr, u4Size);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Input Error.\n");
+    }
+
+    err = SHA1Result(&sha, pu1MessageDigest);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Result Error.\n");
+    }
+#endif
+
+    return err;
+}
 
 #if defined(CC_USE_SHA1)
 
@@ -839,6 +897,7 @@ int X_CalculateSHA1(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 u4Size)
 }
 #endif  // CC_USE_SHA1
 
+
 #if defined(CC_USE_CHKSUM)
 int x_chksum(UINT8 *pu1MessageDigest, UINT32 u4StartAddr, UINT32 u4Size)
 {
@@ -907,22 +966,10 @@ void ExtractPKCSblock(UINT32 au4CheckSum[], UINT8 au1ExtractMsg[])
 
     memset(au1Block, 0, 256);
     DataSwap((UINT32 *)au1Block, au4CheckSum, 64, 3);
-    if (au1Block[0] == 0x00 || au1Block[1] == 0x02)
+    if (au1Block[0] == 0x02 && au1Block[1] == 0x00)
     {
-    	for (i = 2; i < 256; i++)
-    	{	/* Look for zero separating byte */
-    		if (au1Block[i] == 0x00)
-    			break;
-    	}
-
-    	if (((i+1+SHA_1_ALGORITHM_ID_SIZE) >= 256) || ((256-i-1-SHA_1_ALGORITHM_ID_SIZE) > SHA1HashSize))
-    	{
-    		printf("ERROR: failed to find message in decrypted block %d.\n", i);
-    	}
-    	else
-    	{
-    		memcpy(au1ExtractMsg, &au1Block[i+1+SHA_1_ALGORITHM_ID_SIZE], 256 - i - 1 - SHA_1_ALGORITHM_ID_SIZE);
-    	}
+		memcpy(au1ExtractMsg, &au1Block[256-32], 32);
+	//	dumpBinary(au1Block,64,"au1Block ");
     }
     else
     {
@@ -1003,8 +1050,11 @@ void sig_authetication(UINT32 u4StartAddr, UINT32 u4Size, UINT32 *pu4Signature, 
         X_CalculateSHA1(au1MessageDigest, u4StartAddr, u4Size);
 #elif defined(CC_USE_MD5)
         X_CalculateMD5(au1MessageDigest, u4StartAddr, u4Size);
+#elif defined(CC_USE_SHA256)
+	X_CalculateSHA256(au1MessageDigest, u4StartAddr, u4Size);
 #else
         x_chksum(au1MessageDigest, u4StartAddr, u4Size);
+
 #endif
 
         if (memcmp(au1ExtractMsg, au1MessageDigest, SHA1HashSize) != 0)
@@ -1170,8 +1220,8 @@ static int getFlashPartFileSize(const char* szPartName, unsigned int* pu4Size)
 
 int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char *pu1EncryptedSignature)
 {
-    BYTE au1ExtractMsg[SHA1HashSize];
-    BYTE au1MessageDigest[SHA1HashSize];
+    BYTE au1ExtractMsg[32];
+    BYTE au1MessageDigest[32];
     LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 #ifdef 	SECURE_DEBUG
 
@@ -1240,8 +1290,11 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
 
 #if defined(CC_USE_SHA1)
         X_CalculateSHA1(au1MessageDigest, u4StartAddr, u4Size);
+#elif defined(CC_USE_SHA256)
+        X_CalculateSHA256(au1MessageDigest, u4StartAddr, u4Size);
 #elif defined(CC_USE_MD5)
         X_CalculateMD5(au1MessageDigest, u4StartAddr, u4Size);
+
 #else
         x_chksum(au1MessageDigest, u4StartAddr, u4Size);
 #endif
@@ -1279,12 +1332,15 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
     unsigned char au1Frag[8];
 
 	printf("full verify ~~ \n");
+	
     // 0. check if partition exist
     if (getFlashPartFileSize(szPartName, &image_size) != 0)
     {
         printf("partition name doesn't exist\n");
         return -1;
     }
+	printf("pname = %s \n", szPartName);
+	printf("image_size = 0x%x \n", image_size);
 
     if (preloaded)
     {
@@ -1312,7 +1368,7 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 		printf("header.frag_size  = %d\n", header.frag_size);
 
 	u4FragNum = header.frag_num;
-	u4FragSize = header.frag_size;
+	u4FragSize = header.frag_size ;
 
     // 2. get encrypted signature
      memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);

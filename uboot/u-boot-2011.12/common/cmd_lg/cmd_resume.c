@@ -164,9 +164,43 @@ void (*kernel_resume_func)(void);
 static char *decomp_buf;
 static struct pfn_merge_info *pfn_merge_info;
 static unsigned int processed_pfn_mi_index;
+extern int  X_CalculateSHA256(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 u4Size);
+BOOL UbootAesEncrypt(UINT32 u4InBufStart, UINT32 u4OutBufStart, UINT32 u4BufSize)
+{
+	static char key[16];
+memset(key,0x11,16);
+	GCPU_LoaderInit(0);
+	_GCPU_SetAesKey(key, 128, key);
+	GCPU_AesDecrypt(u4InBufStart,u4OutBufStart,u4BufSize);
+	
+
+}
+
+int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,unsigned int size)
+{
+    BYTE au1ExtractMsg[32];
+    BYTE au1MessageDigest[32];
+
+	X_CalculateSHA256(au1MessageDigest,sign_area,size);
+	UbootAesEncrypt(signature,signature,32);
+	
+	if (memcmp(au1MessageDigest, signature, 32) != 0)
+	{
+		printf("signature check fail!\n");
+	   // writeFullVerifyOTP();
+	
+	   // while(1);
+		return -1;
+	}
+	else
+	{
+		printf("SOK\n");
+		return 0;
+	}
+	
+}
 
 #ifdef CONFIG_SECURITY_BOOT
-
 int verify_snapshot_image(struct snapshot_header *header)
 {
 	int index = 0;

@@ -4,7 +4,7 @@
  * MT53xx Secure Boot driver
  *
  * Copyright (c) 2008-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -71,7 +71,7 @@ enum
 #define MTK_PUBLIC_KEY   (UINT32 *)(ROM_CODE_BASE + 0x3c00 + ((BIM_READ32(REG_SDATA1)>>17)& 0x3) * 256) //15KB + i * 256
 
 #define MAX_BUF_COUNT       0x100
-#define SHA1HashSize        20
+#define SHA1HashSize        32
 #define MD5_HASH_SIZE       16
 
 /*
