@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/13 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #32 $
+ * $Revision: #33 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -845,6 +845,11 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 	
 	if(fgMainCh)
 	{
+	    if((bNewMainDec != SV_VD_DVI)&&(bNewMainDec != SV_VD_NA))
+	    {
+           vDviConnect(SV_VP_MAIN, 0);
+		   LOG(2,"Vdo main call Disconnect DVI\n");
+		}
 		if(bNewMainDec == SV_VD_MPEGHD)
 		{
 			LG_PipLineVdpConnect(SV_VP_MAIN,u1SrcIdx);
@@ -855,7 +860,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 			vSetMOutMux(bNewMainDec);
 			LOG(2, "Main VSC Set Omux %d\n",bNewMainDec);
 		}
-		
 		_rMChannel.bDecType = bNewMainDec;
 		_bMainState = VDO_STATE_IDLE; /* mode change state machine */
 		vSetMainFlg(MAIN_FLG_MODE_CHG);
@@ -866,6 +870,11 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 
 	if(fgPipCh)
 	{
+	    if((bNewSubDec != SV_VD_DVI)&&(bNewSubDec != SV_VD_NA))
+	    {
+           vDviConnect(SV_VP_PIP, 0);
+		   LOG(2,"Vdo sub call Disconnect DVI\n");
+		}
 		if(bNewSubDec == SV_VD_MPEGHD)
 		{
 			LG_PipLineVdpConnect(SV_VP_PIP,u1SrcIdx);
