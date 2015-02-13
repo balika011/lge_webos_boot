@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/13 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2811,6 +2811,7 @@ UINT32 FBM_GetNextDispQPts(UCHAR ucFbgId)
         if (ucLastQ >= FBM_MAX_FB_NS_PER_GROUP)
         {
             LOG(0,"LastQ(%d)\n",ucLastQ);
+            FBM_MUTEX_UNLOCK(ucFbgId);
             ASSERT_FBM(ucLastQ < FBM_MAX_FB_NS_PER_GROUP);
             return 0;
         }
@@ -2891,6 +2892,7 @@ UCHAR FBM_CalFrmRate(UCHAR ucFbgId)
         if (ucLastQ >= FBM_MAX_FB_NS_PER_GROUP)
         {
             LOG(0,"LastQ %d\n",ucLastQ);
+            FBM_MUTEX_UNLOCK(ucFbgId);
             ASSERT_FBM(ucLastQ < FBM_MAX_FB_NS_PER_GROUP);
             return 0;
         }
@@ -3614,6 +3616,7 @@ UCHAR FBM_GetEmptyRefFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay)
         {
             if ((VERIFY_FBG(ucFbgId)) || (VERIFY_FB(ucFbgId, ucFbId)))
             {
+                FBM_MUTEX_UNLOCK(ucFbgId);
                 return FBM_FB_ID_UNKNOWN;
             }
             else

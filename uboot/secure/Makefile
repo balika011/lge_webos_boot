@@ -98,8 +98,8 @@ CC= gcc
 
 
 
-SIGGEN_KEY := $(shell if [ -e $(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key -a -e $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key ]; then echo "$(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key"; else echo "";fi)
-AES_KEY2 := $(SIGN_TOOL_DIR)/aes_key_set2\
+SIGGEN_KEY ?= $(shell if [ -e $(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key -a -e $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key ]; then echo "$(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key"; else echo "";fi)
+AES_KEY2 ?= $(SIGN_TOOL_DIR)/aes_key_set2\
 #$(warning SIGN_TOOL_DIR = $(SIGN_TOOL_DIR))
 #$(error SIGGEN_KEY = $(SIGGEN_KEY))
 T_MTK = $(SIGN_TOOL_DIR)/sign
@@ -129,7 +129,8 @@ package: preprocess packimg siggen
 	chmod +x ./lzhsenc
 #	chmod +x ./t_mtk
 #	chmod +x ./siggen
-ifneq "$(LG_SIGN_FLOW)" "true"
+	chmod +x $(SIGN_TOOL)  
+ifneq "$(CTRIX_ENV)" "true"
 	chmod +x $(T_MTK)
 endif
 	rm -f 14KB_preloader.bin Customer_Key_Encrypt_Data Customer_Key_Signature SHA1_Signature

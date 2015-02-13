@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/13 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2862,10 +2862,6 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
 #ifdef CC_B2R_RES_SUPPORT
     FBM_B2rResIdRelease(ucFbgId);
 #endif
-#ifdef CC_SUPPORT_PIPELINE
-
-    LG_PipLineDisconnect(VDP_1);
-#endif
     // [LOG] FBM Release
     SYSLOG(FBM_PREFIX + 98, ucFbgId, _arFbg[ucFbgId].ucFbgType, 0);
 
@@ -2979,6 +2975,10 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
     VDEC_FbgReleaseHdlr(_arFbg[ucFbgId].u1DecoderSrcId);
 #else
     VDEC_FbgReleaseHdlr();
+#endif
+
+#ifdef CC_SUPPORT_PIPELINE
+    LG_PipLineDisconnect(VDP_1);
 #endif
     _arFbg[ucFbgId].u1DecoderSrcId=0xff;
 }

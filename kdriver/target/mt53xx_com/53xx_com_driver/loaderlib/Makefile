@@ -165,7 +165,11 @@ endif
 
 OPTIONAL_SUB_COMPONENTS =
 
-DEFINES +=
+ifeq ($(BUILD_STATUS),devel)
+DEFINES += -DDEVEL
+else
+DEFINES += -DPRODUCTION
+endif
 
 CC_INC += 
 

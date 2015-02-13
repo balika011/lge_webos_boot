@@ -1692,9 +1692,9 @@ typedef struct
 /* Only For Test in Citrix */
 static verify_list_t verify_list[] =
 {
-		{"rootfs", BOOT_COLD},
-//	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
-//	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
+	{"rootfs", BOOT_COLD},
+	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
+	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
 	{"tvservice",	BOOT_COLD | BOOT_SNAPSHOT},
 	{"otncabi",		BOOT_COLD},
 	{"otycabi",		BOOT_COLD},

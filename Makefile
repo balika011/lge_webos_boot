@@ -29,7 +29,8 @@ export LG_SIGN_FLOW := false
 export L_DUAL_BOOT := true
 export UBOOT_HACK := true
 export LG_WEBOS_BUILD := true
-
+export BUILD_STATUS ?= devel
+export CTRIX_ENV ?= false
 export SHRINK_MTK_LOADER_SIZE := true 
 
 ifndef BUILD_CFG
@@ -132,8 +133,10 @@ SDE_BIN=/opt/toolchains/sde5/bin/SDE_BIN_NOT_DEFNIE
 
 SIGN_TOOL_DIR?=${SIGN_DIR}/tool
 MTK_SIGN_TOOL_DIR=${MTK_SIGN_DIR}/tool
+SIGN_TOOL ?=$(SIGN_TOOL_DIR)/sign_tool
 SIGN_KEY_DIR?=${SIGN_DIR}/key
 MTK_SIGN_KEY_DIR=${MTK_SIGN_DIR}/key
+SIGGEN_KEY ?= $(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key  $(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key
 SIGN_USE_PARTIAL=YES
 
 
@@ -154,8 +157,8 @@ export DEST_OS TARGET TARGET_CPU TARGET_TOOL CROSS_COMPILE
 export TOOL_DIR TOOL_BIN TOOL_LIB IMG_TOOL_BIN TOOL_CHAIN_ROOT SDE_BIN DIST_REV_NO
 export PROJECT_NAME PLATFORM_CHIP PLATFORM_CHIP_REV PLATFORM_NAME PLATFORM PLATFORM_ALLOW
 export TOOL_CHAIN USE_EMMC USE_EMMC_HYNIX USE_EMMC_4GB USE_KERNEL_V3
-export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR  SIGN_DIST SIGN_USE_PARTIAL
-export MTK_SIGN_DIR MTK_SIGN_TOOL_DIR MTK_SIGN_KEY_DIR
+export SIGN_DIR SIGN_TOOL_DIR SIGN_KEY_DIR  SIGN_DIST SIGN_SCRIPT SIGN_USE_PARTIAL
+export MTK_SIGN_DIR MTK_SIGN_TOOL_DIR MTK_SIGN_KEY_DIR SIGN_TOOL
 
 ##############end purplearrow add
 #==============================================================================
@@ -276,7 +279,8 @@ else
 endif
 	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/secureboot.pak $(BOOT_ROOT)/$(SOC_UBOOT)/mtkloader.bin	\
 				secureboot $(MODEL_NAME) $(BUILD_VERS) $(COMPILE_DATE) 0x0 RELEASE
-	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/tzfw.pak $(BOOT_RESULT_DIR)/tzfw.bin	\
+	$(SIGN_TOOL)	$(BOOT_RESULT_DIR)/tzfw.bin $(BOOT_RESULT_DIR)/tzfw.bin_signed 1 131072 32 $(SIGGEN_KEY)
+	$(MK_EPAK) -c $(BOOT_RESULT_DIR)/tzfw.pak $(BOOT_RESULT_DIR)/tzfw.bin_signed	\
 				tzfw $(MODEL_NAME) $(BUILD_VERS) $(COMPILE_DATE) 0x0 RELEASE
 
 re:

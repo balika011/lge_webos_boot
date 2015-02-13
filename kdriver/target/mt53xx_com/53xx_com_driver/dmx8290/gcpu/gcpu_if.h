@@ -33,10 +33,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/13 $
  * $RCSfile: dmx_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -755,6 +755,11 @@ EXTERN INT32 GCPU_ClostHandle(UINT32 u4Handle);
 EXTERN BOOL GCPU_SHA256_Init(UINT32 u4Handle, BOOL fgIOMMU);
 EXTERN BOOL GCPU_SHA256_Update(UINT32 u4Handle, UINT8 *pu1Buf, UINT32 u4Size, BOOL fgLastPacket);
 EXTERN BOOL GCPU_SHA256_Final(UINT32 u4Handle, UINT8 au1Digest[32]);
+EXTERN BOOL GCPU_AES_CBC(const UINT8 *pu1Key, UINT32 u4Keylen, 
+                         const UINT8 *pu1Iv, UINT8 *pu1RetIv,
+                         const UINT8 *pu1Src, UINT8 *pu1Dst, UINT32 u4Len,
+                         BOOL fgEncrypt);
+
 
 #if defined(CC_SUPPORT_STR) && !defined(CC_UBOOT) && !defined(CC_MTK_LOADER)
 EXTERN void GCPU_pm_str_suspend(void);

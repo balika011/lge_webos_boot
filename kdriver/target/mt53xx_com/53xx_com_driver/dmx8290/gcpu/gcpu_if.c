@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/13 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -411,6 +411,68 @@ BOOL GCPU_SHA256_Final(UINT32 u4Handle, UINT8 au1Digest[32])
     _ApiLock();
     fgRet = _GCPU_SHA256_Final(u4Handle, au1Digest);
     _ApiUnlock();
+
+    return fgRet;
+}
+
+BOOL GCPU_AES_CBC(const UINT8 *pu1Key, UINT32 u4Keylen, 
+                  const UINT8 *pu1Iv, UINT8 *pu1RetIv,
+                  const UINT8 *pu1Src, UINT8 *pu1Dst, UINT32 u4Len,
+                  BOOL fgEncrypt)
+{
+    AES_PARAM_T rAes = {0};
+    KEY_BIT_LEN eKeyLen;
+    BOOL fgRet = TRUE;
+    UINT8 i;
+
+    if (!pu1Key || !pu1Iv || !pu1RetIv || !pu1Src || !pu1Dst)
+    {
+        return FALSE;
+    }
+
+    switch (u4Keylen)
+    {
+    case 16:
+        eKeyLen = KEY_BIT_LEN_128;
+        break;
+    case 24:
+        eKeyLen = KEY_BIT_LEN_192;
+        break;
+    case 32:
+        eKeyLen = KEY_BIT_LEN_256;
+        break;
+    default:
+        return FALSE;
+    }
+
+    memcpy(rAes.au1Key, pu1Key, u4Keylen);
+    memcpy(rAes.au1Iv, pu1Iv, 16);
+
+    rAes.u4SrcStartAddr = (UINT32)pu1Src;
+    rAes.u4SrcBufStart = GCPU_LINER_BUFFER_START((UINT32)pu1Src);
+    rAes.u4SrcBufEnd = GCPU_LINER_BUFFER_END((UINT32)pu1Src + u4Len);
+    rAes.u4DstStartAddr = (UINT32)pu1Dst;
+    rAes.u4DstBufStart = GCPU_LINER_BUFFER_START((UINT32)pu1Dst);
+    rAes.u4DstBufEnd = GCPU_LINER_BUFFER_END((UINT32)pu1Dst + u4Len);
+    rAes.u4DatLen = u4Len;
+    rAes.eKeyBitLen = eKeyLen;
+    rAes.eMode = BLOCK_CIPHER_MODE_CBC;
+    rAes.fgEncrypt = fgEncrypt;
+
+    if (S_GCPU_OK != GCPU_CmdEx(0, GCPU_AES, &rAes, TRUE))
+    {
+        fgRet = FALSE;
+    }
+    else
+    {
+        if (pu1RetIv)
+        {
+            for(i = 0; i < 16; i++)
+            {
+                pu1RetIv[i] = rAes.au1Iv[i];
+            }
+        }
+    }
 
     return fgRet;
 }
