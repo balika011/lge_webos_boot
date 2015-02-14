@@ -273,7 +273,7 @@ static int emmc_user_callback(int err, int bytes)
 {
 	g_read_bytes += bytes;
 	
-	tlog("g_read_bytes = %d\n",g_read_bytes);
+	//tlog("g_read_bytes = %d\n",g_read_bytes);
 }
 static int read_emmc(void *arg)
 {
@@ -284,7 +284,7 @@ static int read_emmc(void *arg)
 	a.image_size = p->image_size;
 
 	emmc_register_callback(emmc_user_callback);
-	tlog("\n eMMC  : a.offse=%u, a.image_size%u\n",argT.offset,argT.image_size);
+	//tlog("\n eMMC  : a.offse=%u, a.image_size%u\n",argT.offset,argT.image_size);
 
 	g_read_bytes = 0;
 	start_time = (u32)arch_counter_get_ms();

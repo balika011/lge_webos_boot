@@ -8,6 +8,7 @@ typedef struct
 	volatile u32 lock;
 } spin_lock_t;
 
+extern int all_cpu_up;
 #define UNLOCK 0
 #define LOCK 1
 
@@ -116,17 +117,20 @@ static inline void spin_lock_init(spin_lock_t *lock)
 
 static inline void spin_lock(spin_lock_t *lock)
 {
-	arch_spin_lock((void*)&lock->lock);
+	if( all_cpu_up )
+		arch_spin_lock((void*)&lock->lock);
 }
 
 static inline int spin_trylock(spin_lock_t *lock)
 {
+	if( !all_cpu_up ) return 0;
 	return arch_try_lock((void*)&lock->lock);
 }
 
 static inline void spin_unlock(spin_lock_t *lock)
 {
-	arch_spin_unlock((void*)&lock->lock);
+	if( all_cpu_up )
+		arch_spin_unlock((void*)&lock->lock);
 }
 
 #define spin_lock_irq(lock)		do{ irq_disable(); spin_lock(lock); } while(0)

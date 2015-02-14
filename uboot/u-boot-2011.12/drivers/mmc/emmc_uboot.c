@@ -11,6 +11,7 @@
 #include <malloc.h>
 
 #include "mmc.h"
+#include "../../smp/include/spinlock.h"
 //#include <config.h>
 //#include "configs/mt5396.h"
 
@@ -441,6 +442,7 @@ U_BOOT_CMD(
 #endif
 
 static uint8_t *emmc_buf = (uint8_t *)0x2000000;
+static spin_lock_t g_read_lock = INIT_SPIN_LOCK;
 
 int emmc_init(void)
 {
@@ -472,10 +474,13 @@ int emmc_read(unsigned long ofs, size_t len, u_char *buf)
 	int	devnum = CONFIG_SYS_MMC_ENV_DEV;
 	unsigned long n;
 	struct mmc *mmc = find_mmc_device(devnum);
+	unsigned int flags;
 
 	mmc_init(mmc);
 
+	spin_lock_save(&g_read_lock, flags);
 	n = mmc->block_dev.byte_read(devnum, ofs, len, (void *)buf);
+	spin_unlock_restore(&g_read_lock, flags);
 
 	/* FIXME, flush cache after read */
 	flush_cache((ulong)buf, len); /* FIXME */

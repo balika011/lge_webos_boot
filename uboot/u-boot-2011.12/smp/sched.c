@@ -14,6 +14,7 @@
 spin_lock_t init_done[NR_CPUS] ;
 spin_lock_t init_idle[NR_CPUS] ;
 spin_lock_t  smp_cpu_released[NR_CPUS];
+int all_cpu_up = 0;
 
 static unsigned int oneshot_timer_id[NR_CPUS];
 cond_t g_sub_cond[NR_CPUS];
@@ -604,6 +605,10 @@ thread_t *thread_init_per_cpu(void)
 	dbg_print("LG thread per cpu init done,current cpu=%d\n",cpu_id);
 
 	init_done[cpu_id].lock= 1;
+	if( init_done[1].lock==1 && init_done[2].lock==1 && init_done[3].lock==1 )
+	{
+		all_cpu_up = 1;
+	}
 	return thread;
 }
 

@@ -2148,6 +2148,8 @@ static void malloc_extend_top(nb) INTERNAL_SIZE_T nb;
       or the base of its memory arena.)
 
 */
+#include "../smp/include/thread_info.h"
+spin_lock_t g_heap_lock = INIT_SPIN_LOCK;
 
 #if __STD_C
 Void_t* mALLOc(size_t bytes)
@@ -2167,16 +2169,24 @@ Void_t* mALLOc(bytes) size_t bytes;
   mchunkptr fwd;                     /* misc temp for linking */
   mchunkptr bck;                     /* misc temp for linking */
   mbinptr q;                         /* misc temp */
+  unsigned int flags;
 
   INTERNAL_SIZE_T nb;
+
+  spin_lock_save(&g_heap_lock, flags);
 
   /* check if mem_malloc_init() was run */
   if ((mem_malloc_start == 0) && (mem_malloc_end == 0)) {
     /* not initialized yet */
+    spin_unlock_restore(&g_heap_lock, flags);
     return 0;
   }
 
-  if ((long)bytes < 0) return 0;
+  if ((long)bytes < 0) 
+  {
+    spin_unlock_restore(&g_heap_lock, flags);
+    return 0;
+  }
 
   nb = request2size(bytes);  /* padded request size; */
 
@@ -2203,6 +2213,8 @@ Void_t* mALLOc(bytes) size_t bytes;
       unlink(victim, bck, fwd);
       set_inuse_bit_at_offset(victim, victim_size);
       check_malloced_chunk(victim, nb);
+
+      spin_unlock_restore(&g_heap_lock, flags);
       return chunk2mem(victim);
     }
 
@@ -2230,6 +2242,8 @@ Void_t* mALLOc(bytes) size_t bytes;
 	unlink(victim, bck, fwd);
 	set_inuse_bit_at_offset(victim, victim_size);
 	check_malloced_chunk(victim, nb);
+
+    spin_unlock_restore(&g_heap_lock, flags);
 	return chunk2mem(victim);
       }
     }
@@ -2253,6 +2267,8 @@ Void_t* mALLOc(bytes) size_t bytes;
       set_head(remainder, remainder_size | PREV_INUSE);
       set_foot(remainder, remainder_size);
       check_malloced_chunk(victim, nb);
+
+      spin_unlock_restore(&g_heap_lock, flags);
       return chunk2mem(victim);
     }
 
@@ -2262,6 +2278,8 @@ Void_t* mALLOc(bytes) size_t bytes;
     {
       set_inuse_bit_at_offset(victim, victim_size);
       check_malloced_chunk(victim, nb);
+
+      spin_unlock_restore(&g_heap_lock, flags);
       return chunk2mem(victim);
     }
 
@@ -2317,6 +2335,8 @@ Void_t* mALLOc(bytes) size_t bytes;
 	    set_head(remainder, remainder_size | PREV_INUSE);
 	    set_foot(remainder, remainder_size);
 	    check_malloced_chunk(victim, nb);
+
+        spin_unlock_restore(&g_heap_lock, flags);
 	    return chunk2mem(victim);
 	  }
 
@@ -2325,6 +2345,8 @@ Void_t* mALLOc(bytes) size_t bytes;
 	    set_inuse_bit_at_offset(victim, victim_size);
 	    unlink(victim, bck, fwd);
 	    check_malloced_chunk(victim, nb);
+
+        spin_unlock_restore(&g_heap_lock, flags);
 	    return chunk2mem(victim);
 	  }
 
@@ -2373,13 +2395,19 @@ Void_t* mALLOc(bytes) size_t bytes;
     /* If big and would otherwise need to extend, try to use mmap instead */
     if ((unsigned long)nb >= (unsigned long)mmap_threshold &&
 	(victim = mmap_chunk(nb)) != 0)
+	{
+      spin_unlock_restore(&g_heap_lock, flags);
       return chunk2mem(victim);
+	}
 #endif
 
     /* Try to extend */
     malloc_extend_top(nb);
     if ( (remainder_size = chunksize(top) - nb) < (long)MINSIZE)
+	{
+      spin_unlock_restore(&g_heap_lock, flags);
       return 0; /* propagate failure */
+	}
   }
 
   victim = top;
@@ -2387,6 +2415,8 @@ Void_t* mALLOc(bytes) size_t bytes;
   top = chunk_at_offset(victim, nb);
   set_head(top, remainder_size | PREV_INUSE);
   check_malloced_chunk(victim, nb);
+
+  spin_unlock_restore(&g_heap_lock, flags);
   return chunk2mem(victim);
 
 }
@@ -2432,9 +2462,14 @@ void fREe(mem) Void_t* mem;
   mchunkptr bck;       /* misc temp for linking */
   mchunkptr fwd;       /* misc temp for linking */
   int       islr;      /* track whether merging with last_remainder */
+  unsigned int flags;
+  spin_lock_save(&g_heap_lock, flags);
 
   if (mem == 0)                              /* free(0) has no effect */
+  {
+    spin_unlock_restore(&g_heap_lock, flags);
     return;
+  }
 
   p = mem2chunk(mem);
   hd = p->size;
@@ -2443,6 +2478,7 @@ void fREe(mem) Void_t* mem;
   if (hd & IS_MMAPPED)                       /* release mmapped memory. */
   {
     munmap_chunk(p);
+    spin_unlock_restore(&g_heap_lock, flags);
     return;
   }
 #endif
@@ -2469,6 +2505,8 @@ void fREe(mem) Void_t* mem;
     top = p;
     if ((unsigned long)(sz) >= (unsigned long)trim_threshold)
       malloc_trim(top_pad);
+
+    spin_unlock_restore(&g_heap_lock, flags);
     return;
   }
 
@@ -2506,6 +2544,7 @@ void fREe(mem) Void_t* mem;
   set_foot(p, sz);
   if (!islr)
     frontlink(p, sz, idx, bck, fwd);
+  spin_unlock_restore(&g_heap_lock, flags);
 }
 
 
@@ -2574,15 +2613,31 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 
   mchunkptr bck;              /* misc temp for linking */
   mchunkptr fwd;              /* misc temp for linking */
+  unsigned int flags;
+
+  spin_lock_save(&g_heap_lock, flags);
 
 #ifdef REALLOC_ZERO_BYTES_FREES
-  if (bytes == 0) { fREe(oldmem); return 0; }
+  if (bytes == 0) 
+  { 
+    spin_unlock_restore(&g_heap_lock, flags);
+    fREe(oldmem); 
+    return 0; 
+  }
 #endif
 
-  if ((long)bytes < 0) return 0;
+  if ((long)bytes < 0)
+  {
+     spin_unlock_restore(&g_heap_lock, flags);
+     return 0;
+  }
 
   /* realloc of null is supposed to be same as malloc */
-  if (oldmem == 0) return mALLOc(bytes);
+  if (oldmem == 0) 
+  {
+    spin_unlock_restore(&g_heap_lock, flags);
+    return mALLOc(bytes);
+  }
 
   newp    = oldp    = mem2chunk(oldmem);
   newsize = oldsize = chunksize(oldp);
@@ -2595,15 +2650,31 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
   {
 #if HAVE_MREMAP
     newp = mremap_chunk(oldp, nb);
-    if(newp) return chunk2mem(newp);
+    if(newp)
+    {
+       spin_unlock_restore(&g_heap_lock, flags);
+       return chunk2mem(newp);
+    }
 #endif
     /* Note the extra SIZE_SZ overhead. */
-    if(oldsize - SIZE_SZ >= nb) return oldmem; /* do nothing */
+    if(oldsize - SIZE_SZ >= nb) 
+    {
+        spin_unlock_restore(&g_heap_lock, flags);
+		return oldmem; /* do nothing */
+    }
+    spin_unlock_restore(&g_heap_lock, flags);
     /* Must alloc, copy, free. */
     newmem = mALLOc(bytes);
-    if (newmem == 0) return 0; /* propagate failure */
+    spin_lock_save(&g_heap_lock, flags);
+    if (newmem == 0)
+    {
+      spin_unlock_restore(&g_heap_lock, flags);
+      return 0; /* propagate failure */
+    }
     MALLOC_COPY(newmem, oldmem, oldsize - 2*SIZE_SZ);
     munmap_chunk(oldp);
+
+    spin_unlock_restore(&g_heap_lock, flags);
     return newmem;
   }
 #endif
@@ -2629,6 +2700,8 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 	  top = chunk_at_offset(oldp, nb);
 	  set_head(top, (newsize - nb) | PREV_INUSE);
 	  set_head_size(oldp, nb);
+
+      spin_unlock_restore(&g_heap_lock, flags);
 	  return chunk2mem(oldp);
 	}
       }
@@ -2671,6 +2744,8 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 	    top = chunk_at_offset(newp, nb);
 	    set_head(top, (newsize - nb) | PREV_INUSE);
 	    set_head_size(newp, nb);
+
+        spin_unlock_restore(&g_heap_lock, flags);
 	    return newmem;
 	  }
 	}
@@ -2702,10 +2777,15 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 
     /* Must allocate */
 
+    spin_unlock_restore(&g_heap_lock, flags);
     newmem = mALLOc (bytes);
+    spin_lock_save(&g_heap_lock, flags);
 
     if (newmem == 0)  /* propagate failure */
+    {
+      spin_unlock_restore(&g_heap_lock, flags);
       return 0;
+    }
 
     /* Avoid copy if newp is next chunk after oldp. */
     /* (This can only happen when new chunk is sbrk'ed.) */
@@ -2719,6 +2799,8 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 
     /* Otherwise copy, free, and exit */
     MALLOC_COPY(newmem, oldmem, oldsize - SIZE_SZ);
+    spin_unlock_restore(&g_heap_lock, flags);
+
     fREe(oldmem);
     return newmem;
   }
@@ -2733,6 +2815,8 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
     set_head_size(newp, nb);
     set_head(remainder, remainder_size | PREV_INUSE);
     set_inuse_bit_at_offset(remainder, remainder_size);
+
+    spin_unlock_restore(&g_heap_lock, flags);
     fREe(chunk2mem(remainder)); /* let free() deal with it */
   }
   else
@@ -2742,6 +2826,8 @@ Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
   }
 
   check_inuse_chunk(newp);
+
+  spin_unlock_restore(&g_heap_lock, flags);
   return chunk2mem(newp);
 }
 
