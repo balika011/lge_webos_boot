@@ -278,6 +278,7 @@
 #endif
 #else //#ifndef LG_CHG
 
+#define CONFIG_EMMCLOG		   "0"
 #if 1 //donghwan.jung
 #define CONFIG_BOOTARGS		""
 #else

@@ -146,7 +146,7 @@ void linux_param_set(char *kargs)
 	char *bootmode = getenv("bootmode");
 	char *init_file = getenv("initfile");
 	uint32_t xip_size_mb = 0, appxip_addr = 0, fontxip_addr = 0;
-	char *mac, *print, *lpj;
+	char *mac, *print, *lpj,*emmc_log;
 	//char *malimem, *umpmem;
 	int swumode = get_swumode();
 	unsigned int soc_rev = 0;
@@ -211,6 +211,8 @@ void linux_param_set(char *kargs)
 	mac = getenv("ethaddr");
 	sprintf(arg_next(kargs),"macadr=%s ", mac);
 //add mtk kernel bootargs 
+	emmc_log   = getenv("eMMCLogs");
+	sprintf(arg_next(kargs),"emmclog=%s ", emmc_log);
 	sprintf(arg_next(kargs), "%s ", "console=ttyMT0,115200n1 ");
 	sprintf(arg_next(kargs), "%s ", "rootwait ");
 	sprintf(arg_next(kargs), "%s ", "usbportusing=1,1,0,1 ");

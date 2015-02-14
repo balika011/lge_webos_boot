@@ -129,8 +129,9 @@ package: preprocess packimg siggen
 	chmod +x ./lzhsenc
 #	chmod +x ./t_mtk
 #	chmod +x ./siggen
-	chmod +x $(SIGN_TOOL)  
+
 ifneq "$(CTRIX_ENV)" "true"
+	chmod +x $(SIGN_TOOL)  
 	chmod +x $(T_MTK)
 endif
 	rm -f 14KB_preloader.bin Customer_Key_Encrypt_Data Customer_Key_Signature SHA1_Signature
