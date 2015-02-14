@@ -211,7 +211,7 @@ void linux_param_set(char *kargs)
 	mac = getenv("ethaddr");
 	sprintf(arg_next(kargs),"macadr=%s ", mac);
 //add mtk kernel bootargs 
-	emmc_log   = getenv("eMMCLogs");
+	emmc_log   = getenv("emmclog");
 	sprintf(arg_next(kargs),"emmclog=%s ", emmc_log);
 	sprintf(arg_next(kargs), "%s ", "console=ttyMT0,115200n1 ");
 	sprintf(arg_next(kargs), "%s ", "rootwait ");

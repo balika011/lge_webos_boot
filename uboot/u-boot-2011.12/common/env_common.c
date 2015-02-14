@@ -55,7 +55,7 @@ const uchar default_environment[] = {
 	"bootargs="	CONFIG_BOOTARGS			"\0"
 #endif
 #ifdef	CONFIG_EMMCLOG
-	"eMMCLogs="	CONFIG_EMMCLOG			"\0"
+	"emmclog="	CONFIG_EMMCLOG			"\0"
 #endif
 #ifdef	CONFIG_BOOTCOMMAND
 	"bootcmd="	CONFIG_BOOTCOMMAND		"\0"
