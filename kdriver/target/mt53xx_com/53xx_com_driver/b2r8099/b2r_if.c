@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/14 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1286,7 +1286,7 @@ void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId)
 	   ucB2rId=VDP_Vdp2B2rId(ucOrgVdpId);
 	  
 	 
-	   this = _B2R_GetObj(ucOrgVdpId);
+	   this = _B2R_GetObj(ucB2rId);
 	   LOG(0,"LG_PipLineVdpConnect(ucVdpId=%d,ucEsId=%d),ucOrgVdpId=%d,ucB2rId=%d\n",ucVdpId,ucEsId,ucOrgVdpId,ucB2rId);
 	    if(this==NULL)
 	   {
