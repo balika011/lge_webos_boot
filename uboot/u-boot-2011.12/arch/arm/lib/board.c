@@ -359,8 +359,8 @@ extern int verify_apps(int boot_mode);
 #define IS_SNAPSHOTBOOT		( (check_snapshot_mode() == LGSNAP_RESUME)? BOOT_SNAPSHOT : BOOT_COLD  )
 
 #ifdef SIGN_USE_PARTIAL
-//#define BOOTCOMMAND "cp2ramz kernel 0x7000000 0x7FC0;verification 0 kernel 0x7000000;xipz lgapp;bootm 0x7FC0"
-#define BOOTCOMMAND "cp2ramz lz4 kernel 0x7000000 0x7FC0;verification 0 kernel 0x7000000;xiplz4 lgapp;bootm 0x7FC0"
+#define BOOTCOMMAND "cp2ramz lz4 kernel 0x7000000 0x7FC0;verification 0 kernel 0x7000000;bootm 0x7FC0"
+#define BOOTCOMMAND_WEBOS "cp2ramz lz4 kernel 0x7000000 0x7FC0;bootm 0x7FC0"
 #else
 #define BOOTCOMMAND "cp2ram tzfw 0x200000;verification 0 tzfw 0x200000;cp2ram lginit 0x100000;verification 0 lginit 0x100000;cp2ramz lz4 kernel 0x8000000 0x7FC0;verification 0 kernel 0x8000000;xiplz4 lgapp;bootm 0x7FC0"
 #endif
@@ -372,6 +372,13 @@ extern int verify_apps(int boot_mode);
 	int i;
 	char *cmd1 = BOOTCOMMAND;
 	char *cmd2[1024];
+
+	char *bootmode = getenv("bootmode");
+	if(!strcmp(bootmode,"webos"))
+	{
+		cmd1 = BOOTCOMMAND_WEBOS;
+	}
+
 
 //#if defined(CONFIG_MULTICORES_PLATFORM)
 		second_main();
