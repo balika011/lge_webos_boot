@@ -168,7 +168,7 @@ extern int  X_CalculateSHA256(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 
 BOOL UbootAesEncrypt(UINT32 u4InBufStart, UINT32 u4OutBufStart, UINT32 u4BufSize)
 {
 	static char key[16];
-memset(key,0x11,16);
+	memset(key,0x11,16);
 	GCPU_LoaderInit(0);
 	_GCPU_SetAesKey(key, 128, key);
 	GCPU_AesDecrypt(u4InBufStart,u4OutBufStart,u4BufSize);
@@ -213,7 +213,22 @@ int verify_snapshot_image(struct snapshot_header *header)
 		printf("boundary check error %s (%d)\n", __FUNCTION__, __LINE__);
 		return -1;
 	}
+//full verify
 
+	memcpy(signature,decomp_buf+HEADER_SIZE+header->image_size );
+
+if( !snapshot_image_verify(decomp_buf, sign_area, FRAGMENT_UNIT_SIZE) )
+{
+	printf("snapshot partial verification successed! (index:%d)\n", index);
+}
+else
+{
+	printf("snapshot partial verification failed! (index:%d)\n", index);
+	return -1;
+}
+
+
+//partial verify
 	//sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
 	index = (get_timer(0) % NUMBER_OF_FRAGMENT);
 	memcpy(sign_area,decomp_buf + (index * FRAGMENT_UNIT_SIZE),FRAGMENT_UNIT_SIZE);
@@ -478,12 +493,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 		return -1;
 	}
 
-	sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
-	if(NULL == sign_area)
-	{
-		printf("can not allocate memory %s (%d)\n", __FUNCTION__, __LINE__);
-		return -1;
-	}
+	sign_area = decomp_buf;
 
 	index=(get_timer(0) % NUMBER_OF_FRAGMENT);
 	if (-1 == storage_read(offset_cur + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, sign_area))
@@ -522,12 +532,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 #endif
 
 	// full verification
-	sign_area = (char *) malloc((hib_size - HEADER_SIZE) * sizeof(char));
-	if(NULL == sign_area)
-	{
-	    printf("can not allocate memory %s (%d)\n", __FUNCTION__, __LINE__);
-		return -1;
-	}
+	sign_area = decomp_buf;
 	printf("[%d] snapshot data read, image_leghth = %d\n", readMsTicks(), singature_offset - offset_cur);
 	if (-1 == storage_read(offset_cur, (hib_size - HEADER_SIZE), sign_area))
 	{

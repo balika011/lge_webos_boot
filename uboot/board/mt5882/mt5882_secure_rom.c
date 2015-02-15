@@ -1306,7 +1306,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
             printf("signature check fail!\n");
            // writeFullVerifyOTP();
 
-           // while(1);
+            while(1);
             return -1;
         }
         else
@@ -1353,6 +1353,7 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
         if (copyFlash(szPartName, pu1Image, 0, image_size) != 0)
         {
             printf("copy image fail\n");
+			while(1);
             return -1;
         }
     }
@@ -1536,6 +1537,7 @@ int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int prel
 	if (ret)
 	{
 		printf("block read failed..\n");
+		while(1);
 		return 1;
 	}
 	// 2. get fragment 
@@ -1598,6 +1600,8 @@ u4FragSize = 4096;
 			if (ret)
 			{
 				printf("block read failed..\n");
+				
+				while(1);
 				return 1;
 			}
 	    }
@@ -1618,6 +1622,8 @@ u4FragSize = 4096;
 		if (ret)
 		{
 			printf("block read failed..\n");
+			
+			while(1);
 			return 1;
 		}
 	}
@@ -1863,7 +1869,7 @@ int verify_apps(int boot_mode)
 
 verify_error:
     printf("\033[0;32m Verify error !!!\033[0m\n");
-    //while(1);
+    while(1);
     return -1;
 }
 
