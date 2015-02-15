@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/15 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2269,6 +2269,16 @@ INT32 AUD_GetMixSndRingFifoId(void)
 
     return -1;
 }
+BOOL AUD_GetMixSndRingFifoIdOccupied(UINT8 u1StreamId)
+{
+    if (u1StreamId < MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA)
+    {
+        return (BOOL)_rAudMixSndStream[u1StreamId + ALSA_MIXSND_STREAM_ID].fgOccupied;
+    }else
+    {
+        return TRUE;
+    }
+}
 
 void AUD_FreeMixSndRingFifoId(UINT8 u1StreamId)
 {
@@ -2408,6 +2418,8 @@ void AUD_InitALSAPlayback_MixSnd(UINT8 u1StreamId)
         Printf("\n SA=0x%x, SZ=%d, EA=0x%x, DestAddr=0x%x\n", _rAudMixSndStream[ALSA_MIXSND_STREAM_ID + u1StreamId].u4AFifoSA, 
            _rAudMixSndStream[ALSA_MIXSND_STREAM_ID + u1StreamId].u4AFifoSZ, _rAudMixSndStream[ALSA_MIXSND_STREAM_ID + u1StreamId].u4AFifoEA,
            _rAudMixSndStream[ALSA_MIXSND_STREAM_ID + u1StreamId].u4DesAddr);
+        
+        _rAudMixSndStream[ALSA_MIXSND_STREAM_ID + u1StreamId].fgOccupied = TRUE;
 
         u4LoopCnt123[u1StreamId]  = SAMPLE_UNIT;
         u4LoopCnt456[u1StreamId]  = 0;

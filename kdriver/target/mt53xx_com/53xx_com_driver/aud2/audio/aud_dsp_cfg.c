@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/11 $
+ * $Date: 2015/02/15 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #25 $
+ * $Revision: #26 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27263,7 +27263,7 @@ void _vAUD_Aproc_SetMp3Enc(BOOL fgEnable)
 }
 
 #ifdef CC_AUD_DDI
-UINT32 _au4MixSoundInputVolume[AUD_MIXSND_NUM] = {VOL_SHM_0_DB};
+UINT32 _au4MixSoundInputVolume[AUD_MIXSND_NUM] = {VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB,VOL_SHM_0_DB};
 BOOL _fgMixSoundInputMute[AUD_MIXSND_NUM] = {FALSE};
 BOOL _fgSpdifConnet[AUD_DEC_MAX] = {FALSE};
 BOOL _fgInputMute[AUD_DEC_MAX] = {FALSE};
