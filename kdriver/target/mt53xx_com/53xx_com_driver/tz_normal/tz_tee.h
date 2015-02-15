@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/02/15 $
  * $RCSfile: tz_tee.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -193,6 +193,8 @@
 #define TZCTL_TEE_VUDU_SVP_GetAU					((UINT32)0x6912)
 #define TZCTL_TEE_VUDU_SVP_Flush				((UINT32)0x6913)
 #define TZCTL_TEE_VUDU_SVP_Release				((UINT32)0x6914)
+#define TZCTL_TEE_VUDU_SetM2mKey				((UINT32)0x6915)
+#define TZCTL_TEE_VUDU_SetCAKey				((UINT32)0x6916)
 
 
 
