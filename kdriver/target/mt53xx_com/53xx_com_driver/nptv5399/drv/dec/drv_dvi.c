@@ -272,7 +272,7 @@ UINT32  _wDVI_WAIT_STABLE_COUNTTHR = 0;
 E_TDTV_DECODER_INPUT _bCurInpMode;
 UINT32 _bQueryMode;
 UINT32 _bCurQueryMode;
-
+static UINT8 _bHandleAudio = 1;
 HAL_TIME_T rNoAviTime;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2841,30 +2841,20 @@ void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn)
 {
         if(fgIsOn)
         {
-			_bDviExtSrc = SV_DV_HDMI;
-				
-			if(bchannel == SV_VP_MAIN)
-			{		
-				_rDVIStat.bIsMain = TRUE;
-			}
-			else
-			{				
-				_rDVIStat.bIsPip = TRUE;
-			}
+			_bDviExtSrc = SV_DV_HDMI;	
+			_bHandleAudio = 1;
+			
 		}
 		else
 		{				
-			_bDviExtSrc = SV_DV_NONE;
-				
-			if(bchannel == SV_VP_MAIN)
-			{		
-				_rDVIStat.bIsMain = FALSE;
-			}
-			else
-			{				
-				_rDVIStat.bIsPip = FALSE;
-			}
+			_bDviExtSrc = SV_DV_NONE;	
+			_bHandleAudio = 0;
 		}
+}
+
+UINT8 vDviGetHandleAudio(void)
+{
+        return _bHandleAudio;
 }
 
 /**

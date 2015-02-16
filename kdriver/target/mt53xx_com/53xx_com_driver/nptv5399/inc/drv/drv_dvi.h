@@ -76,7 +76,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/16 $
  * $RCSfile: drv_dvi.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 /**
@@ -162,4 +162,5 @@ extern UINT8 API_Get_Audio_SPDIF_STATUS(void);
 //extern void vHDMISwitchInit(void);
 #endif
 void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn);
+UINT8 vDviGetHandleAudio(void);
 
