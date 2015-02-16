@@ -80,10 +80,10 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/16 $
  * $RCSfile: dsp_intf.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -370,6 +370,7 @@ extern void DSP_Set_VSurr_Cfg(AUD_VSURR_CFG_TYPE_T eVSCfgType, UINT32 u4VSParame
 extern void DSP_GetDtvAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo);
 extern void vDspAOutEnable(UINT8 u1DspId, UINT8 u1DecId);
 extern UINT32 u4ReadD2RInfo_AputBank(UINT8 u1DspId, UINT8 u1DecId);
+extern UINT32 u4ReadBankSampleNum(UINT8 u1DspId, UINT8 u1DecId); 
 #ifdef CC_ENABLE_AOMX
 extern UINT32 u4ReadD2RInfo_PtsCurPnt(UINT8 u1DspId, UINT8 u1DecId);
 extern UINT32 u4ReadD2RInfo_TotalBank(UINT8 u1DspId, UINT8 u1DecId);

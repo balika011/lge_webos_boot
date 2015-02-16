@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/02/16 $
  * $RCSfile: dsp_op.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4068,6 +4068,25 @@ UINT32 u4ReadD2RInfo_AputBank(UINT8 u1DspId, UINT8 u1DecId)
     return (UINT32)dReadDspCommDram(u1DspId, ADDR_D2RC_RISC_INFO_APUT_BANK_DEC1 + u1DecId);
 }
 
+UINT32 u4ReadBankSampleNum(UINT8 u1DspId, UINT8 u1DecId)
+{
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        return u4ReadDspSram(u1DspId, SRAM_BANK_SAMPLE_NUM) >> 8;
+    }
+    else if (u1DecId == AUD_DEC_AUX)
+    {
+        return u4ReadDspSram(u1DspId, SRAM_BANK_SAMPLE_NUM_DEC2) >> 8;
+    }
+    else if (u1DecId == AUD_DEC_THIRD)
+    {
+        return u4ReadDspSram(u1DspId, SRAM_BANK_SAMPLE_NUM_DEC3) >> 8;
+    }
+    else// if (u1DecId == AUD_DEC_4TH)
+    {
+        return u4ReadDspSram(u1DspId, SRAM_BANK_SAMPLE_NUM_DEC4) >> 8;
+    }
+}
 #ifdef CC_AUD_ARM_SUPPORT
 //added by ling
 UINT32 u4ReadD2RInfo_AACVersion(UINT8 u1DecId)

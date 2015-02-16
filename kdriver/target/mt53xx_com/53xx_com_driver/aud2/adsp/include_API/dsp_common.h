@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/16 $
  * $RCSfile: dsp_common.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -356,6 +356,11 @@
 #define SRAM_CHK_FRAME_SIZE_BACKUP_DEC2         (SRAM_COMMVAR2 + 0x2fU)
 #define SRAM_CHK_FRAME_SIZE_BACKUP_DEC3         (SRAM_COMMVAR3 + 0x2fU)
 #define SRAM_CHK_FRAME_SIZE_BACKUP_DEC4         (SRAM_COMMVAR4 + 0x2fU)
+
+#define SRAM_BANK_SAMPLE_NUM                    (SRAM_COMMVAR  + 0x31U)
+#define SRAM_BANK_SAMPLE_NUM_DEC2               (SRAM_COMMVAR2 + 0x31U)
+#define SRAM_BANK_SAMPLE_NUM_DEC3               (SRAM_COMMVAR3 + 0x31U)
+#define SRAM_BANK_SAMPLE_NUM_DEC4               (SRAM_COMMVAR4 + 0x31U)
 
 #define SRAM_INTBUF_INPUT_FLAG					(SRAM_COMMVAR4 + 0x22U)
 #define SRAM_INTBUF4_INPUT_FLAG					(SRAM_COMMVAR4 + 0x2bU)

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8286,122 +8286,37 @@ BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
 {
     UINT8 u1DecId = rPesIn.u1DecId;
     GST_AUDIO_PES_T rPes;
-    //STC_CLOCK rStc;
-#ifndef CC_MT5391_AUD_3_DECODER
-//    static UINT32 u4DeltaPts[2] = {0,0};
-    BOOL fgDulplicatedPts[AUD_DEC_MAX] = {FALSE,FALSE,FALSE,FALSE};
-    static UINT64 u8LastPts[AUD_DEC_MAX] = {0,0,0,0};
-//    static UINT32 u4StartDecWp[2] = {0,0};
-//    static UINT32 u4PrevWp[2] = {0,0};
-//    static UINT32 u4StcPtsDiff[2] = {0,0};
-//    static UINT32 u4CurMaxStcPtsDiff[2] = {0,0};
-#else
-//    static UINT32 u4DeltaPts[3] = {0,0,0};
-    BOOL fgDulplicatedPts[AUD_DEC_MAX] = {FALSE,FALSE,FALSE,FALSE};
-    static UINT64 u8LastPts[AUD_DEC_MAX] = {0,0,0,0};
-//    static UINT32 u4StartDecWp[3] = {0,0,0};
-//    static UINT32 u4PrevWp[3] = {0,0,0};
-//    static UINT32 u4StcPtsDiff[3] = {0,0,0};
-//    static UINT32 u4CurMaxStcPtsDiff[3] = {0,0,0};
-#endif
+    BOOL fgDulplicatedPts[AUD_DEC_MAX] = {FALSE};
+    static UINT64 u8LastPts[AUD_DEC_MAX] = {0};
+    
     UINT64 u8Pts32;
-//    UINT32 u4WpOffset;
-//    UINT32 u4ShiftDecWp;
-//    UINT32 u4DeltaWp;
-
-//    LOG(1,"SEND PES!!\n");
     x_memcpy((VOID *)VIRTUAL((UINT32)&rPes), (VOID *)VIRTUAL((UINT32)&rPesIn), sizeof(GST_AUDIO_PES_T));
     // Check if dulplicated PTS
-    fgDulplicatedPts[u1DecId] = (rPes.u8Pts == u8LastPts[u1DecId]) ? TRUE : FALSE;
+    fgDulplicatedPts[u1DecId] = (rPes.u8Pts == u8LastPts[u1DecId]) ? TRUE : FALSE; 
 
-    //Check if delta PTS too large
-    #if 0
-    if ((_arAudDrvState[u1DecId] == AUD_ON_PLAY) &&
-       ((INT64)(rPes.u8Pts - u8LastPts[u1DecId]) >= 9000000))  //9sec, since for divx zero padding test the delta will be 10 sec
-    {
-        AUD_DspSetWaitVideo(u1DecId,TRUE);   //reset PTS and trigger DSP wait video, will be cleared in DSP
-        LOG(1,"AUD_DspSetWaitVideo!!!!! lastPTS = %x, PTS = %x\n", u8LastPts[u1DecId], rPes.u8Pts);
-        LOG(1,"CUR = %x, BUF = %x, WP = %x\n",u4ReadDspSram(0x96d), u4ReadDspSram(0x20b),rPes.u4Wp);
-    }
-    #endif
-        //LOG(1," PTS=%llx, Wp=%x, \n", rPes.u8Pts, rPes.u4Wp);
-
-    {
-        u8LastPts[u1DecId] = rPes.u8Pts;
-        _arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount++;
-    }
-
+    u8LastPts[u1DecId] = rPes.u8Pts;
+    _arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount++; 
     _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount ++;
-
-
 
     // Address translation, translate virtual address to DSP internal address
     rPes.u4Wp = DSP_INTERNAL_ADDR(rPes.u4Wp);
 
-//    if ((_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) ||
-//        (_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_MULTI_MEDIA))
+    if(!fgDulplicatedPts[u1DecId])
     {
-        // Check if audio only program
-        //_ChkAudioOnlyControl(u1DecId, FALSE);  //Andrew Wen 2007/6/22 Audio only program set sync mode to free run.
+        u8Pts32 = u8Div6432(rPes.u8Pts * 9,100,NULL);
+        GST_MMQueueSyncInfo(u1DecId, rPes.u8Pts, rPes.u4Wp, FALSE,u8Pts32>>32);
     }
-    // Check if send PTS to DSP
-#if 0
-    if ((_arAudDrvState[u1DecId] == AUD_ON_PLAY) &&
-        (STC_GetSrc(STC_SRC_A1, &rStc) == STC_VALID) &&
-        (_arAudDecoder[u1DspId][u1DecId].eSynMode != AV_SYNC_FREE_RUN) &&
-        (!fgDulplicatedPts[u1DecId]))
-#endif
-    {
-//        if (_IsPtsValid(rPes.u1PidIndex, u1DecId, &rPes))
-        {
-//            if (_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_MULTI_MEDIA)
-            {
-                //u4ShiftDecWp = rPes.u4Wp;
-                //MM queue av sync info
-            if(!fgDulplicatedPts[u1DecId])
-            {
-                u8Pts32 = u8Div6432(rPes.u8Pts * 9,100,NULL);
-                GST_MMQueueSyncInfo(u1DecId, rPes.u8Pts, rPes.u4Wp, FALSE,u8Pts32>>32);
-            }
-//                #ifdef TIME_SHIFT_SUPPORT
-//                //MM queue tick info
-//                AUD_MMQueueTickInfo(u1DecId, rPes.u4TickNum, u4ShiftDecWp, FALSE);
-//                #endif
-            }
-#if 0
-            else
-            {
-                if (_DMX_GetInterruptThreshold(DMX_PID_TYPE_ES_AUDIO, &u4WpOffset))
-                {
-                    if (u4DeltaWp < u4WpOffset)
-                    {
-                        u4WpOffset = u4DeltaWp;
-                    }
-                    u4ShiftDecWp = rPes.u4Wp - (u4WpOffset);
-                    if (DSP_INTERNAL_ADDR(u4ShiftDecWp) < DSP_INTERNAL_ADDR(u4GetAFIFOStart(u1DecId)))
-                    {
-                         u4ShiftDecWp = DSP_INTERNAL_ADDR(u4GetAFIFOEnd(u1DecId)) -
-                                       (DSP_INTERNAL_ADDR(u4GetAFIFOStart(u1DecId)) - u4ShiftDecWp);
-                    }
-                }
-                else
-                {
-                    u4ShiftDecWp = rPes.u4Wp;
-                }
-}
-#endif
-            if(!fgDulplicatedPts[u1DecId])
-            {
-                if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_SEND_PTS) == AUD_DBG_SYNC_SEND_PTS)
-                {
-                    LOG(11,"PST=%lld, PTS=%08x, Wp=%x\n", rPes.u8Pts, (UINT32)u8Pts32, rPes.u4Wp);
-                }
 
-                if (DSP_SendPts(AUD_DSP0, u1DecId, (UINT32)u8Pts32, rPes.u4Wp) == DSP_FAIL)
-                {
-                    LOG(11, "DspSendPts fail, DecId = %d\n", u1DecId);
-                }
-            }
+    if(!fgDulplicatedPts[u1DecId])
+    {
+        if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_SEND_PTS) == AUD_DBG_SYNC_SEND_PTS)
+        {
+            LOG(11,"PST=%lld, PTS=%08x, Wp=%x\n", rPes.u8Pts, (UINT32)u8Pts32, rPes.u4Wp);
+        }
+
+        if (DSP_SendPts(AUD_DSP0, u1DecId, (UINT32)u8Pts32, rPes.u4Wp) == DSP_FAIL)
+        {
+            LOG(11, "DspSendPts fail, DecId = %d\n", u1DecId);
         }
     }
 
@@ -8410,19 +8325,13 @@ BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
         (_arAudDecoder[AUD_DSP0][u1DecId].eSynMode != AV_SYNC_FREE_RUN) &&
         (!_afgIssuePlayComToDsp[AUD_DSP0][u1DecId]))
     {
-//        if((_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_MULTI_MEDIA) &&
-//           (_arAudDecoder[AUD_DSP0][u1DecId].eSynMode != AV_SYNC_SLAVE))
-        {
-//            x_memcpy((VOID *)VIRTUAL((UINT32)&_arAudDecoder[u1DspId][u1DecId].rFristDecodePes),
-//                     (const VOID *)&rPes, sizeof(PSR_AUDIO_PES_T));
-            vDspSetFifoReadPtr(AUD_DSP0, u1DecId, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
-            DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
+        vDspSetFifoReadPtr(AUD_DSP0, u1DecId, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
+        DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
 
-            VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
-            _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-            LOG(1, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) for multimedia\n",
-                u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts,  _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
-        }
+        VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
+        _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
+        LOG(1, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) for multimedia\n",
+            u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts,  _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
     }
     return TRUE;
 }

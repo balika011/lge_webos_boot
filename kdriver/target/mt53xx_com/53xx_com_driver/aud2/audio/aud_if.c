@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6523,38 +6523,54 @@ void AUD_QuerySampleRate(UINT8 u1DecId,  UINT32 * pSampleRate)
 {
     SAMPLE_FREQ_T eSmpRate;
     eSmpRate = AUD_GetSampleFreq(u1DecId);
-
-    if (eSmpRate == FS_32K)
+    
+    switch (eSmpRate)
     {
+    case FS_8K:
+       *pSampleRate = 8000;
+        break;
+    case FS_11K:
+        *pSampleRate = 11025;
+        break;
+    case FS_12K:
+        *pSampleRate = 12000;
+        break;        
+    case FS_16K:
+        *pSampleRate = 16000;
+        break;
+    case FS_22K:
+        *pSampleRate = 22050;
+        break;
+    case FS_24K:
+        *pSampleRate = 24000;
+        break;
+    case FS_32K:
         *pSampleRate = 32000;
-    }
-    else if (eSmpRate == FS_44K)
-    {
-        *pSampleRate = 44000;
-    }
-    else if (eSmpRate == FS_48K)
-    {
+        break;
+    case FS_44K:
+        *pSampleRate = 44100;
+        break;
+    case FS_48K:
         *pSampleRate = 48000;
-    }
-    else if (eSmpRate == FS_88K)
-    {
-        *pSampleRate = 88000;
-    }
-    else if (eSmpRate == FS_96K)
-    {
+        break;
+    case FS_64K:
+        *pSampleRate = 64000;
+        break;
+    case FS_88K:
+        *pSampleRate = 88200;
+        break;
+    case FS_96K:
         *pSampleRate = 96000;
-    }    
-    else if (eSmpRate == FS_176K)
-    {
-        *pSampleRate = 176000;
-    }
-    else if (eSmpRate == FS_192K)
-    {
+        break;
+    case FS_176K:
+        *pSampleRate = 176400;
+        break;
+    case FS_192K:
         *pSampleRate = 192000;
-    }
-    else
-    {
-        *pSampleRate = 0xffffffff;
+        break;
+    default:
+        *pSampleRate = 48000;
+        break;
     }
 }
 
