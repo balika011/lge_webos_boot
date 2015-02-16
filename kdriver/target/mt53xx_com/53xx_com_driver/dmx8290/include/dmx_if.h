@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/12 $
+ * $Date: 2015/02/16 $
  * $RCSfile: dmx_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -458,6 +458,7 @@ CC_DMX_PID_CASE_4: MT5880 use mode
 #define H265_PIC_TYPE_FD                  0x26
 #define H265_PIC_TYPE_PRESEI              0x27
 #define H265_PIC_TYPE_SUFSEI              0x28
+#define H265_PIC_VALID_TYPE(x)          (((x)>=H265_SLICE_TRAIL_N)&&((x)<=H265_PIC_TYPE_SUFSEI))
 
 // MPEG4 Picture types
 #define MPEG4_PIC_TYPE_PIC              0x31
