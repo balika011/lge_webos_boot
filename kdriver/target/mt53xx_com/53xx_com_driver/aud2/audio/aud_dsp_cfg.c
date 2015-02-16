@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/15 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #26 $
+ * $Revision: #27 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -16280,6 +16280,21 @@ typedef enum
 	AUDIO_LGSE_MODE_VARIABLESALL= 5  // All "VARIABLES" will be written simultaneously. Data will be arranged from 0 to 4.
 } AUDIO_LGSE_VARIABLE_MODE_T;
 
+#ifdef CC_AUD_DDI
+void _AUD_LGSEFN010Out(UINT32* pParam)
+{
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+	UINT32 u4Reg;
+
+	u4Reg = 0x1;
+	vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_GET_FN010_OUT), u4Reg);
+	x_thread_delay(50);
+	pParam[0] = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_OUT, APROC_REG_LGSE_FN010_LGSE00663_0));
+	pParam[1] = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_OUT, APROC_REG_LGSE_FN010_LGSE00663_1));
+	Printf ("[LGSE][OUT] _AUD_LGSEFN010Out: pParam[0] = 0x%x, pParam[1] = 0x%x\n", pParam[0], pParam[1]);
+#endif
+}
+
 void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataOption, UINT8 varOption)
 {
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -16453,6 +16468,8 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
    DSP_SendDspTaskCmd(AUD_DSP0, UOP_DSP_CV);
 #endif
 }
+#endif
+
 /** _AUD_GetAC3_EAC3_Info
  *
  *  @retval  u1version

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_dsp_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4372,10 +4372,18 @@ void AUD_DspSpeed(UINT8 u1DecId, UINT16 u2Speed)
 	_AUD_DspSpeed(u1DecId, u2Speed);
 }
 
+#ifdef CC_AUD_DDI
 void AUD_LGSEFN000(UINT8 fNo, VOID * u1CV_param_buf, UINT16 noParam, UINT8  dataOption, UINT8 varOption)
 {
 	_AUD_LGSEFN000(fNo, u1CV_param_buf, noParam, dataOption, varOption);
 }
+
+void AUD_GetLGSEFN010Out(UINT32* pParam)
+{
+	_AUD_LGSEFN010Out(pParam);
+}
+#endif
+
 //-----------------------------------------------------------------------------
 /** AUD_DspDownmixPosition
  *  Set Downmix Channel (CH9/10) Position

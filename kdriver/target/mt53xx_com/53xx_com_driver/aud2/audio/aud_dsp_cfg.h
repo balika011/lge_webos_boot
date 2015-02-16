@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -638,7 +638,10 @@ extern void _AUD_DspSrcLinoutVol(UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStrmSrc, 
 #endif
 extern void _AUD_GetDtvAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo) ;
 extern void _AUD_DspSpeed(UINT8 u1DecId, UINT16 u1Speed);
+#ifdef CC_AUD_DDI
+extern void _AUD_LGSEFN010Out(UINT32* pParam);
 extern void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataOption, UINT8 varOption);
+#endif
 extern void _AUD_DspGetSpeed(UINT8 u1DecId, UINT16 *u1Speed);
 extern void _AUD_DspDownmixPosition(UINT8 u1DspId, UINT8 u1DMPosition);
 extern UINT8 _AUD_DspGetDownmixPosition(UINT8 u1DspId);

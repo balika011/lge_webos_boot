@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/16 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -181,7 +181,10 @@ extern LGSE_FN_PARAM_T _argLgseFnPara[11];
 //-----------------------------------------------------------------------------
 extern UINT32 u4ReadDspSram(UINT8 u1DspId, UINT32 u4Addr);
 extern void vADSPIRQEnable(BOOL fgEnable);
+#ifdef CC_AUD_DDI
 extern void AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8  dataOption, UINT8 varOption);
+extern void AUD_GetLGSEFN010Out(UINT32* pParam);
+#endif
 #ifdef CC_AUD_ARM_POST
 extern void vAproc_Enable(UINT32 u4Enable);
 extern void vAprocS_EnableConfig(BOOL fgEnable);
@@ -2196,6 +2199,7 @@ void AUD_GetStreamFrom(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T *peSt
      UNUSED(AUD_DRVGetStreamFrom(u1DspId, u1DecId,  peStreamFrom));
 }
 
+#ifdef CC_AUD_DDI
 void AudLGSEFN000(UINT8 fNo, UINT32 pParamsPtr, UINT16 noParam, UINT8 dataOption, UINT8 varOption)
 {
 
@@ -2219,6 +2223,13 @@ void AudLGSEFN000(UINT8 fNo, UINT32 pParamsPtr, UINT16 noParam, UINT8 dataOption
 #endif
     AUD_LGSEFN000(fNo, _argLgseFnPara[fNo].pParams, noParam, dataOption, varOption);
 }
+
+void AudGetLGSEFN010Out(UINT32* pParam)
+{
+	AUD_GetLGSEFN010Out(pParam);
+}
+#endif
+
 #ifdef  LINUX_TURNKEY_SOLUTION
 #if 1
 //-----------------------------------------------------------------------------

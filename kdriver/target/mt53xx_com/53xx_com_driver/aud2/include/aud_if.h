@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/16 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5656,11 +5656,15 @@ typedef enum {
 	APROC_REG_LGSE_MODIFIED_MODE,
 	APROC_REG_LGSE_INIT_NO,
 	APROC_REG_LGSE_VAR_NO,
-	APROC_REG_LGSE_FUNC_DEBUG, // 0x7
+	APROC_REG_LGSE_GET_FN010_OUT, // 0x7
 	APROC_REG_LGSE_VOL_DEBUG1,
 	APROC_REG_LGSE_VOL_DEBUG2
 } APROC_ASM_LGSE_CTRL_T;
 
+typedef enum {
+	APROC_REG_LGSE_FN010_LGSE00663_0 = 0x0,
+	APROC_REG_LGSE_FN010_LGSE00663_1	
+} APROC_ASM_LGSE_OUT_T;
 
 /* APROC Data Port (ADP)
     */
@@ -6765,7 +6769,11 @@ extern void AUD_GetDecodeType(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_
  */
 //-----------------------------------------------------------------------------
 extern void AUD_GetStreamFrom(UINT8 u1DspId, UINT8 u1DecId, AUD_DEC_STREAM_FROM_T* peStreamFrom);
+
+#ifdef CC_AUD_DDI
 extern void AudLGSEFN000(UINT8 fNo, UINT32 pParamsPtr, UINT16 noParam, UINT8 dataOption, UINT8 varOption);
+extern void AudGetLGSEFN010Out(UINT32* pParam);
+#endif
 
 extern void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index, UINT32 u4Arg1, UINT32 u4Arg2, UINT32 u4Arg3, UINT32 u4Arg4);
 //-----------------------------------------------------------------------------
