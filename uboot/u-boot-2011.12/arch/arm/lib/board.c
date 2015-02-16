@@ -359,12 +359,41 @@ extern int verify_apps(int boot_mode);
 #define IS_SNAPSHOTBOOT		( (check_snapshot_mode() == LGSNAP_RESUME)? BOOT_SNAPSHOT : BOOT_COLD  )
 
 #ifdef SIGN_USE_PARTIAL
-#define BOOTCOMMAND "cp2ramz lz4 kernel 0x7000000 0x7FC0;verification 0 kernel 0x7000000;bootm 0x7FC0"
+#define BOOTCOMMAND "cp2ramz lz4 kernel 0x7000000 0x7FC0;bootm 0x7FC0"
 #define BOOTCOMMAND_WEBOS "cp2ramz lz4 kernel 0x7000000 0x7FC0;bootm 0x7FC0"
 #else
 #define BOOTCOMMAND "cp2ram tzfw 0x200000;verification 0 tzfw 0x200000;cp2ram lginit 0x100000;verification 0 lginit 0x100000;cp2ramz lz4 kernel 0x8000000 0x7FC0;verification 0 kernel 0x8000000;xiplz4 lgapp;bootm 0x7FC0"
 #endif
-
+void secure_verify_kernel(void)
+{
+	struct partition_info *mpi=NULL;
+	unsigned long long kernel_size = 0;
+	unsigned long long kernel_offset = 0;
+	int ret = 0;
+	int retry_cnt = 0;
+	ulong addr = 0x8000000;
+		
+		printf("\033[0;32m[%d] %s start \n", readMsTicks(), __FUNCTION__);
+		mpi =get_used_partition("kernel");
+	
+	do {			
+		ret = sb_verify_image(mpi->name, addr, 1);
+		retry_cnt++;
+		printf("\033[0;32msb_verify_application check %d time \033[0m\n",retry_cnt);
+		if (ret < 0)
+			udelay(200000);
+	} while (ret < 0 && retry_cnt < VERIFY_RETRY_MAX);
+	
+	if (ret < 0)
+	{
+		printf("\033[0;32m kernel verification failed in %d check ... fullverify flag will be set and System will stop \033[0m\n", retry_cnt);
+		DDI_NVM_SetFullVerifyFlag(1);
+		while(1);
+	}
+	
+	verify_done |= VERIFY_KERNEL_DONE;
+	printf("\033[0;32m[%d]Completed... \033[0m\n",readMsTicks());
+}
 
  int fast_boot(void)
 {
@@ -443,6 +472,7 @@ if(!strcmp(bootmode,"auto"))
 		}
 #endif
 
+		secure_verify_kernel();
 		printf("bootcmd cmd = %s \n",cmd1);
 		run_command(cmd1, 0);
 	}
