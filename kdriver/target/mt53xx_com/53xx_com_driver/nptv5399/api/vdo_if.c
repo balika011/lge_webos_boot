@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/15 $
+ * $Date: 2015/02/16 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #36 $
+ * $Revision: #37 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -845,13 +845,16 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 	
 	if(fgMainCh)
 	{
-	    #if 0
-	    if((bNewMainDec != SV_VD_DVI)&&(bNewMainDec != SV_VD_NA))
+	    if((bNewMainDec != SV_VD_DVI)&&(bNewMainDec != SV_VD_NA)&&(_rDVIStat.bIsMain))
 	    {
-           vDviConnect(SV_VP_MAIN, 0);
-		   LOG(2,"Vdo main call Disconnect DVI\n");
+           vDviSetConnetForAudio(SV_VP_MAIN, 0);
+		   LOG(2,"Vdo main call Disconnect audio DVI\n");
 		}
-		#endif
+	    if((bNewMainDec == SV_VD_DVI)&&(!(_rDVIStat.bIsMain)))
+	    {
+           vDviSetConnetForAudio(SV_VP_MAIN, 1);
+		   LOG(2,"Vdo main call connect audio DVI\n");
+		}
 		if(bNewMainDec == SV_VD_MPEGHD)
 		{
 			LG_PipLineVdpConnect(SV_VP_MAIN,u1SrcIdx);
@@ -872,13 +875,16 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 
 	if(fgPipCh)
 	{
-	    #if 0
-	    if((bNewSubDec != SV_VD_DVI)&&(bNewSubDec != SV_VD_NA))
+	    if((bNewSubDec != SV_VD_DVI)&&(bNewSubDec != SV_VD_NA)&&(_rDVIStat.bIsPip))
 	    {
-           vDviConnect(SV_VP_PIP, 0);
-		   LOG(2,"Vdo sub call Disconnect DVI\n");
+           vDviSetConnetForAudio(SV_VP_PIP, 0);
+		   LOG(2,"Vdo sub call Disconnect audio DVI\n");
 		}
-		#endif
+	    if((bNewSubDec == SV_VD_DVI)&&(!(_rDVIStat.bIsPip)))
+	    {
+           vDviSetConnetForAudio(SV_VP_PIP, 1);
+		   LOG(2,"Vdo sub call connect audio DVI\n");
+		}
 		if(bNewSubDec == SV_VD_MPEGHD)
 		{
 			LG_PipLineVdpConnect(SV_VP_PIP,u1SrcIdx);

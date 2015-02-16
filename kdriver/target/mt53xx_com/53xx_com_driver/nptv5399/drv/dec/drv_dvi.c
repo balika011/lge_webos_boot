@@ -2837,6 +2837,36 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
         }
     }
 }
+void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn)
+{
+        if(fgIsOn)
+        {
+			_bDviExtSrc = SV_DV_HDMI;
+				
+			if(bchannel == SV_VP_MAIN)
+			{		
+				_rDVIStat.bIsMain = TRUE;
+			}
+			else
+			{				
+				_rDVIStat.bIsPip = TRUE;
+			}
+		}
+		else
+		{				
+			_bDviExtSrc = SV_DV_NONE;
+				
+			if(bchannel == SV_VP_MAIN)
+			{		
+				_rDVIStat.bIsMain = FALSE;
+			}
+			else
+			{				
+				_rDVIStat.bIsPip = FALSE;
+			}
+		}
+}
+
 /**
  * @brief 	DVI call-back function for getting DVI input signal HTotal.
  * @param	None

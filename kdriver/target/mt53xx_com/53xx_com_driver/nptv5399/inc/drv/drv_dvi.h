@@ -73,10 +73,10 @@
  * enforceable in any court of competent jurisdiction.                        *
  *---------------------------------------------------------------------------*/
 /*
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/16 $
  * $RCSfile: drv_dvi.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 /**
@@ -161,3 +161,5 @@ extern UINT8 API_Get_Audio_SPDIF_STATUS(void);
 #endif
 //extern void vHDMISwitchInit(void);
 #endif
+void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn);
+
