@@ -300,10 +300,6 @@ void linux_param_set(char *kargs)
     sprintf(arg_next(kargs), "fullverify ");
 #endif
 
-	if((check_snapshot_mode() == LGSNAP_MAKING_IMAGE))
-	{
-		sprintf(arg_next(kargs), "snapshot ");
-	}
 	sprintf(arg_next(kargs), "resume=/dev/%s%d ", get_blkdev_name(), get_blkdev_idx(SNAP_PART_NAME));
 
 	{
