@@ -852,6 +852,7 @@ void vDrvColorTransform(UINT8 bPath)
     switch (bGetSignalType(bPath))
     {
         case SV_ST_DVI:
+		case SV_ST_MPEG:
             u4VideoRange = bHDMIRgbRange();
             u4VideoRange = (u4VideoRange == SV_HDMI_RANGE_DEFAULT) ? 
                                     DRVCUST_HDMIRange(bPath) : u4VideoRange;

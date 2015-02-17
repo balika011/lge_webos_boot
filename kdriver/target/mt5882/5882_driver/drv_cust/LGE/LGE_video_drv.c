@@ -1352,7 +1352,7 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
     UINT8 bLevel = GET_BLK_LVL(bPath);
     if (bPath == SV_VP_MAIN)
     {
-        if(fgIsMainDVI())
+        if(fgIsMainDVI() || fgIsMainDec())
         {
             SET_MATRIX_PED(SV_OFF);
             switch (bLevel)
