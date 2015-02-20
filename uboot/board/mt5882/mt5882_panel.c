@@ -272,6 +272,9 @@ UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 frctype
 	
 	//Set OSD Timing from Front Scaler
 	vIO32WriteFldAlign(SCPIP_SCSYS_14, 0, SCSYS_14_SC_OSD_SRC_SEL);
+#if defined(CC_LGE_PROTO_PCBA) && defined(CC_MT5882)
+	vIO32WriteFldAlign(OSTG_00, 0, C_BYPASS_TTD);
+#endif
 
 	//set vesa type => jeida
 #ifndef UBOOT_HACK    
