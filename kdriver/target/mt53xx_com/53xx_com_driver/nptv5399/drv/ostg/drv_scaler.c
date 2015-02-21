@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/26 $
+ * $Date: 2015/02/21 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3340,6 +3340,11 @@ static void _vDrvScpipISR(UINT16 u2Vector)
 			u1Scpip_GFX_Write_Enable(SV_TRUE);
 			VssWriteUnFreeze[GFX_MAIN_SCL] = SV_FALSE;
 		}
+		else if(VssWriteUnFreeze[GFX_MAIN_PDS] == SV_TRUE)
+		{
+			u1Scpip_GFX_Write_Enable(SV_TRUE);
+			VssWriteUnFreeze[GFX_MAIN_PDS] = SV_FALSE;
+		}
         vScpipClearISRstatus(ISR_FSC_MAIN_VSYNC_IN_RISING);
     }
 
@@ -3519,12 +3524,6 @@ static void _vDrvScpipISR(UINT16 u2Vector)
         {
             _pfVdoVSSCb(); // trigger callback
         }
-
-		if(VssWriteFreeze == SV_TRUE)
-		{
-			u1Scpip_GFX_Write_Enable(SV_FALSE);
-			VssWriteFreeze = SV_FALSE;
-		}
         vScpipClearISRstatus(ISR_DRAM_GFX_WRITE);
     }
 

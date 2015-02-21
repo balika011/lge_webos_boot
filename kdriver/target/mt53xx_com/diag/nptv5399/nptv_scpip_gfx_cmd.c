@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/01/14 $
+ * $Date: 2015/02/21 $
  * $RCSfile: nptv_scpip_gfx_cmd.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  * Description:
  *         This file contains CLI implementation of NPTV Video.
@@ -416,6 +416,7 @@ static INT32 _ScpipGfxDumpSetting(INT32 i4Argc, const CHAR **szArgv)
 	u1Scpip_GFX_Set_Alpha(0xff);
 	u1Scpip_GFX_Set_Dump_Format(Format);
 	u1Scpip_GFX_Set_Dram_Address(u4BaseAddr, u4FrameSize, u1FrameNum);
+	u1Scpip_GFX_Set_Frame_Num(u1FrameNum);
 	u1Scpip_GFX_Source_Sel(bPath);
 	u1Scpip_GFX_Set_Write_Mode(1);
 	u1Scpip_GFX_Set_3x3();
