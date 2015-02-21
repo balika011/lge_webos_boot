@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/21 $
  * $RCSfile: dmx_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -136,7 +136,9 @@
 //-----------------------------------------------------------------------------
 BOOL DMX_NAND_AES_INIT(UINT8 *pu1Key, UINT16 u2KeyLen);
 
-
+#ifndef CC_MTK_LOADER
+int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsigned int frag_unit_size,unsigned int num_of_frag);
+#endif
 //-----------------------------------------------------------------------------
 /** DMX_NAND_AES_Encryption
  *  NAND AES encryption

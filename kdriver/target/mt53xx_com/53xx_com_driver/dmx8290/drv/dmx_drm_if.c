@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/21 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -94,8 +94,7 @@
 #include "x_assert.h"
 #include "dmx_debug.h"
 #include "gcpu_if.h"
-
-
+#include "msdc_if.h"
 //-----------------------------------------------------------------------------
 // Configurations
 //-----------------------------------------------------------------------------
@@ -317,62 +316,95 @@ INT32 GetPartIDByName(char *szPartName, UINT32  *pu4PartId)
 }
 
 #endif
-extern int Loader_ReadMsdc(UINT32 u4PartId, UINT32 u4Offset, void *pvMemPtr, UINT32 u4MemLen);
-extern int Loader_WriteMsdc(UINT32 u4PartId, UINT32 u4Offset, void *pvMemPtr, UINT32 u4MemLen);
 
-int sign_snapshot(char* blkdev, int size, unsigned int snapoffset,unsigned int frag_unit_size,unsigned int num_of_frag)
+int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsigned int frag_unit_size,unsigned int num_of_frag)
 {
     UINT8 u1AesKey[16];
 	UINT8 pu1RetIv[16];
-    UINT8* buffer;
-    UINT32 bufsize=4096;
+ //   UINT8* buffer;
+//   UINT32 bufsize=4096;	
+//    UINT32 bufsize=0x10000;
     UINT32 i;
-    UINT32 u4Offset=0;
-    UINT32 u4MidEnd;
+//    INT32 u4Offset=0;
+//    UINT32 u4MidEnd;
 	GCPU_SHA_HDL_T rShaHdl;
 	UINT8 au1Digest[32];
-    UINT32 u4ImageSize;
+	UINT8 au1Digest_dst[32];
+//    UINT32 u4ImageSize;
+	UINT64 u4fullImageSize  ;
 	UINT32	u4PartId;
     unsigned char* group_buf;
-    unsigned int group_size = 0, group_num = 0,frag_idx = 0,group_idx = 0,offset = 0;
+    unsigned int group_size = 0, group_num = 0,frag_idx = 0,group_idx = 0;
+	UINT64	offset = 0;
+	
+#if 0
 	if(GetPartIDByName(blkdev, &u4PartId)!=0)
 		{
 			LOG(0,"\n get partition id failed \n");
 			return 0;
 		}
+#endif
+
+	LOG(0," size =%x \n", size );
+	LOG(0," snapoffset =%x \n", snapoffset );
+	u4fullImageSize  = (UINT64)size + (UINT64)snapoffset;
+	
+    LOG(0,"full image size: %lld \n", u4fullImageSize);
+
+	LOG(0,"\n partition id set to 43 \n");
+	u4PartId = 43;
 
     x_memset(u1AesKey, 0x11, 16);
 
-    u4ImageSize = size;
-    LOG(0,"image size: 0x%x\n", u4ImageSize);
+
+//    u4ImageSize = size;
+	
+#ifdef FULL_VERIFY
     u4MidEnd = u4Offset + u4ImageSize - bufsize;
 
     buffer = x_mem_alloc(bufsize);
 
+    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, 10);
+	printf("read emmc test \n");
+	for(i = 0;i<10;i++)
+		printf("buffer[%d]=%d\n",i,buffer[i] );
+	
+
     LOG(0,"buffer address: 0x%x\n", buffer);
 
-    // begin
-    ASSERT((bufsize & (0x40-1)) == 0);
-    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
+    // begin/    ASSERT((bufsize & (0x40-1)) == 0);
 	
+//    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
+	GCPU_Init(0);
     GCPU_SHA256_Init((UINT32)&rShaHdl,FALSE);
-    GCPU_SHA256_Update((UINT32)&rShaHdl, buffer, bufsize,FALSE);
-    u4Offset += bufsize;
-
+	printf("after GCPU_SHA256_Init\n");
+//    GCPU_SHA256_Update((UINT32)&rShaHdl, buffer, bufsize,FALSE);
+//    u4Offset += bufsize;
+//	return 0;
+	
     // middle
+    #if 0
     while (u4Offset < u4MidEnd)
     {
         ASSERT((bufsize & (0x40-1)) == 0);
 		Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
 		GCPU_SHA256_Update((UINT32)&rShaHdl, buffer, bufsize,FALSE);
         u4Offset += bufsize;
-        LOG(0,".");
     }
+	#endif
+
+	while(u4Offset<(u4fullImageSize-bufsize))
+	{
+		Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
+		GCPU_SHA256_Update((UINT32)&rShaHdl, buffer, bufsize,FALSE);
+		u4Offset += bufsize;
+	}
+	u4Offset -= bufsize;
 
     // end
-    ASSERT((bufsize & (0x40-1)) == 0);
-    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer, bufsize);
-    GCPU_SHA256_Update((UINT32)&rShaHdl, buffer, bufsize,TRUE);
+ //   ASSERT((bufsize & (0x40-1)) == 0);
+    Loader_ReadMsdc(u4PartId,u4Offset,(UINT32*)buffer,(u4fullImageSize-u4Offset));
+    GCPU_SHA256_Update((UINT32)&rShaHdl, buffer,(u4fullImageSize-u4Offset),TRUE);
 	GCPU_SHA256_Final((UINT32)&rShaHdl,au1Digest);
     //u4Offset += bufsize;
 
@@ -382,16 +414,18 @@ int sign_snapshot(char* blkdev, int size, unsigned int snapoffset,unsigned int f
     LOG(0,"before aes \n");
     for (i=0; i<32; i++)
     {
-        LOG(0,"%02x ", au1Digest[i]);
+        LOG(0,"au1Digest[%d] = %02x ", i,au1Digest[i]);
     }
+	
     LOG(0,"\n");
-	GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest,2,TRUE);
+	
+	//GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest,2,TRUE);
 
    // DMX_Encrypt_Snapshot(u1HashValue, u4HashValueSize, u1HashValueOut, u1AesKey, &u4AesKeySize);
    LOG(0,"after aes \n");
     for (i=0; i<32; i++)
     {
-        LOG(0,"%02x ", au1Digest[i]);
+        LOG(0,"au1Digest[%d] = %02x ", i,au1Digest[i]);
     }
 
 #if 0 // verification
@@ -407,56 +441,74 @@ int sign_snapshot(char* blkdev, int size, unsigned int snapoffset,unsigned int f
     //x_memcpy(buffer, u1AesKey, u4AesKeySize);
     //x_memcpy(buffer+u4AesKeySize, au1Digest, 32);
 
-    Loader_WriteMsdc(u4PartId,size,au1Digest,32);
-	size += 32;
+	printf("u4fullImageSize = %x\n",u4fullImageSize);
+
+    Loader_WriteMsdc(u4PartId,u4fullImageSize,au1Digest,32);
 
     x_mem_free(buffer);
-//for fragment signture check
-	group_num = size / (frag_unit_size*num_of_frag);
 
-    LOG(0,"group_num: 0x%x\n", group_num);
+	return 0;
+#endif
+
+	u4fullImageSize += 32;
+//for fragment signture check
+	group_size = (frag_unit_size*num_of_frag);
+	group_num = 1;//u4ImageSize/group_size;
 	
-	group_buf = x_mem_alloc(group_size);
+    LOG(0,"SNAPSHOT debug  partial sign: group_num: 0x%x\n", group_num);
+	
+	group_buf = (unsigned char*)x_mem_alloc(group_num*frag_unit_size);
 	if (!group_buf)
 	{
 		LOG(0,"malloc %d bytes fail!!!\n", group_num*frag_unit_size);
 		return 1;
 	}
+
 	
+	GCPU_Init(0);
+    GCPU_SHA256_Init((UINT32)&rShaHdl,FALSE);
+	
+	num_of_frag = 1; //for test only one frag
 	// generate frag_num(20) partial SHA256 signature
 	for (frag_idx = 0; frag_idx < num_of_frag; frag_idx++)
 	{
 		// collect partial data for 1 group
 		for (group_idx = 0; group_idx < group_num; group_idx++)
 		{
-			offset = (group_idx*num_of_frag + frag_idx)*frag_unit_size;
+			offset = (group_idx*num_of_frag + frag_idx)*frag_unit_size + snapoffset;
 			// copy frag_size from file[offset] to group_buf[j*frag_size]
-			Loader_ReadMsdc(u4PartId,offset,&group_buf[group_idx*frag_unit_size],frag_unit_size);
+			Snapshot_ReadMsdc(u4PartId,offset,&group_buf[group_idx*frag_unit_size],frag_unit_size);
 		}
 		
-		GCPU_SHA256_Update((UINT32)&rShaHdl, group_buf, group_size,TRUE);
+		GCPU_SHA256_Update((UINT32)&rShaHdl, group_buf,group_num*frag_unit_size,TRUE);
 		GCPU_SHA256_Final((UINT32)&rShaHdl,au1Digest);
-	
-	 LOG(0,"before aes \n");
+
+	LOG(0,"SNAPSHOT debug before aes Digest data: \n");
 	 for (i=0; i<32; i++)
 	 {
 		 LOG(0,"%02x ", au1Digest[i]);
 	 }
 	 LOG(0,"\n");
 	
-	GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest,2,TRUE);
+	GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest_dst,32,TRUE);
 		
 		// DMX_Encrypt_Snapshot(u1HashValue, u4HashValueSize, u1HashValueOut, u1AesKey, &u4AesKeySize);
-		LOG(0,"after aes \n");
-		 for (i=0; i<32; i++)
-		 {
-			 LOG(0,"%02x ", au1Digest[i]);
-		 }
-    	Loader_WriteMsdc(u4PartId,size,au1Digest,32);
-		size += 32;
+	LOG(0,"SNAPSHOT debug after aes Digest data: \n");
+		
+	 for (i=0; i<32; i++)
+	 {
+		LOG(0,"%02x ", au1Digest_dst[i]);
+	 }
+	 
+		LOG(0,"\n");
+		LOG(0,"SNAPSHOT debug signdigest partition offset = %d \n",u4fullImageSize);
+		
+    	Snapshot_WriteMsdc(u4PartId,u4fullImageSize,au1Digest_dst,32);
+		u4fullImageSize += 32;
 
 	}
 	
+    x_mem_free(group_buf);
 
     return 0;
 }

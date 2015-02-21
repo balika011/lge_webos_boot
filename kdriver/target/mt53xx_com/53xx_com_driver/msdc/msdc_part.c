@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/21 $
  * $RCSfile: nor_part.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -953,6 +953,29 @@ INT32 Loader_GetMsdcEraseSize(void)
 #endif    
     return (INT32)u4EraseSize;
 }
+
+INT32 Snapshot_ReadMsdc(UINT32 u4PartId, UINT64 u8Offset, void *pvMemPtr, UINT32 u4MemLen)
+{
+	
+    INT32  i4Ret = MSDC_SUCCESS;
+#if defined(__KERNEL__)
+    i4Ret = msdc_partread(u4PartId, u8Offset, u4MemLen, (void *)pvMemPtr);
+#endif
+	return i4Ret;
+}
+
+
+INT32 Snapshot_WriteMsdc(UINT32 u4PartId, UINT64 u8Offset, void *pvMemPtr, UINT32 u4MemLen)
+{
+	
+    INT32  i4Ret = MSDC_SUCCESS;	
+#if defined(__KERNEL__)
+    i4Ret = msdc_partwrite(u4PartId, u8Offset, u4MemLen, (void *)pvMemPtr);
+#endif
+	return i4Ret;
+}
+
+
 
 INT32 Loader_ReadMsdc(UINT32 u4PartId, UINT32 u4Offset, void *pvMemPtr, UINT32 u4MemLen)
 {

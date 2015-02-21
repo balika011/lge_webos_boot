@@ -176,6 +176,8 @@ EXTERN INT32 Loader_ReadMsdc(UINT32 u4PartId, UINT32 u4Offset, VOID *pvMemPtr, U
 EXTERN INT32 Loader_WriteMsdc(UINT32 u4PartId, UINT32 u4Offset, VOID *pvMemPtr, UINT32 u4MemLen);
 EXTERN INT32 Loader_EraseMsdc(UINT32 u4PartId, UINT32 u4Offset, UINT32 u4MemLen);
 EXTERN INT32 Loader_WriteToBootArea1(VOID *pvMemPtr);
+EXTERN INT32 Snapshot_ReadMsdc(UINT32 u4PartId, UINT64 u8Offset, void *pvMemPtr, UINT32 u4MemLen);
+EXTERN INT32 Snapshot_WriteMsdc(UINT32 u4PartId, UINT64 u8Offset, void *pvMemPtr, UINT32 u4MemLen);
 
 EXTERN INT32 MSDCTest_HS200Tuning(UINT32 target);
 EXTERN INT32 MSDCTest_HS200Calibration(UINT32 u4Offset, UINT32 u4Size);
