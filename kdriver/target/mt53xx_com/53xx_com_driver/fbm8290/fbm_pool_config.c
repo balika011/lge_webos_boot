@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/21 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3551,16 +3551,7 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
         UPDATE_PRPOOL(FBM_POOL_TYPE_SCPOS_DYN_SUB, SCPOS);
     }
 
-#ifdef CC_SUPPORT_PIPELINE
-    if (env->u1IsTDC[u4VdpId]|| bTvd3dSignalStatus())
-    {
-        u4Width = 780;
-        u4Height = 578;
-        u4Mode = FBM_POOL_MODE_10BIT;
-        u4Size = FBM_TDC_POOL_SIZE;
-        UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
-    }
-#else
+#ifndef CC_SUPPORT_PIPELINE
     if (env->u1IsTDC[u4VdpId])
     {
         UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
@@ -3759,6 +3750,17 @@ void ExpandFBM4SinglexPOP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4Base
             }
         }
     }
+
+	#ifdef CC_SUPPORT_PIPELINE
+    if (env->u1IsTDC[u4VdpId]|| bTvd3dSignalStatus())
+    {
+        u4Width = 780;
+        u4Height = 578;
+        u4Mode = FBM_POOL_MODE_10BIT;
+        u4Size = FBM_TDC_POOL_SIZE;
+        UPDATE_PRPOOL(FBM_POOL_TYPE_TDC_DYN, TDC);
+    }
+	#endif
 
     u4SizeOfCurrent[u4VdpId] = u4NextDramAddr-u4BaseDramAddr;
     LOG(3, "vdp:%d, occupied size: 0x%x\n", u4VdpId, u4SizeOfCurrent[u4VdpId]);
