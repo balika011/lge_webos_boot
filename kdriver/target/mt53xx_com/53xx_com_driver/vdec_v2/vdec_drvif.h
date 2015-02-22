@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/22 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -766,6 +766,13 @@ typedef enum _VDE_PUSH_MODE_T
     VDEC_PUSH_MODE_TUNNEL
 } VDEC_PUSH_MODE_T;
 
+typedef enum _VDEC_DEBUG_CALLSTCK_T
+{
+    VDEC_DEBUG_CALLSTCK_T_VDEC_GetEsInfo    = 0,
+    VDEC_DEBUG_CALLSTCK_T_VDEC_PIPE,
+    VDEC_DEBUG_CALLSTCK_T_INVALID
+}VDEC_DEBUG_CALLSTCK_T;
+
 typedef struct _VDEC_APP_TYPE_T
 {
     CHAR *pcAppType;
@@ -1265,6 +1272,11 @@ typedef UCHAR (*PFN_VDEC_HANDLE_OVERFLW)(
     HANDLE_T hMutex,
     HANDLE_T hMsgQueue,
     const void* pvPesInfo
+);
+
+typedef void (*PFN_VDEC_CALLSTAC_CB)
+(
+    VDEC_DEBUG_CALLSTCK_T eType,UCHAR *szInfor,UINT32 u4Param
 );
 
 
@@ -2161,6 +2173,7 @@ typedef struct
 	PFN_VDEC_PICINFO_CB pfPicInfo;
 
     PFN_VDEC_RM_CB pfnRmCb;
+    PFN_VDEC_CALLSTAC_CB pfnCallStackPrintf;
 /*
     PFN_VDEC_RENDER_PTS_CB pfnRenderPtsCb;
     PFN_VDEC_TRICK_PTS_CB pfnTrickPtsCb;
@@ -2228,6 +2241,7 @@ EXTERN void VDEC_GetDecStatus(UCHAR ucEsId, BOOL* pfgLock
 
 EXTERN void VDEC_GetDecErrInfo(UCHAR ucEsId, BOOL* pfgError, BOOL* pfgDisplayStatus,UINT32 *pu4ErrMbCnt);
 
+EXTERN BOOL  VDEC_RegCallStackCb(PFN_VDEC_CALLSTAC_CB pfnDecErrCb);
 EXTERN BOOL VDEC_RegDecErrCb(PFN_VDEC_DECERR_CB pfDecErrCb, UINT32 u4ErrDuration);
 EXTERN BOOL VDEC_RegPicTypeCb(PFN_VDEC_PIC_TYPE_CB pfnPicTypeCb);
 EXTERN BOOL VDEC_RegStatusCb(PFN_VDEC_STATUS_CB pfnStatusCb);

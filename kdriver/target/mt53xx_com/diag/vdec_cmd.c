@@ -298,6 +298,7 @@ static INT32 _VdecCmdForceSrc(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdecCmdSetVdecStatus(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _PlayVideoPid(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _StopVideoPid(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv);
 
 #if BDP_LOG_STYLE
 static INT32 _MpvShowModeLogCmd(INT32 i4Argc, const CHAR ** szArgv);
@@ -546,7 +547,7 @@ static CLI_EXEC_T _arVdecCmdTbl[] =
 
     {"playVideoPid", "pvp", _PlayVideoPid, NULL, "start play a DTV video PID to main/sub video path", CLI_SUPERVISOR},
 	{"stopVideoPid", "svp", _StopVideoPid, NULL, "Stop play DTV video PID ", CLI_SUPERVISOR},
-	
+    {"showcallstack", "stack", _VdecCallStackSetting, NULL, "showcallstack", CLI_SUPERVISOR},
     CLIMOD_DEBUG_CLIENTRY(VDEC),
     {NULL, NULL, NULL, NULL, NULL, CLI_SUPERVISOR}
 };
@@ -1489,6 +1490,11 @@ static INT32 _VdecCmdForceSrc(INT32 i4Argc, const CHAR ** szArgv)
         SWDMX_SRC_TYPE_YOUTUBE
         );
     #endif
+
+    #ifdef CC_SUPPORT_NPTV_SEAMLESS
+    LOG(0,"CC_SUPPORT_NPTV_SEAMLESS ENABLE\n");
+    #endif
+    
     return 0;
 }
 
@@ -10766,5 +10772,122 @@ static INT32 _PlayVideoPid(INT32 i4Argc, const CHAR ** szArgv)
    VDP_SetDisplayOff(uVideoPath,0);
    pPlayVideo->fgPlaying=TRUE;
    return 0;
+}
+
+
+extern void dump_stack(void );
+extern VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTAC_CB cb);
+typedef struct
+{
+   BOOL fgEnable;
+   UINT32 u4PrintCnt;
+}CS_INFO_T;
+
+
+static CS_INFO_T rCallStackInfo[VDEC_DEBUG_CALLSTCK_T_INVALID];
+static VOID PrintfCallStackCb(VDEC_DEBUG_CALLSTCK_T eType,UCHAR *szInfor,UINT32 u4Param)
+{
+    CRIT_STATE_T rState;
+    CS_INFO_T *prCsInfo;
+    if(eType >= VDEC_DEBUG_CALLSTCK_T_INVALID)
+    {
+        return;
+    }
+
+    prCsInfo=&rCallStackInfo[eType];
+
+    if(prCsInfo->fgEnable && prCsInfo->u4PrintCnt > 0)
+    {
+        rState = x_crit_start();
+        if(szInfor)
+        {
+            Printf("StackInfo[%d],Param=%d,%s\n",eType,u4Param,szInfor);
+        }
+        else
+        {
+            Printf("StackInfo[%d],Param=%d\n",eType,u4Param);
+        }
+        
+        dump_stack();
+        prCsInfo->u4PrintCnt--;
+        x_crit_end(rState);
+    }
+
+    return;
+}
+
+static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UINT8 ucType;
+    UINT8 u4Index;
+    UINT8 ucCsType;
+    
+    ucType=(UINT8)StrToInt(szArgv[1]);
+
+    if(ucType == 0) // init
+    {
+       x_memset(rCallStackInfo,0,sizeof(rCallStackInfo));
+       VDEC_RegCallStackCb(PrintfCallStackCb);
+       VDP_PipeRegPrintStackCb(PrintfCallStackCb);
+       
+    }
+    else if(ucType == 1) // enable
+    {
+        UINT8 ucCsType;
+        UINT32 u4PrintCnt;
+        if(i4Argc >= 4)
+        {
+            ucCsType=(UINT8)StrToInt(szArgv[2]);
+            u4PrintCnt = (UINT32)StrToInt(szArgv[3]);
+            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            {
+                rCallStackInfo[ucCsType].fgEnable = TRUE;
+                rCallStackInfo[ucCsType].u4PrintCnt = u4PrintCnt;
+            }
+        }
+    }
+    else if(ucType == 2) // disable
+    {
+        if(i4Argc >= 3)
+        {
+            ucCsType=(UINT8)StrToInt(szArgv[2]);
+            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            {
+                rCallStackInfo[ucCsType].fgEnable = FALSE;
+                rCallStackInfo[ucCsType].u4PrintCnt = 0;
+            }
+        }
+    }
+    else if(ucType == 3) // disable all
+    {
+        for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTCK_T_INVALID;u4Index++)
+        {
+            rCallStackInfo[u4Index].fgEnable = FALSE;
+            rCallStackInfo[u4Index].u4PrintCnt = 0;
+        }
+    }
+    else if(ucType == 100)  // query
+    {
+        if(i4Argc == 2)
+        {
+            for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTCK_T_INVALID;u4Index++)
+            {
+                Printf("CsDebug[%d] Enable=%d,PrintCnt=%d\n",u4Index, \
+                    rCallStackInfo[u4Index].fgEnable,rCallStackInfo[u4Index].u4PrintCnt);
+            }
+        }
+        else if(i4Argc >= 3)
+        {
+            ucCsType=(UINT8)StrToInt(szArgv[2]);
+            
+            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            {
+                Printf("CsDebug[%d] Enable=%d,PrintCnt=%d\n",ucCsType, \
+                    rCallStackInfo[ucCsType].fgEnable,rCallStackInfo[ucCsType].u4PrintCnt);
+            }
+        }
+    }
+
+    return 0;
 }
 

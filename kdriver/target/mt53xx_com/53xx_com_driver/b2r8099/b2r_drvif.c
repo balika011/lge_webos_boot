@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/27 $
+ * $Date: 2015/02/22 $
  * $RCSfile: b2r_drvif.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -933,7 +933,7 @@ UINT32 _B2R_GetContainerType(B2R_OBJECT_T *this)
              break;
         }   
         ucEsId = prVdpConf->ucInputPort[0];
-        prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+        prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
         if (prVdecEsInfo)
         {
             u4Type = (UINT32)prVdecEsInfo->eContainerType;
@@ -970,7 +970,7 @@ UINT32 _B2R_GetContentSourceType(B2R_OBJECT_T *this)
                  break;
             }   
             ucEsId = prVdpConf->ucInputPort[0];
-            prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+            prVdecEsInfo = (ucEsId < VDEC_MAX_ES) ? _VDEC_GetEsInfo(ucEsId) : NULL;
             if (prVdecEsInfo)
             {
                 u4Type = (UINT32)prVdecEsInfo->eMMSrcType;

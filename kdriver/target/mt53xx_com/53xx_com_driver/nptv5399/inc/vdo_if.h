@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/22 $
  * $RCSfile: vdo_if.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -303,6 +303,9 @@ typedef enum VSC_DEC_TYPE
 	VSC_DEC_MAXN,
 } VSC_DEC_TYPE_T;
 
+#define JPEG_DEFAULT_SRC_IDX 2
+      // JPEG_DEFAULT_SRC_IDX = VDEC_MAX_ES
+      //MAX_ES_NS = JPEG_DEFAULT_SRC_IDX +1
 #endif
 
 

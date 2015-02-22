@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/22 $
  * $RCSfile: b2r_drvif.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -129,7 +129,7 @@
 #define PD_32_FLAG_LEAVE_LOOP_SIZE      (6)                         // 0.25 second
 #define VDP_STC_CLOCK                   (90000)                     // 90 KHz
 // 0~3 for MPEG, 4 for Video Input, 5 for DV
-#define MAX_ES_NS                    6
+#define MAX_ES_NS                    3
 
 #define B2R_MAX_INPORT_NS           1    ///< Maximum number of input port for each video plane.
 

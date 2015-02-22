@@ -282,7 +282,9 @@ static INT32 _VdpVB1_test (INT32 i4Argc, const CHAR ** szArgv);
 
 #endif
 #ifdef CC_SUPPORT_PIPELINE
-static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdpPipeVdecConnect(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdpPipeVdpConnect(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdpPipeQuery (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv);
 #endif
@@ -533,6 +535,20 @@ static CLI_EXEC_T _arB2rWfdCmdTbl[] =
     DECLARE_END_ITEM(),
 };
 
+#ifdef CC_SUPPORT_PIPELINE
+static CLI_EXEC_T _arB2rPipCmdTbl[] =
+{
+#ifdef CC_CLI
+    {"query",    "q",   _VdpPipeQuery, NULL,    "query pipe status",    CLI_SUPERVISOR},
+    {"connect",	  "vc",  _VdpPipeVdpConnect,    NULL,    "VDP connect to pipe",         CLI_SUPERVISOR},
+    {"disconnect","dc",   _VdpPipeVdecConnect,     NULL,    "VDEC connect to pipe",         CLI_SUPERVISOR},
+ 	{"mainomx",   "mo",	_VdPipLineSetMainOmux, NULL,	"Vdp Set main omx", CLI_GUEST},
+ 	{"subomx",	  "so",	_VdPipLineSetPipOmux, NULL,		"Vdp Set sub omx", CLI_GUEST},
+#endif
+    DECLARE_END_ITEM(),
+};
+#endif
+
 #if defined(CC_SUPPORT_UHD)
 static CLI_EXEC_T _arVdpUHDCmdTbl[] =
 {
@@ -558,11 +574,6 @@ static CLI_EXEC_T _arVdpCmdTbl[] =
  	{"query",		"q",	_VdpQueryCmd, NULL,			"Vdp status query", CLI_GUEST},
  	{"info",		NULL,	_VdpInfoCmd, NULL,			"DTV info query", CLI_GUEST},
  	{"stop",		NULL,	_VdpStopCmd, NULL,			"Vdp stop", CLI_SUPERVISOR},
- 	#ifdef CC_SUPPORT_PIPELINE
- 	{"LG",		"sw",	_VdPipLineTest, NULL,			"Vdp PipLine", CLI_GUEST},
- 	{"LG",		"som",	_VdPipLineSetMainOmux, NULL,	"Vdp PipLine", CLI_GUEST},
- 	{"LG",		"sop",	_VdPipLineSetPipOmux, NULL,		"Vdp PipLine", CLI_GUEST},
- 	#endif
  	{"freeze",		"f",	_VdpFreezeCmd, NULL,		"Vdp freeze", CLI_GUEST},
  	{"nonlinear",	"nl",	_VdpNonlinearCmd, NULL,		"Vdp nonlinear", CLI_SUPERVISOR},
     {"newnonlinear",   "nnl",   _VdpNewNonlinearCmd, NULL,     "Vdp new nonlinear", CLI_GUEST}, 
@@ -612,6 +623,11 @@ static CLI_EXEC_T _arVdpCmdTbl[] =
 #if defined(CC_SUPPORT_UHD)
 	{"UHD",			        "uhd",	NULL, _arVdpUHDCmdTbl,		"Vdp uhd query", CLI_GUEST},
 #endif
+
+#ifdef CC_SUPPORT_PIPELINE
+    {"PIPE",                 "pipe",  NULL, _arB2rPipCmdTbl,      "Vdp uhd query", CLI_GUEST},
+#endif
+
 LINT_SAVE_AND_DISABLE
 	CLIMOD_DEBUG_CLIENTRY(VDP),
 LINT_RESTORE
@@ -2064,22 +2080,33 @@ INT32 _VdpSetVPSPhaseBottomEn(INT32 i4Argc, const CHAR ** szArgv)
 #endif
 #ifdef CC_SUPPORT_PIPELINE
 
-static INT32 _VdPipLineTest(INT32 i4Argc, const CHAR ** szArgv)
+static INT32 _VdpPipeQuery (INT32 i4Argc, const CHAR ** szArgv)
 {
-    UINT32 u4VdpId;
-    UINT32 ucesid;
+    VDP_PipeGetInifor();
+    return 0;
+}
 
-    if ((i4Argc < 3) || (szArgv == NULL) || (szArgv[1] == NULL) || (szArgv[2] == NULL))
-    {
-      
-        return 0;
-    }
+static INT32 _VdpPipeVdpConnect(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UCHAR ucVdpId,ucEsId;
+    if(i4Argc < 3) return 0;
+    
+    ucVdpId=(UCHAR) StrToInt(szArgv[1]);
+    ucEsId= (UCHAR) StrToInt(szArgv[2]);
+    Printf("Start Connect Vdp%d Es%d\n",ucVdpId,ucEsId);
+    VDP_PipeConnectFromVdp(ucVdpId,ucEsId);
+    return 0;
+}
 
-    u4VdpId = (UINT32) StrToInt(szArgv[1]);
-    ucesid = (UINT32) StrToInt(szArgv[2]);
-    LG_PipLineTest(u4VdpId,ucesid);
-   
+static INT32 _VdpPipeVdecConnect(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UCHAR ucVbgId,ucEsId;
+    if(i4Argc < 3) return 0;
 
+    ucEsId= (UCHAR) StrToInt(szArgv[1]);
+    ucVbgId=(UCHAR) StrToInt(szArgv[2]);
+    Printf("Start Connect Es%d Fbg%d\n",ucEsId,ucVbgId);
+    VDP_PipeConnectFromVdec(ucEsId,ucVbgId);
     return 0;
 }
 static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv)

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/22 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1328,7 +1328,7 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
                 UCHAR ucEsId;
                 VDEC_ES_INFO_T *prVdecEsInfo = NULL;
                 ucEsId = prVdpConf->ucInputPort[0];
-                prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+                prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
 #endif
                 /* 20081113 MM start, STC will be updated by AUDIO but not yet updated */
                 FBM_GetSyncStc(prFrcPrm->ucFbgId, &ucAvSyncMode, &ucStcSrc);
@@ -1968,10 +1968,14 @@ INT32 _B2R_Cust_info_cfg(VDP_CFG_T*   prVdpConf,
             
 
             ucEsId = prVdpConf->ucInputPort[0];
-            prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+            prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
             if(prVdecEsInfo)
             {
                 ptVdpPrm->pt_cust_info->eMMSrcType = prVdecEsInfo->eMMSrcType;
+            }
+            else if(FBM_GetFbgAppMode(ptVdpPrm->ucFbgId) == FBM_FBG_APP_MTIMAGE)
+            {
+                ptVdpPrm->pt_cust_info->eMMSrcType = SWDMX_SRC_TYPE_HIGH_SPEED_STORAGE;
             }
 
             prHdr = FBM_GetFrameBufferPicHdr(ptVdpPrm->ucFbgId, ptVdpPrm->ucFbId);
@@ -4011,28 +4015,6 @@ static BOOL _B2R_PreProessNewFrameBuffer(B2R_OBJECT_T* this)
         return FALSE;
     }
 
-
-    u1DecoderSrcId = FBM_GetDecoderSrcId(prFrcPrm->ucFbgId);
-       
-#ifdef ENABLE_MULTIMEDIA
-    if (u1DecoderSrcId < VDEC_MAX_ES)
-    {
-        prVdecEsInfo = _VDEC_GetEsInfo(u1DecoderSrcId);
-    }
-    else
-    {
-        LOG(0,"u1DecoderSrcId > VDEC_MAX_ES , oops \n");
-        prVdecEsInfo = _VDEC_GetEsInfo(ES0);
-    }
-
-    if (prVdecEsInfo == NULL)
-    {
-        LOG(0,"prVdecEsInfo == NULL, oops\n");
-        return FALSE;
-    }
-#endif
-
-
     //for DTV00320479
     prFrcPrm->fgFastForward = !(FBM_ChkFrameBufferPicFlag(prFrcPrm->ucFbgId, prFrcPrm->ucFbId, FBM_MM_BACKWARD_FLAG));
 
@@ -4270,8 +4252,23 @@ static BOOL _B2R_PreProessNewFrameBuffer(B2R_OBJECT_T* this)
     }
 
     /* Seek Finish Notify at 20081212 */
-#ifdef ENABLE_MULTIMEDIA            
-    _B2R_SeekFinishNtfy(this, (prVdecEsInfo->eMMSrcType == SWDMX_SRC_TYPE_NETWORK_DASH)); 
+
+    u1DecoderSrcId = FBM_GetDecoderSrcId(prFrcPrm->ucFbgId);
+#ifdef ENABLE_MULTIMEDIA 
+    if (u1DecoderSrcId < VDEC_MAX_ES)
+    {
+        prVdecEsInfo = _VDEC_GetEsInfo(u1DecoderSrcId);
+    }
+    else if(FBM_GetFbgAppMode(prFrcPrm->ucFbgId) != FBM_FBG_APP_MTIMAGE)
+    {
+        LOG(0,"u1DecoderSrcId > VDEC_MAX_ES , oops \n");
+        prVdecEsInfo = _VDEC_GetEsInfo(ES0);
+    }
+    
+    if(prVdecEsInfo)
+    {
+        _B2R_SeekFinishNtfy(this, (prVdecEsInfo->eMMSrcType == SWDMX_SRC_TYPE_NETWORK_DASH)); 
+    }
 #else
     _B2R_SeekFinishNtfy(this, FALSE); 
 #endif
@@ -4794,7 +4791,7 @@ static void _B2R_FrcFrameBufferReady(FB_CHG_INFO_T* pt_fb)
             _B2R_ChangeFrameBuffer(this);
 
           //  ASSERT(ptVdpPrm->ucFbId != FBM_FB_ID_UNKNOWN);
-            LOG(1,"ptVdpPrm->ucFbId=%d\n",ptVdpPrm->ucFbId);
+            LOG(2,"ptVdpPrm->ucFbId=%d\n",ptVdpPrm->ucFbId);
         //     LOG(2, "FBR (%d) (%d)\n", _arVdpPrm[ucVdpId].ucFbId, _arVdpPrm[ucVdpId].prFbCounter->u4DispFail);
             break;
 
@@ -6400,7 +6397,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
     B2R_PRM_T *  ptVdpPrm;
     UCHAR ucB2rId;
     UINT32 u4Ret = 0;
-	UCHAR i;
+//	UCHAR i;
     #ifdef CC_B2R_SUPPORT_GAME_MODE
     BOOL fgGameModeStart =FALSE;
     #endif
@@ -6755,20 +6752,22 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                        LOG(3,"========B2R ready to play 1st Frame===eGameMode=%d,DisplayQ Num=%d\n",eGameMode[ucB2rId],FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
 #endif                     
 #ifdef CC_SUPPORT_PIPELINE
-
-                          if(bApiQuearyScartOutStatus())
+/*
+                         if(bApiQuearyScartOutStatus())
                          {
-                              LG_pipLineScartConnect(VDP_2,prVdpConf->ucInputPort[0]);
+                               VDP_PipeConnectFromVdp(VDP_2,prVdpConf->ucInputPort[0]);
+                              //LG_pipLineScartConnect(VDP_2,prVdpConf->ucInputPort[0]);
                          }
 
 						   for(i=0;i<VDP_NS;i++)
 						   {
 						   	  if(bApiQuearyVSCConnectStatus(i)==SV_VD_MPEGHD)
 							   {
-							       LG_PipLineVdpConnect(i, prVdpConf->ucInputPort[0]);
+							       VDP_PipeConnectFromVdp(i, prVdpConf->ucInputPort[0]);
 								   break;
 							   }
 						   }
+*/
 #endif
 #ifdef TIME_MEASUREMENT
                         TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R ready to play 1st Frame");
@@ -7941,7 +7940,7 @@ BOOL _VDP_RTNeedSuperGameMode(UCHAR ucVdpId)
     }
 
     ucEsId = prVdpConf->ucInputPort[0];
-    prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+    prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
     if (prVdecEsInfo && 
         (prVdecEsInfo->eMMSrcType == SWDMX_SRC_TYPE_WIFI_DISPLAY))
     {

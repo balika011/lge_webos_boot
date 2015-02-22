@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/02/22 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #38 $
+ * $Revision: #39 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -714,6 +714,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 		}
 		else if(bSrc == VSC_DEC_JPEG)
 		{
+            u1SrcIdx = JPEG_DEFAULT_SRC_IDX;
 			bApiVFESetMainSubSrc(SV_VS_DTV1, SV_VS_NO_CHANGE);
 		}
 		else
@@ -741,6 +742,7 @@ UINT8 bApiVSCConnectVideoSrc(UINT8 bPath, UINT8 bSrc, UINT8 u1SrcIdx, UINT8 u4Ty
 		}
 		else if(bSrc == VSC_DEC_JPEG)
 		{
+		    u1SrcIdx = JPEG_DEFAULT_SRC_IDX;
 			bApiVFESetMainSubSrc(SV_VS_NO_CHANGE, SV_VS_DTV1);
 		}
 		else
@@ -818,9 +820,6 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 		fgPipCh = TRUE;
 	}
 
-	bOldMainDec = bNewMainDec;
-	bOldSubDec = bNewSubDec;
-
 	if(bMainSrc == SV_VD_NA)
 	{
 		_rMChannel.bIsChannelOn = SV_OFF;
@@ -855,10 +854,21 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
            vDviSetConnetForAudio(SV_VP_MAIN, 1);
 		   LOG(2,"Vdo main call connect audio DVI\n");
 		}
-		if(bNewMainDec == SV_VD_MPEGHD)
+
+		if(bNewMainDec == SV_VD_MPEGHD || (bOldMainDec == SV_VD_MPEGHD && bNewMainDec ==SV_VD_NA))
 		{
-			LG_PipLineVdpConnect(SV_VP_MAIN,u1SrcIdx);
-			LOG(2,"Vdo main call LG_PipLineVdpConnect\n");
+			if(bNewMainDec == SV_VD_NA) 
+            {
+               u1SrcIdx = 0xFF;
+            }
+			VDP_PipeConnectFromVdp(SV_VP_MAIN,u1SrcIdx);
+
+            if(bNewMainDec == SV_VD_NA)
+            {
+                vSetMOutMux(bNewMainDec);
+            }
+            
+			LOG(2,"Vdo main call VDP_PipeConnectFromVdp\n");
 		}
 		else
 		{
@@ -885,10 +895,19 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
            vDviSetConnetForAudio(SV_VP_PIP, 1);
 		   LOG(2,"Vdo sub call connect audio DVI\n");
 		}
-		if(bNewSubDec == SV_VD_MPEGHD)
+
+		if(bNewSubDec == SV_VD_MPEGHD || (bOldSubDec ==SV_VD_MPEGHD && bNewSubDec == SV_VD_NA))
 		{
-			LG_PipLineVdpConnect(SV_VP_PIP,u1SrcIdx);
-			LOG(2,"Vdo sub call LG_PipLineVdpConnect\n");
+		    if(bNewSubDec == SV_VD_NA) 
+            {
+                u1SrcIdx = 0xFF;
+            }
+			VDP_PipeConnectFromVdp(SV_VP_PIP,u1SrcIdx);
+            if(bNewSubDec == SV_VD_NA)
+            {
+                vSetSOutMux(bNewSubDec);
+            }
+			LOG(2,"Vdo sub call VDP_PipeConnectFromVdp\n");
 		}
 		else
 		{
@@ -901,6 +920,9 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 		vSetPipFlg(PIP_FLG_MODE_DET_DONE);
 	}
 
+
+	bOldMainDec = bNewMainDec;
+	bOldSubDec = bNewSubDec;
 	return SV_SUCCESS;
 }
 

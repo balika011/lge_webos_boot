@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/22 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -121,12 +121,20 @@
 EXTERN BOOL fgLGPipLine;
 EXTERN BOOL fgVdpModeChg[B2R_NS];
 
+/*
 EXTERN UCHAR  LG_PipLineConnect(UCHAR ucVdpId, UCHAR ucB2rId);
 EXTERN void  LG_PipLineDisconnect(UCHAR ucVdpId);
 EXTERN void  LG_PipLineTest(UCHAR ucVdpId,UCHAR ucEsId);
-EXTERN void LG_PipLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId);
 EXTERN void  LG_PipLineVdpConnect(UCHAR ucVdpId,UCHAR ucEsId);
 EXTERN void LG_pipLineScartConnect(UCHAR ucVdpId,UCHAR ucEsId);
+*/
+
+EXTERN BOOL VDP_PipeModeChangeing(UCHAR ucB2rId);
+EXTERN VOID VDP_PipeModeChangeDone(UCHAR ucB2rId);
+EXTERN BOOL VDP_PipeIsConnected(UCHAR ucVdpId,UCHAR ucEsId);
+EXTERN VOID VDP_PipeConnectFromVdp(UCHAR ucVdpId,UCHAR ucEsId);
+EXTERN VOID VDP_PipeConnectFromVdec(UCHAR ucEsId,UCHAR ucFbgId);
+EXTERN VOID VDP_PipeGetInifor(VOID);
 
 #endif
 

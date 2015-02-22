@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/22 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1052,7 +1052,7 @@ VOID FBM_TriggerSmlsByResizer(UCHAR ucFbgId, UCHAR ucFbId)
 
 #if defined(ENABLE_MULTIMEDIA) && defined(CC_VDEC_RM_SUPPORT)
             VDEC_ES_INFO_T *prVdecEsInfo = NULL;
-            prVdecEsInfo = _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId);
+            prVdecEsInfo = _prFbg[ucFbgId].u1DecoderSrcId < VDEC_MAX_ES ? _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId) : NULL;
             ucRzIdMask = prVdecEsInfo ? prVdecEsInfo->ucImgrzId : 0;
 #endif
             _prFbg[ucFbgId].ucSeamlessRzId = VDP_PRESCALE_RZ_ID_UNKNOWN;
@@ -1559,8 +1559,8 @@ void _FBM_PutFrameBufferToEmptyResize2Q(UCHAR ucFbgId, UCHAR ucRzFbId)
 static UINT32 FBM_GetEmptyDelayTime(UCHAR ucFbgId, UINT32 *pu4Delay)
 {
 #ifdef ENABLE_MULTIMEDIA
-    VDEC_ES_INFO_T *prVdecEsInfo;
-    prVdecEsInfo = _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId);
+    VDEC_ES_INFO_T *prVdecEsInfo = NULL;
+    prVdecEsInfo = _prFbg[ucFbgId].u1DecoderSrcId < VDEC_MAX_ES ? _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId) : NULL;
 #endif
     
     if (VERIFY_FBG(ucFbgId) || !pu4Delay)
@@ -1571,7 +1571,7 @@ static UINT32 FBM_GetEmptyDelayTime(UCHAR ucFbgId, UINT32 *pu4Delay)
     if ((_prFbg[ucFbgId].ucPlayMode == FBM_FBG_DTV_MODE)
 #ifdef ENABLE_MULTIMEDIA
             ||
-            ((_prFbg[ucFbgId].ucPlayMode == FBM_FBG_MM_MODE) &&
+            ((_prFbg[ucFbgId].ucPlayMode == FBM_FBG_MM_MODE) && prVdecEsInfo &&
              (prVdecEsInfo->eContainerType == SWDMX_FMT_MPEG2_TS_TIME_SHIFT)
             )
 #endif
@@ -1692,11 +1692,20 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
     {
             UCHAR ucB2rId = B2R_NULL;
              B2R_RM_T input_Src;
-             VDEC_ES_INFO_T *prVdecEsInfo;
-             VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep;
-             prVdecEsInfo= _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId);
-             prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(_prFbg[ucFbgId].u1DecoderSrcId);
-            input_Src.eVdecType = prVdecEsInfoKeep->eCurFMT;// prVdecEsInfoKeep->eCurFMT;
+            VDEC_ES_INFO_T *prVdecEsInfo = NULL;
+            VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep = NULL;
+             
+            if(_prFbg[ucFbgId].u1FbgAppMode != FBM_FBG_APP_MTIMAGE)
+            {
+                prVdecEsInfo= _VDEC_GetEsInfo(_prFbg[ucFbgId].u1DecoderSrcId);
+                prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(_prFbg[ucFbgId].u1DecoderSrcId);
+                input_Src.eVdecType = prVdecEsInfoKeep->eCurFMT;// prVdecEsInfoKeep->eCurFMT;
+            }
+            else
+            {
+                input_Src.eVdecType = VDEC_FMT_JPG; // prVdecEsInfoKeep->eCurFMT;
+            }
+
             input_Src.u2HActive = _prFbg[ucFbgId].rSeqHdr.u2HSize;//prVdecEsInfo->u2OrgHSize;
             input_Src.u2VActive =_prFbg[ucFbgId].rSeqHdr.u2VSize; //prVdecEsInfo->u2OrgVSize;
             input_Src.u2Fps = 30;//prVdecEsInfo->u4FrameRate/100;
@@ -1706,16 +1715,22 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
             input_Src.ucEsId = _prFbg[ucFbgId].u1DecoderSrcId;
 
             FBM_MUTEX_UNLOCK(ucFbgId);
-            if(!FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE))
+
+            if(_prFbg[ucFbgId].u1FbgAppMode == FBM_FBG_APP_MTIMAGE)
             {
-                if (prVdecEsInfo->u4RenderVDPId != 0xFF)
+                VDP_SetB2RId(B2R_NULL, VDP_1, _prFbg[ucFbgId].u1DecoderSrcId);
+                ucB2rId = B2R_Source_Connect(input_Src);
+            }
+            else if(!FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE))
+            {
+                if (prVdecEsInfo && prVdecEsInfo->u4RenderVDPId != 0xFF)
                 {
                     VDP_SetB2RId(B2R_NULL, prVdecEsInfo->u4RenderVDPId, _prFbg[ucFbgId].u1DecoderSrcId);
                 }
                
                 ucB2rId = B2R_Source_Connect(input_Src);
                 LOG(1,"cB2rId =%d,prVdecEsInfoKeep=%d,u1DecoderSrcId=%d,rSeqHdr.u1Depth=%d\n",ucB2rId,prVdecEsInfoKeep,_prFbg[ucFbgId].u1DecoderSrcId,_prFbg[ucFbgId].rSeqHdr.u1Depth);
-                if (prVdecEsInfoKeep->pfnVdecSetParam && (ucB2rId >= B2R_3) && (ucB2rId < B2R_NULL))
+                if (prVdecEsInfoKeep && prVdecEsInfoKeep->pfnVdecSetParam && (ucB2rId >= B2R_3) && (ucB2rId < B2R_NULL))
                 {
                     prVdecEsInfoKeep->pfnVdecSetParam(_prFbg[ucFbgId].u1DecoderSrcId, (UINT32)VDEC_BLK_MODE, 0, 0, 0);
                 }

@@ -5736,17 +5736,16 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
                     fgEsmQEmpty = TRUE;
                 }
             }
-            if((u4DmxAvailSize < prVdec->rMsg.u.rBytesInfo.u4BytesSize + 32) ||
-               (fgEsmQFull))
+            
+            if((u4DmxAvailSize < prVdec->rMsg.u.rBytesInfo.u4BytesSize + 32) || fgEsmQFull)
             {
-                if (fgEsmQEmpty)
+                if(fgEsmQEmpty)
                 {
-                    LOG(4, "Auto flush dmx vfifo!\n");
+                    LOG(2, "Auto flush dmx vfifo %d < %d\n",u4DmxAvailSize,prVdec->rMsg.u.rBytesInfo.u4BytesSize);
                     UNUSED(_VPUSH_GetMsgCountInQ(prVdec));
                     DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                     _VPUSH_FlushEsmQ(prVdec->ucVdecId);
                     //VDEC_ReleaseDispQ(prVdec->ucVdecId);
-
                     //x_thread_delay(10);
                     //continue;
                 }
@@ -5762,7 +5761,7 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
                         ASSERT(0);
                         LOG(0, "%s(%d): i4Ret(%d))\n", __FUNCTION__, __LINE__, i4Ret);
                     }
-                    x_thread_delay(50);
+                    x_thread_delay(100);
                 }
                 else
                 {

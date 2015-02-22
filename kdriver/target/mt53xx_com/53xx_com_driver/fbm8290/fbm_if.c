@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/22 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1903,12 +1903,6 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     B2R_IPT_INFO_T t_b2r_res;
     VDEC_ES_INFO_T *prVdecEsInfo = NULL;
 #endif
-#ifdef CC_SUPPORT_PIPELINE
-
-    UCHAR ucB2rId     = B2R_NS;
-    UCHAR ucVdpId     = VDP_NS;
-
-#endif
     FBP_LIST_T* prFbpList;
     
     if(prPar && (prPar->ucCftFbgId == 0))
@@ -2562,17 +2556,9 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     _u1FbgColorMode = FBM_CM_420;
 
 #ifdef CC_B2R_RES_SUPPORT
-    if(prPar &&
-        !prPar->fgThumbnailMode)
+    if(prPar && !prPar->fgThumbnailMode)
     {
         LOG(1,"[B2R_RES]FBM create fbg b2r_Res enter,u4FbgId(%d)!\n", u4FbgId); 
-
-        prVdecEsInfo = _VDEC_GetEsInfo(prPar->u1VdecId);
-        if(prVdecEsInfo == NULL)
-        {
-            LOG(1,"!!!!!!!!!!!Can not get ESinfo with vdecid(%d)\n",prPar->u1VdecId);
-        }
-        
         switch(u4VDecFmt)
         {
             case FBM_VDEC_H265:
@@ -2590,13 +2576,22 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
         t_b2r_res.t_vd.u1PixDepth = prPar->fg10Bit ? 10 : 8;
         t_b2r_res.t_vd.u4Resolution = u4HSize * u4VSize;
 
+        prVdecEsInfo = prPar->u1VdecId < VDEC_MAX_ES ? _VDEC_GetEsInfo(prPar->u1VdecId) : NULL;
+        if(prVdecEsInfo == NULL)
+        {
+            LOG(1,"!!!!!!!!!!!Can not get ESinfo with vdecid(%d)\n",prPar->u1VdecId);
+        }
+
         if(prVdecEsInfo != NULL)
         {
             t_b2r_res.u1VdpId = prVdecEsInfo->u4RenderVDPId;
         }
+        else
+        {
+            t_b2r_res.u1VdpId = VDP_1;
+        }
 
         
-
         LOG(1,"[B2R_RES]FBM create fbg b2r_Res info:codec(%d),fgUfoEn(%d),PixelDepth(%d),Resolution(%d) with VDPID(%d)!\n", 
             t_b2r_res.t_vd.eCodec,t_b2r_res.t_vd.fgUfoEn,t_b2r_res.t_vd.u1PixDepth,t_b2r_res.t_vd.u4Resolution,t_b2r_res.u1VdpId);
         
@@ -2622,11 +2617,6 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     ASSERT(_arFbg[u4FbgId].hEmptyBQSemaphore.hMutex == _arFbg[u4FbgId].hMutex);
 
     VERIFY(x_sema_unlock(_hFbgMutex) == OSR_OK);
-	#ifdef CC_SUPPORT_PIPELINE
-	ucB2rId= FBM_B2rResIdAccess(u4FbgId, RES_R, NULL);
-    ucVdpId= LG_PipLineConnect(VDP_1,ucB2rId);
-	VDP_SetInput(ucVdpId,_arFbg[u4FbgId].u1DecoderSrcId,0);
-	#endif
     return FBM_BYTE(u4FbgId);
 }
 
@@ -2977,9 +2967,6 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
     VDEC_FbgReleaseHdlr();
 #endif
 
-#ifdef CC_SUPPORT_PIPELINE
-    LG_PipLineDisconnect(VDP_1);
-#endif
     _arFbg[ucFbgId].u1DecoderSrcId=0xff;
 }
 
@@ -3631,7 +3618,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
 #ifdef ENABLE_MULTIMEDIA
     //for not-standard timing such as 1440*900 to support much more reference.
     {
-        VDEC_ES_INFO_T* prVdecEsInfo = _VDEC_GetEsInfo(_arFbg[ucFbgId].u1DecoderSrcId);
+        VDEC_ES_INFO_T* prVdecEsInfo = _arFbg[ucFbgId].u1DecoderSrcId < VDEC_MAX_ES ? _VDEC_GetEsInfo(_arFbg[ucFbgId].u1DecoderSrcId) : NULL;
         if(prVdecEsInfo && (prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_NETWORK_NETFLIX) && (_arFbg[ucFbgId].ucFbgType != FBM_FBG_TYPE_4K2K_JPEG)) 
         {            
             if ((FBM_FBG_PAL_H > u4HSize) && (FBM_FBG_PAL_V > u4VSize))
@@ -4980,7 +4967,7 @@ void FBM_FbgChgNotify(UCHAR ucFbgId, UCHAR ucEsId)
         }
     }
 
-    prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(ucEsId);
+    prVdecEsInfoKeep = ucEsId < VDEC_MAX_ES ? _VDEC_GetEsInfoKeep(ucEsId) : NULL;
     
     if (prVdecEsInfoKeep && prVdecEsInfoKeep->fgFrameToUser)
     {
@@ -5070,7 +5057,7 @@ void FBM_FbgChgNotify(UCHAR ucFbgId, UCHAR ucEsId)
         }
     }
 
-    if (ucFbgId < FBG_MAX_NS)
+    if (ucFbgId < FBG_MAX_NS && _arFbg[ucFbgId].u1FbgAppMode != FBM_FBG_APP_MTIMAGE)
     {
         VDEC_FbgChgHdlr(ucEsId,ucFbgId, _arFbg[ucFbgId].u4FbMemoryPool,
                         (_arFbg[ucFbgId].u4FbMemoryPool + _arFbg[ucFbgId].u4FbMemoryPoolSize));
@@ -5989,8 +5976,7 @@ void _FBM_B2rResGetSrcInfo(UCHAR ucFbgId,
                                      B2R_IPT_INFO_T* pt_src,
                                      FBM_CREATE_FBG_PAR_T* ptPar)
 {
-    VDEC_ES_INFO_T*      ptVdecEsInfo = NULL;
-    VDEC_ES_INFO_KEEP_T* ptVdecEsInfoKeep = NULL;
+
     
     do
     {
@@ -6004,23 +5990,35 @@ void _FBM_B2rResGetSrcInfo(UCHAR ucFbgId,
             break;
         }
         
-        ptVdecEsInfo = _VDEC_GetEsInfo(_arFbg[ucFbgId].u1DecoderSrcId);
-        if(!ptVdecEsInfo)
+        if(_arFbg[ucFbgId].u1FbgAppMode != FBM_FBG_APP_MTIMAGE)
         {
-            break;
+            VDEC_ES_INFO_T*      ptVdecEsInfo = NULL;
+            VDEC_ES_INFO_KEEP_T* ptVdecEsInfoKeep = NULL;
+            ptVdecEsInfo = _VDEC_GetEsInfo(_arFbg[ucFbgId].u1DecoderSrcId);
+            if(!ptVdecEsInfo)
+            {
+                break;
+            }
+            
+            ptVdecEsInfoKeep = _VDEC_GetEsInfoKeep(_arFbg[ucFbgId].u1DecoderSrcId);
+            if(!ptVdecEsInfoKeep)
+            {
+                break;
+            }
+
+            pt_src->t_vd.eCodec = ptVdecEsInfoKeep->eCurFMT;
+            pt_src->t_vd.fgUfoEn = ptVdecEsInfo->fgEnableUFO;
+            pt_src->t_vd.u1PixDepth = ptVdecEsInfo->u4BitDepth;
+            pt_src->t_vd.u4Resolution = ptVdecEsInfo->u2OrgHSize * ptVdecEsInfo->u2OrgVSize;
+        }
+        else
+        {
+            pt_src->t_vd.eCodec = VDEC_JPEG;
+            pt_src->t_vd.fgUfoEn =  FALSE;
+            pt_src->t_vd.u1PixDepth = 8;
+            pt_src->t_vd.u4Resolution = _arFbg[ucFbgId].rSeqHdr.u2OrgHSize * _arFbg[ucFbgId].rSeqHdr.u2OrgVSize;
         }
         
-        ptVdecEsInfoKeep = _VDEC_GetEsInfoKeep(_arFbg[ucFbgId].u1DecoderSrcId);
-        if(!ptVdecEsInfoKeep)
-        {
-            break;
-        }
-
-        pt_src->t_vd.eCodec = ptVdecEsInfoKeep->eCurFMT;
-        pt_src->t_vd.fgUfoEn = ptVdecEsInfo->fgEnableUFO;
-        pt_src->t_vd.u1PixDepth = ptVdecEsInfo->u4BitDepth;
-        pt_src->t_vd.u4Resolution = ptVdecEsInfo->u2OrgHSize * ptVdecEsInfo->u2OrgVSize;
-
         LOG(1,"eCodec(%d), UfoEn(%d), Depth(%d), Res(%d)!\n", pt_src->t_vd.eCodec,
             pt_src->t_vd.fgUfoEn, pt_src->t_vd.u1PixDepth, pt_src->t_vd.u4Resolution);
     }while(0);
@@ -6056,16 +6054,15 @@ void FBM_B2rResNotifyClient(UCHAR ucFbgId,
             ((FBM_B2R_RES_CHG_FUNC)pt_cb_func->au4CbFunc[FBM_CB_FUNC_B2R_HW_CHG_CB])(ucFbgId, pt_change);
         }
 
-        ptVdecEsInfoKeep = _VDEC_GetEsInfoKeep(_arFbg[ucFbgId].u1DecoderSrcId);
+        ptVdecEsInfoKeep = _arFbg[ucFbgId].u1DecoderSrcId < VDEC_MAX_ES ? _VDEC_GetEsInfoKeep(_arFbg[ucFbgId].u1DecoderSrcId) : NULL;
+
         if(!ptVdecEsInfoKeep)
         {
             LOG(1,"Es info Null!\n");
             break;
         }
 
-        if (ptVdecEsInfoKeep->pfnVdecSetParam && 
-            ((pt_change->u1B2rId == 2) || 
-            (pt_change->u1B2rId == 3)))
+        if(ptVdecEsInfoKeep->pfnVdecSetParam && ((pt_change->u1B2rId == 2) || (pt_change->u1B2rId == 3)))
         {
             ptVdecEsInfoKeep->pfnVdecSetParam(_arFbg[ucFbgId].u1DecoderSrcId, (UINT32)VDEC_BLK_MODE, 0, 0, 0);
         }
