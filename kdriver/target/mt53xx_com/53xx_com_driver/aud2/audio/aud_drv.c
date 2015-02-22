@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/02/22 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3903,7 +3903,7 @@ static void _AudSendDspFlowControlCmd(UINT8 u1DspId, UINT8 u1DecId, UINT32 u4Cmd
     else if (u4Cmd == DSP_RESUME)
     {
 #ifdef CC_AUD_ARM_SUPPORT
-        if (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_FREE_RUN)
+        if ( (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_FREE_RUN) || (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_AUDIO_MASTER))
         {
             AUD_Aproc_Chg_AVSyncCtrl(u1DecId, APROC_AVSYNC_CTRL_WORK);
             vAprocReg_Write(APROC_ASM_ADDR(APROC_ASM_ID_AVSYNC_0,(APROC_REG_AVSYNC_CMD_SRC0+u1DecId)), AVSYNC_CMD_WAIT_OFF);
@@ -10210,17 +10210,17 @@ BOOL GST_MMFindSyncInfo(UINT8 u1DecId, UINT64* u8PTS, UINT32 u4PTSRp, UINT32* u4
 */
     if ((!fgFound) ||  (_aeMMSyncInfo[u2Idx].u4PtsWP == 0xfffffff))
     {
-        LOG(1,"AUD_MMFindSyncInfo NOT FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        LOG(8,"AUD_MMFindSyncInfo NOT FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
         fgFound = FALSE;
     }
     else if (_aeMMSyncInfo[u2Idx].u8PTS < u8LastGetPts)
     {
-        LOG(1,"PTS decrease!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!%lld, %lld\n", _aeMMSyncInfo[u2Idx].u8PTS,u8LastGetPts );
+        LOG(8,"PTS decrease!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!%lld, %lld\n", _aeMMSyncInfo[u2Idx].u8PTS,u8LastGetPts );
     }
     *u8PTS = _aeMMSyncInfo[u2Idx].u8PTS;
     *u4PTSHigh = _aeMMSyncInfo[u2Idx].u4PTSHigh;
-    LOG(1,"Request Rp = 0x%x\n", u4PTSRp);
-    LOG(1,"MM Find idx = %d, Rp = 0x%x, PTS = %lld @@@@@@@@@@@@@@@@@@@@@\n",u2Idx,
+    LOG(8,"Request Rp = 0x%x\n", u4PTSRp);
+    LOG(8,"MM Find idx = %d, Rp = 0x%x, PTS = %lld @@@@@@@@@@@@@@@@@@@@@\n",u2Idx,
     _aeMMSyncInfo[u2Idx].u4PtsWP, _aeMMSyncInfo[u2Idx].u8PTS);
     if (fgFound)
     {
@@ -10245,7 +10245,7 @@ BOOL GST_MMFindSyncInfo(UINT8 u1DecId, UINT64* u8PTS, UINT32 u4PTSRp, UINT32* u4
             {
                 u4FifoStart = DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId));
                 u4FifoEnd = DSP_INTERNAL_ADDR(u4GetAFIFOEnd(AUD_DSP0, u1DecId));
-                LOG(1,"#####INTERPOLATION 0x%x, 0x%x, 0x%x, %lld, %lld\n",u4PTSRp,u4PtsWP1,u4PtsWP2,u8PTS1,u8PTS2);
+                LOG(8,"#####INTERPOLATION 0x%x, 0x%x, 0x%x, %lld, %lld\n",u4PTSRp,u4PtsWP1,u4PtsWP2,u8PTS1,u8PTS2);
                 if (u4PtsWP2 > u4PtsWP1)
                 {
                     u8PTSInt = u8PTS1 + u8Div6432(((UINT64)(u4PTSRp-u4PtsWP1))* (u8PTS2 - u8PTS1),(UINT64)(u4PtsWP2 -u4PtsWP1),NULL);
@@ -10271,7 +10271,7 @@ BOOL GST_MMFindSyncInfo(UINT8 u1DecId, UINT64* u8PTS, UINT32 u4PTSRp, UINT32* u4
                 }
                 else
                 {
-                    LOG(1,"Interpolation ERR! PTS1 = %lld, PTS2 = %lld, PTS = %lld\n", u8PTS1,u8PTS2,u8PTSInt);
+                    LOG(8,"Interpolation ERR! PTS1 = %lld, PTS2 = %lld, PTS = %lld\n", u8PTS1,u8PTS2,u8PTSInt);
                 }
 
             }
