@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/20 $
+ * $Date: 2015/02/22 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -545,7 +545,7 @@ void* _Dmx_AllocPsiBuffer(UINT32 u4Size)
     void *pBuf;
 
     pBuf = dlmalloc(u4Size);
-    //LOG(0, "%s: 0x%x\n", __FUNCTION__, (UINT32)pBuf);
+    LOG(0, "%s: 0x%x, line=%d\n", __FUNCTION__, (UINT32)pBuf, __LINE__);
 
     pBuf = (void *)PHYSICAL((UINT32)pBuf);
 
@@ -748,6 +748,11 @@ static BOOL _DmxSetPidBuffer(UINT8 u1Pidx, const DMX_PID_T* prPid,
         {
             prPidStruct->u4BufStartPoint = (UINT32)_Dmx_AllocPsiBuffer(u4BufSize + 64);
             u4PhyBufStart = DMX_Align(prPidStruct->u4BufStartPoint, DMX_ES_FIFO_ALIGNMENT);
+            if (u4PhyBufStart==0)
+            {
+                LOG(0, "%s, line=%u, u4PhyBufStart=0x%x, u4BufSize=%d, DMX_ES_FIFO_ALIGNMENT=%d\n", __FUNCTION__, __LINE__, u4PhyBufStart, u4BufSize, DMX_ES_FIFO_ALIGNMENT);
+                LOG(0, "%s, line=%u, prPidStruct->u4BufStartPoint=0x%x\n", __FUNCTION__, __LINE__, prPidStruct->u4BufStartPoint);
+            }
         }
         else
 #endif
@@ -767,7 +772,7 @@ static BOOL _DmxSetPidBuffer(UINT8 u1Pidx, const DMX_PID_T* prPid,
             prPidStruct->u4HeaderBufAddr = 0;
             _DMX_Unlock();
 
-            LOG(2, "%s:%d: Can't allocate memory!\n", __FILE__, __LINE__);
+            LOG(0, "Can't allocate memory! %s, line=%u\n", __FUNCTION__, __LINE__);
             return FALSE;
         }
     }
@@ -2563,6 +2568,7 @@ BOOL _DMX_SetPid(UINT8 u1Pidx, UINT32 u4Flags, const DMX_PID_T* prPid, BOOL fgKe
     {
         if (!_DmxSetPidBuffer(u1Pidx, prPid, &rPidStruct))
         {
+            LOG(0, "%s: line=%u\n", __FUNCTION__, __LINE__);
             return FALSE;
         }
     }

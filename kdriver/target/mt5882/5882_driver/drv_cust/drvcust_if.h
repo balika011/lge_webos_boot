@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/02/22 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -209,7 +209,7 @@ C Total size:
 #endif
 
 #if defined(CC_FBM_SUPPORT_DMXPID)
-#define FBM_DMX_PID_BUF_SIZE    0x200000
+#define FBM_DMX_PID_BUF_SIZE    0x400000
 #else
 #define FBM_DMX_PID_BUF_SIZE    0x0
 #endif
