@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/23 $
  * $RCSfile: vdp_vsync.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -437,7 +437,7 @@ static UINT32 _B2R_CmdSrcOutRegion(UCHAR ucB2rId)
     /* 20081127 Pibben: Why we need to use rOutInfo.u4Width/u4Height to set H/V active? */
     B2R_HAL_Config(this->hB2r);
 #ifdef CC_SUPPORT_PIPELINE
-   if( VDP_PipeModeChangeing(ucB2rId))
+   if( VDP_PipeModeChangeing(ucVdpId,ucB2rId))
 #endif
     {
         B2R_HAL_OMUX_T tOmux = {0};

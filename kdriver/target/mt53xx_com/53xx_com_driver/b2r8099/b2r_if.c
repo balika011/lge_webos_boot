@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/23 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -674,7 +674,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
         if (u4IssueModeChange != 0)
         {
         #ifdef CC_SUPPORT_PIPELINE
-            LOG(0, "ucVdpId(%d) DTV Mode Change,->fgVdpModeChg=%d,ucB2rId=%d\n\n", ucVdpId,VDP_PipeModeChangeing(this->ucB2rId),this->ucB2rId);
+            LOG(0, "ucVdpId(%d) DTV Mode Change,->fgVdpModeChg=%d,ucB2rId=%d\n\n", ucVdpId,VDP_PipeModeChangeing(ucVdpId,this->ucB2rId),this->ucB2rId);
 		#else
 		     LOG(0, "ucVdpId(%d) DTV Mode Change,ucB2rId=%d\n\n", ucVdpId,this->ucB2rId);
 		#endif
@@ -684,13 +684,13 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
             _vDrvVideoSetMute(MUTE_MODULE_B2R, ucVdpId, 0, FALSE);
             _vDrvVideoSetMute(MUTE_MODULE_MODECHG, ucVdpId, 10, FALSE);
 			#ifdef CC_SUPPORT_PIPELINE
-             if(fgLGPipLine==FALSE || VDP_PipeModeChangeing(this->ucB2rId))
+             if(fgLGPipLine==FALSE || VDP_PipeModeChangeing(ucVdpId,this->ucB2rId))
 			#endif
             {
                 vMpegModeChg(ucVdpId);
                 vMpegModeDetDone(ucVdpId);
 				#ifdef CC_SUPPORT_PIPELINE
-                VDP_PipeModeChangeDone(this->ucB2rId);
+                VDP_PipeModeChangeDone(ucVdpId,this->ucB2rId);
 				#endif
             }
             //#ifdef CC_B2R_RM_SUPPORT
@@ -1397,32 +1397,28 @@ VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTAC_CB cb)
    return;
 }
 
-BOOL VDP_PipeModeChangeing(UCHAR ucB2rId)
+BOOL VDP_PipeModeChangeing(UCHAR ucVdpId,UCHAR ucB2rId)
 { 
     CONNECTION_ADAPTOR *prConnAdaptor;
-    UCHAR ucVdpId,ucVdecId,ucConnectedCnt=0;
-    if(ucB2rId >= B2R_HW_MAX_ID)
+    UCHAR ucVdecId,ucConnectedCnt=0;
+    if(ucB2rId >= B2R_HW_MAX_ID || ucVdpId >=CONN_VDP_CNT)
     {
-        LOG(0,"[Pipe][Error]VDP_PipeInModeChangeing(%d) Param Error\n",ucVdpId);
+        LOG(0,"[Pipe][Error]VDP_PipeInModeChangeing(%d,%d) Param Error\n",ucVdpId,ucB2rId);
         return FALSE;
     }
 
-    for(ucVdpId=0; ucVdpId < CONN_VDP_CNT; ucVdpId++)
-    {
-        for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
-        {
-           prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
-           if(prConnAdaptor->ucB2rId ==ucB2rId &&prConnAdaptor->fgModeChanging)
-           {
-              LOG(1,"[Pipe]Doing Mode change conn=%d,vdp=%d,Es=%d,fbg=%d,b2r=%d\n",
-                prConnAdaptor->fgConnected,ucVdpId,ucVdecId,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId);
-              ucConnectedCnt++;
-           }
-        }
-    }
-
+	for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
+	{
+	   prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
+	   if(/*prConnAdaptor->ucB2rId ==ucB2rId &&*/prConnAdaptor->fgModeChanging)
+	   {
+		  LOG(1,"[Pipe]Doing Mode change conn=%d,vdp=%d,Es=%d,fbg=%d,b2r=%d\n",
+			prConnAdaptor->fgConnected,ucVdpId,ucVdecId,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId);
+		  ucConnectedCnt++;
+	   }
+	}
     
-    LOG(1,"[Pipe]VDP_PipeModeChangeing(%d) cnt=%d\n",ucB2rId,ucConnectedCnt);
+    LOG(1,"[Pipe]VDP_PipeModeChangeing(%d,%d) cnt=%d\n",ucVdpId,ucB2rId,ucConnectedCnt);
     if(ucConnectedCnt > 0)
     {
        if(ucConnectedCnt > 1)
@@ -1435,33 +1431,30 @@ BOOL VDP_PipeModeChangeing(UCHAR ucB2rId)
     return FALSE;
 }
 
-VOID VDP_PipeModeChangeDone(UCHAR ucB2rId)
+VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
 {
     CONNECTION_ADAPTOR *prConnAdaptor;
-    UCHAR ucVdpId,ucVdecId,ucConnectedCnt=0;
-    if(ucB2rId >= B2R_HW_MAX_ID)
+    UCHAR ucVdecId,ucConnectedCnt=0;
+    if(ucB2rId >= B2R_HW_MAX_ID || ucVdpId >=CONN_VDP_CNT)
     {
-        LOG(0,"[Pipe][Error]VDP_PipeModeChangeDone(%d) Param Error\n",ucVdpId);
+        LOG(0,"[Pipe][Error]VDP_PipeModeChangeDone(%d,%d) Param Error\n",ucVdpId,ucB2rId);
         return;
     }
 
-    for(ucVdpId=0; ucVdpId < CONN_VDP_CNT; ucVdpId++)
-    {
-        for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
-        {
-           prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
-           
-           if(prConnAdaptor->ucB2rId ==ucB2rId && prConnAdaptor->fgModeChanging)
-           {
-              prConnAdaptor->fgModeChanging = FALSE;
-              LOG(1,"[Pipe]Doing Mode change done, conn=%d,vdp=%d,es=%d,fbg=%d,b2r=%d\n",
-                prConnAdaptor->fgConnected,ucVdpId,ucVdecId,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId);
-              ucConnectedCnt++;
-           }
-        }
-    }
+	for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
+	{
+	   prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
+	   
+	   if(/*prConnAdaptor->ucB2rId ==ucB2rId && */prConnAdaptor->fgModeChanging)
+	   {
+		  prConnAdaptor->fgModeChanging = FALSE;
+		  LOG(1,"[Pipe]Doing Mode change done, conn=%d,vdp=%d,es=%d,fbg=%d,b2r=%d\n",
+			prConnAdaptor->fgConnected,ucVdpId,ucVdecId,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId);
+		  ucConnectedCnt++;
+	   }
+	}
     
-    LOG(1,"[Pipe]VDP_PipeModeChangeDone(%d) cnt=%d\n",ucB2rId,ucConnectedCnt);
+    LOG(1,"[Pipe]VDP_PipeModeChangeDone(%d,%d) cnt=%d\n",ucVdpId,ucB2rId,ucConnectedCnt);
     if(ucConnectedCnt > 0)
     {
        if(ucConnectedCnt > 1)
