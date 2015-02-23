@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #20 $
+* $Revision: #21 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -878,7 +878,7 @@ static UINT8 _sbAnaCopyProMvType2 =0, _sbPreAnaCopyProMvType2 =0;
 
 #if SUPPORT_SCART
 //--------- Counter for Scart SFisrt -----------
-#define TVD_S_CNT     9
+#define TVD_S_CNT     20
 #define TVD_S_CNT2    1
 
 #define vDrvTvdRstSCnt()      (_sbSCnt = 5)
@@ -2991,8 +2991,8 @@ static void _svDrvTvdRstNSTStatus(BOOL fgIs525, RTvdNSTDStatus *pRTvdNSTDStatus)
  * @retval : VPRES status.
  */
 #if TVD_VPRES_STATE
-
 /*
+
 static UINT8 _sbDrvTvdVpresStateMachine(UINT8 *pVpresState)
 {
     UINT8 bCurVpresState = *pVpresState;
@@ -4122,7 +4122,7 @@ static void _svDrvTvdSetCAgcUVPeak(UINT8 bMode)
  */
 static void _svDrvTvdModeChgDone(void)
 {
-    LOG(0,"[11111TVD_DBG_MSG] _svDrvTvdModeChgDone fgVPres=%d mcnt(%d)\n",_rTvd3dStatus.fgVPres, _sbTvdModeCnt);
+    LOG(0,"[TVD_DBG_MSG] _svDrvTvdModeChgDone fgVPres=%d mcnt(%d)\n",_rTvd3dStatus.fgVPres, _sbTvdModeCnt);
 
 #ifdef CC_SUPPORT_RECORD_AV
     if(_sbATVPVRBypassModeChg==TRUE)
@@ -4610,7 +4610,7 @@ static void _svDrvTvdNAStop(void)
  */
 static void _svDrvTvdModeChg(void)
 {
-    LOG(0, "[11111TVD_DBG_MSG] _svDrvTvdModeChg\n");
+    LOG(0, "[TVD_DBG_MSG] _svDrvTvdModeChg\n");
 
     #if TVD_BP_ATV_MODECHG
     LOG(1, "[TVD_DBG_MSG] BypassModeChg = %d\n", _sbBypassModeChg);
@@ -5936,15 +5936,15 @@ BOOL fgHwTvdVPres(void)
     else
     {
         #ifdef CC_SUPPORT_PIPELINE
-		//if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
-	       if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV))&&((!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV))))
+		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+	       //if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV))&&((!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV))))
 
         #else
 		if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
         #endif
         {
-           // return ((IO32ReadFldAlign(DFE_STA_00, VPRES4_ON_FLAG))||(IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D)));
-	     return (IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D));
+           //return ((IO32ReadFldAlign(DFE_STA_00, VPRES4_ON_FLAG))||(IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D)));
+	        return (IO32ReadFldAlign(STA_CDET_00, VPRES_TVD3D));
 
         }
         else
@@ -7055,13 +7055,14 @@ void vTvd3dVSyncISR(void)
     
 #ifdef CC_SUPPORT_PIPELINE
     //if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
-     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV))&&((!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV))))
+     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
 
 #else
     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
 #endif
     {
 		//fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
+		//LOG(1, "[TVD_DBG_MSG1] Scart and cvbs use VPRES4.\n");
 		fgPreVPres_0 = fgHwTvdVPres();
 
     }

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/23 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #39 $
+ * $Revision: #40 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1557,10 +1557,10 @@ UINT8 bApiVideoMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc)
 
 UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 {
-    BOOL fgMainCh = FALSE;
-    ExtInputTable NewExtInput;
+	BOOL fgMainCh = FALSE;
+	ExtInputTable NewExtInput;
 	// connect AVD is from here
-    _fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
+	_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
 	if(_fVSCConnectMainAVD)
 	{
@@ -1573,60 +1573,61 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 
 	}
 	
-    if(bMainSrc ==SV_VS_NO_CHANGE)
-    {
-        bMainSrc = _fVFEAVDSourceMainOld;
-    }
+	if(bMainSrc ==SV_VS_NO_CHANGE)
+	{
+		bMainSrc = _fVFEAVDSourceMainOld;
+	}
 
-    if(bSubSrc ==SV_VS_NO_CHANGE)
-    {
-        bSubSrc = _fVFEAVDSourceSubOld;
-    }
+	if(bSubSrc ==SV_VS_NO_CHANGE)
+	{
+		bSubSrc = _fVFEAVDSourceSubOld;
+	}
 	
-    NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
-    /*AVD source is changed ? */
-    {
+	NewExtInput.MapIntMode = bDrvGetMapIntMode(bMainSrc, bSubSrc);
+	/*AVD source is changed ? */
+	{
 
-        if(_fVFEAVDSourceMainOld != bMainSrc)
-        {
-            fgMainCh = TRUE;
-        }
-        _fVFEAVDSourceMainNew = bMainSrc;
-        _fVFEAVDSourceMainOld = bMainSrc;
-        _fVFEAVDSourceSubNew = bSubSrc;
-        _fVFEAVDSourceSubOld = bSubSrc;
-	    _fVFEAVDMainICPin = NewExtInput.MapIntMode >> 8;
-	    _fVFEAVDSubICPin = NewExtInput.MapIntMode & 0xff;
+		if(_fVFEAVDSourceMainOld != bMainSrc)
+		{
+			fgMainCh = TRUE;
+		}
+		
+		_fVFEAVDSourceMainNew = bMainSrc;
+		_fVFEAVDSourceMainOld = bMainSrc;
+		_fVFEAVDSourceSubNew = bSubSrc;
+		_fVFEAVDSourceSubOld = bSubSrc;
+		_fVFEAVDMainICPin = NewExtInput.MapIntMode >> 8;
+		_fVFEAVDSubICPin = NewExtInput.MapIntMode & 0xff;
 		 _fVSCConnectAVDMainChannelON = SV_ON;
 		_fVSCConnectAVDSubChannelON= SV_ON;
-        _fVSCConnectAVDMainDEC = SV_VD_TVD3D;
+		_fVSCConnectAVDMainDEC = SV_VD_TVD3D;
 		_fVSCConnectAVDSubDEC= SV_VD_TVD3D;
-       
-    }
+		_bSFisSV =SV_FALSE;
+	   
+	}
 	LOG(0, "bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
-     _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
-    if(fgMainCh)
-    {
-        vDrvCvbsVfePD();  //for scart out issue
-        vDrvAvMux(0);
-        vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
-    }
+	 _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
+	
+	if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
+	{
+		vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
+	}
 
-    if(fgMainCh)
-    {
-			
+	if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
+	{
 		vTvd3dConnect(0x0, SV_ON);//just  connect TVD
 
-     }
+	}
+	if(bOnOff==0)
+	{
+		vTvd3dConnect(0x0, SV_OFF);
+		LOG(0, "bApiVFEAVDdisconnect:clean the AVMUX and power down the ADC.\n");
+	}
+	
+	return SV_SUCCESS;
 
-// disconnet  from here	
-if(bOnOff==0x0)
-{   
-	LOG(0, "bApiVFEAVDdisconnect\n");
-	vTvd3dConnect(0x0, SV_OFF);// disconnect TVD
 }
-    return SV_SUCCESS;
-}
+
 #endif
 
 

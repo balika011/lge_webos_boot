@@ -86,7 +86,7 @@ UINT32 _gu4SysPinmuxInit[][2] =
 #else
 		//for spidif /ARC_spidif  output 
 		{PIN_ALIN,	 PINMUX_FUNCTION2 },
-		{PIN_ASPDIF0,PINMUX_FUNCTION2 },
+		{PIN_ASPDIF0,PINMUX_FUNCTION0 },
 #endif
     {PIN_AOMCLK, PINMUX_FUNCTION1},
     {PIN_AOBCK, PINMUX_FUNCTION1},

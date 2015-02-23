@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: video_def.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -518,7 +518,7 @@ extern  MonOutPicInfo   _rMonitorOutInfo;
 
 
 #ifdef CC_SUPPORT_PIPELINE
-	#define fgIsMainScart() (u1ADCConnentSrcType==VSS_SCART)//in pipline only stand for adc/avdscart connent or disconnent  not diff main sub
+	#define fgIsMainScart() (VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)//in pipline only stand for adc/avdscart connent or disconnent  not diff main sub
 	#define fgIsPipScart() 0//in pipline ,always set 0
 #else
 
