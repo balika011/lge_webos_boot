@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_pwm.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -192,7 +192,7 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 		{
 			u4Frequency = _gPWMSetting[pwmIndex].pwm_frequency;
 		}
-		LOG(0, "_|-|_  opwm[%d] freq:%dHz,duty:%d, lock:%d, adaptive:%d\n",pwmIndex, u4Frequency, _gPWMSetting[pwmIndex].pwm_duty,_gPWMSetting[pwmIndex].pwm_lock,_gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwm_adapt_freq_enable);
+		LOG(2, "_|-|_  opwm[%d] freq:%dHz,duty:%d, lock:%d, adaptive:%d\n",pwmIndex, u4Frequency, _gPWMSetting[pwmIndex].pwm_duty,_gPWMSetting[pwmIndex].pwm_lock,_gPWMSetting[pwmIndex].pwm_adapt_freq_param.pwm_adapt_freq_enable);
 		if(u4Frequency == 0)
 		{
 			u4PwmP = 0;
@@ -255,7 +255,7 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 		        	Printf("Error , get wrong LCD freq : %d .\n",vDrvGetLCDFreq());
 		        	break;
 			}
-    LOG(0, "_|-|_  scanpwm[%d] freq:%dHz,dev:%d,start(permillage):%d%,high(permillage):%d%,low(permillage):%d%\n",u4Port, u4Frequency, u4Devider, u4Start, u4High, u4Low);
+    LOG(2, "_|-|_  scanpwm[%d] freq:%dHz,dev:%d,start(permillage):%d%,high(permillage):%d%,low(permillage):%d%\n",u4Port, u4Frequency, u4Devider, u4Start, u4High, u4Low);
 
    if(u4Devider==0)
 		 u4Devider=1; 
@@ -263,10 +263,10 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
    u4High=u4High/u4Devider;
    u4Low=u4Low/u4Devider;
 
-	if(!fgIsScanPWMSetDataLatch())
+	/*if(!fgIsScanPWMSetDataLatch())
 	{
 		vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA_OFF,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Aligned Vsync
-	}
+	}*/
   
     vDrvSetScanPWM(u4Port,u4Start,u4High,u4Low);
 
@@ -282,15 +282,21 @@ void vDrvPWM_ApplyParam(DRV_PWM_PIN_SEL_T pwmIndex)
 void vDrvPWM_SetParam(DRV_PWM_PIN_SEL_T pwmIndex,DRV_PWM_PARAM_T *prPwmSetting)
 {
 	 u1FlagSetPwm = 1;  
+	 LOG(2,"%s,get %d %d %d %d %d %d %d %d\n",__FUNCTION__,pwmIndex ,prPwmSetting->pwm_enable,prPwmSetting->pwm_duty,prPwmSetting->pwm_frequency,
+			 prPwmSetting->pwm_adapt_freq_param.pwm_adapt_freq_enable,prPwmSetting->pwm_lock,prPwmSetting->pwm_pos_start,prPwmSetting->pwm_scanning_enable);
+	 LOG(2,"adapt_freq:%d,%d,%d\n",prPwmSetting->pwm_adapt_freq_param.pwmfreq_48nHz,prPwmSetting->pwm_adapt_freq_param.pwmfreq_50nHz,prPwmSetting->pwm_adapt_freq_param.pwmfreq_60nHz);
+		memcpy(&_gPWMSetting[pwmIndex], prPwmSetting, sizeof(DRV_PWM_PARAM_T)); 
+	if(_gPWMSetting[pwmIndex].pwm_enable && (_gPWMSetting[pwmIndex].pwm_scanning_enable))
+			vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA_OFF,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
 
-	 memcpy(&_gPWMSetting[pwmIndex], prPwmSetting, sizeof(DRV_PWM_PARAM_T));
 	 vDrvPWM_ApplyParam(pwmIndex);
 }
 void vDrvPWM_ApplyParamSet()
 {
 	INT32 i;
 	if (u1FlagSetPwm==0) return;                                                        ;
-	for(i=1;i<=SrcPWM2;i++)
+	LOG(1, "vDrvPWM_ApplyParamSet\n");
+	for(i=SrcPWM1;i<=SrcPWM2;i++)
 	{	if(_gPWMSetting[i].pwm_enable && (_gPWMSetting[i].pwm_scanning_enable))
 			vDrvSetScanPWMLatchMode(SCAN_PWM_LATCH_MODE_SETDATA,SCAN_PWM_LATCH_MODE_OFF,SCAN_PWM_ALIGN_MODE_VSYNC);  // Set data
 		vDrvPWM_ApplyParam(PWM_DEV_PIN0+i);
@@ -984,7 +990,7 @@ void vDrvSetScanPWM(UINT8 u1Src, UINT32 u4Start, UINT32 u4High, UINT32 u4Low)
     u2VTotal = wDrvGetOutputVTotal();
     u4Val = u2HTotal * u2VTotal / 1000;
 
-	LOG(3, "_|-|_ vDrvSetScanPWM [SRC:scanPWM%d,%d*%d,start:%d%,high:%d%,low:%d%]\n", u1Src, u2HTotal, u2VTotal, u4Start, u4High, u4Low);
+	LOG(2, "_|-|_ vDrvSetScanPWM [SRC:scanPWM%d,%d*%d,start:%d%,high:%d%,low:%d%]\n", u1Src, u2HTotal, u2VTotal, u4Start, u4High, u4Low);
 
     switch(u1Src)
     {
@@ -1052,7 +1058,7 @@ void vDrvSetScanPWM(UINT8 u1Src, UINT32 u4Start, UINT32 u4High, UINT32 u4Low)
 
         case SrcPWM3:
         	BSP_PinSet(PIN_OPWM2, PINMUX_FUNCTION3);
-            if (u4High == 100)            
+            if (u4High == 1000)            
             {			 
 	            vIO32WriteFldAlign(PWM_SCAN_10, 1, REG_PWM_SCAN3_FIXED_HIGH);			 
 	            vIO32WriteFldAlign(PWM_SCAN_10, 0, REG_PWM_SCAN3_FIXED_LOW);		 			 			 			             
