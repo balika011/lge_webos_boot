@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/24 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8954,7 +8954,7 @@ BOOL AUD_DRVSetDecodeType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T e
     // Thus, it must calls after DSP code is loaded. (_bDspStrTyp is set at loading DSP code)
     if ((u1DecId!=AUD_DEC_AUX)||(_arAudDecoder[u1DspId][AUD_DEC_MAIN].eStreamFrom != AUD_STREAM_FROM_HDMI))
     {
-        _AUD_DspSetIEC(u1DecId);
+     //   _AUD_DspSetIEC(u1DecId);
     }
     //Setup DVD gpio
     //AUD_SetSrc(u1DecId,eStreamFrom, eDecFmt);
@@ -9923,7 +9923,7 @@ void GST_MMQueueSyncInfo(UINT8 u1DecId, UINT64 u8PTS, UINT32 u4PTSWp, BOOL fgRes
         _aeMMSyncInfo[u2Idx].u4PtsWP = u4PTSWp;
         _aeMMSyncInfo[u2Idx].u4PTSHigh = u4PTSHigh;
 
-        LOG(1,"MM Q %d, P %lld, W 0x%x, H 0x%x\n",u2Idx,_aeMMSyncInfo[u2Idx].u8PTS,_aeMMSyncInfo[u2Idx].u4PtsWP,_aeMMSyncInfo[u2Idx].u4PTSHigh);
+        LOG(9,"MM Q %d, P %lld, W 0x%x, H 0x%x\n",u2Idx,_aeMMSyncInfo[u2Idx].u8PTS,_aeMMSyncInfo[u2Idx].u4PtsWP,_aeMMSyncInfo[u2Idx].u4PTSHigh);
         u2CurrIdx = u2Idx;
         u2Idx += 1;
     }

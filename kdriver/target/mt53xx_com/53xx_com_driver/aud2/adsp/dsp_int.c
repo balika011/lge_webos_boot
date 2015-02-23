@@ -75,7 +75,7 @@
 /***************    MTK CONFIDENTIAL & COPYRIGHTED     ****************/
 /***************                                       ****************/
 /***************  $Modtime:: 04/12/06 4:57p    $       ****************/
-/***************  $Revision: #1 $       ****************/
+/***************  $Revision: #2 $       ****************/
 /***************                                       ****************/
 /***************   Description : DSP Control routines  ****************/
 /***************                                       ****************/
@@ -835,6 +835,7 @@ void vDspSetSamplingRate(UINT8 u1DspId, UINT8 u1DecId)
             _AUD_DspAsrcSetBaseFreq(0, _rDspVars[u1DspId][u1DecId].dwDacFreq);
         }
         // IEC RAW delay
+		_AUD_DspSetIEC(u1DecId);
         vSetIECRawDelay (_rDspVars[u1DspId][u1DecId].dwDacFreq,u1DecId);
     }
 

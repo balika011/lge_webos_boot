@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/24 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1892,6 +1892,9 @@ void  AUD_SetSampleFreq(UINT8 u1DecId, SAMPLE_FREQ_T eSmpFreq)
 
         if (((u1DecId == AUD_DEC_MAIN) && (_aeStrSrcConf[AUD_DEC_MAIN] != AUD_STREAM_FROM_HDMI)) ||
             ((u1DecId == AUD_DEC_AUX) && (_aeStrSrcConf[AUD_DEC_MAIN] == AUD_STREAM_FROM_DIGITAL_TUNER)) ||
+#ifdef CC_ENABLE_AOMX
+            ((u1DecId == AUD_DEC_AUX) && (_aeStrSrcConf[AUD_DEC_AUX] == AUD_STREAM_FROM_GST)) ||
+#endif            
             ((u1DecId == AUD_DEC_THIRD) && _IsTriOnlyDecMode() && (_aeStrSrcConf[AUD_DEC_THIRD] != AUD_STREAM_FROM_HDMI)))
         {
             if (_AudGetStrFormat(u1DecId) == AUD_FMT_AAC) //for bypass DDCO 44.1K
