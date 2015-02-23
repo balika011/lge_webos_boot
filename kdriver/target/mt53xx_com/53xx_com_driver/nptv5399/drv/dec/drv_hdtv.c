@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/02/23 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1311,10 +1311,16 @@ UINT16 wHdtvInputWidth(void)
     {
         return (Get_VGAMODE_IPH_WID(_bHdtvTiming)>>(IO32ReadFldAlign(HDTV_00,HDTV_CEN_SEL)));
     }
-    else
+    else if ((_bHdtvTiming == MODE_NOSUPPORT)&&(_IsHdtvDetectDone))
     {
-        return (720);
-    }
+    	return 4096;
+		
+	}
+	else 
+	{
+		//DBG_Printf(VGA_Debug,"HdtvInputWidth=0,%d ,%d\n",_bHdtvTiming,_IsHdtvDetectDone);
+		return 0;
+	}
 }
 
 
@@ -1374,9 +1380,15 @@ UINT16 wHdtvInputHeight(void)
     {
         return (Get_VGAMODE_IPV_LEN(_bHdtvTiming));
     }
-    else
+    else if ((_bHdtvTiming == MODE_NOSUPPORT)&&(_IsHdtvDetectDone))
     {
-        return (480);
+    	return 4096;
+		
+	}
+	else 
+	{
+		//DBG_Printf(VGA_Debug,"wHdtvInputHeight =0,%d ,%d\n",_bHdtvTiming,_IsHdtvDetectDone);
+		return 0;
     }
 }
 
@@ -1391,9 +1403,13 @@ UINT8 bHdtvRefreshRate(void)
     {
         return (Get_VGAMODE_IVF(_bHdtvTiming));
     }
-    else
+	else if ((_bHdtvTiming == NO_SIGNAL) &&(_IsHdtvDetectDone))	
     {
-        return (0);
+        return 0;
+    }
+	else 
+    {
+    	return bSP0Vclk;
     }
 }
 
