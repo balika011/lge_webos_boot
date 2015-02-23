@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/21 $
+ * $Date: 2015/02/23 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -113,6 +113,8 @@
 #define FUNC_EXIT
 #endif
 
+
+//#define SNAPSHOT_DEBUG
 //-----------------------------------------------------------------------------
 // Type definitions
 //-----------------------------------------------------------------------------
@@ -324,7 +326,9 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
  //   UINT8* buffer;
 //   UINT32 bufsize=4096;	
 //    UINT32 bufsize=0x10000;
+ #ifdef SNAPSHOT_DEBUG
     UINT32 i;
+ #endif
 //    INT32 u4Offset=0;
 //    UINT32 u4MidEnd;
 	GCPU_SHA_HDL_T rShaHdl;
@@ -334,7 +338,8 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 	UINT64 u4fullImageSize  ;
 	UINT32	u4PartId;
     unsigned char* group_buf;
-    unsigned int group_size = 0, group_num = 0,frag_idx = 0,group_idx = 0;
+    unsigned int group_size = 0, group_num = 0,frag_idx = 0;
+		//,group_idx = 0;
 	UINT64	offset = 0;
 	
 #if 0
@@ -345,14 +350,14 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 		}
 #endif
 
-	LOG(0," size =%x \n", size );
-	LOG(0," snapoffset =%x \n", snapoffset );
 	u4fullImageSize  = (UINT64)size + (UINT64)snapoffset;
-	
-    LOG(0,"full image size: %lld \n", u4fullImageSize);
 
-	LOG(0,"\n partition id set to 43 \n");
-	u4PartId = 43;
+#ifdef SNAPSHOT_DEBUG
+    LOG(0,"snapshot debug : full image size: %lld \n", u4fullImageSize);
+	LOG(0,"snapshot debug : partition id set to 43 \n");
+#endif	
+
+	u4PartId = 43;  //hard code for hib partition 
 
     x_memset(u1AesKey, 0x11, 16);
 
@@ -450,12 +455,15 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 	return 0;
 #endif
 
-	u4fullImageSize += 32;
+	u4fullImageSize += 0x1000; // add another header size --> don't know the reason
+	
+	u4fullImageSize += 32;     // add fullimage signature size 
+	
 //for fragment signture check
 	group_size = (frag_unit_size*num_of_frag);
-	group_num = 1;//u4ImageSize/group_size;
+	group_num = 1;// only implement partitial verify , so set group num -->1
 	
-    LOG(0,"SNAPSHOT debug  partial sign: group_num: 0x%x\n", group_num);
+    LOG(0,"snapshot debug  partial sign: group_num: 0x%x\n", group_num);
 	
 	group_buf = (unsigned char*)x_mem_alloc(group_num*frag_unit_size);
 	if (!group_buf)
@@ -468,8 +476,9 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 	GCPU_Init(0);
     GCPU_SHA256_Init((UINT32)&rShaHdl,FALSE);
 	
-	num_of_frag = 1; //for test only one frag
-	// generate frag_num(20) partial SHA256 signature
+//	num_of_frag = 1; //for test only one frag
+
+#if 0
 	for (frag_idx = 0; frag_idx < num_of_frag; frag_idx++)
 	{
 		// collect partial data for 1 group
@@ -492,16 +501,80 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 	
 	GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest_dst,32,TRUE);
 		
-		// DMX_Encrypt_Snapshot(u1HashValue, u4HashValueSize, u1HashValueOut, u1AesKey, &u4AesKeySize);
+
 	LOG(0,"SNAPSHOT debug after aes Digest data: \n");
 		
 	 for (i=0; i<32; i++)
 	 {
 		LOG(0,"%02x ", au1Digest_dst[i]);
 	 }
-	 
+
 		LOG(0,"\n");
 		LOG(0,"SNAPSHOT debug signdigest partition offset = %d \n",u4fullImageSize);
+		
+    	Snapshot_WriteMsdc(u4PartId,u4fullImageSize,au1Digest_dst,32);
+		u4fullImageSize += 32;
+
+	}
+
+	
+	LOG(0,"SNAPSHOT debug signdigest partition offset = %d \n",(u4fullImageSize-32));
+	
+    Snapshot_ReadMsdc(u4PartId,(u4fullImageSize-32),au1Digest_dst,32);
+
+	LOG(0,"SNAPSHOT debug verify after write key date to emmc and read again \n");
+
+	for (i=0; i<32; i++)
+	 {
+		LOG(0,"%02x ", au1Digest_dst[i]);
+	 }
+
+	#endif
+
+	for (frag_idx = 0; frag_idx < num_of_frag; frag_idx++)
+	{
+		
+#ifdef SNAPSHOT_DEBUG
+		LOG(0,"snapshot debug: frag %d \n", frag_idx);
+#endif
+		offset = frag_idx*frag_unit_size+snapoffset;
+
+		Snapshot_ReadMsdc(u4PartId,offset,group_buf,frag_unit_size);
+#ifdef SNAPSHOT_DEBUG
+		
+		LOG(0,"snapshot debug : read image data test (only 32bytes) \n");
+		
+		for (i=0; i<32; i++)
+		{
+			LOG(0,"%02x ", group_buf[i]);
+		}
+		LOG(0,"\n");
+#endif		
+		GCPU_SHA256_Update((UINT32)&rShaHdl, group_buf,frag_unit_size,TRUE);
+		GCPU_SHA256_Final((UINT32)&rShaHdl,au1Digest);
+#ifdef SNAPSHOT_DEBUG
+	
+		LOG(0,"snapshot debug before aes Digest data: \n");
+		for (i=0; i<32; i++)
+		{
+			LOG(0,"%02x ", au1Digest[i]);
+		}
+		
+		LOG(0,"\n");
+#endif
+	
+		GCPU_AES_CBC(u1AesKey, 16, u1AesKey,pu1RetIv,au1Digest,au1Digest_dst,32,TRUE);
+
+#ifdef SNAPSHOT_DEBUG
+
+		LOG(0,"snapshot debug after aes Digest data: \n");
+		for (i=0; i<32; i++)
+		{
+			LOG(0,"%02x ", au1Digest_dst[i]);
+		}
+
+		LOG(0,"\n");
+#endif
 		
     	Snapshot_WriteMsdc(u4PartId,u4fullImageSize,au1Digest_dst,32);
 		u4fullImageSize += 32;
