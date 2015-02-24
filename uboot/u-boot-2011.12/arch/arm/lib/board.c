@@ -489,7 +489,7 @@ unsigned int chb_kmemsize = 0;
 unsigned int tzsize = 0;
 unsigned int tzcorestart =0;
 #define FLASH_BASE 0
-#define FLASH_TZFW_TOTAL_LEN 0x200000
+#define FLASH_TZFW_TOTAL_LEN 0x500000
 #define FLASH_KERMEM_TOTAL_LEN 0x20000
 #define FLASH_TZBIN_TOTAL_LEN (FLASH_TZFW_TOTAL_LEN-FLASH_KERMEM_TOTAL_LEN)
 
