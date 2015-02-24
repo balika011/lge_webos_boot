@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/24 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #28 $
+ * $Revision: #29 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -12454,7 +12454,7 @@ BOOL _AUD_SetSPDIFEnable(BOOL fgEnable)
         x_thread_delay(50);
     }
     _aafgMWSetSpdifFlag = fgEnable;
-    _AudDspSetIec(_aeMWIec, fgEnable);
+   // _AudDspSetIec(_aeMWIec, fgEnable);
     _AudSetSPDIFEnable(fgEnable);
     VERIFY(x_sema_unlock(_ahSpdifCtlSema) == OSR_OK);
 
