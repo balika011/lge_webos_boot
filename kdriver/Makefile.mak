@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #14 $
-# $Date: 2015/02/03 $
+# $Revision: #15 $
+# $Date: 2015/02/24 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -1469,9 +1469,14 @@ ifeq "$(MTK_DRM_SUPPORT)" "true"
 	ifndef ENABLE_INTERTRUST_SUPPORT 
 	    export ENABLE_INTERTRUST_SUPPORT := true
 	endif
-	ifndef ENABLE_PLAYREADY_SUPPORT 
-	    export ENABLE_PLAYREADY_SUPPORT := true
-	endif
+	#ifndef ENABLE_PLAYREADY_SUPPORT 
+	#    export ENABLE_PLAYREADY_SUPPORT := true
+	#endif
+endif
+
+
+ifndef ENABLE_PLAYREADY_SUPPORT
+export ENABLE_PLAYREADY_SUPPORT := true
 endif
 
 ifndef SYS_MS10_SUPPORT

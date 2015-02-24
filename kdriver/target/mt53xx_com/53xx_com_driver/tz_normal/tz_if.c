@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/05 $
+ * $Date: 2015/02/24 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -156,6 +156,7 @@ static BOOL TZ_CTL(UINT32 u4Cmd, UINT32 u4PAddr, UINT32 u4Size)
     case TZCTL_TEE_PLAYREADY_DASH_SAMPLE_AESCTR_DECRYPT_AUDIO:
     case TZCTL_OEMCrypto_DecryptCTR:
     case TZCTL_OEMCrypto_DecryptVideo:
+    case TZCTL_TEE_PLAYREADY_MULTI_CONTENT_SECUREBUFFER_DECRYPT:
         GCPU_HW_LOCK();
         break;
     }
@@ -178,6 +179,7 @@ static BOOL TZ_CTL(UINT32 u4Cmd, UINT32 u4PAddr, UINT32 u4Size)
     case TZCTL_TEE_PLAYREADY_DASH_SAMPLE_AESCTR_DECRYPT_AUDIO:
     case TZCTL_OEMCrypto_DecryptCTR:
     case TZCTL_OEMCrypto_DecryptVideo:
+    case TZCTL_TEE_PLAYREADY_MULTI_CONTENT_SECUREBUFFER_DECRYPT:
         GCPU_HW_UNLOCK();
         break;
     }

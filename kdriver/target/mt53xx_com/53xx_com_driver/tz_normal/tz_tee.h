@@ -34,9 +34,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/15 $
+ * $Date: 2015/02/24 $
  * $RCSfile: tz_tee.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -121,6 +121,37 @@
 #define TZCTL_TEE_PLAYREADY_SECURESTOP_COMMIT_SECURESTOP                        ((UINT32)0x636f)
 #define TZCTL_TEE_PLAYREADY_SECURESTOP_RESET_SECURESTOPS                        ((UINT32)0x6370)
 #define TZCTL_TEE_PLAYREADY_SECURESTOP_UNLOADSECRETKEY                             ((UINT32)0x6371)
+#define TZCTL_TEE_Wrapped_OEM_HAL_IsHalDevCertValidationSupported           ((UINT32)0x6380)
+#define TZCTL_TEE_Wrapped_OEM_HAL_IsHalDevCertValidationUnsupported           ((UINT32)0x6381)
+#define TZCTL_TEE_Wrapped_Oem_Hal_AllocateRegister         ((UINT32)0x6382)
+#define TZCTL_TEE_Wrapped_Oem_Hal_FreeRegister          ((UINT32)0x6383)
+#define TZCTL_TEE_Wrapped_Oem_Hal_RegisterCount         ((UINT32)0x6384)
+#define TZCTL_TEE_Wrapped_Oem_Hal_GetPreloadedIndex         ((UINT32)0x6385)
+#define TZCTL_TEE_Wrapped_Oem_Hal_Initialize          ((UINT32)0x6386)
+#define TZCTL_TEE_Wrapped_Oem_Hal_Deinitialize          ((UINT32)0x6387)
+#define TZCTL_TEE_Wrapped_Oem_Hal_VerifyMessageSignature          ((UINT32)0x6388)
+#define TZCTL_TEE_Wrapped_Oem_Hal_CreateMessageSignature          ((UINT32)0x6389)
+#define TZCTL_TEE_Wrapped_Oem_Hal_VerifyOMAC1Signature           ((UINT32)0x638A)
+#define TZCTL_TEE_Wrapped_Oem_Hal_CreateOMAC1Signature           ((UINT32)0x638B)
+#define TZCTL_TEE_Wrapped_Oem_Hal_EncryptDataBlock         ((UINT32)0x638C)
+#define TZCTL_TEE_Wrapped_Oem_Hal_IsDevelopmentPlatform          ((UINT32)0x638D)
+#define TZCTL_TEE_Wrapped_Oem_Hal_UnwrapKey        ((UINT32)0x638E)
+#define TZCTL_TEE_Wrapped_Oem_Hal_WrapKey          ((UINT32)0x638F)
+#define TZCTL_TEE_Wrapped_Oem_Hal_GenerateKey          ((UINT32)0x6390)
+#define TZCTL_TEE_Wrapped_Oem_Hal_DecryptContent           ((UINT32)0x6391)
+#define TZCTL_TEE_Wrapped_Oem_Hal_DecryptContentOpaque           ((UINT32)0x6392)
+#define TZCTL_TEE_Wrapped_Oem_Hal_CreateSampleEncryptionContext          ((UINT32)0x6393)
+#define TZCTL_TEE_Wrapped_Oem_Hal_EncryptSampleData           ((UINT32)0x6394)
+#define TZCTL_TEE_Wrapped_Oem_Hal_QuerySampleMetadata           ((UINT32)0x6395)
+#define TZCTL_TEE_Wrapped_Oem_Hal_DestroySampleEncryptionContext          ((UINT32)0x6396)
+#define TZCTL_TEE_Wrapped_Oem_Hal_LoadPlayReadyRevocationInfo           ((UINT32)0x6397)
+#define TZCTL_TEE_Wrapped_Oem_Hal_LoadPlayReadyCrl          ((UINT32)0x6398)
+#define TZCTL_TEE_Wrapped_Oem_Hal_SetPrivDat          ((UINT32)0x6399)
+#define TZCTL_TEE_Wrapped_Oem_Hal_SetZGPrivDat          ((UINT32)0x639a)
+#define TZCTL_TEE_Wrapped_Wrapped_Get_EncryptionType     ((UINT32)0x639b)
+#define TZCTL_TEE_Wrapped_Wrapped_Get_KeyDataType          ((UINT32)0x639c)
+#define TZCTL_TEE_PLAYREADY_MULTI_CONTENT_SECUREBUFFER_DECRYPT    ((UINT32)0x639d)
+#define TZCTL_TEE_Wrapped_Oem_Hal_DecryptContentOpaque_tosecure           ((UINT32)0x639e)
 
 
 #define TZCTL_TEE_DDI_BASE                          ((UINT32)0x6400)
