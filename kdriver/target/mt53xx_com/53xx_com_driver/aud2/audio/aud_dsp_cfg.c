@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/02/24 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #27 $
+ * $Revision: #28 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2708,16 +2708,14 @@ static void _AudDspAgcEnalbe(UINT8 u1DecId, BOOL fgEnable)
 #endif
 }
 
-static void _AudDspIecConvertIecFlag (AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIecFlag_p, BOOL *bLoadTrans_p)
+static void _AudDspIecConvertIecFlag (UINT8 u1DecId ,AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIecFlag_p, BOOL *bLoadTrans_p)
 {
     AUD_IEC_T eIecFlag;
     BOOL bLoadTrans;
     AUD_FMT_T eDecFormat = SetIecInfo->eDecFormat;
     AUD_IEC_T eIecCfg = SetIecInfo->eIecCfg;
-    UINT8 u1DecId;
     bLoadTrans = FALSE; // default do not load transcoder
     eIecFlag = AUD_IEC_CFG_PCM; // default PCM
-    UNUSED(u1DecId);
     
     if (eIecCfg == AUD_IEC_CFG_RAW)
     {
@@ -2734,6 +2732,7 @@ static void _AudDspIecConvertIecFlag (AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIec
             {
                 if (SetIecInfo->eStreamSrc == AUD_STREAM_FROM_DIGITAL_TUNER)
                 {
+#ifndef CC_ENABLE_AOMX
                     // for source = DTV
                     if (_IsTriOnlyDecMode())
                     {
@@ -2743,6 +2742,7 @@ static void _AudDspIecConvertIecFlag (AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIec
                     {
                         u1DecId = AUD_DEC_AUX;
                     }
+#endif					
                     if ((AUD_GetSampleFreq(u1DecId) == FS_48K)
 #ifdef  CC_AUD_DOLBY_SUPPORT_DDT
                        ||(AUD_GetSampleFreq(u1DecId) == FS_32K)
@@ -2760,6 +2760,8 @@ static void _AudDspIecConvertIecFlag (AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIec
                 }
                 else
                 {
+
+#ifndef CC_ENABLE_AOMX				
                     // for source = MM, HDMI...
                     if (_IsTriOnlyDecMode())
                     {
@@ -2769,6 +2771,7 @@ static void _AudDspIecConvertIecFlag (AUD_IECINFO_T *SetIecInfo, AUD_IEC_T *eIec
                     {
                         u1DecId = AUD_DEC_MAIN;
                     }
+#endif					
                     if ((AUD_GetSampleFreq(u1DecId) == FS_48K)
 #ifdef  CC_AUD_DOLBY_SUPPORT_DDT
                         ||(AUD_GetSampleFreq(u1DecId) == FS_32K)
@@ -2896,7 +2899,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     _gSetIecInfo.eDecFormat = eDecFormat;
 
     /* Convert IEC type for RAW type */
-    _AudDspIecConvertIecFlag (&_gSetIecInfo, &eIecFlag, &bLoadTrans);
+    _AudDspIecConvertIecFlag (_u1SpdifRawDec, &_gSetIecInfo, &eIecFlag, &bLoadTrans);
 
     eSpdifRegType = SPDIF_REG_TYPE_USER;
     if (eSpdifRegType >= SPDIF_REG_TYPE_NUM)
