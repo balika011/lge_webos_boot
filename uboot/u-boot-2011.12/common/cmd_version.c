@@ -26,6 +26,20 @@
 #include <version.h>
 #include <linux/compiler.h>
 
+#ifdef LG_VERSION_INFO
+const char LG_version_info_str[] =
+	"Second Boot Version Info : " LG_VERSION_INFO " " __DATE__ ", " __TIME__;
+#else
+const char LG_version_info_str[] =
+	"Second Boot Version Info : Build by MTK";
+#endif
+
+#ifdef LG_BOOT_VERSION
+	const char second_boot_ver[] = LG_BOOT_VERSION;
+#else
+	const char second_boot_ver[] = "0";
+#endif
+
 const char __weak version_string[] = U_BOOT_VERSION_STRING;
 
 int do_version(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])

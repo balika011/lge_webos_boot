@@ -620,6 +620,14 @@ $(VERSION_FILE):
 		 '$(shell $(CC) --version | head -n 1)' )>>  $@.tmp
 		@( printf '#define LD_VERSION_STRING "%s"\n' \
 		 '$(shell $(LD) -v | head -n 1)' )>>  $@.tmp
+ifneq ($(LG_VERSION_INFO), )
+		@( printf '#define LG_VERSION_INFO "%s"\n' \
+		 "$(LG_VERSION_INFO)")>>  $@.tmp
+endif
+ifneq ($(LG_BOOT_VERSION), )
+		@( printf '#define LG_BOOT_VERSION "%s"\n' \
+		 "$(LG_BOOT_VERSION)")>>  $@.tmp
+endif
 		@cmp -s $@ $@.tmp && rm -f $@.tmp || mv -f $@.tmp $@
 
 $(TIMESTAMP_FILE):

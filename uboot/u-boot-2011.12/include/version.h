@@ -39,5 +39,6 @@
 
 #ifndef __ASSEMBLY__
 extern const char version_string[];
+extern const char LG_version_info_str[];
 #endif	/* __ASSEMBLY__ */
 #endif	/* __VERSION_H__ */

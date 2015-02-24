@@ -130,6 +130,7 @@ extern char strHWOption[];
 extern char bPortProtect;
 extern UINT16 gToolOpt[];
 extern MODEL_INFO_DB_T gModelInfoDB;
+extern const char second_boot_ver[];
 
 extern void release_non_boot_core(void);
 
@@ -270,7 +271,9 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "countryGrp=%d ", gModelInfoDB.group_code);
 	sprintf(arg_next(kargs), "modelName=%s ", gModelInfoDB.aModelName);
 	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
-	sprintf(arg_next(kargs), "%s ", "sver=3.00.00 bver=3.00.00");
+	sprintf(arg_next(kargs), "sver=%s ", "3.00.00");		// 1st Boot version
+	sprintf(arg_next(kargs), "bver=%s ", second_boot_ver);	// 2nd Boot version
+	
 
 	if(IS_IC_5882_ES1() || IS_IC_5882_ES2())
 		sprintf(arg_next(kargs), "%s ", "chip=A5LRA0");

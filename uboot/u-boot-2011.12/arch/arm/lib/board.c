@@ -170,7 +170,7 @@ extern  void GIC_Init(void);
 extern int cpu_init (void);
 static int display_banner(void)
 {
-	printf("\n\n%s\n\n", version_string);
+	printf("\n\n%s\n%s\n\n", LG_version_info_str, version_string);
 	debug("U-Boot code: %08lX -> %08lX  BSS: -> %08lX\n",
 	       _TEXT_BASE,
 	       _bss_start_ofs + _TEXT_BASE, _bss_end_ofs + _TEXT_BASE);
