@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/21 $
+ * $Date: 2015/02/25 $
  * $RCSfile: drv_scaler_gfx.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -380,7 +380,7 @@ UINT8 u1Scpip_GFX_Set_Dram_Address(UINT32 u4BaseAddr, UINT32 u4FrameSize, UINT8 
 	
 	vScpipGfxSetAddrLimit(_arGfxInf.u4WAddrHigh, _arGfxInf.u4WAddrLow);
 
-	//u1Scpip_GFX_Init_Dram();
+	u1Scpip_GFX_Init_Dram();
 
 	return TRUE;
 	
@@ -622,10 +622,10 @@ UINT8 u1Scpip_GFX_Set_Dump_Format(SCPIP_GFX_FORMAT Format)
     {
         case RGBA8888:
 			vScpipGfxSetMode(1);
-			vScpipGfxAlphaPosSel(0);
+			vScpipGfxAlphaPosSel(1);
 			vScpipGfxSetMux(1, 0, 2);
             _arGfxInf.Format = RGBA8888;
-            _arGfxInf.u1AlphaPos = 0;  //Scaler format( 0:ARGB , 1:RGBA) different order with OpenGL.
+            _arGfxInf.u1AlphaPos = 1;  //Scaler format( 1:ARGB , 0:RGBA) different order with OpenGL.
             _arGfxInf.u1MuxB = 2;
             _arGfxInf.u1MuxR = 1;
 			
