@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #21 $
+* $Revision: #22 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -231,7 +231,7 @@
 #define TVD_FAST_CHCHG 1
 #define TVD_NOBURST_SLOW_V625_WA 1
 #define TVD_LIM_HERR_WA 1
-#define TVD_BP_ATV_MODECHG 1
+#define TVD_BP_ATV_MODECHG 0
 #define TVD_ADAP_VPRES_SETTING 1
 #define TVD_RESET_MODE_CHCHG 1
 #define TVD_VMASK_HEAD_SHAKING  1
@@ -4336,7 +4336,7 @@ static void _svDrvTvdModeChgDone(void)
 	//VSC do not connect the AVD it need to something
     else
     {
-       
+       /*
 	   vTvd3dBHModeDone();
 	   if(_rTvd3dStatus.bSigStatus == (UINT8)SV_VDO_NOSIGNAL)  //need to check DTV scart out case, need?
 	   {
@@ -4380,7 +4380,7 @@ static void _svDrvTvdModeChgDone(void)
 		}
 #endif
 #endif
-
+  */
 	}
 #else
 	if(fgIsMainTvd3d())
@@ -4801,7 +4801,8 @@ static void _svDrvTvdModeChg(void)
 		}
 		//when VSC do not connect the AVD it need to do something  
 		else
-		{
+		{   
+		   /*
                #ifndef CC_SUPPORT_RECORD_AV
                #if SUPPORT_SCART
 	  		   if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
@@ -4831,6 +4832,7 @@ static void _svDrvTvdModeChg(void)
 #if defined(CC_SUPPORT_TVE) || defined(CC_SUPPORT_TVE_82xx)
 	            vApiTVEVideoStatusNotify(SV_VP_MAIN, SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
 #endif
+      */
 		}
 		#else
         if(fgIsMainTvd3d())
@@ -7257,7 +7259,7 @@ void vTvd3dVSyncISR(void)
     //-------------------Check Vpress Changed status----------------------
     if(_rTvd3dStatus.fgVPres != fgVPres)
     {
-        LOG(0,"[11111TVD_DBG_MSG] tvd vpres mode change %d->%d\n",_rTvd3dStatus.fgVPres,fgVPres);
+        LOG(0,"[TVD_DBG_MSG] tvd vpres mode change %d->%d\n",_rTvd3dStatus.fgVPres,fgVPres);
         #if ENABLE_PRBS_BY_DRIVER
         LOG(1,"[TVD_DBG_MSG] _bEnablePrbsByAPMute is %d\n", _bEnablePrbsByAPMute);
         if(_bEnablePrbsByAPMute==TRUE) //channel change 		    

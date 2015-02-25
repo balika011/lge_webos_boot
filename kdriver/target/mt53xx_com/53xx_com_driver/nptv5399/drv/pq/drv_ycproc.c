@@ -1050,13 +1050,13 @@ void vDrvGlobalPQAdj(void)
 	{
 	    vDrvDIForce3DModeWithDelay();   // Avoid 3x3 matrix change then DI flicker       
 		vVdoSetColorTransform(SV_VP_MAIN);
-		vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_M);	
+		//vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_M);	
 	}
 
 	if (IO32ReadFldAlign(PEUI_00, PEUI_IN_CSC_MODE_CHANGE_P))
 	{
 		vVdoSetColorTransform(SV_VP_PIP);
-		vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_P);	
+		//vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_P);	
 	}
 }
 
