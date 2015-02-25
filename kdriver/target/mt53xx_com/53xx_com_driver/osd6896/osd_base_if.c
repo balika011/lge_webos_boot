@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/20 $
+ * $Date: 2015/02/25 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1420,8 +1420,10 @@ void OSD_pm_suspend(void)
     }
 
     OSD_PLA_Enable(OSD_PLANE_1,FALSE);
+#if !defined(CC_LG_SNAP_SHOT)
     OSD_PLA_Enable(OSD_PLANE_2,FALSE);
     OSD_PLA_Enable(OSD_PLANE_3,FALSE);
+#endif
     
     pb_osd_enable[OSD_PLANE_1] = u4Plane1Enable;
     pb_osd_enable[OSD_PLANE_2] = u4Plane2Enable;
@@ -1481,10 +1483,12 @@ void OSD_pm_suspend(void)
         x_memcpy((void*)pm_save_csr_regs,(void*)(OSD_BASE+0x700),OSD_CSR_REG_SIZE);
   }
 
+#if !defined(CC_LG_SNAP_SHOT)
     OSD_BASE_SetClock(OSD_CK_XTAL);
 
     IO_WRITE32MSK(IO_ADDR(0xd1c4), 0, 0x0, 0x00000002);
     IO_WRITE32MSK(IO_ADDR(0xd1cc), 0, 0x0, 0x00000002);
+#endif
     pm_save_pmx_regs[0]=IO_READ32(PMX_RRG_BASE,0x0);
     pm_save_pmx_regs[1]=IO_READ32(PMX_RRG_BASE,0x4);
 
