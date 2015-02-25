@@ -5972,7 +5972,7 @@ void vHDMIMainLoop(void)
     //UINT8 bReadData;//,bPHYCount;
     //UINT8 bI2CWriteData;
 #if (DEFAULTKEYS == 0)
-    UINT32 i4_ret;
+    //UINT32 i4_ret;
 #endif
     static UINT8 bInitHDCP = 0;
     //static UINT8 bResChange = 0;
@@ -6012,14 +6012,14 @@ void vHDMIMainLoop(void)
 #if (DEFAULTKEYS == 0)
         // load HDCP key form EEP to SRAM
         bInitHDCP++;
-        i4_ret = (UINT32)EEPHDCP_Init();	//need to modify ??
+        /*i4_ret = (UINT32)EEPHDCP_Init();	//need to modify ??
 
         if(i4_ret != 0)
         {
             LOG(6, "fail on load HDCP\n");
         }
 
-        UNUSED(EEPHDCP_SetSramDevice(1, 0xA0));
+        UNUSED(EEPHDCP_SetSramDevice(1, 0xA0));*/
         vHDMIHDCPRst();
 
 #ifdef SYS_MHL_SUPPORT
@@ -8916,7 +8916,7 @@ UINT8 u1HDMIGetAudioSamplingFreq(void)
 UINT8 u1HDMI_SetHdcpKey(UINT8 *pData, UINT16 u2Length)
 {
     UINT8 u1Ret = 0;
-    /*UINT32 i = 0;
+    UINT32 i = 0;
     UINT32 u4Data;
 
     vIO32Write4B(HDCP_ADDR,0);
@@ -8933,7 +8933,7 @@ UINT8 u1HDMI_SetHdcpKey(UINT8 *pData, UINT16 u2Length)
         LOG(3,"0x%8x",u4Data);
 
         if (i % 16) { LOG(3,"\n");}
-    }*/
+    }
 
     // en/adr
     vIO32Write4B(HD_DEV0, 0x1a0);
