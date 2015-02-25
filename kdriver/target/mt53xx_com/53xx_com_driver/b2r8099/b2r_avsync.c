@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/25 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -115,7 +115,7 @@
 /* Modify for passing DTG MHEG5 ICS Test Suite  */
 #define VDP_INVALID_DRIFT		        (VDP_STC_CLOCK * 1 / 10) // 100ms
 #else
-#define VDP_INVALID_DRIFT		        (VDP_STC_CLOCK * 10)		 // 6 Seconds
+#define VDP_INVALID_DRIFT		        (VDP_STC_CLOCK * 7)		 // to fixe Korea goverment office internal broadcasting
 #endif
 #ifndef CC_B2R_DISABLE_ONE_SECOND_FRC
 #define VDP_MAX_ASYNC_REPEAT_NS         (15)
