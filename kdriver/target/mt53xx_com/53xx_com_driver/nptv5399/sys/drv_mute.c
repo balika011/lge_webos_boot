@@ -152,7 +152,8 @@ static CHAR _aszMuteModuleStr[MUTE_MODULE_MAX][MODULE_STR_LEN] =
     "(TDC)",
     "(FRC)",
     "(Color Mode)",
-    "(Game Mode)"
+    "(Game Mode)",
+    "(VDP)"
     
 };
 #endif

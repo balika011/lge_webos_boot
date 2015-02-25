@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/23 $
+ * $Date: 2015/02/25 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #40 $
+ * $Revision: #41 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -844,6 +844,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 	
 	if(fgMainCh)
 	{
+		_vDrvVideoSetMute(MUTE_MODULE_VDP, VDP_1, 10, FALSE);
 	    if((bNewMainDec != SV_VD_DVI)&&(bNewMainDec != SV_VD_NA)&&(vDviGetHandleAudio()))
 	    {
            vDviSetConnetForAudio(SV_VP_MAIN, 0);
@@ -885,6 +886,7 @@ UINT8 bApiVSCMainSubSrc(UINT8 bMainSrc, UINT8 bSubSrc, UINT8 u1SrcIdx)
 
 	if(fgPipCh)
 	{
+		_vDrvVideoSetMute(MUTE_MODULE_VDP, VDP_2, 10, FALSE);
 	    if((bNewSubDec != SV_VD_DVI)&&(bNewSubDec != SV_VD_NA)&&(vDviGetHandleAudio()))
 	    {
            vDviSetConnetForAudio(SV_VP_PIP, 0);
