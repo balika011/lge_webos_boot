@@ -76,11 +76,11 @@
 /*-----------------------------------------------------------------------------
  *
 * $Author: p4admin $
-* $Date: 2015/01/18 $
+* $Date: 2015/02/25 $
 
  * $RCSfile:  $
 
- * $Revision: #2 $
+ * $Revision: #3 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -154,7 +154,7 @@ void BIM_Core1Stub(void)
 #if defined(CC_TRUSTZONE_IN_CHB)
 	reg = TCMGET_CHANNELA_SIZE()*0x100000+TCMGET_CHANNELB_SIZE()*0x100000-TRUSTZONE_MEM_SIZE+TRUSTZONE_CODE_BASE;
 #else
-    reg = TOTAL_MEM_SIZE - TRUSTZONE_MEM_SIZE + TRUSTZONE_CODE_BASE;
+    reg = TCMGET_CHANNELA_SIZE()*0x100000 - TRUSTZONE_MEM_SIZE + TRUSTZONE_CODE_BASE;
 #endif
 
     __asm__ ("MOV     r1, %0" : : "r" (reg));
