@@ -318,7 +318,7 @@
     #ifdef ANDROID
         #define TRUSTZONE_MEM_SIZE                  (18 * 1024 * 1024)
     #else
-        #define TRUSTZONE_MEM_SIZE                  (20 * 1024 * 1024)
+        #define TRUSTZONE_MEM_SIZE                  (18 * 1024 * 1024)
     #endif
 #endif
 
