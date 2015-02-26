@@ -581,7 +581,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 		//free(sign_area);
 		//sign_area = NULL;
 		//need to add return -1 ,after secure check is ok. 
-		//return -1 ;
+		return -1 ;
 	}
 #endif
 
