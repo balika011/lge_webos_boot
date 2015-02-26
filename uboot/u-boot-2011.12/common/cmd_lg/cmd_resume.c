@@ -153,7 +153,7 @@ static unsigned int get_signed_image_size(struct snapshot_header *header)
 	size =  ALIGN(header->image_size, 16);
 
 #if defined (CONFIG_SECURITY_BOOT)
-	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
+	//size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
 #endif
 	return size;
 }
@@ -1042,7 +1042,7 @@ int do_hib(void)
 {
 	int rc = -1;
 
-	rc = snapshot_boot(1, 0, 0, 0, 0);
+	rc = snapshot_boot(0, 0, 0, 0, 0);
 
 	return rc;
 }
