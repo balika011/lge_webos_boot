@@ -55,7 +55,7 @@ extern void disable_console(void);
 #if defined(CONFIG_MULTICORES_PLATFORM)
 extern void release_non_boot_core(void);
 #endif
-//extern void display_boottime_log(void);
+extern void display_boottime_log(void);
 
 
 #define TIME_CHECK() \
@@ -992,7 +992,10 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 	if(load_only)
 		return 0;
 
-	//display_boottime_log();
+#if defined(CONFIG_MULTICORES_PLATFORM)
+		extern thread_t *thread_logo;
+		if( thread_logo ) thread_join(thread_logo, NULL);
+#endif
 
 #if defined(CONFIG_MULTICORES_PLATFORM)
 	release_non_boot_core();
@@ -1009,6 +1012,7 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 	wait_tee_ready();
 #endif
 
+	display_boottime_log();
 	kernel_resume_func();
 
 	return 0;

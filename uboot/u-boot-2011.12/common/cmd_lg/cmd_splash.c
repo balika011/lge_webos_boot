@@ -35,6 +35,7 @@
 #include "cmd_polltimer.h"
 #include <cmd_micom.h>
 #include <cmnio_type.h>
+#include <thread.h>
 
 /*-------------------------------------------------------------
  * constant definitions
@@ -74,6 +75,7 @@ typedef	struct
 UINT16 gToolOpt[NUM_TOOL_OPTION] = {0, };
 static UINT32	_gModelOptions;
 PANEL_INFO_T	gPanelInfo = {0, };
+thread_t		*thread_logo;
 
 #ifndef NEW_BOOT_LOGO
 extern void	Splash_GetImageInfo(SPLASH_BMP_TYPE_T bmpType, SPLASH_BMP_INFO_T *pSplashBmpInfo, void *argv, unsigned char systype );
@@ -1312,3 +1314,17 @@ void BootSplash(void)
 	printf("set __InvertOn : %d \n", __InvertOn);
 }
 
+void display_logo(void)
+{
+	printf("Bootlogo Initializing...\n");
+	
+#if defined(CONFIG_MULTICORES_PLATFORM)
+	int cpu_id = 2, priority = THREAD_MAX_PRIORITY;
+
+	printf("Creating thread=%s, pri=%d, cpu= %d\n", "logo", priority, cpu_id);
+	thread_logo = thread_create_ex("logo", BootSplash, NULL, 0, cpu_id, priority, 1);
+	if( thread_logo == NULL ) printf("logo thread create fail...\n");
+#else
+	BootSplash();
+#endif
+}

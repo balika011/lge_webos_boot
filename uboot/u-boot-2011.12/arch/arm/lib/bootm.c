@@ -444,6 +444,7 @@ int do_bootm_linux(int flag, int argc, char *argv[], bootm_headers_t *images)
 #ifdef CC_TRUSTZONE_SUPPORT
 	init_tz();
 #endif
+	display_boottime_log();
 	printf ("\nStarting kernel ...\n\n");
 	kernel_entry = (void (*)(int, int, uint, uint))ep;
 	kernel_entry (0, machid, bd->bi_boot_params, ep); // jump to kernel

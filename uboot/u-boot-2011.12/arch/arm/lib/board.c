@@ -56,6 +56,7 @@
 #include <partinfo.h>
 #include <cmd_polltimer.h>
 #include <cmd_resume.h>
+#include <thread.h>
 #endif
 #include <fdtdec.h>
 #include <post.h>
@@ -112,7 +113,7 @@ volatile int LogEnable = 1;
 #include <i2c.h>
 #endif
 #ifdef CFG_LG_CHG
-void BootSplash(void);
+void display_logo(void);
 static void verify_mac_address(void);
 void del_timer_all(void);
 #endif
@@ -416,7 +417,7 @@ void secure_verify_kernel(void)
 	printf("[%4d] fast boot check \n", readMsTicks());
 	/* delay 10 * 1us */
 
-	BootSplash();
+	display_logo();
 
 #if 0 // temporary disable	
 #ifndef UNSECURE
@@ -473,6 +474,11 @@ if(!strcmp(bootmode,"auto"))
 #endif
 
 		secure_verify_kernel();
+#if defined(CONFIG_MULTICORES_PLATFORM)
+		extern thread_t *thread_logo;
+		if( thread_logo ) thread_join(thread_logo, NULL);
+#endif
+
 		printf("bootcmd cmd = %s \n",cmd1);
 		run_command(cmd1, 0);
 	}

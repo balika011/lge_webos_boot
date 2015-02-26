@@ -23,7 +23,7 @@
 
 include $(TOPDIR)/config.mk
 
-CFLAGS += -I$(COMMON_INC) -I$(OSAI_INC)
+CFLAGS += -I$(COMMON_INC) -I$(OSAI_INC) -I$(TOPDIR)/smp/include
 
 LIB	= $(obj)lib$(ARCH).o
 LIBGCC	= $(obj)libgcc.o
