@@ -498,6 +498,204 @@ _epk_end:
 	return 0;
 }
 
+static void _do_str_sort(int cnt, char *str[])
+{
+	int i=0, j=0, index=0;
+	char *tmp, *min;
+
+	for(i=0; i<cnt-1; i++)
+	{
+		index = i;
+		min=str[i];
+		for(j=i+1; j<cnt; j++)
+		{
+			if(strcmp(min, str[j]) > 0)
+			{
+				min = str[j];
+				index = j;
+			}
+		}
+		if( i != index)
+		{
+			tmp = str[i];
+			str[i]=str[index];
+			str[index]=tmp;
+		}
+	}
+}
+
+static int _do_epk_ex(int type, int argc, char *argv[])
+{
+	char dnfilename[128]={0,}, boot_cmd[128]={0, };
+	int ret = 0, file_num = 0, i = 0, j = 0, index = 0, is_support_head = 0;
+	u32 total_rsize = 0, current_wsize = 0, wsize = 0, rsize = 0, remained = 0;
+	u32 emmc_write_offset = 0x0;
+	PART_LOCATION_T	*partloc = NULL;
+	RAWIMG_HEADER_T *check_type = (RAWIMG_HEADER_T*)malloc(SECTOR_SIZE_BOOT);
+	if(check_type == NULL) return -1;
+
+	_do_str_sort(argc, argv);
+	for(i=0; i<argc; i++)
+	{
+		printf("dnfilename[%d]: %s\n", i, argv[i]);
+	}
+
+	for(i=0; i<argc; i++)
+	{
+		current_wsize = 0;
+		sprintf(dnfilename, "%s", argv[i]);
+		printf("dnfilename: %s\n", dnfilename);
+	
+		switch(type) {
+#ifdef CONFIG_LOAD_TFTP
+			case LOAD_TYPE_TFTP:
+				gu4PausePL2303 = 1;
+				rsize = tftp_get(dnfilename);
+				gu4PausePL2303 = 0;
+				break;
+#endif
+#ifdef CONFIG_LOAD_FAT32
+			case LOAD_TYPE_FAT32:
+				rsize = fat_fsload(dnfilename);
+				break;
+#endif
+#ifdef CONFIG_LOAD_ZMODEM
+			case LOAD_TYPE_ZMODEM:
+				rsize = rz("test.txt", default_offset);
+				break;
+#endif
+#ifdef CONFIG_LOAD_HZMODEM
+			case LOAD_TYPE_HZMODEM:
+				set_uart_baudrate(CONFIG_RZ_BAUDRATE);
+				rsize = rz("test.txt", default_offset);
+				break;
+#endif
+#ifdef CONFIG_LOAD_SERIAL
+			case LOAD_TYPE_SERIAL:
+				rsize = get_serial_data(default_offset);
+				break;
+#endif
+			default:
+				rsize = 0;
+				break;
+		}
+
+		if(rsize == 0) {
+			dprintf("file receive error...(type:%d, size:%d)\n", type, rsize);
+			ret = -1;
+			goto _bin_end;
+		}
+
+		total_rsize += rsize;
+		printf("binary[%d] file size : %d\n", i, rsize);
+		printf("total_rsize: 0x%x, \n", total_rsize);
+
+		if(i == 0)
+		{
+			memcpy(check_type, default_offset, SECTOR_SIZE_BOOT);
+
+			if(!strncmp(check_type->magic, RAWIMAGE_MAGIC, strlen(RAWIMAGE_MAGIC)))
+			{
+				is_support_head = 1;
+				file_num = (int)check_type->partition_count;
+				printf("Binary header exist!!!\n");
+				printf("binary magic: %8s\n", check_type->magic);
+				printf("boot area: %s\n", (check_type->check_boot_area)?"Used":"Unused");
+				printf("partition number: %d\n", file_num);
+
+				for (j=0; j<file_num; j++) {
+					partloc = &(check_type->part_location[j]);
+					printf("partition location [%d] info - image_offset: 0x%llx, image_size: 0x%llx, flash_offset: 0x%llx\n", j, partloc->image_offset, partloc->image_size, partloc->flash_offset);
+				}
+				current_wsize += SECTOR_SIZE_BOOT;
+			}
+			else
+			{
+				printf("Origial raw image!!!\n", i);
+			}
+		}
+
+		if(is_support_head)
+		{
+			if(index == 0 && check_type->check_boot_area)
+			{
+				sprintf(boot_cmd, "mmc write.boot 1 0x%x 0 0x%x", default_offset+current_wsize, BOOT_AREA_SIZE);
+				printf("%s\n", boot_cmd);
+				run_command(boot_cmd,0);
+				printf("Use boot area.. download complete!\n");
+				current_wsize += BOOT_AREA_SIZE;
+			}
+
+			while(index<file_num)
+			{
+				if(remained == 0)
+				{
+					partloc = &(check_type->part_location[++index]);
+					emmc_write_offset = (u32)(partloc->flash_offset);
+					remained = (u32)(partloc->image_size);
+					printf("remeained is zero, increase part index[%d -> %d], emmc_write_offset: 0x%x, remained = image_size: 0x%x\n", index-1, index, emmc_write_offset, remained);
+				}
+
+				printf("1. part_index: %d, emmc_write_offset: 0x%x, remained: 0x%x, current_wsize: 0x%x\n", index, emmc_write_offset, remained, current_wsize);
+
+				if(total_rsize < partloc->image_offset+partloc->image_size)
+				{
+					wsize = rsize - current_wsize;
+				}
+				else
+				{
+					wsize = remained;
+				}
+
+				printf("2. emmc_write_offset: 0x%x, wsize: 0x%x, current_wsize: 0x%x\n", emmc_write_offset, wsize, current_wsize);
+
+				ret = storage_write(emmc_write_offset, (size_t)(wsize), (const void *)(default_offset+current_wsize));
+				if(ret) {
+					printf("part[%d]: emmc write failed..--;;\n", i);
+					ret = -1;
+					goto _bin_end;
+				}
+				current_wsize += wsize;
+				emmc_write_offset += wsize;
+				remained -= wsize;
+				printf("3. emmc_write_offset: 0x%x, remained: 0x%x, current_wsize: 0x%x\n", emmc_write_offset, remained, current_wsize);
+
+				if(current_wsize == rsize)
+				{
+					printf("current_wsize: 0x%x.. Receive next file!!\n", current_wsize);
+					break;
+				}
+			}
+		}
+		else
+		{
+			printf("binary[%d] file copy start. wait a minute plz.\n", i);
+
+			wsize = rsize - current_wsize;
+			ret = storage_write(emmc_write_offset, (size_t)(wsize), (const void *)(default_offset+current_wsize));
+			printf("Download completed part[%d] image. file offset: 0x%x, file size: 0x%x\n", i, emmc_write_offset, wsize);
+			emmc_write_offset += wsize;
+		}
+		if(ret) {
+			printf("part[%d]: emmc write failed..--;;\n", i);
+			ret = -1;
+			goto _bin_end;
+		}
+	}
+
+_bin_end:
+#ifdef CONFIG_LOAD_HZMODEM
+	if(type == LOAD_TYPE_HZMODEM) {
+		printf("\n\n");
+		set_uart_baudrate(CONFIG_BAUDRATE);
+	}
+#endif
+	if(check_type) free(check_type);
+
+	return ret;
+}
+
+
 #ifdef CONFIG_LOAD_TFTP
 int do_swu (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
@@ -514,9 +712,41 @@ U_BOOT_CMD(
 		"swu\t- downlaod epk image file from tftp, and write on flash \n",
 		"[filename]\n"
 		);
+
+int do_swub (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	int i = 0;
+	if(argc > 1)
+	{
+		for(i=1; i<argc; i++)
+		{
+			// check file name format
+			if(strstr(argv[i], "test")==NULL || strstr(argv[i], ".part")==NULL)
+			{
+				printf("File format is wrong: %s\n", argv[i]);
+				printf("File format: test_filename.part1 .. test_filename.partN\n");
+				return -1;
+			}
+		}
+
+		return _do_epk_ex(LOAD_TYPE_TFTP, argc-1, argv+1);
+	}
+	else {
+		printf ("Usage:\n%s\n", cmdtp->usage);
+		printf ("         :\n%s\n", cmdtp->help);
+		return -1;
+	}
+}
+
+U_BOOT_CMD(
+		swub,	5,	0,	do_swub,
+		"swub\t- downlaod raw image file from tftp, and write on flash \n",
+		"swub [filename] || swub [filename1] [filename2]\n"
+		);
+
 #endif
 
-#ifdef CONFIG_LOAD_TFTP
+#ifdef CONFIG_LOAD_FAT32
 int do_swum (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	if(argc != 2) {

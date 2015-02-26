@@ -9,6 +9,13 @@
 #define PAK_TYPE_ID_LEN		4
 #define FILE_PATH_LEN		1024
 
+/**********************************************************/
+#define RAWIMAGE_MAGIC			"LGRAWIMG"
+#define SECTOR_SIZE_BOOT		(0x200)
+#define BOOT_AREA_SIZE			(0x20000)
+#define HEAD_FILE_NAME			"tmp_rawImg_head"
+/**********************************************************/
+
 typedef unsigned char	UINT8;
 typedef unsigned int	UINT32;
 
@@ -56,5 +63,25 @@ typedef enum
 	CREATE_EPK,
 	UNCOMP_EPK,
 } CREATE_OPT_T;
+
+/**********************************************************/
+typedef struct
+{
+	unsigned long long image_offset;	// 8Byte
+	unsigned long long image_size;		// 8Byte
+	unsigned long long flash_offset;	// 8Byte
+	unsigned char dummy[8];				// 8Byte
+}PART_LOCATION_T;
+
+typedef struct
+{
+	char magic[8];							// 8Byte
+	unsigned char partition_count;			// 1Byte
+	unsigned char dummy1[3];				// 3Byte
+	unsigned char check_boot_area;			// 1Byte
+	unsigned char dummy2[3];				// 3Byte
+	PART_LOCATION_T part_location[];		// 32Byte * partition_count
+}RAWIMG_HEADER_T;
+/**********************************************************/
 
 #endif /* _EPK_H_ */
