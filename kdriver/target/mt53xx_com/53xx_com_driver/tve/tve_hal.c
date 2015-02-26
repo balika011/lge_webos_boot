@@ -3697,12 +3697,75 @@ void Bypass_HalSrcBypass(UCHAR DAC, UCHAR bSrc)
         #if (defined(CC_MT5363) || defined(CC_MT5396) || defined(CC_MT5368) || defined(CC_MT5389) || defined(CC_MT5398) || defined(CC_MT5880) || defined(CC_MT5881) || defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
         else if(bSrc == TVE_SIF_MIXER)//BYPASS_SIF
         {
+           
+            /*
             vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x6, FLD_VDAC1_SEL); 
             #ifdef CC_MT5363
             vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x3, FLD_VDAC1_DTDCK_SEL); 
             #elif (defined(CC_MT5396) || defined(CC_MT5368) || defined(CC_MT5389) || defined(CC_MT5398) || defined(CC_MT5880) || defined(CC_MT5881) || defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
             vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x1, FLD_VDAC1_SIF_SEL); 
             #endif
+			*/
+		{
+           vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x5, FLD_VDAC1_SEL); 
+           #if (defined(CC_MT5396) || defined(CC_MT5368) || defined(CC_MT5389) || defined(CC_MT5398) || defined(CC_MT5880) || defined(CC_MT5881) || defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
+           vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x0, FLD_VDAC1_SIF_SEL); 
+           #endif
+           #if (defined(CC_MT5398) || defined(CC_MT5880) || defined(CC_MT5881) || defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
+           vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x0, FLD_DAC2_DTDCK);
+   		   vIO32WriteFldAlign(CKGEN_PSWCLK_CFG, 0x0, FLD_DEMOD_TVE_CK_SEL); 
+           #endif
+	   		//set vdac clk to 108m
+	   		#if(defined(CC_MT5881)||defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
+	           #if (defined(CC_MT5399)|| defined(CC_MT5890)|| defined(CC_MT5882))
+	   		vIO32WriteFldAlign(CKGEN_REG_TVE_FIFO_CFG, 1, FLD_TVE_TVD_UP_CK_SEL); 
+	   		#else
+	   		vIO32WriteFldAlign(CKGEN_REG_HDMI_FREQMETER_CKCFG, 1, FLD_TVE_TVD_UP_CK_SEL); 
+	   		#endif
+	   		#if CC_TVE_SUPPORT_VDAC108M
+	   		//dac clock set to 108m
+	   		vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_SRC_TVD_TVE_CLK); 
+	   		if((VSS_MAJOR(_bSrcMainNew) == VSS_SV)||((VSS_MAJOR(_bSrcMainNew) == VSS_SCART)&&(bDrvGetScartInputMode() == SCART_COLOR_SV)))  //while sv data clock = 54M
+	   		{
+	   		    /*
+	   			//CVBS data/clock set to 54m
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_TVD_TVE_DATA); 
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_VDOIN_TVD_CLK); 
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 1;
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
+	   		    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
+				Printf("SV_TVE_DAC_BYPASS_SIF=TVE_SIF_MIXER3.\n");
+				*/
+					   			//CVBS data/clock set to 108m
+			    
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_TVD_TVE_DATA);  //need set CHB=108M
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_VDOIN_TVD_CLK);
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 0;
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
+	   		    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
+	   		}
+	   		else  //while av data clock = 108m
+	   		{
+	   			//CVBS data/clock set to 108m
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_TVD_TVE_DATA);  //need set CHB=108M
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_VDOIN_TVD_CLK);
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 0;
+	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
+	   		    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
+	   		}
+	   		#else
+	   		//dac clock set to 54m
+	   		vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_SRC_TVD_TVE_CLK); 
+	   		//CVBS data/clock set to 54m
+	   		vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_TVD_TVE_DATA); 
+	   		vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_VDOIN_TVD_CLK); 
+	   		rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 0;
+	   		rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
+	   		TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
+	   		#endif
+	   		#endif
+        }
+			
         }
         #endif
     }

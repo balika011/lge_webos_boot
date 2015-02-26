@@ -731,11 +731,11 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
     switch (au1TveOutType[u1Dac_id])
     {
         case SV_TVE_DAC_BYPASS_CVBS:
-	     Bypass_HalSrcBypass(u1Dac_id,TVE_VDOIN_MIXER);
+	        Bypass_HalSrcBypass(u1Dac_id,TVE_VDOIN_MIXER);
             abBypPath[u1Dac_id] = TVE_BYP_AVMUX_PATH;
 	break;
 	case SV_TVE_DAC_BYPASS_DEMOD:
-            Bypass_HalSrcBypass(u1Dac_id,TVE_DEMOD_MIXER);
+             Bypass_HalSrcBypass(u1Dac_id,TVE_DEMOD_MIXER);
             abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
 	break;
 	case SV_TVE_DAC_BYPASS_SIF:
@@ -748,14 +748,22 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
                 BOOL bUseChD;
                 bUseChD = vDrvSetSIFADC();
                 if(bUseChD==TRUE)
-                {
-                    Bypass_HalSrcBypass(u1Dac_id,TVE_SIF_MIXER);
+                {   
+                    vIO32WriteFldAlign(REG_CVBS_CFG0, 1, RG_BOTTOM_EN);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_11);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_13);
+					Bypass_HalSrcBypass(u1Dac_id,TVE_SIF_MIXER);
+					IO_WRITE32(0xf0020000,0x28b4, 0x42878);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
                 }
                 else
                 {
+                    vIO32WriteFldAlign(REG_CVBS_CFG0, 0, RG_BOTTOM_EN);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_11);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_13);
                     Bypass_HalSrcBypass(u1Dac_id,TVE_VDOIN_MIXER);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
+					IO_WRITE32(0xf0020000,0x28b4, 0x78);
                 }
             }
             #endif
