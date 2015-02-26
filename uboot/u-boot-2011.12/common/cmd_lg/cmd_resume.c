@@ -182,10 +182,21 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
     BYTE au1ExtractMsg[32];
     BYTE au1MessageDigest[32];
 	int i = 0;
+	
 	X_CalculateSHA256(au1MessageDigest,sign_area,size);
-//	X_CalculateSHA256(au1MessageDigest,sign_area,32);
-
 	UbootAesDecrypt(signature,au1ExtractMsg,32);
+#ifdef SNAPSHOT_DEBUG
+
+	printf("au1MessageDigest data: \n");
+
+	for(i=0;i<32;i++)
+	{
+		printf("%02x  ",  au1MessageDigest[i]);
+	}
+
+	printf("\n");
+#endif
+
 
 #ifdef SNAPSHOT_DEBUG
 
@@ -193,7 +204,7 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
 
 	for(i=0;i<32;i++)
 	{
-		printf("%d  ", i, au1ExtractMsg[i]);
+		printf("%02x  ",  au1ExtractMsg[i]);
 	}
 
 	printf("\n");
@@ -201,15 +212,15 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
 
 	if (memcmp(au1MessageDigest, au1ExtractMsg, 32) != 0)
 	{
-		printf("signature check fail!\n");
+		printf("snapshot signature check fail!\n");
 	   // writeFullVerifyOTP();
 	
-	   // while(1);
-		return -1;
+	    while(1);
+	//return -1;
 	}
 	else
 	{
-		printf("SOK\n");
+		printf("\n$$$$$$$$$SOK$$$$$$$$$$\n");
 		return 0;
 	}
 	
@@ -500,7 +511,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	const unsigned long hib_size = header->image_size;
 	unsigned char signature[32] = {0};
 	unsigned int index = 0;
-	char *sign_area = NULL;
+	ulong sign_area = 0x8000000;
 
 #ifdef SNAPSHOT_PARTIAL_VERIFY
 	// partial verification
@@ -510,18 +521,20 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 		return -1;
 	}
 
-	sign_area = decomp_buf;
+	//sign_area = (char *)(SNAPSHOT_IMAGE_LOAD_ADDR + PAGE_SIZE);
+	
+	//sign_area = 0x8000000;
 
 	index=(get_timer(0) % NUMBER_OF_FRAGMENT);
-	
 #ifdef SNAPSHOT_DEBUG
 	printf("snapshot debug: index = %d \n", index); 
 	printf("snapshot debug: read sign_area offset  = %lld \n",(offset_cur  + (index * FRAGMENT_UNIT_SIZE)));
+	printf("snapshot debug: header->image_size  = %d \n", header->image_size ); 
 #endif	
 	if (-1 == storage_read(offset_cur  + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, sign_area))
 	{
 		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		free(sign_area);
+		//free(sign_area);
 		return -1;
 	}
 
@@ -541,7 +554,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	if(-1 == storage_read(singature_offset + ((index + 1) *SIGNATURE_SIZE), SIGNATURE_SIZE, signature))
 	{
 		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		free(sign_area);
+		//free(sign_area);
 		return -1;
 	}
 
@@ -565,8 +578,8 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	else
 	{
 		printf("snapshot partial verification failed! (index:%d)\n", index);
-		free(sign_area);
-		sign_area = NULL;
+		//free(sign_area);
+		//sign_area = NULL;
 		//need to add return -1 ,after secure check is ok. 
 		//return -1 ;
 	}
@@ -620,8 +633,8 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 #endif
 #endif
 skip_full_verification:
-	free(sign_area);
-	sign_area = NULL;
+	//free(sign_area);
+	//sign_area = NULL;
 	printf("[%d] verify completed\n", readMsTicks());
 
 	// =================================================================
