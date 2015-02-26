@@ -206,7 +206,7 @@ static const DMX_FRONTEND_CONFIG_T _arMtkFeCfgTable[] =
 
 static const DMX_SCRAMBLE_CONFIG_T _rMtkDmxScrambleConfig =
 {
-    DMX_SCRAMBLE_PESSTART_ONLY,   // DMX_SCRAMBLE_TSFLAG_ONLY
+    DMX_SCRAMBLE_TSFLAG_ONLY,   // DMX_SCRAMBLE_TSFLAG_ONLY
     0,                            // If
 };
 
