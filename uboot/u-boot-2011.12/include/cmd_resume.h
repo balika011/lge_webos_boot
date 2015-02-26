@@ -14,7 +14,7 @@
 #define HIB_PART_NAME "hib"
 #define SNAP_PART_NAME            "hib"
 #define SNAPSHOT_PARTIAL_VERIFY
-#define SNAPSHOT_VERIFY
+//#define SNAPSHOT_VERIFY
 
 #define NUMBER_OF_FRAGMENT        32
 #define FRAGMENT_UNIT_SIZE        128*1024  //128KByte
