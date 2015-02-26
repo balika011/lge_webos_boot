@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/26 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -300,26 +300,12 @@ extern void writeMMCblock(u8* buffer, u32 offset, u32 size);
 
 void readMMCblock(UINT32* buffer, UINT32 offset, UINT32 size) {}
 void writeMMCblock(UINT8* buffer, UINT32 offset, UINT32 size) {}
-INT32 GetPartIDByName(char *szPartName, UINT32  *pu4PartId)
-{
-    UINT32 u4PartId;
-    char *szName;
 
-    for (u4PartId = 0; u4PartId < 64; u4PartId++)
-    {
-        szName = (char *)DRVCUST_InitGet((QUERY_TYPE_T)(eNANDFlashPartName0 + u4PartId));
-        if (strcmp(szPartName, szName) == 0)
-        {
-            *pu4PartId = u4PartId;
-            return 0;
-        }
-    }
-    return -1;
-}
 
 #endif
 
 //#define SNAPSHOT_DEBUG
+extern int lgemmc_get_partnum(const char *name);
 
 int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsigned int frag_unit_size,unsigned int num_of_frag)
 {
@@ -338,29 +324,28 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 	UINT8 au1Digest_dst[32];
 //    UINT32 u4ImageSize;
 	UINT64 u4fullImageSize  ;
-	UINT32	u4PartId;
+	UINT32	u4PartId = 0;
 	UINT32 phy_group_buf;
     unsigned char* group_buf;
     unsigned int group_size = 0, group_num = 0,frag_idx = 0;
 		//,group_idx = 0;
 	UINT64	offset = 0;
+	u4PartId =lgemmc_get_partnum(blkdev)+1;
 	
-#if 0
-	if(GetPartIDByName(blkdev, &u4PartId)!=0)
+	if(u4PartId <=0)
 		{
 			LOG(0,"\n get partition id failed \n");
 			return 0;
 		}
-#endif
 
 	u4fullImageSize  = (UINT64)size + (UINT64)snapoffset;
 
 #ifdef SNAPSHOT_DEBUG
     LOG(0,"snapshot debug : full image size: %lld \n", u4fullImageSize);
-	LOG(0,"snapshot debug : partition id set to 43 \n");
+    LOG(0,"###########snapshot debug : u4PartId: %d \n", u4PartId);
 #endif	
 
-	u4PartId = 43;  //hard code for hib partition 
+	//u4PartId = 43;  //hard code for hib partition 
 
     x_memset(u1AesKey, 0x11, 16);
 
