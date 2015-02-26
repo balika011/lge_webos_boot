@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/13 $
+ * $Date: 2015/02/26 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -2256,6 +2256,7 @@ static void _vDrvDARAdaptive(UINT8 bPath)
     static UINT8 u1MotionIdx, u1TargetValue; 
     static UINT16 u2PreAlpha;
     static UINT32 u4MoPxl[5], u4MoSum[5];
+    UINT32 u4TimingType = bDrvVideoGetTiming(VDP_1);
 
     UINT8 u1MaxStrMin = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_DAR_00, DAR_V_MAX_MIN);  
     UINT8 u1MaxStrMax = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_DAR_00, DAR_V_MAX_MAX);  
@@ -2317,7 +2318,16 @@ static void _vDrvDARAdaptive(UINT8 bPath)
 
     u1TargetValue = MIN(u1TargetValue, 0x10);
     
-    vIO32WriteFldAlign(MCVP_DARE_10, u1TargetValue, DAR_V_MAX_ALPHA);
+    if(IS_MPEG(VDP_1)&& (VDP_GetPlayMode(VDP_1) == FBM_FBG_DTV_MODE)&& (u4TimingType== MODE_1080i))
+    {
+        vIO32WriteFldAlign(MCVP_DARE_10, 0x0, DAR_V_ADAP_SMOOTHING);
+    }
+    else
+    {
+
+        vIO32WriteFldAlign(MCVP_DARE_10, 0x1, DAR_V_ADAP_SMOOTHING);
+        vIO32WriteFldAlign(MCVP_DARE_10, u1TargetValue, DAR_V_MAX_ALPHA);
+    }
 
 	if ((bGetSignalType(VDP_1) == SV_ST_TV) && (IO32ReadFldAlign(PSCAN_FWCS_02, NOISE_REDUCE_EN)))
     {
