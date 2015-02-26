@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/24 $
+ * $Date: 2015/02/26 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6029,7 +6029,7 @@ static void _AudDrvThread(void* pvArg)
                         break;
 
                     default:
-                        LOG(0, "Error command %s\n", _paszAudCmd[u4Event]);
+                        LOG(0, "Dec(%d) receive Error command %s\n", u1DecId, _paszAudCmd[u4Event]);
                         ASSERT(0);
                     }
                 }
@@ -7171,7 +7171,7 @@ static void _AudDtvOnPlayThread(void* pvArg)
 #endif
 #if defined(CC_MT5391_AUD_3_DECODER) && !defined(CC_DUAL_AUD_DEC_SUPPORT) && !defined(CC_AUD_DDI)
             if ((u1DecId == AUD_DEC_MAIN )&& (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER))
-                continue;   //EU DTV dec0 can't do following processing
+              //  continue;   //EU DTV dec0 can't do following processing
 #endif
 
             if (_afgDtvOnPlayThreadGo[u1DecId])
@@ -8126,7 +8126,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
                 u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts, rPes.u4Pts,  u4StartDecWp[u1DecId], _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
         }
 #ifdef CC_MT5391_AUD_3_DECODER
-        else if ((u1DecId == AUD_DEC_THIRD) && (_afgIssuePlayComToDsp[AUD_DSP0][AUD_DEC_AUX]) &&
+        else if ((u1DecId == AUD_DEC_THIRD) && ((_afgIssuePlayComToDsp[AUD_DSP0][AUD_DEC_AUX]) || (_afgIssuePlayComToDsp[AUD_DSP0][AUD_DEC_MAIN])) &&
                     (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) && !_IsTriOnlyDecMode())
         {
             x_memcpy((VOID *)VIRTUAL((UINT32)&_arAudDecoder[AUD_DSP0][u1DecId].rFristDecodePes),
