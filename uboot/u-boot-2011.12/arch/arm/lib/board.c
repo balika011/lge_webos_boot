@@ -474,7 +474,7 @@ if(!strcmp(bootmode,"auto"))
 #endif
 
 		secure_verify_kernel();
-#if defined(CONFIG_MULTICORES_PLATFORM)
+#if 0//defined(CONFIG_MULTICORES_PLATFORM)
 		extern thread_t *thread_logo;
 		if( thread_logo ) thread_join(thread_logo, NULL);
 #endif

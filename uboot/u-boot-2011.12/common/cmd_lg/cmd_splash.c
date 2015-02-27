@@ -1318,7 +1318,7 @@ void display_logo(void)
 {
 	printf("Bootlogo Initializing...\n");
 	
-#if defined(CONFIG_MULTICORES_PLATFORM)
+#if 0 //defined(CONFIG_MULTICORES_PLATFORM)
 	int cpu_id = 2, priority = THREAD_MAX_PRIORITY;
 
 	printf("Creating thread=%s, pri=%d, cpu= %d\n", "logo", priority, cpu_id);
