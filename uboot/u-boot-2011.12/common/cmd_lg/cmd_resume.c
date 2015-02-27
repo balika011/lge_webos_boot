@@ -35,6 +35,7 @@ static loff_t g_snapshot_offset = 0;
 static int decomp_done[NR_CPUS] = {0,};
 static int use_single_core = 0;
 static int decomp_error_cpumask = 0;
+loff_t Global_offset_cur;
 
 typedef struct _thread_arg
 {
@@ -153,7 +154,7 @@ static unsigned int get_signed_image_size(struct snapshot_header *header)
 	size =  ALIGN(header->image_size, 16);
 
 #if defined (CONFIG_SECURITY_BOOT)
-	//size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
+	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
 #endif
 	return size;
 }
@@ -229,38 +230,67 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
 #ifdef CONFIG_SECURITY_BOOT
 int verify_snapshot_image(struct snapshot_header *header)
 {
-	int index = 0;
-	unsigned char *signature_offset = decomp_buf - HEADER_SIZE + header->image_size ;
+	int index = 0,i;
+	unsigned char *signature_offset = decomp_buf  + header->image_size  ;
 	unsigned char signature[32];
-	static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
+	//static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
 
 	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (header->image_size - HEADER_SIZE))
 	{
 		printf("boundary check error %s (%d)\n", __FUNCTION__, __LINE__);
 		return -1;
 	}
-//full verify
-
-	memcpy(signature,decomp_buf+HEADER_SIZE+header->image_size );
-
-if( !snapshot_image_verify(decomp_buf, sign_area, FRAGMENT_UNIT_SIZE) )
-{
-	printf("snapshot partial verification successed! (index:%d)\n", index);
-}
-else
-{
-	printf("snapshot partial verification failed! (index:%d)\n", index);
-	return -1;
-}
 
 
 //partial verify
 	//sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
 	index = (get_timer(0) % NUMBER_OF_FRAGMENT);
+	#if 1
+	
+	if(-1 == storage_read(Global_offset_cur  + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, decomp_buf))
+	{
+		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+		//free(sign_area);
+		return -1;
+	}
+	#else
 	memcpy(sign_area,decomp_buf + (index * FRAGMENT_UNIT_SIZE),FRAGMENT_UNIT_SIZE);
-	memcpy(signature,signature_offset + ((index + 1) * SIGNATURE_SIZE),SIGNATURE_SIZE);
+	#endif
+	
+#ifdef SNAPSHOT_DEBUG
+		printf("verify_snapshot_image snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
+	
+		for(i =0;i<32;i++)
+		{	
+			printf("%02x  ", decomp_buf[i]);
+		}
+		printf("\n");
+	
+#endif
+#if 1
+	if(-1 == storage_read(Global_offset_cur  + header->image_size  + ((index + 1) *SIGNATURE_SIZE), SIGNATURE_SIZE, signature))
+	{
+		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
+		//free(sign_area);
+		return -1;
+	}
+#else
 
-	if( !snapshot_image_verify(signature, sign_area, FRAGMENT_UNIT_SIZE) )
+	memcpy(signature,signature_offset + ((index + 1) * SIGNATURE_SIZE),SIGNATURE_SIZE);
+#endif
+#ifdef SNAPSHOT_DEBUG
+			printf("signature snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
+		
+			for(i =0;i<32;i++)
+			{	
+				printf("%02x  ", signature[i]);
+			}
+			printf("\n");
+		
+#endif
+
+
+	if( !snapshot_image_verify(signature, decomp_buf, FRAGMENT_UNIT_SIZE) )
 	{
 		printf("snapshot partial verification successed! (index:%d)\n", index);
 	}
@@ -270,36 +300,6 @@ else
 		return -1;
 	}
 	return 0;
-#if 0 //def SNAPSHOT_DEBUG
-    printf("\n");
-    for(i=0; i<32; ++i)
-        printf("%02x ", 0xFF & ((char*)signature)[i]);
-    printf("\n");
-#endif
-#if 0
-	printf("[%d] full verify snapshot image\n", readMsTicks());
-	sign_area = decomp_buf;
-	signature = signature_offset;
-	if(0 == snapshot_image_verify(signature, sign_area, hib_size - HEADER_SIZE))
-	{
-		printf("snapshot full verification successed!\n");
-		}
-	else
-	{
-		enable_console();
-		printf("snapshot full verification failed!\n");
-		if((DDI_NVM_GetDebugStatus() == RELEASE_LEVEL) || (DDI_NVM_GetDebugStatus() == EVENT_LEVEL) || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL))
-		{
-			char cmd[] = "reset";
-			remake_hib();
-			run_command(cmd, 0);
-		}
-		else
-		{
-			while (1); /* halt */
-		}
-	}
-#endif
 }
 #endif
 
@@ -486,6 +486,8 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 #ifdef SNAPSHOT_DEBUG
 	int i;
 #endif
+	Global_offset_cur = offset_cur;
+
 	// =================================================================
 	// 1. get snapshot header
 	// =================================================================
@@ -501,141 +503,6 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	start_time = (u32)arch_counter_get_ms();
 	memset(decomp_done,0,sizeof(decomp_done));
 #endif
-
-#ifdef SNAPSHOT_VERIFY
-	// =================================================================
-	// 2. snapshot verify
-	// =================================================================
-    // signature offset = current offset(offset + PAGE_SIZE) - PAGE_SIZE(header) + compressed image size
-	const loff_t singature_offset = offset_cur  + header->image_size;
-	const unsigned long hib_size = header->image_size;
-	unsigned char signature[32] = {0};
-	unsigned int index = 0;
-	ulong sign_area = 0x8000000;
-
-#ifdef SNAPSHOT_PARTIAL_VERIFY
-	// partial verification
-	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (hib_size - HEADER_SIZE))
-	{
-		printf("boundary check error %s (%d)\n", __FUNCTION__, __LINE__);
-		return -1;
-	}
-
-	//sign_area = (char *)(SNAPSHOT_IMAGE_LOAD_ADDR + PAGE_SIZE);
-	
-	//sign_area = 0x8000000;
-
-	index=(get_timer(0) % NUMBER_OF_FRAGMENT);
-#ifdef SNAPSHOT_DEBUG
-	printf("snapshot debug: index = %d \n", index); 
-	printf("snapshot debug: read sign_area offset  = %lld \n",(offset_cur  + (index * FRAGMENT_UNIT_SIZE)));
-	printf("snapshot debug: header->image_size  = %d \n", header->image_size ); 
-#endif	
-	if (-1 == storage_read(offset_cur  + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, sign_area))
-	{
-		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		//free(sign_area);
-		return -1;
-	}
-
-#ifdef SNAPSHOT_DEBUG
-	printf("snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");	 // first 16 bytes
-
-	for(i =0;i<32;i++)
-	{	
-		printf("%02x  ", sign_area[i]);
-	}
-	printf("\n");
-
-#endif
-	
-	printf("snapshot debug: singature_offset = %lld , SIGNATURE_SIZE = %d \n",singature_offset, SIGNATURE_SIZE);
-	
-	if(-1 == storage_read(singature_offset + ((index + 1) *SIGNATURE_SIZE), SIGNATURE_SIZE, signature))
-	{
-		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		//free(sign_area);
-		return -1;
-	}
-
-#ifdef SNAPSHOT_DEBUG
-	printf("snapshot debug: signature data:\n");	
-
-	for(i =0;i<32;i++)
-	{	
-		printf("%02x  ", signature[i]);
-	}
-	printf("\n");
-
-#endif
-
-	printf("[%d] partial verify snapshot image\n", readMsTicks());
-	if(0 == snapshot_image_verify(signature, sign_area, FRAGMENT_UNIT_SIZE))
-		{
-		printf("snapshot partial verification successed! (index:%d)\n", index);
-		goto skip_full_verification;
-		}
-	else
-	{
-		printf("snapshot partial verification failed! (index:%d)\n", index);
-		//free(sign_area);
-		//sign_area = NULL;
-		//need to add return -1 ,after secure check is ok. 
-		return -1 ;
-	}
-#endif
-
-#if 0 //  disable full verification 
-	// full verification
-	sign_area = decomp_buf;
-	printf("[%d] snapshot data read, image_leghth = %d\n", readMsTicks(), singature_offset - offset_cur);
-	if (-1 == storage_read(offset_cur, (hib_size - HEADER_SIZE), sign_area))
-	{
-	    printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-	    free(sign_area);
-	    return -1;
-	}
-
-	if(-1 == storage_read(singature_offset, sizeof(signature), signature))
-	{
-	    printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-	    free(sign_area);
-	    return -1;
-	}
-
-#if 0 //def SNAPSHOT_DEBUG
-    printf("\n");
-    for(i=0; i<32; ++i)
-        printf("%02x ", 0xFF & ((char*)signature)[i]);
-    printf("\n");
-#endif
-
-	printf("[%d] full verify snapshot image\n", readMsTicks());
-	if(0 == snapshot_image_verify(signature, sign_area, hib_size - HEADER_SIZE))
-	{
-		printf("snapshot full verification successed!\n");
-		}
-	else
-	{
-		enable_console();
-		printf("snapshot full verification failed!\n");
-		if((DDI_NVM_GetDebugStatus() == RELEASE_LEVEL) || (DDI_NVM_GetDebugStatus() == EVENT_LEVEL) || (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL))
-		{
-			char cmd[] = "reset";
-			remake_hib();
-			run_command(cmd, 0);
-		}
-		else
-		{
-			while (1); /* halt */
-	}
-	}
-#endif
-#endif
-skip_full_verification:
-	//free(sign_area);
-	//sign_area = NULL;
-	printf("[%d] verify completed\n", readMsTicks());
 
 	// =================================================================
 	// 3. snapshot decompress
@@ -1008,9 +875,6 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 #endif
 
 	kernel_resume_func = (void (*))header->pa_resume_func;
-#ifdef CONFIG_SECURITY_BOOT
-	wait_tee_ready();
-#endif
 
 	display_boottime_log();
 	kernel_resume_func();
@@ -1042,7 +906,7 @@ int do_hib(void)
 {
 	int rc = -1;
 
-	rc = snapshot_boot(0, 0, 0, 0, 0);
+	rc = snapshot_boot(1, 0, 0, 0, 0);
 
 	return rc;
 }

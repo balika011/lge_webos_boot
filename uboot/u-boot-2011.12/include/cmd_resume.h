@@ -15,6 +15,7 @@
 #define SNAP_PART_NAME            "hib"
 #define SNAPSHOT_PARTIAL_VERIFY
 //#define SNAPSHOT_VERIFY
+#define CONFIG_SECURITY_BOOT
 
 #define NUMBER_OF_FRAGMENT        32
 #define FRAGMENT_UNIT_SIZE        128*1024  //128KByte
@@ -27,6 +28,7 @@
 #define USB_PORT1 1
 #define USB_PORT2 2
 #define USB_PORT3 4
+
 //#define SNAPSHOT_IMAGE_LOAD_ADDR 0x2E400000
 
 /*
