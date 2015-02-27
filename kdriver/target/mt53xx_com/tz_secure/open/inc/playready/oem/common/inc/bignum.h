@@ -505,9 +505,7 @@ DRMFORCEINLINE DRM_BOOL DRM_CALL multiply(
 **        The output should not overlap the inputs.
 */
 {
-//#ifndef PLAYREADY_COMPILE
     MULTIPLY_DRMBIGNUM_IMPL();
-//#endif
 } /* multiply */
 
 #endif  /* !DRM_INLINING_SUPPORTED */
