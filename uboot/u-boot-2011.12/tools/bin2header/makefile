@@ -1,0 +1,1 @@
+gcc -g -o bin bin2header.cr_key
