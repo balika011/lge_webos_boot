@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #23 $
+* $Revision: #24 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4927,6 +4927,7 @@ static void _svDrvTvdScartSet(UINT8 bUIScartMode,UINT8 *PbSFisSV,UINT8 *PbTrigSc
 
                 if((fgDrvTvdIsSCnt(TVD_S_CNT) && (*PbSFisSV == SV_FALSE))||(*PbTrigScartAuto==SV_TRUE))
                 {
+					vIO32WriteFldAlign(VSRC_09_0, 1, CVBS_SC_SEL);//enable VGA_R
                     *PbSFisSV = SV_TRUE;
                     *PbTrigScartAuto = SV_FALSE;
                     vApiVideoSetEvtFlg(VDO_FLG_SCART_SF_CHG);
