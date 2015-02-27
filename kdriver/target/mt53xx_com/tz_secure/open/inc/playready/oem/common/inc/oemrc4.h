@@ -63,7 +63,9 @@ DRMFORCEINLINE DRM_API DRM_VOID DRM_CALL DRM_RC4_KeySetup(
     __in       DRM_DWORD       cbKey,
     __in const DRM_BYTE       *pbKey )
 {
+//#ifndef PLAYREADY_COMPILE
     DRM_RC4_KeySetupImpl( pKS, cbKey, pbKey );
+//#endif
 }
 
 /*********************************************************************
@@ -85,7 +87,9 @@ DRMFORCEINLINE DRM_API DRM_VOID DRM_CALL DRM_RC4_Cipher(
     __in                     DRM_DWORD      cbBuffer,
     __inout_bcount(cbBuffer) DRM_BYTE      *pbBuffer )
 {
+//#ifndef PLAYREADY_COMPILE
     DRM_RC4_CipherImpl( pKS, cbBuffer, pbBuffer );
+//#endif
 }
 
 EXIT_PK_NAMESPACE;

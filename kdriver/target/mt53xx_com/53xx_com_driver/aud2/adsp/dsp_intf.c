@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/27 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8297,6 +8297,9 @@ void DSP_GetDtvAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
         break;
     case AAC_STREAM:
         _GetAacAudInfo(u1DecId,  prAudInfo);
+        break;
+    case DRA_STREAM:
+        _GetDraAudInfo(u1DecId,  prAudInfo);
         break;
     default:
         break;
