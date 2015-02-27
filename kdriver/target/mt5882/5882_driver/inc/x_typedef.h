@@ -198,7 +198,7 @@ typedef double  DOUBLE;
 #define MIN(x, y)               (((x) < (y)) ? (x) : (y))
 #endif
 
-#ifndef MSX
+#ifndef MAX
 #define MAX(x, y)               (((x) > (y)) ? (x) : (y))
 #endif
 
