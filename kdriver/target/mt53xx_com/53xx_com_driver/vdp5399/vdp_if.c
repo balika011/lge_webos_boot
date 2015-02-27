@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/02/27 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1077,10 +1077,15 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
         }
         // only unmute when vdp is enable,
         // else you will see some garbage frame buffer
-		if(bGetSignalType(ucVdpId)<=SV_ST_AV)
+		if(bGetSignalType(ucVdpId)==SV_ST_AV)
 		{
          _bCount=30;
 		}
+	    if(bGetSignalType(ucVdpId)==SV_ST_TV)
+		{
+         _bCount=20; 
+		}
+
         #if ENABLE_PRBS_BY_DRIVER
         _bEnablePrbsByAPMute=FALSE;
         #endif
