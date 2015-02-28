@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/28 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -118,7 +118,7 @@
 // in time-shift, usb device is not fast enough to send 2x data to us.
 // use I frame mode to send data.
 #ifdef ENABLE_MULTIMEDIA
-#if !defined(CC_USE_DDI)
+#if !defined(CC_DTV_SUPPORT_LG)
 #define VDEC_TIME_SHIFT_2X_I_MODE
 #endif
 #endif
@@ -176,7 +176,6 @@ extern UINT32 u4VLDLogWr(UCHAR ucEsId, UCHAR ucVldId, UINT32 u4LogValue);
 #define VDEC_4K2K_EFUSE_WIDTH   3840
 #define VDEC_4K2K_EFUSE_HEIGHT  2160
 
-
 #ifndef CC_VDEC_RM_SUPPORT
 //#define CC_VDEC_RM_SUPPORT
 #endif
@@ -222,7 +221,6 @@ typedef enum{
 #define DUAL_CORE_MODE              1
 #define M10TILE_DUAL_CORE_MODE      2
 
-
 //ES ID
 #ifndef ES0
 #define ES0     0  // in the case, other don't expect we could decode have more than on es
@@ -240,7 +238,7 @@ typedef enum{
 #define VDEC_WAIT_DISP_TIME           10000
 #define VDEC_AVSYNC_WAIT_DISP_TIME    10000
 #else
-#if defined(CC_USE_DDI)
+#if defined(CC_DTV_SUPPORT_LG)
 #define VDEC_WAIT_DISP_TIME           1500         // 1500 ms
 #else
 #define VDEC_WAIT_DISP_TIME           150         // 100 ms
@@ -301,7 +299,7 @@ typedef enum{
 #define MPV_FIFO_CTRL_INIT              3000         // for SLT
 #define H264_FIFO_CTRL_INIT             3000         // for SLT
 #else
-#ifdef CC_USE_DDI
+#ifdef CC_DTV_SUPPORT_LG
 #define H264_FIFO_CTRL_INIT             9000//18000         // 200 ms, 18000/90000
 #else
 #define H264_FIFO_CTRL_INIT             9000         // 200 ms, 18000/90000
@@ -768,10 +766,18 @@ typedef enum _VDE_PUSH_MODE_T
 
 typedef enum _VDEC_DEBUG_CALLSTCK_T
 {
-    VDEC_DEBUG_CALLSTCK_T_VDEC_GetEsInfo    = 0,
-    VDEC_DEBUG_CALLSTCK_T_VDEC_PIPE,
-    VDEC_DEBUG_CALLSTCK_T_INVALID
-}VDEC_DEBUG_CALLSTCK_T;
+    VDEC_DEBUG_CALLSTACK_T_VDEC_GetEsInfo    = 0,
+    VDEC_DEBUG_CALLSTACK_T_VDEC_PIPE,
+    VDEC_DEBUG_CALLSTACK_T_INVALID
+}VDEC_DEBUG_CALLSTACK_T;
+
+typedef enum
+{
+    SUPER_DATA_DUMP_POINT_RECEIVE_ES,
+    SUPER_DATA_DUMP_POINT_EMPTY_BUFFER,
+    SUPER_DATA_DUMP_POINT_EMPTY_TEST,
+   SUPER_DATA_DUMP_POINT_MAX
+}SUPER_DATA_DUMP_POINT_TYPE;
 
 typedef struct _VDEC_APP_TYPE_T
 {
@@ -1274,9 +1280,17 @@ typedef UCHAR (*PFN_VDEC_HANDLE_OVERFLW)(
     const void* pvPesInfo
 );
 
-typedef void (*PFN_VDEC_CALLSTAC_CB)
+
+typedef UINT32 (*PFN_VDEC_DATADUMP_CB)
 (
-    VDEC_DEBUG_CALLSTCK_T eType,UCHAR *szInfor,UINT32 u4Param
+    UCHAR eType,UINT32 u4Tag,UINT32 u4StartAddr,
+    UINT32 u4EndAddr, UINT32 u4ReadPtr,UINT32 u4Size
+);
+
+
+typedef void (*PFN_VDEC_CALLSTACK_CB)
+(
+    VDEC_DEBUG_CALLSTACK_T eType,UCHAR *szInfor,UINT32 u4Param
 );
 
 
@@ -1967,6 +1981,8 @@ typedef struct
 	INT32 i4HalDisplayDelay;
 	INT32 i4HalLipsyncMaster;
     UINT32 u4DecErrMbCnt;
+    UINT32 u4EsDataCnt;  // received data cnt;
+    BOOL fgLGSeamless;
 } VDEC_ES_INFO_T;
 
 
@@ -2173,7 +2189,8 @@ typedef struct
 	PFN_VDEC_PICINFO_CB pfPicInfo;
 
     PFN_VDEC_RM_CB pfnRmCb;
-    PFN_VDEC_CALLSTAC_CB pfnCallStackPrintf;
+    PFN_VDEC_CALLSTACK_CB pfnCallStackPrintf;
+    PFN_VDEC_DATADUMP_CB pfnDumpData;
 /*
     PFN_VDEC_RENDER_PTS_CB pfnRenderPtsCb;
     PFN_VDEC_TRICK_PTS_CB pfnTrickPtsCb;
@@ -2241,7 +2258,7 @@ EXTERN void VDEC_GetDecStatus(UCHAR ucEsId, BOOL* pfgLock
 
 EXTERN void VDEC_GetDecErrInfo(UCHAR ucEsId, BOOL* pfgError, BOOL* pfgDisplayStatus,UINT32 *pu4ErrMbCnt);
 
-EXTERN BOOL  VDEC_RegCallStackCb(PFN_VDEC_CALLSTAC_CB pfnDecErrCb);
+EXTERN BOOL  VDEC_RegCallStackCb(PFN_VDEC_CALLSTACK_CB pfnDecErrCb);
 EXTERN BOOL VDEC_RegDecErrCb(PFN_VDEC_DECERR_CB pfDecErrCb, UINT32 u4ErrDuration);
 EXTERN BOOL VDEC_RegPicTypeCb(PFN_VDEC_PIC_TYPE_CB pfnPicTypeCb);
 EXTERN BOOL VDEC_RegStatusCb(PFN_VDEC_STATUS_CB pfnStatusCb);

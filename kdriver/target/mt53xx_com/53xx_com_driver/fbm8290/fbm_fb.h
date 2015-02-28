@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/28 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -225,6 +225,7 @@ typedef struct
     BOOL   fgCreateFromInst;                 // Init fbg from external FBM inst
     BOOL   fgSendEOS;
     BOOL   fgPtsSync;
+    BOOL  fgDoSeqChanging;
     UINT8 u1DecoderSrcId;
     UINT8 u1FbgAppMode;
     BOOL  fgEnableH264V5Support;

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/28 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -193,6 +193,7 @@
 // Imported functions
 //---------------------------------------------------------------------------
 extern void _EnableNewSeamless(UINT32 u4FbgId);
+extern VOID i4VDOOmxRenderFrame(UINT8 ucType);
 
 //---------------------------------------------------------------------------
 // Static function forward declarations
@@ -1665,8 +1666,6 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
    
    fgGotFirstSeqChg = _prFbg[ucFbgId].fgGotFirstSeqChg;
 
-   
-
     FBM_MUTEX_LOCK(ucFbgId);
     if (u4Flag == FBM_FLAG_SEQ_CHG || u4Flag == FBM_FLAG_SEQ_CHG_SPEEDUP)
     {
@@ -1739,7 +1738,7 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
     }
 #endif
 #endif
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
         if (FBM_ChkSeamlessMode(ucFbgId, SEAMLESS_BY_NPTV) && fgGotFirstSeqChg)
         {
             if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->au4CbFunc[FBM_CB_FUNC_SEQ_CHG_PRE_CB],
@@ -2312,10 +2311,15 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
 #endif
             _FbmPutFrameBufferToDispQ(ucFbgId, ucFbId);
 
+            if(_prFbg[ucFbgId].ucPlayMode == FBM_FBG_MM_MODE)
+            {
+                i4VDOOmxRenderFrame(3);
+            }
+            
             if (_prFbg[ucFbgId].u1FbgAppMode == FBM_FBG_APP_OMX_DISP)
             {
-                #ifdef CC_USE_DDI
-                FBM_TriggerSmlsByResizer(ucFbgId, ucFbId);
+                #ifdef CC_DTV_SUPPORT_LG
+                //FBM_TriggerSmlsByResizer(ucFbgId, ucFbId);
                 #else
                 //stage fright case, do seamless in B2R send render msg.
                 //Otherwise, the stage fright drop frame will not update seamless FB to empty in time.
@@ -2323,7 +2327,7 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
             }
             else
             {
-                FBM_TriggerSmlsByResizer(ucFbgId, ucFbId);
+                //FBM_TriggerSmlsByResizer(ucFbgId, ucFbId);
             }
 
         }
@@ -2430,13 +2434,15 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
             x_memset(&rPicNfyInfo, 0, sizeof(FBM_PIC_NTF_INFO_T));
             rPicNfyInfo.ucFbgId = ucFbgId;
             rPicNfyInfo.ucFbId = ucFbId;
-            if (FBM_ChkFrameBufferPicFlag(ucFbgId, ucFbId, (FBM_MM_EOS_FLAG | FBM_MM_PSEUDO_EOS_FLAG)))
+            if(FBM_ChkFrameBufferPicFlag(ucFbgId, ucFbId, (FBM_MM_EOS_FLAG | FBM_MM_PSEUDO_EOS_FLAG)))
             {
                 rPicNfyInfo.fgEos = TRUE;
             }
+            
             ((FBM_FB_READY_IND_FUNC_EX)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND])(
                 _prFbmCbFunc->aau4CbFuncTag[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND],
                 &rPicNfyInfo);
+                
         }
     }
     
@@ -2665,6 +2671,45 @@ UCHAR FBM_PreLook2ndFrameBufferFromDispQ(UCHAR ucFbgId)
 
     return ucFbId;
 }
+
+UCHAR FBM_PreLookBFromDispQ(UCHAR ucFbgId, UCHAR ucTheNth)
+{
+    UCHAR ucFbId = FBM_FB_ID_UNKNOWN;
+   
+
+    if (VERIFY_FBG(ucFbgId))
+    {
+        return FBM_FB_ID_UNKNOWN;
+    }
+
+    FBM_MUTEX_LOCK(ucFbgId);
+   
+
+    if (_prFbg[ucFbgId].rDisplayQ.ucCount > ucTheNth)
+    {
+        ucFbId = _prFbg[ucFbgId].rDisplayQ.aucQueue[(_prFbg[ucFbgId].rDisplayQ.ucReadIdx + ucTheNth) % FBM_MAX_FB_NS_PER_GROUP];
+        if (ucFbId >= FBM_MAX_FB_NS_PER_GROUP)
+        {
+            LOG(0,"ucFbId(%d)\n",ucFbId);
+            ASSERT_FBM(ucFbId < FBM_MAX_FB_NS_PER_GROUP);
+        }
+        else
+        {
+            if (_prFbg[ucFbgId].aucFbStatus[ucFbId] != FBM_FB_STATUS_DISPLAYQ)
+            {
+                LOG(0,"ucFbgId(%d) ucFbId(%d) FbStatus(%d)\n",
+                    ucFbgId,ucFbId,
+                    _prFbg[ucFbgId].aucFbStatus[ucFbId]);
+            }
+            ASSERT_FBM(_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_DISPLAYQ);
+        }
+    }
+
+    FBM_MUTEX_UNLOCK(ucFbgId);
+
+    return ucFbId;
+}
+
 //-------------------------------------------------------------------------
 /** FBM_PreLookNthFBFromDispQ
  *  Pre-look frame buffer from display queue

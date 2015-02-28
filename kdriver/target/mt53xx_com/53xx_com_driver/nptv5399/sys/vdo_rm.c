@@ -127,7 +127,7 @@ typedef enum
     B2R_TRIG_OFF,
 }B2R_TRIGGER_STATE_E;
 static B2R_TRIGGER_STATE_E _eVRMWaitForB2RTrigger[VDP_MAX_NS] = {B2R_TRIG_OFF, B2R_TRIG_OFF};
-static UINT8 bVRMUpdateSrcReg[VDP_MAX_NS] = {FALSE, FALSE};
+UINT8 bVRMUpdateSrcReg[VDP_MAX_NS] = {FALSE, FALSE};
 
 UCHAR* VRM_MODULE_NAMES[VRM_MODULE_MAX] = 
 {
@@ -239,9 +239,10 @@ void vVRMDumpVRMInfo(UINT8 bPath, VRM_MODULE_E moduleID)
 
 void vVRMDumpAllVRMInfo(void)
 {
-    UINT8 bPath;
+    UINT8 bPath= SV_VP_MAIN;
     UINT8 i;
     UINT32 mode;
+    VDP_SEAMLESS_INFO_T b2rVrmInfo;
 
     mode = u4DrvVrmGetAppFlag();
     LOG(0, "Application mode %d\n", mode);
@@ -259,6 +260,8 @@ void vVRMDumpAllVRMInfo(void)
     {
         LOG(0, "SCART: %d\n", SCPIP_READ_FLD(SCPIP_SCSYS_14, SCSYS_14_SC_TVE_SRC_SEL)); // FIXME
     }
+    LOG(2,"Seamless change %d\n",VDP_GetSeamlessInfo(bPath, &b2rVrmInfo)!=VDP_SET_ERROR);
+    LOG(2,"Seamless change with %d height %d\n",b2rVrmInfo.u4SrcWidth,b2rVrmInfo.u4SrcHeight);
     LOG(0, "========================================================================\n");
     LOG(0, "FW STA DUMP\n");        
     LOG(0, "========================================================================\n");
@@ -271,7 +274,9 @@ void vVRMDumpAllVRMInfo(void)
 
         LOG(2, "\tForce Import Module 0x%X\n",_importInfo[bPath].forcedImportModule);
         LOG(2, "\tImport Module       0x%X\n",_importInfo[bPath].importModule);
-        LOG(2, "\tImport Flag         0x%X\n",_importInfo[bPath].importWaitFlag);        
+        LOG(2, "\tImport Flag         0x%X\n",_importInfo[bPath].importWaitFlag); 
+        LOG(2, "\tVRMRdyForB2R          %d\n",bVRMReadyForB2R(bPath));
+        LOG(2, "\tvVRMB2RTrigge         %d\n",_eVRMWaitForB2RTrigger[bPath]);
         LOG(2, "========================================================================\n");
     }
 
@@ -2541,7 +2546,7 @@ UINT32 u4VRMSetTriggerMode(UINT8 bPath)
 #endif         
     else if (VRM_IMPORT_WAIT_NONE == vDrvGetImportWaitFlag(bPath))
     {
-        if (fgVRMIsEventFlgSet(bPath, VRM_EVENT_BY_B2R))
+        if (fgVRMIsEventFlgSet(bPath, VRM_EVENT_BY_B2R) || VDP_SeamlessSeqChanging(bPath))
         {
             LOG(1, "path(%d) set import module to B2R\n",bPath);
             vDrvSetImportTriggerModule(bPath, IMPORT_MODULE_B2R);
@@ -2561,7 +2566,7 @@ UINT32 u4VRMSetTriggerMode(UINT8 bPath)
     else
     {
         //Set Resolution not ready yet, can not handle next resolution event
-        LOG(1, "path(%d) set import module no change, import flag(0x%X)\n",
+        LOG(4, "path(%d) set import module no change, import flag(0x%X)\n",
             bPath,vDrvGetImportWaitFlag(bPath));
         u4NotPending = SV_FALSE;
     }
@@ -2670,7 +2675,7 @@ void vVRMLoop(UINT8 bPath)
                 break;
             }
 
-            LOG(3, "========VRM(%d) Loop Event flag (0x%X) at %d-th pass========\n", 
+            LOG(1, "========VRM(%d) Loop Event flag (0x%X) at %d-th pass========\n", 
                 bPath,vVRMGetEventFlg(bPath),u4VRMPassCnt++);
 
             vVRMClrEventFlg(bPath); 
@@ -2700,6 +2705,7 @@ void vVRMLoop(UINT8 bPath)
         if (B2R_TRIG_START == _eVRMWaitForB2RTrigger[bPath])
         {
             _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_WAITING;
+            LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_WAITING\n", bPath);   
         }
     }
               
@@ -2749,12 +2755,14 @@ void vDrvSetImportTriggerModule(UINT8 bPath, IMPORT_MODULE_E module)
         vVrmAllImportEn(bPath, SV_OFF);
         //vScpipSetTgImportOnOff(SV_OFF);
         _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_OFF;
+        LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_OFF\n", bPath);
     }
     else
     {
         if (_importInfo[bPath].importModule == IMPORT_MODULE_B2R)
         {
             _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_START;
+            LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_START\n", bPath);
         }    
         vVrmAllImportEn(bPath, SV_ON);
         vScpipSetTgImportOnOff(SV_ON);
@@ -3196,6 +3204,7 @@ UINT8 bVRMReadyForB2R(UINT8 bPath)
 void vVRMB2RTrigger(UINT8 bPath)
 {
     _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_OFF;
+    LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_OFF\n", bPath);
 }
 
 UINT8 bVRMUpdatingSrcRegDone(UINT8 bPath)

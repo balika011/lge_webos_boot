@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/28 $
  * $RCSfile: vdp_frc.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -138,9 +138,11 @@ VOID _B2R_Set3DInfo(UCHAR ucB2rId,UINT8 u13DType,BOOL fg3DEnable);
 BOOL _B2R_IsStartToPlay(UCHAR ucB2rId);
 UINT32 _B2R_GetDispBufLocked(UCHAR ucB2rId, UINT32 u4BufAddr, BOOL *pfgLocked);
 BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg);
+BOOL _B2R_SendB2RAysncRenderFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg);
 BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucVdpId);
 VOID _B2R_ResetPts(UCHAR ucB2rId);
 void _B2R_FrcResetPort(UCHAR ucB2rId, UCHAR ucPort);
+UCHAR _B2R_Fbg2B2r(UCHAR ucFbgId);
 #ifdef VDP_B2R_PSCAN_CRC_FLOW
 /* B2R CRC check on PTS value */
 void _VDPSetChkPTS(UINT32 u4Pts);

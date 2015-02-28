@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/23 $
+ * $Date: 2015/02/28 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -138,6 +138,7 @@ EXTERN VOID VDP_PipeGetInifor(VOID);
 
 #endif
 
+EXTERN VOID B2R_SetVsyncNum(UCHAR uVNum);
 
 typedef enum
 {
@@ -454,7 +455,7 @@ typedef struct
     UCHAR ucSubFbgIdRecorded;
     UCHAR ucSubReleased;
 #endif
-
+    BOOL fgSeqChg;
     // Output
     UCHAR ucOutputMode;
     UCHAR ucOutFrameRate;
@@ -704,7 +705,7 @@ typedef struct _VDP_CFG_T
     UINT32 u4AspectRatioWidth;
     UINT32 u4AspectRatioHeight;
     UINT32 u4AspectRatioIdc;
-    
+
     BOOL fgScartOut; // Scart out enable
     UINT32 u4LogFilter;
     B2R_HW_CHG_T t_HwChg;
@@ -1074,12 +1075,17 @@ EXTERN VOID B2R_SetChapterEnable(VDP_CHAPTER_T * prChapter);
 #endif
 #endif
 EXTERN B2R_PRM_T* VDP_GetVdpPrm(UINT8 u1B2rId);
+EXTERN BOOL VDP_SendB2RAysncRenderFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg);
+EXTERN BOOL VDP_FlushB2RAysyncRenderFrameMsg(UCHAR ucFbgId);
+EXTERN VOID VDP_DropB2RAysyncRenderFrame(UCHAR ucFbgId);
 
 EXTERN BOOL VDP_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T *prMsg);
 
 EXTERN BOOL VDP_FlushB2RChgFrameMsg(UCHAR ucVdpId);
 
 EXTERN VOID B2R_Init(VOID);
+
+EXTERN BOOL  VDP_SeamlessSeqChanging(UCHAR ucVdpId);
 #if 1// for 4K2K    vb1
 EXTERN UINT16 VDP_GetBypassHTotal(VOID);
 

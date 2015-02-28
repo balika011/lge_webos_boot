@@ -96,7 +96,10 @@
 #include "vdp_if.h"
 #include "mute_if.h"
 
-#ifdef VDEC_DUMP_VFIFO
+
+#define ENABLE_SMART_DBUG_TOOL
+
+#if defined(VDEC_DUMP_VFIFO) || defined(ENABLE_SMART_DBUG_TOOL)
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <linux/param.h>
@@ -111,6 +114,7 @@
 #include "x_debug.h"
 #include "x_mid.h"
 #include "x_bim.h"
+
 
 //#define USB_RW_SUPPORT
 //#define CC_EMULATION
@@ -298,7 +302,11 @@ static INT32 _VdecCmdForceSrc(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdecCmdSetVdecStatus(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _PlayVideoPid(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _StopVideoPid(INT32 i4Argc, const CHAR ** szArgv);
+
+#ifdef ENABLE_SMART_DBUG_TOOL
 static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv);
+static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv);
+#endif
 
 #if BDP_LOG_STYLE
 static INT32 _MpvShowModeLogCmd(INT32 i4Argc, const CHAR ** szArgv);
@@ -547,7 +555,12 @@ static CLI_EXEC_T _arVdecCmdTbl[] =
 
     {"playVideoPid", "pvp", _PlayVideoPid, NULL, "start play a DTV video PID to main/sub video path", CLI_SUPERVISOR},
 	{"stopVideoPid", "svp", _StopVideoPid, NULL, "Stop play DTV video PID ", CLI_SUPERVISOR},
+
+#ifdef ENABLE_SMART_DBUG_TOOL
     {"showcallstack", "stack", _VdecCallStackSetting, NULL, "showcallstack", CLI_SUPERVISOR},
+    {"superdatadump", "sdd", _VdecSuperDataDump, NULL, "super data dump", CLI_SUPERVISOR},
+#endif
+    
     CLIMOD_DEBUG_CLIENTRY(VDEC),
     {NULL, NULL, NULL, NULL, NULL, CLI_SUPERVISOR}
 };
@@ -1493,6 +1506,14 @@ static INT32 _VdecCmdForceSrc(INT32 i4Argc, const CHAR ** szArgv)
 
     #ifdef CC_SUPPORT_NPTV_SEAMLESS
     LOG(0,"CC_SUPPORT_NPTV_SEAMLESS ENABLE\n");
+    #endif
+
+    #ifdef CC_USE_DDI
+    LOG(0,"CC_USE_DDI\n");
+    #endif
+
+    #ifdef CC_DTV_SUPPORT_LG
+    LOG(0,"CC_DTV_SUPPORT_LG\n");
     #endif
     
     return 0;
@@ -10775,8 +10796,431 @@ static INT32 _PlayVideoPid(INT32 i4Argc, const CHAR ** szArgv)
 }
 
 
+#ifdef ENABLE_SMART_DBUG_TOOL
+EXTERN BOOL  VDEC_RegDataDumpCb(PFN_VDEC_DATADUMP_CB pfnDataDumpCb);
+EXTERN VOID i4VDOOmxRegDumpDataCb(PFN_VDEC_DATADUMP_CB pfnCallback);
+
+typedef enum
+{
+    DATA_DUMP_STATUS_STOPED,
+    DATA_DUMP_STATUS_RUNING,
+    DATA_DUMP_STATUS_IDLE
+}SUPER_DATA_DUMP_STATUS;
+
+typedef enum
+{
+   DATA_DUMP_CMD_INIT,
+   DATA_DUMP_CMD_START,
+   DATA_DUMP_CMD_STOP,
+   DATA_DUMP_CMD_WRITE,
+   DATA_DUMP_CMD_PARAM_TAG,
+   DATA_DUMP_CMD_PARAM_FILE,
+   DATA_DUMP_CMD_PARAM_TYPE,
+   DATA_DUMP_CMD_QUERY = 100
+}SUPER_DATA_DUMP_CMD;
+
+typedef enum
+{
+  DATA_DUMP_TYPE_CONTINUOUS,
+  DATA_DUMP_TYPE_INSERT_IDENTIFICATION,
+  DATA_DUMP_TYPE_ONCE
+}SUPER_DATA_DUMP_TYPE;
+
+typedef struct
+{
+   BOOL fgStarted;
+   SUPER_DATA_DUMP_TYPE eDumpType;
+   SUPER_DATA_DUMP_STATUS eStatus;
+   UINT32 u4Tag;
+   UINT32 u4SavedDataSize;
+   UINT32 u4WritedSize;
+   UINT32 u4PreAddr;
+   UINT32 u4DataCnt;
+   UINT32 u4ErrorCnt;
+   UCHAR szFileName[256];
+   UCHAR szIdentification[64];
+   mm_segment_t oldfs;
+   struct file *filep;
+   HANDLE_T hWaitSemaphore;
+   HANDLE_T hThread;
+   HANDLE_T hMsgQ;
+
+   UINT32 u4DataReadPtr;
+   UINT32 u4DataSize;
+   UINT32 u4StartAddr;
+   UINT32 u4EndAddr;
+   UINT32 u4DataTag;
+   
+}SUPER_DATA_DUMP_T;
+
+static SUPER_DATA_DUMP_T rDumpInst[SUPER_DATA_DUMP_POINT_MAX];
+static BOOL fgInited = FALSE;
+
+UINT32 _VdecSuperDumpSaveDataCb(UCHAR eType,UINT32 u4Tag,UINT32 u4StartAddr,
+    UINT32 u4EndAddr, UINT32 u4ReadPtr,UINT32 u4Size)
+{
+    SUPER_DATA_DUMP_T *prDumpInfor;
+    INT32 i4Ret;
+    UINT32 u4Cmd;
+    prDumpInfor =  &rDumpInst[eType];
+
+    if(prDumpInfor->eStatus != DATA_DUMP_STATUS_RUNING)
+    {
+        return 0;
+    }
+    
+    prDumpInfor->u4DataTag = u4Tag;
+    prDumpInfor->u4StartAddr = u4StartAddr;
+    prDumpInfor->u4EndAddr = u4EndAddr;
+    prDumpInfor->u4DataReadPtr = u4ReadPtr;
+    prDumpInfor->u4DataSize = u4Size;
+    u4Cmd = DATA_DUMP_CMD_WRITE;
+    i4Ret = x_msg_q_send(prDumpInfor->hMsgQ,(void*)&u4Cmd, 4, 255);
+
+    if(i4Ret != OSR_OK)
+    {
+       LOG(0,"_VdecSuperDumpSaveDataCb send command error\n");
+    }
+
+    x_sema_lock(prDumpInfor->hWaitSemaphore,X_SEMA_OPTION_WAIT); 
+    return prDumpInfor->u4WritedSize;
+}
+
+
+static UINT32 _VdecSuperDumpSaveData(SUPER_DATA_DUMP_T *prDumpInfor)
+{
+    UINT32 u4SaveSize,u4WritedSize;
+
+    if((prDumpInfor->u4Tag != 0XFF && prDumpInfor->u4DataTag!= prDumpInfor->u4Tag))
+    {
+       return 0;
+    }
+
+    if(prDumpInfor->eDumpType == DATA_DUMP_TYPE_ONCE && prDumpInfor->u4DataCnt > 0)
+    {
+       return 0;
+    }
+    
+    if(prDumpInfor->u4StartAddr == 0 || prDumpInfor->u4EndAddr == 0)
+    {
+        prDumpInfor->u4StartAddr = prDumpInfor->u4DataReadPtr;
+        prDumpInfor->u4EndAddr = prDumpInfor->u4DataReadPtr + prDumpInfor->u4DataSize;
+    }
+    
+    if(prDumpInfor->u4DataSize == 0)
+    {
+        UINT32 u4TemAddr;
+        if(prDumpInfor->u4PreAddr == 0)
+        {
+           prDumpInfor->u4PreAddr = prDumpInfor->u4DataReadPtr;
+           return 0;
+        }
+
+        if(prDumpInfor->u4PreAddr > prDumpInfor->u4DataReadPtr)
+        {
+           prDumpInfor->u4DataSize = (prDumpInfor->u4DataReadPtr-prDumpInfor->u4StartAddr) + (prDumpInfor->u4EndAddr - prDumpInfor->u4PreAddr);
+        }
+        else 
+        {
+           prDumpInfor->u4DataSize = prDumpInfor->u4DataReadPtr - prDumpInfor->u4PreAddr;
+        }
+
+        u4TemAddr = prDumpInfor->u4PreAddr;
+        prDumpInfor->u4PreAddr = prDumpInfor->u4DataReadPtr;
+        prDumpInfor->u4DataReadPtr = u4TemAddr;
+        
+    }
+
+    prDumpInfor->u4DataCnt++;
+    prDumpInfor->u4WritedSize = 0;
+    if(prDumpInfor->eDumpType == DATA_DUMP_TYPE_INSERT_IDENTIFICATION)
+    {
+        x_sprintf(prDumpInfor->szIdentification,"DumpDataCnt %d>>>>>>",prDumpInfor->u4DataCnt);
+        prDumpInfor->filep->f_op->write(prDumpInfor->filep, (VOID *)prDumpInfor->szIdentification,
+            strlen(prDumpInfor->szIdentification),&prDumpInfor->filep->f_pos);
+    }
+
+    LOG(2,"%s(%d,%d,%d,%d,%d)\n",prDumpInfor->szFileName, prDumpInfor->u4DataTag,\
+        prDumpInfor->u4StartAddr,prDumpInfor->u4EndAddr,prDumpInfor->u4DataReadPtr,prDumpInfor->u4DataSize);
+
+    if(prDumpInfor->u4DataReadPtr + prDumpInfor->u4DataSize > prDumpInfor->u4EndAddr)
+    {
+        u4SaveSize=prDumpInfor->u4EndAddr-prDumpInfor->u4DataReadPtr;
+        u4WritedSize = prDumpInfor->filep->f_op->write(prDumpInfor->filep, 
+            (VOID *)VIRTUAL(prDumpInfor->u4DataReadPtr), u4SaveSize,&prDumpInfor->filep->f_pos);
+        
+        if (u4WritedSize != u4SaveSize)
+        {
+            LOG(0, "_VdecSuperDumpSaveData(%s) %d/%d error1\n",prDumpInfor->szFileName,u4WritedSize,u4SaveSize);
+            prDumpInfor->u4ErrorCnt++;
+            return 0;
+        }
+
+        prDumpInfor->u4SavedDataSize += u4WritedSize;
+        prDumpInfor->u4WritedSize += u4WritedSize;
+
+        u4SaveSize = prDumpInfor->u4DataSize - u4SaveSize;
+        u4WritedSize = prDumpInfor->filep->f_op->write(prDumpInfor->filep, 
+            (VOID *)VIRTUAL(prDumpInfor->u4StartAddr), u4SaveSize, &prDumpInfor->filep->f_pos);
+
+        if (u4WritedSize != u4SaveSize)
+        {
+            LOG(0, "_VdecSuperDumpSaveData(%s) %d/%d error2\n",prDumpInfor->szFileName,u4WritedSize,u4SaveSize);
+            prDumpInfor->u4ErrorCnt++;
+            return 0;
+        }
+        
+        prDumpInfor->u4SavedDataSize += u4WritedSize;
+        prDumpInfor->u4WritedSize += u4WritedSize;
+    }
+    else
+    {
+        u4SaveSize = prDumpInfor->u4DataSize ;
+        u4WritedSize = prDumpInfor->filep->f_op->write(prDumpInfor->filep, 
+            (VOID *)VIRTUAL(prDumpInfor->u4DataReadPtr), u4SaveSize, &prDumpInfor->filep->f_pos);
+
+        if (u4WritedSize != u4SaveSize)
+        {
+            LOG(0, "_VdecSuperDumpSaveData(%s) %d/%d error3\n",prDumpInfor->szFileName,u4WritedSize,u4SaveSize);
+            prDumpInfor->u4ErrorCnt++;
+            return 0;
+        }
+        
+        prDumpInfor->u4SavedDataSize += u4WritedSize;
+        prDumpInfor->u4WritedSize += u4WritedSize;
+    }
+
+    return prDumpInfor->u4WritedSize;
+}
+
+static void _VdecSuperDumpLoop(void* pvArg)
+{
+   UINT16 u2MsgQIdx;
+   UCHAR ucInstIdx;
+   UINT32 u4Cmd,u4WriteSize;
+   SIZE_T zMsgSize;
+   INT32 i4Ret;
+   SUPER_DATA_DUMP_T *prDumpInfor;
+   ucInstIdx = *(UCHAR*)pvArg;
+  
+   prDumpInfor = &rDumpInst[ucInstIdx];
+   Printf("_VdecSuperDumpLoop(%d) started \n",ucInstIdx);
+   while(1)
+   {
+       i4Ret = x_msg_q_receive(&u2MsgQIdx, &u4Cmd, &zMsgSize,
+               &(prDumpInfor->hMsgQ), 1, X_MSGQ_OPTION_WAIT);
+       ASSERT(i4Ret == OSR_OK);
+
+       switch (u4Cmd)
+       {
+           case DATA_DUMP_CMD_WRITE:
+            u4WriteSize = _VdecSuperDumpSaveData(prDumpInfor);
+            x_sema_unlock(prDumpInfor->hWaitSemaphore); 
+            LOG(2,"DataDump[%d] Writed %d\n",ucInstIdx,u4WriteSize);
+            break;
+
+           case DATA_DUMP_CMD_START:
+            
+               if(prDumpInfor->fgStarted)
+               {
+                   LOG(0,"DumpPoint[%d] is started, stop it now\n",ucInstIdx);
+                   filp_close(prDumpInfor->filep,0);
+                   set_fs(prDumpInfor->oldfs);
+               }
+
+               prDumpInfor->u4SavedDataSize =  0;
+               prDumpInfor->u4PreAddr = 0;
+               prDumpInfor->u4DataCnt =  0;
+               prDumpInfor->u4ErrorCnt = 0;
+               
+               prDumpInfor->oldfs = get_fs();
+               set_fs(KERNEL_DS);
+               prDumpInfor->filep = filp_open(prDumpInfor->szFileName, (O_CREAT | O_RDWR | O_APPEND), 777);
+               if(IS_ERR(prDumpInfor->filep))
+               {
+                   set_fs(prDumpInfor->oldfs);
+                   LOG(0, "Start dump %d error1!\n",ucInstIdx);
+                   return ;
+               }
+               
+               prDumpInfor->eStatus = DATA_DUMP_STATUS_RUNING;
+               LOG(0,"DataDump[%d] Started\n",ucInstIdx);
+               break;
+
+           case DATA_DUMP_CMD_STOP:
+               if(prDumpInfor->fgStarted)
+               {
+                   filp_close(prDumpInfor->filep,0);
+                   set_fs(prDumpInfor->oldfs);
+               }
+
+               prDumpInfor->eStatus = DATA_DUMP_STATUS_STOPED;
+               LOG(0,"DataDump[%d] Stoped\n",ucInstIdx);
+               break;
+            default:
+                LOG(0,"DataDump[%d] Unknow Cmd %d\n",ucInstIdx,u4Cmd);
+                break;
+       }
+   }
+
+   return;
+}
+
+static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UINT8 ucType;
+    UINT8 uCIndex;
+    SUPER_DATA_DUMP_T *prDumpInfor;
+    UINT32 u4Cmd;
+    INT32 i4Ret;
+
+    if(i4Argc < 2)
+    {    
+        Printf("\n");
+        Printf("%d-->Init\n",DATA_DUMP_CMD_INIT);
+        Printf("%d-->Start\n",DATA_DUMP_CMD_START);
+        Printf("%d-->Stop\n",DATA_DUMP_CMD_STOP);
+        Printf("%d-->Write\n",DATA_DUMP_CMD_WRITE);
+        Printf("%d-->Set Tag\n",DATA_DUMP_CMD_PARAM_TAG);
+        Printf("%d-->Set file name\n",DATA_DUMP_CMD_PARAM_FILE);
+        Printf("%d-->Set dump type\n",DATA_DUMP_CMD_PARAM_TYPE);
+        Printf("%d-->Query status\n",DATA_DUMP_CMD_QUERY);
+        return 0;
+    }
+    
+    ucType=(UINT8)StrToInt(szArgv[1]);
+    
+    if(ucType == DATA_DUMP_CMD_INIT && fgInited == FALSE)
+    {
+        UCHAR szBuf[16]; 
+        x_memset(rDumpInst,0,sizeof(rDumpInst));
+        VDEC_RegDataDumpCb(_VdecSuperDumpSaveDataCb);
+        i4VDOOmxRegDumpDataCb(_VdecSuperDumpSaveDataCb);
+        
+        for(uCIndex = 0;uCIndex<SUPER_DATA_DUMP_POINT_MAX;uCIndex++)
+        {
+            prDumpInfor=&rDumpInst[uCIndex];
+            prDumpInfor->u4Tag = 0xFF;
+            VERIFY(x_sema_create(&prDumpInfor->hWaitSemaphore, X_SEMA_TYPE_BINARY,X_SEMA_STATE_LOCK) == OSR_OK);
+            x_snprintf(szBuf, sizeof(szBuf),  "Dump-Q%d\n", uCIndex);
+            VERIFY(x_msg_q_create(&prDumpInfor->hMsgQ, szBuf, 4, 20) == OSR_OK);
+            x_snprintf(szBuf, sizeof(szBuf),  "Dump-T%d\n", uCIndex);
+            VERIFY(x_thread_create(&prDumpInfor->hThread, szBuf, 4096, 60,_VdecSuperDumpLoop, sizeof(uCIndex), (void*)&uCIndex) == OSR_OK);
+        }
+        
+        LOG(0,"_VdecSuperDataDump INIT done\n");
+        fgInited = TRUE;
+        return 0;
+    }
+    else if(ucType == DATA_DUMP_CMD_QUERY)
+    {
+        LOG(0,"\n");
+        for(uCIndex = 0; uCIndex< SUPER_DATA_DUMP_POINT_MAX;uCIndex++)
+        {
+          prDumpInfor=&rDumpInst[uCIndex];
+          LOG(0,"DumpPoint[%d] File=%s\n",uCIndex,prDumpInfor->szFileName);
+          LOG(0,"State=%d,DumpType=%d,Tag=%d,DumpSize=%d,DataCnt=%d\n",prDumpInfor->eStatus,prDumpInfor->eDumpType,
+            prDumpInfor->u4Tag,prDumpInfor->u4SavedDataSize,prDumpInfor->u4DataCnt);
+        }
+        return 0;
+    }
+    else if(ucType == 99)  // testing something
+    {
+        UCHAR szPreString[64];
+        x_sprintf(szPreString,"DumpDataIndex %d >>",ucType);
+        Printf("%s, Len=%d\n",szPreString,strlen(szPreString));
+        return 0;
+    }
+
+    if(i4Argc < 3)
+    {
+        LOG(0,"_VdecSuperDataDump Please set dump point idx\n");
+        return 0;
+    }
+    
+    uCIndex=(UINT8)StrToInt(szArgv[2]);
+
+    if(uCIndex >= SUPER_DATA_DUMP_POINT_MAX)
+    {
+       LOG(0,"Start dump %d error0 \n",uCIndex);
+       return 0;
+    }
+
+    prDumpInfor=&rDumpInst[uCIndex];
+    
+    if(ucType == DATA_DUMP_CMD_PARAM_TAG)
+    {
+        prDumpInfor->u4Tag = (UINT32)StrToInt(szArgv[3]);
+    }
+    else if(ucType == DATA_DUMP_CMD_PARAM_FILE)
+    {
+        if(prDumpInfor->fgStarted)
+        {
+            LOG(0,"DumpPoint[%d] is started, can't set file name \n",uCIndex);
+            return 0;
+        }
+        
+        x_strcpy(prDumpInfor->szFileName,szArgv[3]);
+        prDumpInfor->u4SavedDataSize =  0;
+        prDumpInfor->u4DataCnt =  0;
+    }
+    else if(ucType == DATA_DUMP_CMD_START)
+    {
+        u4Cmd = DATA_DUMP_CMD_START;
+        i4Ret = x_msg_q_send(prDumpInfor->hMsgQ,(void*)&u4Cmd, 4, 255);
+        
+        if(i4Ret != OSR_OK)
+        {
+           LOG(0,"_VdecSuperDataDump send start command error\n");
+        }
+    }
+    else if(ucType == DATA_DUMP_CMD_WRITE)
+    {
+        INT32 u4Addr, u4Size;
+
+        if(prDumpInfor->eStatus != DATA_DUMP_STATUS_RUNING)
+        {
+            LOG(0,"DataDump(%d) is stoped\n",uCIndex);
+            return 0;
+        }
+
+        prDumpInfor->u4DataReadPtr = (UINT32)StrToInt(szArgv[3]);
+        prDumpInfor->u4DataSize = (UINT32)StrToInt(szArgv[4]);
+        prDumpInfor->u4DataTag =  0;
+        prDumpInfor->u4StartAddr = 0;
+        prDumpInfor->u4EndAddr = 0;
+        
+        LOG(0,"Start to write: (0x%x,0x%x) Len=%d\n",u4Addr,VIRTUAL(u4Addr),u4Size);
+        
+        u4Cmd = DATA_DUMP_CMD_WRITE;
+        i4Ret = x_msg_q_send(prDumpInfor->hMsgQ,(void*)&u4Cmd, 4, 255);
+        
+        if(i4Ret != OSR_OK)
+        {
+           LOG(0,"_VdecSuperDataDump send write command error\n");
+        }
+        x_sema_lock(prDumpInfor->hWaitSemaphore,X_SEMA_OPTION_WAIT); 
+
+    }
+    else if(ucType == DATA_DUMP_CMD_STOP)
+    {
+        u4Cmd = DATA_DUMP_CMD_STOP;
+        i4Ret = x_msg_q_send(prDumpInfor->hMsgQ,(void*)&u4Cmd, 4, 255);
+        
+        if(i4Ret != OSR_OK)
+        {
+           LOG(0,"_VdecSuperDataDump send stop command error\n");
+        }
+    }
+    else if(ucType == DATA_DUMP_CMD_PARAM_TYPE)
+    {
+        prDumpInfor->eDumpType = (UCHAR)StrToInt(szArgv[3]);
+    }
+    return 0;
+} 
+
 extern void dump_stack(void );
-extern VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTAC_CB cb);
+extern VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTACK_CB cb);
 typedef struct
 {
    BOOL fgEnable;
@@ -10784,12 +11228,12 @@ typedef struct
 }CS_INFO_T;
 
 
-static CS_INFO_T rCallStackInfo[VDEC_DEBUG_CALLSTCK_T_INVALID];
-static VOID PrintfCallStackCb(VDEC_DEBUG_CALLSTCK_T eType,UCHAR *szInfor,UINT32 u4Param)
+static CS_INFO_T rCallStackInfo[VDEC_DEBUG_CALLSTACK_T_INVALID];
+static VOID PrintfCallStackCb(VDEC_DEBUG_CALLSTACK_T eType,UCHAR *szInfor,UINT32 u4Param)
 {
     CRIT_STATE_T rState;
     CS_INFO_T *prCsInfo;
-    if(eType >= VDEC_DEBUG_CALLSTCK_T_INVALID)
+    if(eType >= VDEC_DEBUG_CALLSTACK_T_INVALID)
     {
         return;
     }
@@ -10839,7 +11283,7 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
         {
             ucCsType=(UINT8)StrToInt(szArgv[2]);
             u4PrintCnt = (UINT32)StrToInt(szArgv[3]);
-            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            if(ucCsType < VDEC_DEBUG_CALLSTACK_T_INVALID)
             {
                 rCallStackInfo[ucCsType].fgEnable = TRUE;
                 rCallStackInfo[ucCsType].u4PrintCnt = u4PrintCnt;
@@ -10851,7 +11295,7 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
         if(i4Argc >= 3)
         {
             ucCsType=(UINT8)StrToInt(szArgv[2]);
-            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            if(ucCsType < VDEC_DEBUG_CALLSTACK_T_INVALID)
             {
                 rCallStackInfo[ucCsType].fgEnable = FALSE;
                 rCallStackInfo[ucCsType].u4PrintCnt = 0;
@@ -10860,7 +11304,7 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
     }
     else if(ucType == 3) // disable all
     {
-        for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTCK_T_INVALID;u4Index++)
+        for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTACK_T_INVALID;u4Index++)
         {
             rCallStackInfo[u4Index].fgEnable = FALSE;
             rCallStackInfo[u4Index].u4PrintCnt = 0;
@@ -10870,7 +11314,7 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
     {
         if(i4Argc == 2)
         {
-            for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTCK_T_INVALID;u4Index++)
+            for(u4Index=0;u4Index<VDEC_DEBUG_CALLSTACK_T_INVALID;u4Index++)
             {
                 Printf("CsDebug[%d] Enable=%d,PrintCnt=%d\n",u4Index, \
                     rCallStackInfo[u4Index].fgEnable,rCallStackInfo[u4Index].u4PrintCnt);
@@ -10880,7 +11324,7 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
         {
             ucCsType=(UINT8)StrToInt(szArgv[2]);
             
-            if(ucCsType < VDEC_DEBUG_CALLSTCK_T_INVALID)
+            if(ucCsType < VDEC_DEBUG_CALLSTACK_T_INVALID)
             {
                 Printf("CsDebug[%d] Enable=%d,PrintCnt=%d\n",ucCsType, \
                     rCallStackInfo[ucCsType].fgEnable,rCallStackInfo[ucCsType].u4PrintCnt);
@@ -10890,4 +11334,6 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
 
     return 0;
 }
+
+#endif 
 

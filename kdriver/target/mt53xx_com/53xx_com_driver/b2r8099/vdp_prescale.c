@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/28 $
  * $RCSfile: vdp_prescale.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -184,7 +184,7 @@ typedef enum
 #define PRESCALE_MSG_Q_SIZE 64
 #define VDP_PRESCALE_STACK_SIZE 2048
 
-#ifdef CC_USE_DDI
+#ifdef CC_DTV_SUPPORT_LG
 #if defined(CC_HIGH_B2R_THREAD_PRIORITY) //customer kr 3d case
 #define VDP_PRESCALE_THREAD_PRIORITY 4
 #else

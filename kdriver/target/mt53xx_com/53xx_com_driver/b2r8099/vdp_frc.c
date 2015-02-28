@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/28 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -222,6 +222,7 @@ BOOL fgB2REarlyDisp = FALSE;
 static UINT32 _u4SetPts = 0xFFFFFFFF;
 static BOOL _fgTriggerEnc = FALSE;
 #endif
+static UCHAR uVsyncNum = 2;
 
 #ifdef CC_B2R_SUPPORT_GAME_MODE
 #define VDP_MAX_RELEASE_Q 10
@@ -429,7 +430,7 @@ static UCHAR _B2R_PreLookNextDisp(B2R_PRM_T* prFrcPrm);
  //static VOID _B2R_SetOutInfoByPmx(UCHAR ucPmxMode,VDP_OUT_INFO_T *prOutInfo);
 //VOID _B2R_CheckOutputMode(B2R_OBJECT_T *this);
 static VOID _B2R_FrcFrameBufferReady(FB_CHG_INFO_T* pt_fb);
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
 static BOOL _B2R_ChkSequenceInfo(UCHAR ucFbgId);
 #endif
 static UINT32 _B2R_TriggerAudOn(B2R_OBJECT_T *this, UINT32 u4CurPts);
@@ -456,7 +457,6 @@ static VOID _B2R_CalcRepeatCntForPushTrickMode(B2R_PRM_T* prFrcPrm, BOOL fgRepea
 static VOID _B2R_GetFrameBufferFromPending(B2R_OBJECT_T* this);
 static VOID _B2R_CpyPicHdr2B2r(B2R_PRM_T* prFrcPrm, FBM_PIC_HDR_T* prPicHdr);
 static VOID _B2R_SetB2RMirrorFlip(B2R_OBJECT_T* this);
-static UCHAR _B2R_Fbg2B2r(UCHAR ucFbgId);
 static VOID _VDP_SetXYOffset(UCHAR ucB2rId);
 #ifdef ENABLE_MULTIMEDIA
 static UCHAR _B2R_RTFrameRateConvert(B2R_PRM_T* prFrcPrm, UCHAR ucIndex);
@@ -563,7 +563,11 @@ static BOOL _B2R_Is4To1024XSpeed(UINT32 u4Speed)
     return FALSE;
 }
 
-
+VOID B2R_SetVsyncNum(UCHAR uVNum)
+{
+   uVsyncNum=uVNum;
+   LOG(0,"B2R_SetVsyncNum=%d\n",uVsyncNum);
+}
 static BOOL _B2R_IsEnableDP(B2R_OBJECT_T *this)
 {
     UINT32 i,j;
@@ -1100,7 +1104,7 @@ static UINT32 _B2R_FrmInit(UCHAR ucB2rId, UCHAR ucPort, BOOL fgCreateThread)
     prB2rVar->fgDoubleClock = 0;
     FBM_RegCbFunc(FBM_CB_FUNC_FB_READY_IND, (UINT32)_B2R_FrcFrameBufferReady);
     
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
     FBM_RegCbFunc(FBM_CB_FUNC_SEQ_CHG_PRE_CB, (UINT32)_B2R_ChkSequenceInfo);
 #endif
 
@@ -1186,7 +1190,7 @@ static UINT32 _B2R_FrmInit(UCHAR ucB2rId, UCHAR ucPort, BOOL fgCreateThread)
     ptVdpPrm->ucPendingFbId = FBM_FB_ID_UNKNOWN;
     ptVdpPrm->ucLastFbId = FBM_FB_ID_UNKNOWN;
     ptVdpPrm->fgReleaseDispQ= FALSE;
-
+    ptVdpPrm->fgSeqChg= FALSE;
     ptVdpPrm->ucLastAcsFrame = ~0;
     ptVdpPrm->ucLastAcsAuto = ~0;
 
@@ -1196,7 +1200,7 @@ static UINT32 _B2R_FrmInit(UCHAR ucB2rId, UCHAR ucPort, BOOL fgCreateThread)
     ptVdpPrm->ptRtCli = rVdpPrm.ptRtCli;
     ptVdpPrm->prFbCounter = &(_prDbase->rVdp.arFbCounter[ucB2rId][0]);
     ptVdpPrm->u4B2rSkipFrameNo = 0;
-
+    //ptVdpPrm->fgSeqChg =  FALSE;
     prB2rVar->rFbmAspectRatio.u1AspectRatioType = MPEG_ASPECT_RATIO_4_3;
     prB2rVar->rFbmAspectRatio.u2AspectHorizSize = 0;
     prB2rVar->rFbmAspectRatio.u2AspectVertSize =0;
@@ -1218,7 +1222,7 @@ static UINT32 _B2R_FrmInit(UCHAR ucB2rId, UCHAR ucPort, BOOL fgCreateThread)
     }
     
 #ifdef CC_B2R_ENABLE_CHG_FRAME_MSG
-    _B2R_FlushB2RChgFrameMsg(ucB2rId);
+    //_B2R_FlushB2RChgFrameMsg(ucB2rId);
 #endif
 
     // for _VdpCheckOutputMode, if ucPmxMode != VDP_B2R_MODE_UNKNOWN, no output change
@@ -1390,6 +1394,10 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
             }
 
             _B2R_SearchFrameInDisplayQ(this);//for seek 
+            LOG(5,"_B2R_ChangeFrameBuffer: ucOriginalFlow=%d,u4OnOff =%d,ucReady=%d,u4Recovery=%d,fgPauseMM=%d\n", \
+                ucOriginalFlow, prB2rVar->rVdpDtvFreeze.u4OnOff,prFrcPrm->ucReady,prB2rVar->rVdpDtvFreeze.u4Recovery,\
+                prB2rVar->fgPauseMM);
+
             if (ucOriginalFlow == 1)
             {
                 if (((prB2rVar->rVdpDtvFreeze.u4OnOff == 0) ||
@@ -1403,12 +1411,16 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
                 {
                     prFrcPrm->u2TargetNs = 0;
                 }
+                
             }
             else
             {
                 prFrcPrm->u2TargetNs = 0;
             }
+            
 
+            LOG(5,"_B2R_ChangeFrameBuffer: Fbg=%d, Fb=%d,u2TargetNs=%d\n", prFrcPrm->ucFbgId,prFrcPrm->ucFbId,prFrcPrm->u2TargetNs);
+            
             if ((prFrcPrm->u2TargetNs != 0) &&
                     (prFrcPrm->ucFbId != FBM_FB_ID_UNKNOWN))
             {
@@ -2492,7 +2504,7 @@ UINT32 VDP_SetVB1ControlBit(B2R_OBJECT_T *this)
 }
 #endif
 
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
 static BOOL _B2R_ChkSequenceInfo(UCHAR ucFbgId)
 {
     UCHAR ucEsId;
@@ -2551,6 +2563,8 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     VDP_CFG_T* prVdpConf;
     UCHAR ucB2rId;
     UCHAR ucVdpId;
+	UCHAR ucEsId;
+    VDEC_ES_INFO_T* prVdecEsInfo = NULL;
     
     if(!this)
     {
@@ -2575,7 +2589,18 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     {
         return FALSE;
     }
-    
+
+	 if(prFrcPrm->fgSeqChg)
+    {
+        prVdpConf->u4SrcLineSize = prSeqHdr->u2LineSize;
+        FBM_ClrFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_SEQ_CHG);
+        FBM_ClrFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_3D_SEQ_CHG);
+        FBM_ClrFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_SEQ_CHG_SPEEDUP);
+	
+        LOG(2,"_B2R_GetSequenceInfo prSeqHdr->u2LineSize=%d\n",prSeqHdr->u2LineSize);
+         return TRUE;
+    }
+	 
     if (prSeqHdr->ucFrmRatCod == MPEG_FRAME_RATE_UNKNOWN)
     {
         prSeqHdr->ucFrmRatCod = FBM_CalFrmRate(prFrcPrm->ucFbgId);
@@ -2603,6 +2628,16 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
         u4SeqWidth = (prSeqHdr->fgCropping  ? prSeqHdr->u4CropWidth : (UINT32)prSeqHdr->u2HSize);
         u4SeqHeight = (prSeqHdr->fgCropping ? prSeqHdr->u4CropHeight : (UINT32)prSeqHdr->u2VSize);
     }
+
+	ucEsId = prVdpConf->ucInputPort[0];
+    prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+
+	if (prVdecEsInfo && (prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV))
+	  {
+		  u4SeqWidth = (UINT32) 1920;//prSeqHdr->u4ResizeWidth;
+		  u4SeqHeight = (UINT32)1080;// prSeqHdr->u4ResizeHeight;
+	  }
+
 
     // because of the 420 sample method
     // progressive : the height should be a multiple of 2
@@ -2688,7 +2723,7 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
         //For VDP seamless pre check only the w,h change or not.
         if (fgResChg && !fg3DChg && !fgFrmRateChg)
         {
-            #ifdef CC_SUPPORT_NPTV_SEAMLESS 
+            #ifndef CC_SUPPORT_NPTV_SEAMLESS 
             _B2R_NPTVSeamlessStatus(this, VDP_SMLS_PREPARE);
             #endif
             LOG(1, "[%s-%d]H,V(%d-%d).Line(%d->%d) Org(%d-%d->%d-%d).\n", __func__, __LINE__, 
@@ -2702,7 +2737,7 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     
     _B2R_HandleResolutionChange(this);
     
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
     if (prFrcPrm->ucSeamlessVDPMode)
     {
         
@@ -3018,7 +3053,16 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
     BOOL fgEos = FALSE;
     B2R_PRM_T* prFrcPrm;
     UCHAR ucB2rId;
-
+	
+    FBM_PIC_HDR_T* prNextFbmPicHdr=NULL;
+	FBM_PIC_HDR_T* prCurFbmPicHdr =NULL;
+	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
+	UCHAR ucEsId;
+	VDP_CFG_T* prVdpConf;
+	UCHAR ucPreLookFbId;
+	FBM_SEQ_HDR_T* prSeqHdr;
+	UINT32 u4PitchWidth;
+	UINT16 u2MsgQNum;
     *pfgGstPlayBack = TRUE;
     
     do
@@ -3033,11 +3077,25 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
             LOG(0, "ucB2rId = %d [%s-%d]\n", ucB2rId, __FUNCTION__, __LINE__);;
             break;
         }
+
+		prVdpConf = _B2R_GetDP(this);
+		ucEsId = prVdpConf->ucInputPort[0];
+		prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+		 if(!prVdecEsInfo)
+		 {
+		     break;
+		 }
+		
         prFrcPrm = this->ptB2rPrm;
         prB2rVar = this->ptB2rVar;
         zMsgSize = sizeof(VDP_B2R_CHG_FRAME_MSG_T);
         x_memset(&rMsg, 0, zMsgSize);
 
+        if(prB2rVar->fgPendingChgFrmMsg)
+        {
+            LOG(1,"_B2R_GetFrameBufferForOMX: Pending \n");
+        }
+        
         if (!prB2rVar->fgPendingChgFrmMsg &&
                 //x_msg_q_receive(&u2MsgQIdx, &rMsg, &zMsgSize,&(_ahChgFrameQueue[prFrcPrm->ucVdpId]), 1, X_MSGQ_OPTION_NOWAIT) != OSR_OK
                 (_B2R_ReceiveChgFrameMsg(ucB2rId, &rMsg, X_MSGQ_OPTION_NOWAIT) != OSR_OK))
@@ -3052,6 +3110,52 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                 prB2rVar->fgPendingChgFrmMsg = FALSE;
             }
 
+		   if((prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV))
+	       {
+	           ucPreLookFbId = FBM_PreLookBFromDispQ(prFrcPrm->ucFbgId,uVsyncNum);
+	     	   prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId );
+	           prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
+			   x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+			  
+			   if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
+			   {
+				 if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
+				 {
+				     if(prFrcPrm->fgSeqChg == FALSE)
+                     {
+                         LOG(1,"PreCheck:WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d,TagNs=%d,rMsg->ucFbId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId,(prFrcPrm->u4InStcPeriod /prFrcPrm->u4OutStcPeriod ),rMsg.ucFbId);
+                         LOG(1,"org(W=%d,H=%d), Current(W=%d,H=%d),u2MsgQNum=%d\n",prCurFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,u2MsgQNum);
+                         vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
+                         prFrcPrm->fgSeqChg=TRUE;
+                     }
+				}
+				else
+				{
+					 prFrcPrm->fgSeqChg=FALSE;
+				}
+		      }
+
+				 ucPreLookFbId = FBM_PreLookBFromDispQ(prFrcPrm->ucFbgId,0);
+			     prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
+			     prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+				 
+				 if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
+				 {
+					 if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
+					 {
+					      BOOL fgSet = TRUE;
+						  prSeqHdr = FBM_GetFrameBufferSeqHdr(prFrcPrm->ucFbgId);
+                          LOG(1,"CurrentCheck: WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId);
+                          u4PitchWidth=prSeqHdr->u2LineSize;
+						  LOG(1,"Next pitch=%d,current Pitch=%d,FB=%d,u2LineSize=%d\n",prNextFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicWidth,ucPreLookFbId,prSeqHdr->u2LineSize);
+						  B2R_HAL_Set(this->hB2r, B2R_HAL_PITCH, &u4PitchWidth);
+                          B2R_HAL_Set(this->hB2r, B2R_HAL_SET_RESOLUTION,&fgSet);
+                          FBM_DoSeqChanging(prFrcPrm->ucFbgId,FALSE, FALSE);
+                          vVRMB2RTrigger( _B2R_GetVdpId(ucB2rId));
+					  }
+				 }
+	     	}
+           
             if ( (ucB2rId < B2R_NS) && (prB2rVar->eSpeed != STC_SPEED_TYPE_FORWARD_1X))
             {
                 static UINT32 _u4Counter[B2R_NS] = {0, 0};
@@ -3199,7 +3303,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                             FBM_PIC_HDR_T* prPicHdr = NULL;
                             prFrcPrm->ucFbId = FBM_GetFrameBufferFromDispQ(prFrcPrm->ucFbgId);
                             prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-                            LOG(2, "[OMX] fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
+                            LOG(2, "_B2R_GetFrameBufferForOMX fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
                         }
                     }
                     else
@@ -3213,7 +3317,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                             {
                                 prFrcPrm->ucFbId = FBM_FB_ID_UNKNOWN;
                                 fgFound = FALSE;
-                                //LOG(2, "[OMX] FB(%d) Resize not ready.\n", prFrcPrm->ucFbId);
+                                LOG(2, "_B2R_GetFrameBufferForOMX: FB(%d) Resize not ready.\n", prFrcPrm->ucFbId);
                             }
                         }
                     }
@@ -3222,6 +3326,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                 if (!fgFound)
                 {
                     prFrcPrm->ucFbId = FBM_FB_ID_UNKNOWN;
+                    LOG(2,"_B2R_GetFrameBufferForOMX: not Found\n");
                     x_memcpy(&(prB2rVar->rPendingChgFrmMsg), &rMsg, zMsgSize);
                     prB2rVar->fgPendingChgFrmMsg = TRUE;
                 }
@@ -4472,7 +4577,7 @@ static void _B2R_GetNextDisp(B2R_OBJECT_T* this)
     prFrcPrm->ucRealChangeFb = 0;
     prB2rVar->fgGstPlayBack = FALSE;
 
-#if defined(CC_USE_DDI)
+#if defined(CC_DTV_SUPPORT_LG)
     if (prB2rVar->fgTimeShift)
     {
         prB2rVar->fgGstPlayBack = TRUE;
@@ -4615,7 +4720,7 @@ static void _B2R_GetNextDisp(B2R_OBJECT_T* this)
  */
 //-----------------------------------------------------------------------------
 
-static UCHAR _B2R_Fbg2B2r(UCHAR ucFbgId)
+UCHAR _B2R_Fbg2B2r(UCHAR ucFbgId)
 {
     UCHAR ucIdx;
     UCHAR ucB2rId;
@@ -5045,6 +5150,7 @@ static UINT32 _B2R_TriggerAudOn(B2R_OBJECT_T *this, UINT32 u4CurPts)
 #ifdef CC_USE_DDI
             AUD_MMAoutEnable(AUD_DEC_AUX, TRUE);
 #endif
+
 #ifdef ENABLE_MULTIMEDIA
             UNUSED(SWDMX_SetInfo(ptVdpPrm->u4AttachedSrcId, eSWDMX_SET_AOUT_ENABLE, 0, 0, 0));
 #else
@@ -5692,6 +5798,43 @@ UINT32 _VDP_HalSetRenderRegion(UCHAR ucB2rId, VDP_REGION_T* prRenderRegion)
 }
 
 #ifdef CC_B2R_ENABLE_CHG_FRAME_MSG
+EXTERN VOID i4VDOOmxRenderFrame(UINT8 ucType);
+
+static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
+{
+   
+    UINT16 u2MsgQNum;
+	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
+	UCHAR ucEsId;
+	VDP_CFG_T* prVdpConf;
+
+     x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+
+	 
+     prVdpConf = _B2R_GetDP(this);
+     ucEsId = prVdpConf->ucInputPort[0];
+     prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+	 if(!prVdecEsInfo)
+	 {
+	     return FALSE;
+	 }
+	 if(prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV)
+	 {
+	     if(u2MsgQNum>=KEEP_FB_NUM)
+	     {
+	         return TRUE;
+	     }
+		 else
+		 {
+		     return FALSE;
+		 }
+	 }
+
+
+    return TRUE;
+}
+
+
 static INT32 _B2R_ReceiveChgFrameMsg(UCHAR ucB2rId,
                                      VOID            *pv_msg,
                                      MSGQ_OPTION_T   e_option)
@@ -5709,10 +5852,57 @@ static INT32 _B2R_ReceiveChgFrameMsg(UCHAR ucB2rId,
 
     VERIFY(x_sema_lock(_ahChgFrameMutex[ucB2rId], X_SEMA_OPTION_WAIT) == OSR_OK);
     iRet = x_msg_q_receive(&u2MsgQIdx, pv_msg, &zMsgSize, &(_ahChgFrameQueue[ucB2rId]), 1, e_option);
+    if(iRet == OSR_OK)
+    {
+        i4VDOOmxRenderFrame(2);
+    }
     VERIFY(x_sema_unlock(_ahChgFrameMutex[ucB2rId]) == OSR_OK);
-
-
     return iRet;
+}
+
+
+BOOL _B2R_SendB2RAysncRenderFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
+{
+    VDP_B2R_CHG_FRAME_MSG_T rMsg;
+    B2R_OBJECT_T* this;
+    UCHAR ucB2rId;
+    UINT16 u2MsgQNum;
+
+    x_memset(&rMsg,0,sizeof(VDP_B2R_CHG_FRAME_MSG_T));
+    rMsg.u4DispMode = VDP_B2R_CHG_FRAME_DISPQ;
+    rMsg.ucFbgId= prMsg->ucFbgId;
+    rMsg.ucFbId = prMsg->ucFbId;
+    ucB2rId=_FBM_Fbg2B2r(prMsg->ucFbgId);
+    if(ucB2rId >= B2R_NS)
+    {
+        LOG(0,"_B2R_SendB2RRenderFrameMsg fbg %d not match a b2r id\n",prMsg->ucFbgId);
+        return FALSE;
+    }
+
+    this = _B2R_GetObj(ucB2rId);
+    if(!this)
+    {
+        LOG(0,"_B2R_SendB2RRenderFrameMsg fbg %d , b2r %d no this \n",prMsg->ucFbgId,ucB2rId);
+        return FALSE;
+    }
+        
+    x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+    LOG(5, "B2R(%d) rMsg.u4DispMode(%d) rMsg.ucFbgId =%d,rMsg.ucFbId=%d,flag=%d,u2MsgQNum=%d\n",
+            ucB2rId, rMsg.u4DispMode, rMsg.ucFbgId, rMsg.ucFbId,(rMsg.u4Flag & VDP_B2R_CHG_FRAME_MSG_SYNC),u2MsgQNum);    
+    
+    if(FBM_CheckFrameBufferStatus(rMsg.ucFbgId, rMsg.ucFbId, FBM_FB_STATUS_EMPTY))
+    {   
+        LOG(1,"_B2R_SendB2RRenderFrameMsg, FbgId=%d,FbId=%d is empty \n",rMsg.ucFbgId,rMsg.ucFbId);
+        return FALSE;
+    }
+    
+    if (x_msg_q_send(_ahChgFrameQueue[ucB2rId], (void *)(&rMsg), sizeof(VDP_B2R_CHG_FRAME_MSG_T), 0) != OSR_OK)
+    {
+        LOG(1,"Msg Queue full for change frame buffer Msg queue\n");
+        return FALSE;
+    }
+    
+    return TRUE;
 }
 
 BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
@@ -5723,7 +5913,7 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
     VDP_CFG_T* prVdpConf = NULL;
     B2R_OBJECT_T* this;
     UCHAR ucB2rId;
-    
+    UINT16 u2MsgQNum;
     x_memset(&rMsg,0,sizeof(VDP_B2R_CHG_FRAME_MSG_T));
 
     rMsg.u4VdpId = prMsg->u4VdpId;
@@ -5762,9 +5952,9 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
             ucB2rId, rMsg.ucFbgId, rMsg.ucFbId, prVdpPrm->ucFbgId);
         return FALSE;
     }
-
-    LOG_REL(prB2rVar->fgEnableGstLog, 1, 7, "B2R(%d) render: Mode(%d) FB(%d-%d).\n",
-            ucB2rId, rMsg.u4DispMode, rMsg.ucFbgId, rMsg.ucFbId);
+    x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+    LOG(5, "B2R(%d) rMsg.u4DispMode(%d) rMsg.ucFbgId =%d,rMsg.ucFbId=%d,flag=%d,u2MsgQNum=%d\n",
+            ucB2rId, rMsg.u4DispMode, rMsg.ucFbgId, rMsg.ucFbId,(rMsg.u4Flag & VDP_B2R_CHG_FRAME_MSG_SYNC),u2MsgQNum);
 
     if (rMsg.u4Flag & VDP_B2R_CHG_FRAME_MSG_SYNC)
     {
@@ -5777,8 +5967,8 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
             while (_B2R_ReceiveChgFrameMsg(ucB2rId, &rPopOutMsg, X_MSGQ_OPTION_NOWAIT) == OSR_OK)
             {
 
-#ifndef CC_USE_DDI
-                UINT16 u2MsgQNum;
+#ifndef CC_DTV_SUPPORT_LG
+                //UINT16 u2MsgQNum;
                 
                 if(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum))
                 {
@@ -5813,7 +6003,7 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
         }
     }
 
-#ifndef CC_USE_DDI
+#ifndef CC_DTV_SUPPORT_LG
     if(FBM_CheckFrameBufferStatus(rMsg.ucFbgId, rMsg.ucFbId, FBM_FB_STATUS_EMPTY))
     {
         return FALSE;
@@ -5826,10 +6016,10 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
         return FALSE;
     }
     
-    #ifndef CC_USE_DDI
+    #ifndef CC_DTV_SUPPORT_LG
     if (rMsg.u4DispMode == VDP_B2R_CHG_FRAME_DIRECT)
     {
-        FBM_TriggerSmlsByResizer(rMsg.ucFbgId, rMsg.ucFbId);
+        //FBM_TriggerSmlsByResizer(rMsg.ucFbgId, rMsg.ucFbId);
     }
     #endif
 
@@ -5846,24 +6036,27 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
     VDP_B2R_CHG_FRAME_MSG_T rMsg;
     B2R_VAR_T* prB2rVar; 
     B2R_OBJECT_T* this;
-    B2R_PRM_T* prVdpPrm = NULL;
+    //B2R_PRM_T* prVdpPrm = NULL;
     
     if (ucB2rId >= B2R_NS)
     {
-        LOG(3,"ucB2rId >= B2R_NS oops\n");
+        LOG(0,"_B2R_FlushB2RChgFrameMsg ucB2rId %d >= B2R_NS oops\n", ucB2rId);
         return FALSE;
     }
     this = _B2R_GetObj(ucB2rId);
     if(!this)
-    {
+    {    
+        LOG(0,"_B2R_FlushB2RChgFrameMsg ucB2rId %d no this\n", ucB2rId);
         return FALSE;
     }
     
-    prVdpPrm = this->ptB2rPrm;
+    //prVdpPrm = this->ptB2rPrm;
      
     prB2rVar = &_arB2rVar[ucB2rId];
-    if (_ahChgFrameQueue[ucB2rId] != (HANDLE_T)(NULL) && prVdpPrm)
+    if (_ahChgFrameQueue[ucB2rId] != (HANDLE_T)(NULL) /*&& prVdpPrm*/)
     {
+        VERIFY(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2Cnt) == OSR_OK);
+        LOG(1,"_B2R_FlushB2RChgFrameMsg (%d) cnt=%d\n",ucB2rId,u2Cnt);
         while (_B2R_ReceiveChgFrameMsg(ucB2rId, &rMsg, X_MSGQ_OPTION_NOWAIT) == OSR_OK)
         {
             if (rMsg.u4DispMode == VDP_B2R_CHG_FRAME_DIRECT)
@@ -5879,6 +6072,44 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
     }
     return TRUE;
 }
+
+UINT32 _B2rUnRenderFrameCnt(UCHAR ucVdpId)
+{
+    VDP_CFG_T* prVdpConf = NULL;
+    UINT16 u2MsgQNum = 0;
+    prVdpConf = _B2R_GetVdpConf(ucVdpId);
+    if(!prVdpConf || prVdpConf->ucB2rId >= B2R_NS)
+    {
+       LOG(0,"_B2rWaitRenderFrameCnt error\n");
+       return 0;
+    }
+    
+    x_msg_q_num_msgs(_ahChgFrameQueue[prVdpConf->ucB2rId],&u2MsgQNum);
+    return u2MsgQNum;
+}
+
+BOOL  VDP_SeamlessSeqChanging(UCHAR ucVdpId)
+{
+    VDP_CFG_T* prVdpConf = NULL;
+    UCHAR ucFbgId,ucPlayMde=0;
+    prVdpConf = _B2R_GetVdpConf(ucVdpId);
+    if(!prVdpConf || prVdpConf->ucB2rId >= B2R_NS)
+    {
+       LOG(3,"_NptvSeamlessDuraingSeqChange return FALSE 1\n");
+       return FALSE;
+    }
+    
+    ucFbgId = _B2R_GetFbg(prVdpConf->ucB2rId);
+    
+    FBM_GetPlayMode(ucFbgId,&ucPlayMde);
+    if(ucFbgId != FBM_FBG_ID_UNKNOWN &&  ucPlayMde == FBM_FBG_MM_MODE)
+    {
+        return FBM_DoSeqChanging(ucFbgId,FALSE, TRUE);
+    }
+    
+    return FALSE;
+}
+
 #endif
 
 
@@ -6614,7 +6845,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 prFrcPrm->ucSubReleaseFbId = FBM_FB_ID_UNKNOWN;
             }
 #endif
-#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+#ifndef CC_SUPPORT_NPTV_SEAMLESS 
             if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_FRAME_COMING)
             {
                 _B2R_NPTVSeamlessStatus(this, VDP_SMLS_MODE_NONE);
@@ -6653,11 +6884,8 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 }
             }
 #endif
-#ifdef CC_B2R_SUPPORT_GAME_MODE
-            if (FRC_DISP_FINISH(prFrcPrm)||(_arVdpPrm[ucB2rId].ucGameModeFrameChange&&(eGameMode[ucB2rId] ==B2R_GAME_MODE_LOW_DELAY)))
-#else
-            if (FRC_DISP_FINISH(prFrcPrm))
-#endif
+
+            if (FRC_DISP_FINISH(prFrcPrm)&&_NptvSeamlessCheckChgFrameMsg(ucB2rId,this))
             {
                 if (prFrcPrm->u2RestoreNs != 0)
                 {
@@ -6671,7 +6899,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                     _arVdpPrm[ucB2rId].ucGameModeFrameChange=0;
                 }
 #endif
-                #ifdef CC_SUPPORT_NPTV_SEAMLESS 
+                #ifndef CC_SUPPORT_NPTV_SEAMLESS 
                 if ((prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_PREPARE) && bVRMReadyForB2R(ucVdpId))
                 {
                     _B2R_NPTVSeamlessStatus(this, VDP_SMLS_READY);
@@ -6696,9 +6924,10 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
 
 
                 _B2R_ChangeFrameBuffer(this);
-                #ifdef CC_SUPPORT_NPTV_SEAMLESS 
+                #ifndef CC_SUPPORT_NPTV_SEAMLESS //Lijia NPTV Seamless debug
                 if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_FRAME_COMING)
                 {
+                   sdf
                     BOOL fgSet = TRUE;
                     B2R_HAL_Set(this->hB2r, B2R_HAL_PITCH, &(prVdpConf->u4SrcLineSize));
                     B2R_HAL_Set(this->hB2r, B2R_HAL_SET_RESOLUTION, &fgSet);
@@ -6746,6 +6975,8 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                             (prFrcPrm->ucNotSupport == 0))
 #endif
                     {
+
+					   LOG(2,"bVRMReadyForB2R(%d),Display Q=%d\n",bVRMReadyForB2R(ucVdpId),FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
                        u4FrameCount=0;
 #ifdef CC_B2R_SUPPORT_GAME_MODE
 
@@ -7032,7 +7263,7 @@ UINT32 _B2R_FrcHandlerEvent(UCHAR ucB2rId, UINT32 u4Event)
             // update mode information
             u4Event |= VDP_EVENT_MODE_CHG;
 
-            LOG(7, "Enable change\n");
+            LOG(1, "Enable change\n");
         }
 
         if (u4Event & VDP_EVENT_INPUT_CHG)
@@ -7080,7 +7311,7 @@ UINT32 _B2R_FrcHandlerEvent(UCHAR ucB2rId, UINT32 u4Event)
                 // update mode information
                 u4Event |= VDP_EVENT_MODE_CHG;
 
-                LOG(7, "Input change\n");
+                LOG(1, "Input change\n");
             }
         }
 
@@ -7115,7 +7346,7 @@ UINT32 _B2R_FrcHandlerEvent(UCHAR ucB2rId, UINT32 u4Event)
                ptVdpPrm->u4OutStcPeriod = (VDP_STC_CLOCK / 60);
             }
 
-            LOG(7, "Output change (%d, %d, %d)\n", prVdpConf->rOutInfo.ucPmxId, prVdpConf->rOutInfo.ucFrameRate, prVdpConf->rOutInfo.ucPrg);
+            LOG(1, "Output change (%d, %d, %d)\n", prVdpConf->rOutInfo.ucPmxId, prVdpConf->rOutInfo.ucFrameRate, prVdpConf->rOutInfo.ucPrg);
 #endif
         }
     }
@@ -8854,7 +9085,7 @@ static INT32 _B2R_ColorFmtMonitor(B2R_OBJECT_T* this)
 
         if(bColorFmtChg)
         {
-            LOG(3,"HW chg!\n");
+            LOG(2,"HW chg!\n");
             B2R_HAL_Set(this->hB2r, B2R_HAL_COLOR_FMT_CHG, &(tColorFmt.fgUfoEn));
         }
         LOG(8,"Pic Ufo(%d)!\n",ptPicHdr->fgUfoEn);

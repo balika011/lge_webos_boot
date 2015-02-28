@@ -227,7 +227,7 @@ static void _VPUSH_VDEC_Nfy(
                 case VDEC_DEC_DECODE_RES_NOT_SUPPORT:
                     if(prVdec->rInpStrm.fnCb.pfnVdecErrHandler)
                     {
-                        LOG(0, "[VPUSH] call Vdec error(%d) handler\n", u4Data1);
+                        LOG(0, "[VPUSH] call Vdec error(%d) handler,ErrorPes %d\n", u4Data1,prVdecEsInfo->u4EsDataCnt);
                         prVdec->rInpStrm.fnCb.pfnVdecErrHandler(
                             prVdec->rInpStrm.fnCb.u4VdecErrTag,
                             &u4Data1);
@@ -1674,14 +1674,6 @@ BOOL _VPUSH_AllocDmx(VOID* prdec)
         rDmxMM.fgSearchStartCode = FALSE;
     }
 
-#if defined(CC_USE_DDI)
-    if(!DMX_MUL_SetFifoOutput(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO,
-        prVdec->ucChannelId, FALSE))
-    {
-        LOG(6, "%s(%d): DMX_MUL_SetFifoOutput disable nothing\n", __FUNCTION__, __LINE__);
-    }
-#endif
-
     rDmxMM.fgEnable = TRUE;
     rDmxMM.ePidType = DMX_PID_TYPE_ES_VIDEO;
     rDmxMM.pvInstanceTag = (void*)prVdec;
@@ -1713,15 +1705,6 @@ BOOL _VPUSH_AllocDmx(VOID* prdec)
         DMX_MUL_FreeInst(prVdec->u1DmxId);
         prVdec->u1DmxId = 0xFF;
         
-#if defined(CC_USE_DDI)
-        if(!DMX_MUL_SetFifoOutput(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO,
-            prVdec->ucChannelId, TRUE))
-        {
-            LOG(6, "%s(%d): DMX_MUL_SetFifoOutput enable nothing\n", __FUNCTION__, __LINE__);
-        }
-#endif
-
-
         return FALSE;
     }
 
@@ -1767,16 +1750,7 @@ BOOL _VPUSH_ReleaseDmx(VOID* prdec)
     prVdec->u1DmxId = 0xFF;
     
     prVdec->fgEnDmx = FALSE;
-#if defined(CC_USE_DDI)
-    //TODO: DMX_MUL_SetFifoOutput
-
-    if(!DMX_MUL_SetFifoOutput(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO,
-        prVdec->ucChannelId, TRUE))
-    {
-        LOG(6, "%s(%d): DMX_MUL_SetFifoOutput enable nothing\n", __FUNCTION__, __LINE__);
-    }
-#endif
-
+    
     if(prVdec->prDmxPool)
     {
         FBM_Free(prVdec->prDmxPool);
@@ -2032,7 +2006,7 @@ BOOL _VPUSH_DmxMoveData(VOID* prdec, DMX_MM_DATA_T *prDmxMMData)
     if(prVdec->fgIsSecureInput)
     {
         prDmxMMData->u4BufStart=prVdec->u4SecureInputStartAddr;
-        prDmxMMData->u4BufEnd=prVdec->u4SecureInputEndAddr;
+        prDmxMMData->u4BufEnd= prVdec->u4SecureInputEndAddr;
         LOG(5,"VPush MoveData:BufAddr=0x%x,BufEnd=0x%x,Addr=0x%x,Size=0x%x,Pts=0x%x\n",prDmxMMData->u4BufStart, prDmxMMData->u4BufEnd, \
 			 prDmxMMData->u4StartAddr, prDmxMMData->u4FrameSize, prDmxMMData->u4Pts);
     }
@@ -3678,22 +3652,33 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     #endif
     LOG(9, "vpush: size=%d, addr=0x%08x, pts=0x%llx\n", prBytesInfo->u4BytesSize, prBytesInfo->u4BytesAddr, prBytesInfo->u8BytesPTS);
 
+    if(prVdec->fgNonFirst==FALSE && prVdec->fgIsSecureInput)
+    {
+        LOG(0,"First secure data, skip.");
+        prVdec->fgNonFirst = TRUE;
+        return TRUE;
+    }
+    
+    if(prVdec->fgIsSecureInput)
+	{
+        if(prVdec->fgNonFirst==FALSE && prVdec->fgGstPlay)
+        {
+            LOG(0,"First secure data,skip.");
+            prVdec->fgNonFirst = TRUE;
+            return TRUE;
+        }
+        else 
+        {
+            LOG(5,"_VPUSH_MoveData SecureData:(Addr=0x%x, 0x%x) Size=0x%x\n",\
+                prBytesInfo->u4BytesAddr,VIRTUAL(prBytesInfo->u4BytesAddr),prBytesInfo->u4BytesSize);
+            
+            prBytesInfo->u4BytesAddr=VIRTUAL(prBytesInfo->u4BytesAddr);
+        }
+	}
+
     prVdec->fgPacketAppend = prBytesInfo->fgAppend;
     prVdec->u4PacketSize = prBytesInfo->u4BytesSize;
-	if(prVdec->fgIsSecureInput)
-	{
-	    prVdec->u4SecureInputStartAddr=ADDRESS_DEC_ALIGN(prBytesInfo->u4SecureInputBufStartAddr,16);
-		prVdec->u4SecureInputEndAddr=ADDRESS_INC_ALIGN(prBytesInfo->u4SecureInputBufEndAddr,1024);
-	    LOG(5,"SecInput1:Start=0x%x,End=0x%x,Addr=0x%x,Size=0x%x\n",prVdec->u4SecureInputStartAddr, \
-			prVdec->u4SecureInputEndAddr,prBytesInfo->u4BytesAddr,prBytesInfo->u4BytesSize);
-		
-		prVdec->u4SecureInputStartAddr=VIRTUAL(prVdec->u4SecureInputStartAddr);
-		prVdec->u4SecureInputEndAddr=VIRTUAL(prVdec->u4SecureInputEndAddr);
-		prBytesInfo->u4BytesAddr=VIRTUAL(prBytesInfo->u4BytesAddr);
-	    LOG(5,"SecInput2:Start=0x%x,End=0x%x,Addr=0x%x,Size=0x%x\n",prVdec->u4SecureInputStartAddr, \
-			prVdec->u4SecureInputEndAddr,prBytesInfo->u4BytesAddr,prBytesInfo->u4BytesSize);
-
-	}
+    
     if(prVdec->rDecryptInfo.fgDecryptPlayback)
     {
         _VPUSH_DmxMoveDataDecryptProcess(prVdec,&rDmxMMData,prBytesInfo);
@@ -4371,11 +4356,20 @@ BOOL _VPUSH_Play(VOID* prdec)
     prVdecEsInfoKeep->fgVPush = TRUE;
     prVdecEsInfo->fgMMPlayback = TRUE;    
     prVdecEsInfoKeep->fgLowLatency = FALSE;
+    
+    if(prVdec->eFmt == VDEC_FMT_H264 || prVdec->eFmt == VDEC_FMT_H265)
+    {
+       prVdecEsInfo->eMMSrcType = SWDMX_SRC_TYPE_NETWORK_NETFLIX; // enable seamless
+       prVdecEsInfo->u4SeamlessWidth = 1920;
+       prVdecEsInfo->u4SeamlessHeight = 1080;
+       VDEC_ChkSeamlessModeChg(prVdec->ucVdecId,prVdecEsInfo->u4SeamlessWidth,prVdecEsInfo->u4SeamlessHeight);
+    }
+    
     if(prVdec->fgLowLatencyMode)
     {
         prVdecEsInfoKeep->fgLowLatency = TRUE;
     }
-    
+
     if(prVdecEsInfoKeep->eVPushPlayMode == VDEC_PUSH_MODE_TUNNEL)
     {
         LOG(0, "set AV_SYNC_MODE_AUDIO_MASTER to STC0");
@@ -4401,7 +4395,7 @@ BOOL _VPUSH_Play(VOID* prdec)
     prVdec->rDecryptInfo.fgReseted=TRUE;
     prVdec->rDecryptInfo.u4TempBufWp=0;
     _VPUSH_SendCmd(prdec, (UINT32)VPUSH_CMD_PLAY);
-
+    
     //register notification
     //LOG(6, "[VPUSH] register notification before vdec play.\n");
     x_memset(&rNfyInfo, 0, sizeof(VDEC_DEC_NFY_INFO_T));
@@ -4769,8 +4763,19 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
 
     if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_SECURE_INPUT)
     {
+        FBM_POOL_T* prSecurePool;
         prVdec->fgIsSecureInput=TRUE;
-        LOG(3, "VPush Marsk=%d,Input buffer is secure buffer=%d\n");
+        prSecurePool = FBM_GetPoolInfo((UINT8)FBM_POOL_TYPE_SECURE_FEEDER);
+        if(prSecurePool)
+        {
+            prVdec->u4SecureInputStartAddr = prSecurePool->u4Addr + (prVdec->fgGstPlay ? 0x200000 : 0);
+            prVdec->u4SecureInputEndAddr =  prSecurePool->u4Addr + prSecurePool->u4Size;
+            prVdec->u4SecureInputStartAddr=VIRTUAL(prVdec->u4SecureInputStartAddr);
+            prVdec->u4SecureInputEndAddr=VIRTUAL(prVdec->u4SecureInputEndAddr);
+        }
+        
+        LOG(2, "VPush(%d) set secure input buffer(0x%x--0x%x)\n",prVdec->ucVPushId,\
+            prVdec->u4SecureInputStartAddr,prVdec->u4SecureInputEndAddr);
     }
     
     if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_VDP_ID)
@@ -4786,6 +4791,7 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
     if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_LGE_GST)
     {
         prVdec->fgGstPlay=TRUE;
+        prVdecEsInfo->fgLGSeamless = TRUE;
         LOG(3, "VPush Marsk VDEC_PUSH_SET_INFO_LGE_GST\n");
     }
     return TRUE;
@@ -5796,7 +5802,7 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
     }
 }
 
-#if defined(CC_USE_DDI)
+#if defined(CC_DTV_SUPPORT_LG)
 static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
 {
     VDEC_T *prVdec;
@@ -5934,8 +5940,9 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->fgIsSecureInput = FALSE;    
     prVdec->fgLowLatencyMode = FALSE;
     prVdec->fgGstPlay=TRUE;
+
 	x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
-#if defined(CC_USE_DDI)
+#if defined(CC_DTV_SUPPORT_LG)
     if (!VPUSH_IS_PIC(eFmt))
     {
         if (NULL_HANDLE != prVdec->hDataTimer)
@@ -6009,7 +6016,7 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
         return;
     }
 
-#if defined(CC_USE_DDI)
+#if defined(CC_DTV_SUPPORT_LG)
     if (prVdec->hDataTimer)
     {
         if (prVdec->fgDataTimerStart)

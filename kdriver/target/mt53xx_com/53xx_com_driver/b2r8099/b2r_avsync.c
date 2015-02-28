@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/25 $
+ * $Date: 2015/02/28 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1101,7 +1101,7 @@ VOID _B2R_NPTVSeamlessStatus(B2R_OBJECT_T* this, UCHAR ucMode)
     {
     case VDP_SMLS_MODE_NONE:
         ASSERT((ucMode == VDP_SMLS_PREPARE) || (ucMode == VDP_SMLS_PREPARE_WHILE_START_PLAY));
-        vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
+        vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);//lijia debug NPTV
         ucCurrnetMode = ucMode;
         break;
     case VDP_SMLS_PREPARE:
@@ -1170,7 +1170,7 @@ static BOOL _B2R_IsNptvStable(B2R_OBJECT_T *this, UCHAR ucStcSrc, STC_CLOCK* prS
         {
         
             BOOL fgSeamlessReady = FALSE;
-            #ifdef CC_SUPPORT_NPTV_SEAMLESS 
+            #ifndef CC_SUPPORT_NPTV_SEAMLESS 
             if (FBM_ChkSeamlessMode(prFrcPrm->ucFbgId, SEAMLESS_BY_NPTV))
             {
                 fgSeamlessReady = FALSE;
@@ -1244,7 +1244,7 @@ static BOOL _B2R_IsNptvStable(B2R_OBJECT_T *this, UCHAR ucStcSrc, STC_CLOCK* prS
                 prB2rVar->fgNPTVStable = TRUE;
 
                 //LOG(3,"wait %d vsyncs for NPTV statlbe\n",_au4WaitNPTVStableCount[prFrcPrm->ucVdpId]);
-                #ifdef CC_SUPPORT_NPTV_SEAMLESS  
+                #ifndef CC_SUPPORT_NPTV_SEAMLESS  
                 if (prFrcPrm->ucSeamlessVDPMode)
                 {
                     _B2R_NPTVSeamlessStatus(this, VDP_SMLS_FRAME_COMING);

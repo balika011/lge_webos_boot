@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: vdp_display.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -132,6 +132,8 @@ static UINT16 u2FscOutWidthLimit = 3840;
 static UINT16 u2FscOutWidthLimit = 1920;
 #endif
 //#endif
+EXTERN UINT8 bVRMUpdateSrcReg[VDP_MAX_NS];
+
 //-----------------------------------------------------------------------------
 // Static variables
 //-----------------------------------------------------------------------------
@@ -495,6 +497,7 @@ UINT8 bVideoUpdateSrcRegion(UINT8 bPath)
     RPicInfo *prPicInfo;
     VDP_DISP_REGION_T rOutRegion;
     VDP_SEAMLESS_INFO_T b2rVrmInfo;
+    static VDP_DISP_REGION_T rPreSrcRegion = {0,0,1920,1080};
     prPicInfo = getPicInfo(bPath);
 
     if(bPath == SV_VP_MAIN)
@@ -549,10 +552,34 @@ UINT8 bVideoUpdateSrcRegion(UINT8 bPath)
     }
     else    //pixel-based
     {
-        u4XOff = prPicInfo->rSrcRegion.u4X;
-        u4YOff = prPicInfo->rSrcRegion.u4Y;
-        u4Width = prPicInfo->rSrcRegion.u4Width;
-        u4Height = prPicInfo->rSrcRegion.u4Height;
+        if(VDP_GetSeamlessInfo(bPath, &b2rVrmInfo)!=VDP_SET_ERROR && bVRMUpdateSrcReg[bPath])
+        {
+            if(rPreSrcRegion.u4X == prPicInfo->rSrcRegion.u4X && rPreSrcRegion.u4Y == prPicInfo->rSrcRegion.u4Y \
+                && rPreSrcRegion.u4Width == prPicInfo->rSrcRegion.u4Width && rPreSrcRegion.u4Height == prPicInfo->rSrcRegion.u4Height)
+            {
+                u4XOff = 0;
+                u4YOff = 0;
+                u4Width = b2rVrmInfo.u4SrcWidth;
+                u4Height = b2rVrmInfo.u4SrcHeight;               
+            }
+            else
+            {
+                u4XOff = prPicInfo->rSrcRegion.u4X;
+                u4YOff = prPicInfo->rSrcRegion.u4Y;
+                u4Width = prPicInfo->rSrcRegion.u4Width;
+                u4Height = prPicInfo->rSrcRegion.u4Height;                
+            }
+        }
+        else
+        {
+            u4XOff = prPicInfo->rSrcRegion.u4X;
+            u4YOff = prPicInfo->rSrcRegion.u4Y;
+            u4Width = prPicInfo->rSrcRegion.u4Width;
+            u4Height = prPicInfo->rSrcRegion.u4Height;            
+        }
+        
+        rPreSrcRegion = prPicInfo->rSrcRegion;
+
     }
 
     /*until here, u4XOff,u4YOff,u4Width,u4Height have become pixel-based*/

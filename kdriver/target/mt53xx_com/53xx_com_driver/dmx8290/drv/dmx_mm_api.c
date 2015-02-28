@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/02/28 $
  * $RCSfile: dmx_mm_api.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -986,13 +986,13 @@ BOOL _DMX_MM_MoveData(UINT8 u1Idx, const DMX_MM_DATA_T *prData, UINT32 u4TimeOut
 #else
      if (u4SendSize != 0)
     {
-        i4Ret = x_sema_lock_timeout(_hDmxMMSema, u4TimeOut);
+        i4Ret = x_sema_lock_timeout(_hDmxMMSema, 60*u4TimeOut);
         if(i4Ret != OSR_OK)
         {
             if(i4Ret == OSR_TIMEOUT)
             {
                 u4MoveDataTimeoutCount++;
-                LOG(3, "Timeout\n");
+                LOG(3, "Timeout(%d), %s, line=%d\n", u4TimeOut, __FUNCTION__, __LINE__);
                 return FALSE;
             }
             else
@@ -1146,7 +1146,7 @@ BOOL _DMX_PS_MoveData(UINT8 u1Idx, const DMX_PS_MOVEDATA_CMD_T *prData, UINT32 u
         if(i4Ret == OSR_TIMEOUT)
         {
             u4MoveDataTimeoutCount++;
-            LOG(3, "Timeout\n");
+            LOG(3, "Timeout(%d), %s, line=%d\n", u4TimeOut, __FUNCTION__, __LINE__);
             return FALSE;
         }
         else

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/07 $
+ * $Date: 2015/02/28 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -110,7 +110,7 @@
 #define CC_FBM_3ND_CHANNEL
 #endif
 
-#define YC_MERGE_IN_CHB 
+//#define YC_MERGE_IN_CHB 
 #ifdef CC_MT5882
 #define FBM_MPEG_C_SIZE_IN_CHB (0x900000) // support Y/C in the same Channel 
 #else
@@ -125,7 +125,7 @@
 #endif
 
 #ifndef CC_SUPPORT_NPTV_SEAMLESS //Enalbe test code, please enable in *.cfg
-//#define CC_SUPPORT_NPTV_SEAMLESS
+#define CC_SUPPORT_NPTV_SEAMLESS
 #endif
 
 
@@ -1659,6 +1659,7 @@ EXTERN UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId);
 EXTERN UCHAR FBM_PreLookFrameBufferFromDispQ(UCHAR ucFbgId);
 
 EXTERN UCHAR FBM_PreLookNthFBFromDispQ(UCHAR ucFbgId, UCHAR ucTheNth);
+EXTERN UCHAR FBM_PreLookBFromDispQ(UCHAR ucFbgId, UCHAR ucTheNth);
 
 EXTERN UCHAR FBM_PreLook2ndFrameBufferFromDispQ(UCHAR ucFbgId);
 
@@ -1885,11 +1886,14 @@ EXTERN BOOL FBM_GetFixedImgRzBuffer(UINT32 *pu4AddrY, UINT32 *pu4AddrC);
 EXTERN BOOL FBM_FreeFixedImgRzBuffer(UINT32 u4AddrY, UINT32 u4AddrC);
 EXTERN void FBM_SetPtsSync(UCHAR ucFbgId,BOOL fgAvsync);
 EXTERN BOOL FBM_GetPtsSync(UCHAR ucFbgId);
+EXTERN BOOL  FBM_FbgValid(UCHAR ucFbgId);
+EXTERN BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery);
 
 #ifdef CC_B2R_RES_SUPPORT
 EXTERN UINT8 FBM_B2rResIdAccess(UCHAR ucFbgId, 
                                           UINT32 u4Mask,
                                           B2R_IPT_INFO_T* pt_src);
+EXTERN UCHAR _FBM_Fbg2B2r(UCHAR ucFbgId);
 #endif
 
 typedef enum

@@ -288,6 +288,8 @@ static INT32 _VdpPipeQuery (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdPipLineSetMainOmux(INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv);
 #endif
+static INT32 _VdpSetVsyncNum(INT32 i4Argc, const CHAR ** szArgv);
+
 static INT32 _VdpStopCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpFreezeCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VdpNonlinearCmd (INT32 i4Argc, const CHAR ** szArgv);
@@ -584,6 +586,7 @@ static CLI_EXEC_T _arVdpCmdTbl[] =
     {"renderlog",	"rl",	_CmdRenderLog, NULL,        "Vdp enable render Log", CLI_SUPERVISOR},
     {"FiterB2rlog",	"fl",	_VdpLogFilter, NULL,        "Filter B2R Log", CLI_SUPERVISOR},
  	{"pattern",		"pt",	_CmdPattern, NULL,		    "Vdp Test Pattern", CLI_SUPERVISOR},
+ 	{"VsyncNum",	"V",	_VdpSetVsyncNum, NULL,		    "Vdp Set Vsync Num", CLI_SUPERVISOR},
 	#if SUPPORT_DOT_TO_DOT_PATTERN 	
 	{"DotToDotPattern",		"dpt",	 _CmdDotToDotPattern, NULL,		    "Vdp DotToDot Pattern", CLI_SUPERVISOR}, 	
 	#endif
@@ -2141,6 +2144,23 @@ static INT32 _VdPipLineSetPipOmux(INT32 i4Argc, const CHAR ** szArgv)
 }
 
 #endif
+
+static INT32 _VdpSetVsyncNum(INT32 i4Argc, const CHAR ** szArgv)
+{
+    UCHAR uVNum;
+
+    if (i4Argc != 2)
+    {
+       printf(" VdpSetVsyncNum Null\n");
+       return 0;
+    }
+	
+    uVNum = (UCHAR) StrToInt(szArgv[1]);
+	B2R_SetVsyncNum(uVNum);
+  
+    return 0;
+}
+
 static INT32 _VdpSetCmd10BitMode(INT32 i4Argc, const CHAR ** szArgv)
 {
     UINT32 u4VdpId;

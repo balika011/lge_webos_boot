@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/02/28 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -233,7 +233,7 @@ static BOOL fgPipLine = TRUE;
     }\
     else \
     {\
-        LOG(1,"Addr(0x%x) u4Size(0x%x) layout overlap!! \n",u4Addr,u4Size);\
+        LOG(0,"Addr(0x%x) u4Size(0x%x) layout overlap!! \n",u4Addr,u4Size);\
     }
     
 //If ns >= 10, return 10; else if ns >= 5, return 5; else return ns;
@@ -1786,13 +1786,13 @@ UINT32 FBM_CalcBufNum(UCHAR ucFbgId, UCHAR ucFbgType, UINT32 u4VDecFmt, UINT32 u
             // one is for reference frame, the other two frame is for seamless display
             if(u1AppMode == FBM_FBG_APP_OMX_DISP)
             {
-                LOG(0, "[%s-%d]OMX not support RV yet....\n", __FUNCTION__, __LINE__);
+                //LOG(0, "[%s-%d]OMX not support RV yet....\n", __FUNCTION__, __LINE__);
             }
             if (u4FbCount >= 10)
             {
                 u4FbCount -= 2; // usine two frame buffer for rpr mode
             }
-#ifdef CC_USE_DDI
+#ifdef CC_DTV_SUPPORT_LG
             u4FbCount = FBM_MIN(u4FbCount, 5);
 #endif
         }
@@ -1854,7 +1854,12 @@ UINT32 FBM_CalcBufNum(UCHAR ucFbgId, UCHAR ucFbgType, UINT32 u4VDecFmt, UINT32 u
     {
         *pu4ExtFbNs = u4ExtraFbNs;
     }
-
+    
+    if(u1AppMode == FBM_FBG_APP_OMX_DISP)
+    {
+        if(u4FbCount > 11) u4FbCount =11;
+    }
+    
     if ((u4VDecFmt == FBM_VDEC_H264) || (u4VDecFmt == FBM_VDEC_H265) || (u4VDecFmt == FBM_VDEC_VP9))
     {
         if (u1AppMode == FBM_FBG_APP_OMX_DISP)
@@ -1922,11 +1927,11 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
         
     }
 
-    LOG(0, "FBM_CreateGroupExt: FbgType(%d) Codec(%d) HV(%d, %d) Thumbnail(%d) 10Bit(%d) UFO(%d) CreateFromInst(%d) SeamlessMode(%d) .\n",ucFbgType,u4VDecFmt,u4HSize,u4VSize, 
+    LOG(0, "FBM_CreateGroupExt: FbgType(%d) Codec(%d) HV(%d, %d) Thumbnail(%d) 10Bit(%d) UFO(%d) ucCftFbgId(%d) SeamlessMode(%d) .\n",ucFbgType,u4VDecFmt,u4HSize,u4VSize, 
 			prPar?prPar->fgThumbnailMode:0,
 			prPar?prPar->fg10Bit:0,
 			prPar?prPar->fgUFO:0,
-			prPar?prPar->fgCreateFromInst:0,
+			prPar?prPar->ucCftFbgId:0,
 			prPar ? (prPar->eSeamlessMode):0);
 	
     _FBM_GetPoolList(&prFbpList, &ucFbpListNs);
@@ -2057,7 +2062,6 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
         _arFbg[u4FbgId].fgPtsSync = FALSE;
 		// Determine number of frame buffer, later
 		_arFbg[u4FbgId].ucFbNs = FBM_MAX_FB_NS_PER_GROUP;
-
 		// Allocalte memory for picture header
 		u4MallocSize = _arFbg[u4FbgId].ucFbNs * (sizeof(FBM_PIC_HDR_T));
 		_arFbg[u4FbgId].pMallocAddr = x_mem_alloc(u4MallocSize);
@@ -2080,7 +2084,8 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
 	}
 	
 	_QueryFixedBuffer(&u4FixedAddr,&u4FixedSize);
-
+    u4FixedSize = 0;
+    u4FixedAddr = 0;
     if (prPar && (( prPar->u4TargetW > FBM_FBG_1080HD_H) || (prPar->u4TargetH > FBM_FBG_1080HD_V)))
     {
 		_arFbg[u4FbgId].eResolutionChangeMode = FBM_RESOLUTION_CHANGE_MODE_4K2K;
@@ -2442,7 +2447,8 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
 
     				_arFbg[u4FbgId].u4FbStartPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPool;				
     				_arFbg[u4FbgId].u4FbEndPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPool + FBM_MPEG_Y_SIZE - u4FixedSize;				
-    				_arFbg[u4FbgId].u4FbStartPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC;
+
+                    _arFbg[u4FbgId].u4FbStartPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC;
     				_arFbg[u4FbgId].u4FbEndPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC + FBM_MPEG_C_SIZE;	
     				
     				#ifdef YC_MERGE_IN_CHB 
@@ -2487,20 +2493,18 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
         {
             _arFbg[u4FbgId].u4FbMemoryPoolSize = _FBM_PoolAllocate(ucFbgType, &_arFbg[u4FbgId].u4FbMemoryPool,&_arFbg[u4FbgId].u4FbMemoryPoolC);
 
-			_arFbg[u4FbgId].u4FbStartPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPool;				
-			_arFbg[u4FbgId].u4FbEndPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPool + FBM_MPEG_Y_SIZE - u4FixedSize;				
-			_arFbg[u4FbgId].u4FbStartPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC;
-			_arFbg[u4FbgId].u4FbEndPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC + FBM_MPEG_C_SIZE;
-			
-			#ifdef YC_MERGE_IN_CHB 
-			_arFbg[u4FbgId].u4FbMemoryPoolC =	_arFbg[u4FbgId].u4FbMemoryPool + FBM_MPEG_Y_SIZE - FBM_MPEG_C_SIZE_IN_CHB - u4FixedSize;
-			
-			_arFbg[u4FbgId].u4FbStartPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPool;				
-			_arFbg[u4FbgId].u4FbEndPoolYAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC;				
-			_arFbg[u4FbgId].u4FbStartPoolCAddr	= _arFbg[u4FbgId].u4FbMemoryPoolC;				
-			_arFbg[u4FbgId].u4FbEndPoolCAddr	= _arFbg[u4FbgId].u4FbStartPoolCAddr + FBM_MPEG_C_SIZE_IN_CHB;			
-			#endif
-			
+            _arFbg[u4FbgId].u4FbStartPoolYAddr  = _arFbg[u4FbgId].u4FbMemoryPool;
+            _arFbg[u4FbgId].u4FbEndPoolYAddr    = _arFbg[u4FbgId].u4FbMemoryPool + FBM_MPEG_Y_SIZE - u4FixedSize;
+            _arFbg[u4FbgId].u4FbStartPoolCAddr  = _arFbg[u4FbgId].u4FbMemoryPoolC;
+            _arFbg[u4FbgId].u4FbEndPoolCAddr    = _arFbg[u4FbgId].u4FbMemoryPoolC + FBM_MPEG_C_SIZE;
+
+            #ifdef YC_MERGE_IN_CHB
+            _arFbg[u4FbgId].u4FbMemoryPoolC =   _arFbg[u4FbgId].u4FbMemoryPool + FBM_MPEG_Y_SIZE - FBM_MPEG_C_SIZE_IN_CHB - u4FixedSize;
+            _arFbg[u4FbgId].u4FbStartPoolYAddr  = _arFbg[u4FbgId].u4FbMemoryPool;
+            _arFbg[u4FbgId].u4FbEndPoolYAddr    = _arFbg[u4FbgId].u4FbMemoryPoolC;
+            _arFbg[u4FbgId].u4FbStartPoolCAddr  = _arFbg[u4FbgId].u4FbMemoryPoolC;
+            _arFbg[u4FbgId].u4FbEndPoolCAddr    = _arFbg[u4FbgId].u4FbStartPoolCAddr + FBM_MPEG_C_SIZE_IN_CHB;
+            #endif
         }
         LOG(2, "AllocFBM = Y:(0x%8x) C:(0x%x) Pool Size:(0x%x).\n", _arFbg[u4FbgId].u4FbMemoryPool,_arFbg[u4FbgId].u4FbMemoryPoolC,_arFbg[u4FbgId].u4FbMemoryPoolSize);
             
@@ -2533,7 +2537,7 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
         _arFbg[u4FbgId].fgCreateFromInst = TRUE;
 	
    // Config color mode		
-	LOG(1, "Config FBG(%d): SeamlessMode(%x) FBNs(%d-%d %d-%d)",
+	LOG(1, "Config FBG(%d): SeamlessMode(%x) FBNs(%d-%d %d-%d)\n",
 			u4FbgId,_arFbg[u4FbgId].eSeamlessMode, _arFbg[u4FbgId].ucFbNsOldBase, _arFbg[u4FbgId].ucFbNsOld, _arFbg[u4FbgId].ucFbNsBase, _arFbg[u4FbgId].ucFbNs);
 
  
@@ -2966,7 +2970,6 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
 #else
     VDEC_FbgReleaseHdlr();
 #endif
-
     _arFbg[ucFbgId].u1DecoderSrcId=0xff;
 }
 
@@ -3358,18 +3361,29 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
 	FBM_MUTEX_LOCK(ucFbgId);
     ucThumbnail = FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE);
 
-    if (!ucThumbnail)
+    if (!ucThumbnail )
     {
+        UCHAR ucVdpId =  0;
         FBM_MUTEX_UNLOCK(ucFbgId);
+        
         ucEsId = _arFbg[ucFbgId].u1DecoderSrcId;
-        ucVdpId = VDP_Es2Vdp(ucEsId);
-        #if defined(CC_MT5890)
-        VDP_VsyncMutexLock(ucVdpId);
-        #else
-        #endif
-        ucFbId = VDP_GetPendingFB(ucVdpId, ucFbgId);
-        VDP_SetReleaseDispQ(ucVdpId, ucFbgId);
-        FBM_MUTEX_LOCK(ucFbgId);
+        for(ucVdpId = 0; ucVdpId< VDP_MAX; ucVdpId++)
+        {
+           if(VDP_PipeIsConnected(ucVdpId,ucEsId))
+           {
+               ucVdpId = VDP_Es2Vdp(ucEsId);
+#if defined(CC_MT5890)
+               VDP_VsyncMutexLock(ucVdpId);
+#else
+
+#endif
+               ucFbId = VDP_GetPendingFB(ucVdpId, ucFbgId);
+               VDP_SetReleaseDispQ(ucVdpId, ucFbgId);
+               FBM_MUTEX_LOCK(ucFbgId);           
+           }
+        }
+        
+
     }
 
     if (_arFbg[ucFbgId].fgEnableNewSeamless)
@@ -3611,7 +3625,8 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
         UINT32 u4FbEndPoolYAddr = 0;        
         UINT32 u4FbStartPoolCAddr = 0;
         UINT32 u4FbEndPoolCAddr = 0;
-        
+        UINT32 u4FbStartWorkAddr =0;
+        UINT32 u4FbEndWorkAddr =0;
         _arFbg[ucFbgId].fgRPRMode = FALSE;
         _arFbg[ucFbgId].u1FbgAppMode= prPar->u1AppMode;
         _arFbg[ucFbgId].ucFbgCm = ucFbgCm;
@@ -3657,6 +3672,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 _arFbg[ucFbgId].u4FbWidth, _arFbg[ucFbgId].u4FbHeight, 
                 _arFbg[ucFbgId].u4FbMemoryPoolSize, u4YSize, u4CSize, 
                 _arFbg[ucFbgId].u1FbgAppMode, &u4ExtraFbNs);
+
         
         u4FbNs -= u4ExtraFbNs; // Remove Extra Fb first, as the extra partion maybe not continuous.
 
@@ -3672,16 +3688,23 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
         }
         
         _arFbg[ucFbgId].ucFbNs = (UCHAR)(u4FbNs) + _arFbg[ucFbgId].ucFbNsBase;
-
         
-        u4Addr = _arFbg[ucFbgId].u4FbMemoryPool;
-        u4AddrC = _arFbg[ucFbgId].u4FbMemoryPoolC;
         u4PoolSize = _arFbg[ucFbgId].u4FbMemoryPoolSize;
 
-        u4FbStartPoolYAddr = _arFbg[ucFbgId].u4FbStartPoolYAddr;
-        u4FbEndPoolYAddr   = _arFbg[ucFbgId].u4FbEndPoolYAddr;
-        u4FbStartPoolCAddr = _arFbg[ucFbgId].u4FbStartPoolCAddr;
-        u4FbEndPoolCAddr   = _arFbg[ucFbgId].u4FbEndPoolCAddr;
+        u4Addr = _arFbg[ucFbgId].u4FbMemoryPool;
+        u4FbStartPoolYAddr = u4Addr ;
+        u4FbEndPoolYAddr = u4FbStartPoolYAddr + (u4YSize + FBM_GFX_Y_ALIGMENT +1) * u4FbNs;
+
+        _arFbg[ucFbgId].u4FbMemoryPoolC = u4FbEndPoolYAddr;
+        u4AddrC = u4FbEndPoolYAddr;
+        u4FbStartPoolCAddr = u4AddrC;
+        u4FbEndPoolCAddr = u4FbStartPoolCAddr + (u4CSize + FBM_GFX_C_ALIGMENT +1) * u4FbNs;
+
+        u4FbStartWorkAddr = u4FbEndPoolCAddr;
+        u4FbEndWorkAddr = _arFbg[ucFbgId].u4FbMemoryPool + u4PoolSize;
+        
+        LOG(1,"FBG(%d),FbNs=%d,Yaddr(0x%x--0x%x),Caddr(0x%x--0x%x) Working(0x%x--0x%x,Size=0x%x)\n",ucFbgId,u4FbNs,u4FbStartPoolYAddr,\
+            u4FbEndPoolYAddr,u4FbStartPoolCAddr,u4FbEndPoolCAddr,u4FbStartWorkAddr,u4FbEndWorkAddr,u4FbEndWorkAddr-u4FbStartWorkAddr);
         
         if(_arFbg[ucFbgId].u4VDecFmt == FBM_VDEC_JPEG && ucFbgCm == FBM_CM_422 && prPar->u1AppMode != FBM_FBG_APP_MTIMAGE)
         {
@@ -4118,6 +4141,8 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 }
 					
             }
+
+            u4Addr = u4FbStartWorkAddr;
         }
 
         //MV buffer config
@@ -4135,10 +4160,10 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                     FBM_MUTEX_UNLOCK(ucFbgId);
                     return;
                 }
+                
                 /* Y/C separation,in CH B & CH C respectively */ 
                 _arFbg[ucFbgId].au4AddrY[u4FbIdx] = u4Addr;
- 
-                _arFbg[ucFbgId].au4AddrC[u4FbIdx] = u4AddrC;
+                _arFbg[ucFbgId].au4AddrC[u4FbIdx] = u4Addr + u4YSize;
             }
         }
         else if (_arFbg[ucFbgId].u4VDecFmt == FBM_VDEC_H264)
@@ -4173,7 +4198,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
             
                 _arFbg[ucFbgId].au4AddrMv[u4FbIdx] = u4Addr;
                 
-                FBM_Check_AddrIsOverLap(u4Addr,u4MvSize,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                FBM_Check_AddrIsOverLap(u4Addr,u4MvSize,u4FbStartWorkAddr,u4FbEndWorkAddr)
                 
                 u4Addr += u4MvSize;
                 LOG(1,"H264:AddrMv[%d] 0x%x\n",u4FbIdx,_arFbg[ucFbgId].au4AddrMv[u4FbIdx]);
@@ -4183,7 +4208,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 u4Addr = FBM_ALIGN_MASK(u4Addr,FBM_FMG_Y_ALIGMENT);
                 
                 _arFbg[ucFbgId].au4AddrCabac[u4FbIdx] = u4Addr; //MV End Storge CABAC buffer
-                FBM_Check_AddrIsOverLap(u4Addr,FBM_FBG_TYPE_CABAC_SIZE,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                FBM_Check_AddrIsOverLap(u4Addr,FBM_FBG_TYPE_CABAC_SIZE,u4FbStartWorkAddr,u4FbEndWorkAddr)
                 
                 u4Addr += FBM_FBG_TYPE_CABAC_SIZE;
                 
@@ -4205,7 +4230,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 u4Addr = FBM_ALIGN_MASK(u4Addr, FBM_VDEC_WORKING_ALIGNMENT);
                 _arFbg[ucFbgId].au4AddrMv[u4FbIdx] = u4Addr; //YAddr End Storge MV buffer 
                 
-                FBM_Check_AddrIsOverLap(u4Addr,u4MvSize,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                FBM_Check_AddrIsOverLap(u4Addr,u4MvSize,u4FbStartWorkAddr,u4FbEndWorkAddr)
                 
                 u4Addr += u4MvSize;
               
@@ -4217,7 +4242,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
               
                 _arFbg[ucFbgId].au4AddrCabac[u4FbIdx] = u4Addr; //MV End Storge CABAC buffer
                 
-                FBM_Check_AddrIsOverLap(u4Addr,FBM_FBG_TYPE_CABAC_SIZE,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                FBM_Check_AddrIsOverLap(u4Addr,FBM_FBG_TYPE_CABAC_SIZE,u4FbStartWorkAddr,u4FbEndWorkAddr)
                 
                 u4Addr += FBM_FBG_TYPE_CABAC_SIZE;
                 
@@ -4284,18 +4309,18 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 
                 if(_arFbg[ucFbgId].ucFbgType == FBM_FBG_TYPE_4K2K)
                 {               
-                    FBM_Check_AddrIsOverLap(u4Addr,FBM_WORK_BUF_VP9_4K2K_SIZE,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                    FBM_Check_AddrIsOverLap(u4Addr,FBM_WORK_BUF_VP9_4K2K_SIZE,u4FbStartWorkAddr,u4FbEndWorkAddr)
                     u4Addr += FBM_WORK_BUF_VP9_4K2K_SIZE;
                         
                 }
                 else
                 {
-                    FBM_Check_AddrIsOverLap(u4Addr,FBM_WORK_BUF_VP9_FHD_SIZE,u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                    FBM_Check_AddrIsOverLap(u4Addr,FBM_WORK_BUF_VP9_FHD_SIZE,u4FbStartWorkAddr,u4FbEndWorkAddr)
                     u4Addr += FBM_WORK_BUF_VP9_FHD_SIZE;                        
                 }
                 
                 LOG(1,"VP9:AddrMv[%d] 0x%x\n",u4FbIdx,_arFbg[ucFbgId].au4AddrMv[u4FbIdx]);
-            }       
+            }
                     
             for (u4FbIdx = 0;u4FbIdx < FBM_MAX_CABAC_BUF_NS_PER_GROUP;u4FbIdx++)
             {
@@ -4303,7 +4328,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
 
                 _arFbg[ucFbgId].au4AddrCabac[u4FbIdx] = u4Addr; //MV End Storge CABAC buffer
 
-                FBM_Check_AddrIsOverLap(u4Addr,(FBM_FBG_TYPE_CABAC_SIZE*2),u4FbStartPoolYAddr,u4FbEndPoolYAddr)
+                FBM_Check_AddrIsOverLap(u4Addr,(FBM_FBG_TYPE_CABAC_SIZE*2),u4FbStartWorkAddr,u4FbEndWorkAddr)
 
                 u4Addr += (FBM_FBG_TYPE_CABAC_SIZE*2);
 
@@ -4313,7 +4338,6 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
             // segld buf size + tife buf size + count tbl size + prob tbl buf size
             u4Addr = FBM_ALIGN_MASK(u4Addr,FBM_FMG_Y_ALIGMENT);
             _arFbg[ucFbgId].au4MiscTblStartAddr = u4Addr;
-            
             
         }
         else if (_arFbg[ucFbgId].u4VDecFmt == FBM_VDEC_JPEG)
@@ -4362,107 +4386,6 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
                 _arFbg[ucFbgId].u4FbMemoryPoolSize, u4YSize, u4CSize, _arFbg[ucFbgId].ucFbNs, _arFbg[ucFbgId].ucFbNsBase);
 #endif
 
-    //Handle extra reference frame, update FbNs & Fb partition here.
-    #if 0
-     /* temp solution ,marked it ,as multi-way playback confilict with this case . */
-#if defined(CC_H264_LV5_SUPPORT_SHARE_POOL) || defined(CC_H264_LV5_SUPPORT_SINGLE_POOL)
-
-        if (u4ExtraFbNs && _arFbg[ucFbgId].u4VDecFmt == FBM_VDEC_H264 && _arFbg[ucFbgId].fgEnableH264V5Support)
-        {
-            UINT32 u4ExtraReferenceNs;
-            UINT32 u4MVSize;
-
-#if defined(CC_H264_LV5_SUPPORT_SHARE_POOL)
-
-            prFbmPool = FBM_GetPoolInfo((UINT8)FBM_POOL_TYPE_MPEG2);
-            u4Addr = FBM_ALIGN_MASK(prFbmPool->u4Addr , FBM_FMG_Y_ALIGMENT);
-            u4PoolSize = prFbmPool->u4Size;
-
-            ASSERT(FBM_FBG_H264_FHD_REFERNCE_NS_TWO_POOL > FBM_FBG_H264_FHD_REFERNCE_NS);
-            u4ExtraReferenceNs = FBM_FBG_H264_FHD_REFERNCE_NS_TWO_POOL - FBM_FBG_H264_FHD_REFERNCE_NS;
-            u4MVSize = ((u4ExtraReferenceNs * u4YSize) >> 2);
-
-            u4ExtraReferenceNs = ((u4PoolSize - u4MVSize)/(u4YSize + u4CSize));
-            ASSERT(u4ExtraReferenceNs >= FBM_FBG_H264_FHD_REFERNCE_NS_TWO_POOL - FBM_FBG_H264_FHD_REFERNCE_NS);
-
-            if (u4ExtraReferenceNs > FBM_FBG_H264_FHD_REFERNCE_NS_TWO_POOL - FBM_FBG_H264_FHD_REFERNCE_NS)
-            {
-                u4ExtraReferenceNs = FBM_FBG_H264_FHD_REFERNCE_NS_TWO_POOL - FBM_FBG_H264_FHD_REFERNCE_NS;
-            }
-
-#elif defined(CC_H264_LV5_SUPPORT_SINGLE_POOL)
-           
-            ASSERT(FBM_FBG_H264_FHD_REFERNCE_NS_ONE_POOL > FBM_FBG_H264_FHD_REFERNCE_NS);
-            u4ExtraReferenceNs = FBM_FBG_H264_FHD_REFERNCE_NS_ONE_POOL - FBM_FBG_H264_FHD_REFERNCE_NS;
-            u4MVSize = ((u4ExtraReferenceNs * u4YSize) >> 2);
-
-            u4ExtraReferenceNs = ((FMB_EXTRA_FOR_SINGLE_H264_LV5 - u4MVSize)/(u4YSize + u4CSize));
-            ASSERT(u4ExtraReferenceNs >= FBM_FBG_H264_FHD_REFERNCE_NS_ONE_POOL - FBM_FBG_H264_FHD_REFERNCE_NS);
-
-            if (u4ExtraReferenceNs > FBM_FBG_H264_FHD_REFERNCE_NS_ONE_POOL - FBM_FBG_H264_FHD_REFERNCE_NS)
-            {
-                u4ExtraReferenceNs = FBM_FBG_H264_FHD_REFERNCE_NS_ONE_POOL - FBM_FBG_H264_FHD_REFERNCE_NS;
-            }
-            
-            prFbmPool = FBM_GetPoolInfo((UINT8)FBM_POOL_TYPE_MPEG);
-            u4Addr = FBM_ALIGN_MASK(prFbmPool->u4Addr + prFbmPool->u4Size - FMB_EXTRA_FOR_SINGLE_H264_LV5, FBM_FMG_Y_ALIGMENT);
-            u4PoolSize = FMB_EXTRA_FOR_SINGLE_H264_LV5;
-
-#endif
-            u4ExtraReferenceNs = FBM_MIN(u4ExtraReferenceNs, u4ExtraFbNs);
-
-            for (u4FbIdx = _arFbg[ucFbgId].ucFbNsBase; ((u4FbIdx < _arFbg[ucFbgId].ucFbNs + u4ExtraReferenceNs)&&(u4FbIdx < FBM_MAX_FB_NS_PER_GROUP)); u4FbIdx++)
-            {
-                // Y
-                _arFbg[ucFbgId].au4AddrY[u4FbIdx] = u4Addr;
-                FBM_GFX_MEMSET((UINT8*)u4Addr, (_arFbg[ucFbgId].u4FbWidth / u4WidthDiv), _arFbg[ucFbgId].u4FbHeight, 0x0);
-                u4Addr += u4YSize;
-
-                _arFbg[ucFbgId].au4AddrC[u4FbIdx] = u4Addr;
-                FBM_GFX_MEMSET((UINT8*)u4Addr, (_arFbg[ucFbgId].u4FbWidth / u4WidthDiv), (_arFbg[ucFbgId].u4FbHeight >> 1), 0x80);
-                u4Addr += u4CSize;
-            }
-
-            _arFbg[ucFbgId].ucFbNs += u4ExtraReferenceNs;
-
-            if (_arFbg[ucFbgId].ucMvBufNs + u4ExtraReferenceNs > FBM_MAX_FB_NS_PER_GROUP-1)
-            {
-                ASSERT(_arFbg[ucFbgId].ucMvBufNs + u4ExtraReferenceNs <= FBM_MAX_FB_NS_PER_GROUP-1);
-                FBM_MUTEX_UNLOCK(ucFbgId);
-                return;
-            }
-
-            if (_arFbg[ucFbgId].ucFbgType == FBM_FBG_TYPE_1080HD_RR)
-            {
-                u4MvSize = u4YSize >> 1;
-            }
-            else
-            {
-                u4MvSize = u4YSize >> 2;
-            }
-            
-            for (u4FbIdx = _arFbg[ucFbgId].ucMvBufNs; ((u4FbIdx < _arFbg[ucFbgId].ucMvBufNs + u4ExtraReferenceNs)&&(u4FbIdx < (FBM_MAX_FB_NS_PER_GROUP-1))); u4FbIdx++)
-            {
-                _arFbg[ucFbgId].au4AddrMv[u4FbIdx] = u4Addr;
-                u4Addr += u4MvSize;
-            }
-
-            _arFbg[ucFbgId].ucMvBufNs += u4ExtraReferenceNs;
-
-            // TODO: Need update _arFbg[ucFbgId].u4WorkBufSize for H.264?             
-            //_arFbg[ucFbgId].u4WorkBufSize = ?
-            
-            if (u4ExtraFbNs >= u4ExtraReferenceNs)
-            {
-                u4ExtraFbNs -= u4ExtraReferenceNs;
-            }
-            
-            ASSERT(u4ExtraFbNs == 0);
-            
-        }                
-#endif
-#endif
-
     }
     
     if (_arFbg[ucFbgId].eDynamicMode == FBM_DYNAMIC_SAME)
@@ -4475,27 +4398,7 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
         FBM_RegCbFunc(FBM_CB_FUNC_GDMA_TASK_MEMSET_DONE, (UINT32)au4CbFunc[FBM_CB_FUNC_GDMA_TASK_MEMSET_DONE]);
         
     }
-	#if 0
-    //fbm memory error check
-    {
-        FBM_POOL_T* prFbmPool;
-#if defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) || defined(CC_FBM_SUPPORT_4K2K)
-        FBM_POOL_T* prFbmPool2;
-        prFbmPool2 = FBM_GetPoolInfo((UINT8)FBM_POOL_TYPE_MPEG2);
-#endif
-        prFbmPool = FBM_GetPoolInfo((UINT8)FBM_POOL_TYPE_MPEG);
 
-#if defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST)  || defined(CC_FBM_SUPPORT_4K2K)
-        if(((_arFbg[ucFbgId].au4AddrMv[0] + _arFbg[ucFbgId].ucMvBufNs * u4MvSize) >= (prFbmPool2->u4Addr + prFbmPool2->u4Size)))
-#else
-        if((_arFbg[ucFbgId].au4AddrMv[0] + _arFbg[ucFbgId].ucMvBufNs * u4MvSize) > (prFbmPool->u4Addr + prFbmPool->u4Size))
-#endif
-        {
-            LOG(1,"warning ! frame buffer allocation error\n");
-            //ASSERT(0);
-        }
-    }
-	#endif
     {
         UINT32 u4FbIdx;
 
@@ -5500,6 +5403,31 @@ UINT32 FBM_GetRunningVdecMemSize(UCHAR ucFbgId)
     }
 }
 
+BOOL FBM_FbgValid(UCHAR ucFbgId)
+{
+    if (VERIFY_FBG(ucFbgId))
+    {
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
+BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery)
+{
+    if(VERIFY_FBG(ucFbgId))
+    {
+        return FALSE;
+    }
+
+    if(fgQuery == FALSE)
+    {
+        _arFbg[ucFbgId].fgDoSeqChanging = fgValue;
+    }
+    
+    return _arFbg[ucFbgId].fgDoSeqChanging;
+}
+
 BOOL FBM_ChkFbgCreateFromInst(UCHAR ucFbgId)
 {
     if (VERIFY_FBG(ucFbgId))
@@ -5610,6 +5538,9 @@ UCHAR FBM_GetFbgByEs(UCHAR ucEsId)
 }
 
 #ifdef CC_B2R_RES_SUPPORT
+
+
+
 B2R_HW_RES_T* _FBM_B2rResGetObj(UINT8 u1HwId)
 {
     UINT32 i;
@@ -6184,6 +6115,27 @@ UINT8 FBM_B2rResIdRelease(UCHAR ucFbgId)
     }while(0);
 
     return u1B2rId;
+}
+
+UCHAR _FBM_Fbg2B2r(UCHAR ucFbgId)
+{
+    UCHAR ucB2rId = B2R_NS;
+    UINT32 i;
+    B2R_HW_RES_T* pt_this = NULL;
+
+    for(i = 0; i < B2R_HW_MAX_ID; i ++)
+    {
+        pt_this = _FBM_B2rResGetObj(i);
+        if(pt_this &&
+            pt_this->t_prm.u1FbgId == ucFbgId &&
+            pt_this->t_prm.b_used)
+        {
+            ucB2rId = pt_this->t_cfg.u1HwId;
+            break;
+        }
+    }
+    
+    return ucB2rId;
 }
 
 #endif
