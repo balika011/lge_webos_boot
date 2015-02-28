@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/02/28 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3093,7 +3093,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
 
         if(prB2rVar->fgPendingChgFrmMsg)
         {
-            LOG(1,"_B2R_GetFrameBufferForOMX: Pending \n");
+            LOG(2,"_B2R_GetFrameBufferForOMX: Pending \n");
         }
         
         if (!prB2rVar->fgPendingChgFrmMsg &&
@@ -3303,7 +3303,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                             FBM_PIC_HDR_T* prPicHdr = NULL;
                             prFrcPrm->ucFbId = FBM_GetFrameBufferFromDispQ(prFrcPrm->ucFbgId);
                             prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-                            LOG(2, "_B2R_GetFrameBufferForOMX fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
+                            LOG(5, "_B2R_GetFrameBufferForOMX fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
                         }
                     }
                     else

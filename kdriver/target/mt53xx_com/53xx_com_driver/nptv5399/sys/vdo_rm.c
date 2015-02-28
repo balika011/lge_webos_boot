@@ -2566,7 +2566,7 @@ UINT32 u4VRMSetTriggerMode(UINT8 bPath)
     else
     {
         //Set Resolution not ready yet, can not handle next resolution event
-        LOG(4, "path(%d) set import module no change, import flag(0x%X)\n",
+        LOG(2, "path(%d) set import module no change, import flag(0x%X)\n",
             bPath,vDrvGetImportWaitFlag(bPath));
         u4NotPending = SV_FALSE;
     }
@@ -2675,7 +2675,7 @@ void vVRMLoop(UINT8 bPath)
                 break;
             }
 
-            LOG(1, "========VRM(%d) Loop Event flag (0x%X) at %d-th pass========\n", 
+            LOG(3, "========VRM(%d) Loop Event flag (0x%X) at %d-th pass========\n", 
                 bPath,vVRMGetEventFlg(bPath),u4VRMPassCnt++);
 
             vVRMClrEventFlg(bPath); 
