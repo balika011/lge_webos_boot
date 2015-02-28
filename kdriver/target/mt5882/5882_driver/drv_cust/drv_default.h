@@ -142,7 +142,8 @@
 
 #ifndef DRAM_PRIORITY_LIST
 // Audio/0 > B2R/5 > VBI/3D/TVE/2 > SCPOS/7 > NR/PSCAN/4 > OSD/OD/MMU/3 > MJC_IN/13 > MJC_OUT/14 > DEMUX/GCPU/1 > CPU/6 > VLD1/9 > VDEC_MC/8 > Test0/15 > GFX/11 > VENC/12 > 3DGFX/10
-#define DRAM_PRIORITY_LIST          ((UINT8*)"08254193bafde67c")
+//#define DRAM_PRIORITY_LIST          ((UINT8*)"08254193bafde67c")
+#define DRAM_PRIORITY_LIST          ((UINT8*)"092651a3cbfde784")
 #endif
 
 #ifndef DRAM_BURSTLEN
