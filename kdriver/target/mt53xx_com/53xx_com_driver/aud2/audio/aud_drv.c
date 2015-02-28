@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/26 $
+ * $Date: 2015/02/28 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -984,7 +984,7 @@ UINT32 _gu4ValidPtsCounter[AUD_DEC_NUM];
 BOOL fgSkipUnderHold[AUD_DEC_MAX] = {FALSE,FALSE,FALSE}; 
 #endif
 
-#if defined(CC_MT5890)
+#if defined(CC_MT5890) || defined(CC_MT5882)
 static void vWritePWMG1(UINT32 addr, UINT32 data)
 {
 #ifdef CC_SUPPORT_STR
@@ -14354,7 +14354,7 @@ static void _AudHpDePopThread(void* pvArg)
                 ANA_WRITE32(REG_ADAC_CFG2, ACT_UP|(ACT_ENVO_CH2|ACT_SLEW_CH2)|(ACT_ENVO_CH1|ACT_SLEW_CH1)|(ACT_ENVO_CH0|ACT_SLEW_CH0));
                 ///0msec
                 _u4HpDePopDelayCnt = (AUD_HP_DEPOP_CASE_E_DLY/AUD_HP_DEPOP_CNT_DELAY);
-                #if defined(CC_MT5890)
+                #if defined(CC_MT5890) || defined(CC_MT5882)
                 //disable PWM & FIFO,then enable PWM & FIFO ,in case of noise issue happen
                 AUD_WRITE32(REG_PWMIP_MON_PG1, 0x00);
                 // 2. Set A_PGTRL0 0xf01 bit0 = 1 enable PWM
