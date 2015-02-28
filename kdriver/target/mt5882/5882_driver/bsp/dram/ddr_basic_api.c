@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/02/28 $
  * $RCSfile: pi_basic_api.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1112,10 +1112,10 @@ void DramcConfig(void)
     //[3] A60807 R/W ODT are enabled
     //2012/10/03, for 2133MHz, DATLAT e -> [6:4] = 110, tR2W [15:12] = 0100
     if(TCMGET_DDR_CLK() > CLK_1700MHZ)
-    	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xe28743ed);	
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xea8743ed); 
 	else
-		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xe28733dd);
-       
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xea8733dd);
+	
     //A60807 verification plan has no this setting? default is 0x00000000
     //[12] CS0 is also applied to CS1
     //A60807 no CS1 for fly by. No need to set for A60807
