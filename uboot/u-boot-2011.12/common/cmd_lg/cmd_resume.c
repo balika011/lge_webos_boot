@@ -154,7 +154,7 @@ static unsigned int get_signed_image_size(struct snapshot_header *header)
 	size =  ALIGN(header->image_size, 16);
 
 #if defined (CONFIG_SECURITY_BOOT)
-	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
+	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1) + 8192;
 #endif
 	return size;
 }
@@ -233,7 +233,7 @@ int verify_snapshot_image(struct snapshot_header *header)
 	int index = 0,i;
 	unsigned char *signature_offset = decomp_buf  + header->image_size  ;
 	unsigned char signature[32];
-	//static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
+	static unsigned char *sign_area ;//= 0x800000;//[FRAGMENT_UNIT_SIZE];
 
 	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (header->image_size - HEADER_SIZE))
 	{
@@ -243,9 +243,20 @@ int verify_snapshot_image(struct snapshot_header *header)
 
 
 //partial verify
-	//sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char));
+	sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char) + 4096);
+	sign_area =	((int)sign_area + 0x10) & (~0xf);
+	
+#ifdef SNAPSHOT_DEBUG
+				printf("sign_area = 0x%8x:\n",sign_area);	// first 16 bytes
+			
+#endif
 	index = (get_timer(0) % NUMBER_OF_FRAGMENT);
-	#if 1
+#ifdef SNAPSHOT_DEBUG
+			printf("index = %d:\n",index);  // first 16 bytes
+		
+#endif
+
+	#if 0
 	
 	if(-1 == storage_read(Global_offset_cur  + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, decomp_buf))
 	{
@@ -255,6 +266,7 @@ int verify_snapshot_image(struct snapshot_header *header)
 	}
 	#else
 	memcpy(sign_area,decomp_buf + (index * FRAGMENT_UNIT_SIZE),FRAGMENT_UNIT_SIZE);
+	memcpy(decomp_buf,sign_area,FRAGMENT_UNIT_SIZE);
 	#endif
 	
 #ifdef SNAPSHOT_DEBUG
@@ -267,7 +279,7 @@ int verify_snapshot_image(struct snapshot_header *header)
 		printf("\n");
 	
 #endif
-#if 1
+#if 0
 	if(-1 == storage_read(Global_offset_cur  + header->image_size  + ((index + 1) *SIGNATURE_SIZE), SIGNATURE_SIZE, signature))
 	{
 		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
@@ -494,7 +506,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	struct snapshot_header *header = GET_SNAP_HEADER(info);
 
 	/* compressed payload size = total size - header size - metadata size */
-	unsigned long snapshot_image_payload_size = get_signed_image_size(header) - PAGE_SIZE;
+	unsigned long snapshot_image_payload_size = get_signed_image_size(header)- PAGE_SIZE;;
 
 	pfn_merge_info = (struct pfn_merge_info *)meta_page_ptr;
 	processed_pfn_mi_index = 0;
@@ -503,7 +515,6 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	start_time = (u32)arch_counter_get_ms();
 	memset(decomp_done,0,sizeof(decomp_done));
 #endif
-
 	// =================================================================
 	// 3. snapshot decompress
 	// =================================================================
