@@ -5,7 +5,7 @@
  *	This file is based  ARM Realview platform
  *  Copyright (C) 2002 ARM Ltd.
  *  All Rights Reserved
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -28,6 +28,10 @@
 #include "x_typedef.h"
 #include <usb.h>
 #include <usb_defs.h>
+
+#include "../../smp/include/spinlock.h"
+
+spin_lock_t g_USB_Serial_lock = INIT_SPIN_LOCK;
 
 /* Integrator AP has two UARTs, we use the first one, at 38400-8-N-1 */
 #define baudRate CONFIG_BAUDRATE
@@ -295,7 +299,8 @@ void PL2303_serial_putc (const char c)
     char data;
     struct usb_device *dev;
     int ret;
-    
+
+    spin_lock_irq(&g_USB_Serial_lock);
     if (pPL2303Dev)
     {
         dev = pPL2303Dev;
@@ -320,6 +325,7 @@ void PL2303_serial_putc (const char c)
             pPL2303Dev = NULL;                
         }
     }
+    spin_unlock_irq(&g_USB_Serial_lock);
 }
 
 void PL2303_serial_puts (const char *s)
@@ -334,6 +340,8 @@ int PL2303_serial_getc (void)
     int c;
     struct usb_device *dev;
     int ret;
+
+    spin_lock_irq(&g_USB_Serial_lock);
     
     if (pPL2303Dev && u1RxLen == 0)
     {
@@ -348,6 +356,7 @@ int PL2303_serial_getc (void)
             pPL2303Dev = NULL;
             u1RxLen = 0;
             u1RxIndex = 0;
+            spin_unlock_irq(&g_USB_Serial_lock);
             return 0;            
         }        
     }
@@ -357,9 +366,11 @@ int PL2303_serial_getc (void)
         c = u1RxBuf[u1RxIndex];
         u1RxIndex ++;
         u1RxLen --;
+        spin_unlock_irq(&g_USB_Serial_lock);
         return c;
     }
 
+    spin_unlock_irq(&g_USB_Serial_lock);
     return 0;
 }
 

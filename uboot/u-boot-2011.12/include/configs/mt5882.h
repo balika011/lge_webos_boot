@@ -732,7 +732,7 @@
 
 /* USB */
 #define CONFIG_USB_STORAGE
-//#define CONFIG_USB_PL2303
+#define CONFIG_USB_PL2303
 #define CONFIG_USB_MTKHCD
 #define LITTLEENDIAN            1       /* used by usb.h  */
 

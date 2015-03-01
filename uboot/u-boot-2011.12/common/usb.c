@@ -355,16 +355,28 @@ int usb_control_msg(struct usb_device *dev, unsigned int pipe,
 int usb_bulk_msg(struct usb_device *dev, unsigned int pipe,
 			void *data, int len, int *actual_length, int timeout)
 {
+    unsigned char u1RxBuf_Cache[len];
+
 	if (len < 0)
 		return -1;
 	dev->status=USB_ST_NOT_PROC; /*not yet processed */
-	submit_bulk_msg(dev,pipe,data,len);
+    if (usb_pipein(pipe))
+    	submit_bulk_msg(dev,pipe,(void *)u1RxBuf_Cache,len);
+    else
+    	submit_bulk_msg(dev,pipe,data,len);
+
 	while(timeout--) {
 		if(!((volatile unsigned long)dev->status & USB_ST_NOT_PROC))
 			break;
 		wait_ms(1);
 	}
 	*actual_length=dev->act_len;
+    if (usb_pipein(pipe))
+        {
+        //printf("actual_length = %d len = %d\n",*actual_length, len);
+        memcpy((char *)data, (char*)u1RxBuf_Cache, dev->act_len);
+        }
+
 	if(dev->status==0)
 		return 0;
 	else
