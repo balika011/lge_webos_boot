@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/02 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1322,21 +1322,43 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
                 prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,prAdaptor->ucB2rId,eSrcType);
             prAdaptor->fgModeChanging = FALSE;
 
-           _VDP_PipeLineSwitch(prAdaptor->ucVdpId,prAdaptor->ucB2rId); 
+		   
+		   if(prAdaptor->ucVdpId == VDP_2 && bApiQuearyScartOutStatus() && B2R_GetVdpConf(VDP_1))
+		   {
+		       UCHAR ucEsId,ucFbgId;
 
-           LG_PipLine_VDP_SetEnable(prAdaptor->ucVdpId,TRUE); 
+			   ucEsId = VDP_Vdp2Es(VDP_1);
+			   ucFbgId = FBM_GetFbgByEs(ucEsId);
+			   
+			   FBM_GetPlayMode(ucFbgId ,&ucPlayMode);
+		       if(ucPlayMode == FBM_FBG_MM_MODE)
+		       {
+		           LOG(0,"[Pipe]_Vdp_PipConnect scant can't connect to MM play\n");
+                   return ;
+		       }
+			   else
+			   {
+				   x_memcpy(B2R_GetVdpConf(prAdaptor->ucVdpId),B2R_GetVdpConf(VDP_1),sizeof(VDP_CFG_T)); 
+			   }
+		   }
+		   else
+		   {			   
+			   _VDP_PipeLineSwitch(prAdaptor->ucVdpId,prAdaptor->ucB2rId); 
+			   
+			   LG_PipLine_VDP_SetEnable(prAdaptor->ucVdpId,TRUE); 
+			   
+			   VDP_SetInput(prAdaptor->ucVdpId,prAdaptor->ucEsId,0);
+			   
+			   _vDrvVideoSetMute(MUTE_MODULE_B2R, prAdaptor->ucVdpId, 10, TRUE);
+			   
+			   _B2R_VsyncSendCmd(prAdaptor->ucB2rId, VDP_CMD_SET_INPUT);
+			   
+			   _VdpCheckFbgReady(prAdaptor->ucFbgId, prAdaptor->ucEsId);
+			   
+			   
+			   vMpegHdConnect(prAdaptor->ucVdpId,SV_ON);
 
-           VDP_SetInput(prAdaptor->ucVdpId,prAdaptor->ucEsId,0);
-
-           _vDrvVideoSetMute(MUTE_MODULE_B2R, prAdaptor->ucVdpId, 10, TRUE);
-
-           _B2R_VsyncSendCmd(prAdaptor->ucB2rId, VDP_CMD_SET_INPUT);
-
-           _VdpCheckFbgReady(prAdaptor->ucFbgId, prAdaptor->ucEsId);
-           
-           FBM_SetFrameBufferFlag(prAdaptor->ucFbgId, FBM_FLAG_SEQ_CHG);
-
-           vMpegHdConnect(prAdaptor->ucVdpId,SV_ON);
+		   }
 
             x_memset(&rOmux,0,sizeof(B2R_HAL_OMUX_T));
             rOmux.ucPath = prAdaptor->ucVdpId;
@@ -1355,18 +1377,6 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
             prAdaptor->fgModeChanging = TRUE;
             vMpegModeChg(prAdaptor->ucVdpId);
             vMpegModeDetDone(prAdaptor->ucVdpId);
-
-            FBM_GetPlayMode(prAdaptor->ucFbgId ,&ucPlayMode);
-            if(eSrcType == E_CONNECT_SRC_VDP && ucPlayMode == FBM_FBG_MM_MODE)
-            {   
-               //_B2R_FlushB2RChgFrameMsg(prAdaptor->ucB2rId);
-               //FBM_SetFrameBufferFlag(prAdaptor->ucFbgId, FBM_FLAG_SEEK_MODE);
-               //FBM_ReleaseDispQ(prAdaptor->ucFbgId);
-               //FBM_ClrFrameBufferFlag(prAdaptor->ucFbgId, FBM_FLAG_SEEK_MODE);
-            }
-            
-            // to do: GST case,  Vdp connect too late, cause frame hasn't been displayed when io_mtb2r.c do frame disp.
-            // and  fb will not been change from display to empty.
         }
         else 
         {
