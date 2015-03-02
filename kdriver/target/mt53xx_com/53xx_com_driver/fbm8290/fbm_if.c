@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/02 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3364,13 +3364,14 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
     if (!ucThumbnail )
     {
         UCHAR ucVdpId =  0;
-        FBM_MUTEX_UNLOCK(ucFbgId);
         
         ucEsId = _arFbg[ucFbgId].u1DecoderSrcId;
         for(ucVdpId = 0; ucVdpId< VDP_MAX; ucVdpId++)
         {
            if(VDP_PipeIsConnected(ucVdpId,ucEsId))
            {
+           
+               FBM_MUTEX_UNLOCK(ucFbgId);
                ucVdpId = VDP_Es2Vdp(ucEsId);
 #if defined(CC_MT5890)
                VDP_VsyncMutexLock(ucVdpId);
@@ -3382,8 +3383,6 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
                FBM_MUTEX_LOCK(ucFbgId);           
            }
         }
-        
-
     }
 
     if (_arFbg[ucFbgId].fgEnableNewSeamless)
