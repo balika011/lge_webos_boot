@@ -1164,7 +1164,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #endif /* !defined(CONFIG_FAST_BOOT) */
 
 
-	stdio_init();	/* get the devices list going. */
+	//stdio_init();	/* get the devices list going. */
 
 	jumptable_init();
 
