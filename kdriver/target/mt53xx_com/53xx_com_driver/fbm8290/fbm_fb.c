@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/03 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2180,6 +2180,7 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
 #endif
         }
 
+        _prFbg[ucFbgId].afgWaitDisplay[ucFbId] =  FALSE;
         if (_prFbg[ucFbgId].aucFbStatus[ucFbId] != FBM_FB_STATUS_EMPTY)
         {
             _prFbg[ucFbgId].u4DispTag[ucFbId]=INVALID_DISPTAG;
@@ -2309,6 +2310,7 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
 #else
             VDEC_GenPTS(ucFbgId, ucFbId);
 #endif
+            _prFbg[ucFbgId].afgWaitDisplay[ucFbId] =  TRUE;
             _FbmPutFrameBufferToDispQ(ucFbgId, ucFbId);
 
             if(_prFbg[ucFbgId].ucPlayMode == FBM_FBG_MM_MODE)
@@ -6515,7 +6517,7 @@ void FBM_FlushLockFrameBuffer(UCHAR ucFbgId)
 
 VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
 {
-    if (VERIFY_FBG(ucFbgId))
+    if(VERIFY_FBG(ucFbgId) || VERIFY_FB(ucFbgId, ucFbId))
     {
         return;
     }
@@ -6529,8 +6531,12 @@ VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
                                  _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
     {
          LOG(7,"FBM_FrameDisplayStart(%d,%d)\n",ucFbgId,ucFbId);
-        ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
-            _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+         if(_prFbg[ucFbgId].afgWaitDisplay[ucFbId] == TRUE)
+         {
+             ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
+                 _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+             _prFbg[ucFbgId].afgWaitDisplay[ucFbId] = FALSE;
+         }
     }
     FBM_MUTEX_UNLOCK(ucFbgId);
     return;

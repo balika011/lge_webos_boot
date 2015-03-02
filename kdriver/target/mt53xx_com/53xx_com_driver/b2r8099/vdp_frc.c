@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/03 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -315,7 +315,7 @@ static __TIMING_TBL_T VB1TimingTab[] =
    
 };
 BOOL fgVB1Byass=FALSE;
-static UINT32 u4FrameCount;
+//static UINT32 u4FrameCount;
 //#endif
 //extern BOOL fgPhotoRasterModeIn4k;
 
@@ -1420,7 +1420,12 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
             
 
             LOG(5,"_B2R_ChangeFrameBuffer: Fbg=%d, Fb=%d,u2TargetNs=%d\n", prFrcPrm->ucFbgId,prFrcPrm->ucFbId,prFrcPrm->u2TargetNs);
-            
+             prFrcPrm->u4FrameCount++;
+			if(prFrcPrm->u4FrameCount>=prFrcPrm->ucInFrameRate)
+			{
+				 prFrcPrm->u4FrameCount=0;
+				 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+			}
             if ((prFrcPrm->u2TargetNs != 0) &&
                     (prFrcPrm->ucFbId != FBM_FB_ID_UNKNOWN))
             {
@@ -1428,12 +1433,7 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
                 UINT32 u4AddrY;
                 UINT32 u4AddrC;
 
-                 u4FrameCount++;
-				 if(u4FrameCount>=prFrcPrm->ucInFrameRate)
-				 {
-				    u4FrameCount=0;
-					 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-				 }
+                
                 // update VSYNC Ns
                 FRC_SET_VSYNC_NS(prFrcPrm, prFrcPrm->u2TargetNs, prFrcPrm->u2ChangeFieldNs);
 
@@ -6977,7 +6977,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                     {
 
 					   LOG(2,"bVRMReadyForB2R(%d),Display Q=%d\n",bVRMReadyForB2R(ucVdpId),FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
-                       u4FrameCount=0;
+                       prFrcPrm->u4FrameCount=0;
 #ifdef CC_B2R_SUPPORT_GAME_MODE
 
                        LOG(3,"========B2R ready to play 1st Frame===eGameMode=%d,DisplayQ Num=%d\n",eGameMode[ucB2rId],FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));

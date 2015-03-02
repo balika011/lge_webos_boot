@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/03 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -487,7 +487,7 @@ typedef struct
     UCHAR u2ChangeFieldVsyncNs;
     UCHAR u2CurrentVsyncNs;
     UCHAR u2DisplayFailNs;
-
+    UINT16 u4FrameCount;// Total display Num
     // 32 flag source
     UCHAR ucValid32Seq;
     UCHAR ucPd32SeqStep;
