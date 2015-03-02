@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/03 $
+ * $Date: 2015/03/02 $
  * $RCSfile: drv_upscaler.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -94,6 +94,8 @@
 #include "vdo_misc.h"
 #include "x_rand.h"
 #include "nptv_debug.h"
+#include "x_hal_arm.h"
+
 //-----------------------------------------------------------------------------
 // Configurations
 //-----------------------------------------------------------------------------
@@ -242,6 +244,7 @@ void vDrvSCPQSramCoeffOnOff(UINT8 bOnOff)
 void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 {
     UINT16 i;
+	UINT32 u4State;
 
 	if(bType>=COEFTYP_MAX)
 	{
@@ -250,7 +253,7 @@ void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 
 	//initial setting before writing coefficient
 	//vDrvSCPQSramCoeffOnOff(SV_OFF);
-    
+    u4State = HalCriticalStart();
     vIO32WriteFldMulti(SCFIR_00, P_Fld(0x1, RD_AUTO_INC_ADDR)|
 		  						 P_Fld(0x1, WR_AUTO_INC_ADDR)|
     							 P_Fld(0x0, PIO_MODE)|
@@ -277,6 +280,8 @@ void vDrvSCPQSetSramCoeff(UINT8 bType, UINT32 dwCoeff[SCPQ_COEF_TBLSIZE])
 	//finish writing sram coeff
 	vIO32WriteFldAlign(SCFIR_01, 0, CPURW_ACTIVE);
 	vIO32WriteFldAlign(SCFIR_01, 0, CPURW_ACTIVE_VPP);
+
+	HalCriticalEnd(u4State);
 }
 
 void vDrvSCPQCoeffRead(UINT8 bType, UINT32 dwResult[SCPQ_COEF_TBLSIZE])
