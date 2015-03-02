@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/22 $
+ * $Date: 2015/03/02 $
  * $RCSfile: msdc_cmd.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1267,84 +1267,6 @@ static INT32 _MSDCCLI_SDR50Calibration(INT32 i4Argc, const CHAR ** szArgv)
     return 0;
 }
 
-static INT32 _MSDCCLI_ETT(INT32 i4Argc, const CHAR ** szArgv)
-{
-	extern UINT32 maxclock;
-	extern UINT32 g_msdc_ett_debug1;
-
-    UINT32 l_ret; 
-    BOOL fgauto = 0;
-    if(i4Argc != 3)
-    	{
-    	    LOG(0, "%s [clock(50M/162M/200M)] [auto cmd param(1/0)]\n", szArgv[0]);
-        return 0;
-    	}
-    	
-    maxclock = StrToInt(szArgv[1]);
-    LOG(0,"set max clock to (%d) M\n", maxclock);
-    
-    fgauto = StrToInt(szArgv[2]);
-    if(fgauto)
-    LOG(0,"use cmd parameter auto tuned\n");
-    else
-    	LOG(0,"use cmd parameter manual input\n");
-    	
-    	g_msdc_ett_debug1 = !fgauto;
-    
-    l_ret = msdc_test_init(0, 0);
-    
-    if (l_ret != 0){
-        LOG(0,"[%s %d][SD%d] card init failed(%d)\n", __func__, __LINE__, 0, l_ret);
-        return -1;
-    }
-    
-    if(!fgauto)
-    	{
-    		LOG(0,"please use cli cmd [manual_ett] to set [DAT_LATCH_CK_SEL] [CKGEN_DLY_SEL]\n");
-    		return 0;
-    	}
- 
-    ett_cmd_test();   	
-    ett_write_test();
-    ett_read_test();
-     
-    
-    return 0;
-}
-static INT32 _MSDCCLI_ETT_MANUAL_TUNE(INT32 i4Argc, const CHAR ** szArgv)
-{
-
-	extern UINT32 g_msdc_ett_debug1_dat_latch_ck_sel;
-extern UINT32 g_msdc_ett_debug1_ckgen_dly_sel;
-extern UINT32 g_msdc_ett_debug1;
-    UINT32 l_ret; 
-    BOOL fgauto = 0;
-    if(i4Argc != 3)
-    	{
-    	    LOG(0, "%s [DAT_LATCH_CK_SEL] [CKGEN_DLY_SEL]\n", szArgv[0]);
-        return 0;
-    	}
-    	if(!g_msdc_ett_debug1)
-    	{
-    		  LOG(0, "it is not user debug mode\n");
-        return 0;
-    	}
-    	
-    g_msdc_ett_debug1_dat_latch_ck_sel = StrToInt(szArgv[1]);
-    LOG(0,"set DAT_LATCH_CK_SEL to (%d)\n", g_msdc_ett_debug1_dat_latch_ck_sel);
-    
-    g_msdc_ett_debug1_ckgen_dly_sel = StrToInt(szArgv[2]);
-    LOG(0,"set CKGEN_DLY_SEL to (%d)\n", g_msdc_ett_debug1_ckgen_dly_sel);
-    
-    ett_cmd_test();
-     ett_write_test();
-     ett_read_test();
-     
-    
-    return 0;
-}
-
-
 #ifdef CC_MSDC_SDMMC_TEST
 static INT32 _MSDCCLI_RegisterTest(INT32 i4Argc, const CHAR ** szArgv)
 {
@@ -1575,8 +1497,6 @@ static CLI_EXEC_T arMsdcCmdTbl[] =
     DECLARE_G_CMD(_MSDCCLI_HS200Calibration, hs200calibration, hs200c, "msdc.hs200calibration"),
     DECLARE_G_CMD(_MSDCCLI_DDR50Calibration, ddr50calibration, ddr50c, "msdc.ddr50calibration"),
     DECLARE_G_CMD(_MSDCCLI_SDR50Calibration, sdr50calibration, sdr50c, "msdc.sdr50calibration"),
-    DECLARE_G_CMD(_MSDCCLI_ETT, ett, ett, "msdc.ett"),
-    DECLARE_G_CMD(_MSDCCLI_ETT_MANUAL_TUNE, manual_ett, manual_ett, "msdc.manual_ett"),  
 #ifdef CC_MSDC_SDMMC_TEST
     DECLARE_CMD(_MSDCCLI_RegisterTest, registertest, rt, "msdc.registertest"),
     DECLARE_CMD(_MSDCCLI_DetectionTest, detectiontest, dt, "msdc.detectiontest"), 
