@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/03/02 $
  * $RCSfile: pcmcia_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
  
 #ifndef PCMCIA_IF_H
@@ -319,7 +319,7 @@ EXTERN PCMCIA_CHIP_TYPE ePcmciaChipType;
 //-----------------------------------------------------------------------------
 // Inter-file functions
 //-----------------------------------------------------------------------------
-EXTERN void     PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard);
+EXTERN void     PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard, BOOL fgWithCAS);
 #ifdef CC_DUAL_TUNER_SUPPORT
 EXTERN INT32    PCMCIA_SetDualTsPath(PCMCIA_DUAL_TS_TYPE eDualTsPath);
 #endif

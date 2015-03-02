@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/02 $
  * $RCSfile: pcmcia_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file pcmcia_cmd.c
@@ -2575,7 +2575,7 @@ static INT32 PcmciaCmdSetTsRoute(INT32 i4Argc, const CHAR** szArgv)
     {
         fgExternalDemod = StrToInt(szArgv[1]);
         fgThroughCard = StrToInt(szArgv[2]);
-        PCMCIA_SetTsPath(fgExternalDemod, fgThroughCard);
+        PCMCIA_SetTsPath(fgExternalDemod, fgThroughCard, TRUE);
         return POD_OK;
     }
 }

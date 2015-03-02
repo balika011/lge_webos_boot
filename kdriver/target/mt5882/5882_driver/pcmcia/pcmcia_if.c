@@ -76,7 +76,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/02 $
  * $RCSfile: pcmcia_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *---------------------------------------------------------------------------*/
  
  //-----------------------------------------------------------------------------
@@ -213,7 +213,7 @@ static void _PCMCIA_AutoSetTsRoutingPath_5396(void)
     #ifdef CC_DUAL_TUNER_SUPPORT
     PCMCIA_SetDualTsPath(iDualTsDemodUpdateValue);
     #else
-    PCMCIA_SetTsPath(fgIsExternalDemod, fgTSGoThroughCam);
+    PCMCIA_SetTsPath(fgIsExternalDemod, fgTSGoThroughCam, TRUE);
     #endif
 
 }
@@ -232,7 +232,7 @@ static void _PCMCIA_AutoSetTsRoutingPath(void)
 }
 
 
-void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard)
+void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard, BOOL fgWithCas)
 {
     // Route TS based on the following attributes : 
     //      *. CamConnectivity, 
@@ -261,8 +261,8 @@ void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard)
     fgCamConnected   = PCMCIA_DetectCableCard();
     fgIsInternalCi   = ((ePcmciaChipType==PCMCIA_CHIP_TYPE_INTERNAL)?TRUE:FALSE);
 
-    LOG(1, "PCMCIA_SetTsPath: fgExternalDemod=%d, fgThroughCard=%d, fgCamConnected=%d\n", 
-            fgExternalDemod, fgThroughCard, fgCamConnected);
+    LOG(1, "PCMCIA_SetTsPath: fgExternalDemod=%d, fgThroughCard=%d, fgCamConnected=%d, fgWithCas=%d\n", 
+            fgExternalDemod, fgThroughCard, fgCamConnected, fgWithCas);
 
     if ( fgIsInternalCi )   // Internal CI
     {
@@ -278,9 +278,23 @@ void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard)
                     PCMCIA_SetParallelTsOnOff(FALSE);
                     PCMCIA_EnableTS(TRUE);
                     LOG(1, "PCMCIA_TS_EXTERNAL_DEMOD_S1\n");
-                    // P3. DMX : Set front end -------------------------------------
-                    LOG(1, "    Set d.sfe %d\n", DMX_FE_CI);
-                    DMX_SetFrontEnd(DMX_FE_CI);
+                    if (fgWithCas == TRUE)
+                    {
+                        // P3. DMX : Set front end -------------------------------------
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_CI);
+                        DMX_SetFrontEnd(DMX_FE_CI);
+                    }
+                    else
+                    {
+                        // P3. DMX : Set front end -------------------------------------
+#ifdef CC_DUAL_TUNER_SUPPORT
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT2_1_S);
+                        DMX_SetFrontEnd(DMX_FE_EXT2_1_S);
+#else
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT_S);
+                        DMX_SetFrontEnd(DMX_FE_EXT_S);
+#endif
+                    }
                 }
                 else    // CAM not Connected
                 {
@@ -308,9 +322,23 @@ void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard)
                     PCMCIA_EnableTS(TRUE);
 					LOG(1, "PCMCIA_TS_EXTERNAL_DEMOD_P\n");
     
+                    if (fgWithCas == TRUE)
+                    {
                     // P3. DMX : Set front end -------------------------------------
                     LOG(1, "    Set d.sfe %d\n", DMX_FE_CI);
                     DMX_SetFrontEnd(DMX_FE_CI);
+                    }
+                    else
+                    {
+                        // P3. DMX : Set front end -------------------------------------
+#ifdef CC_DUAL_TUNER_SUPPORT
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT2_1_S);
+                        DMX_SetFrontEnd(DMX_FE_EXT2_1_S);
+#else
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT_S);
+                        DMX_SetFrontEnd(DMX_FE_EXT_S);
+#endif
+                    }
                 }
                 else    // CAM not Connected
                 {
