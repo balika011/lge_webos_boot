@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/03 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1684,6 +1684,8 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
             _prFbg[ucFbgId].u4SeqChgFlag = u4Flag;
             LOG(5,"[LEO]Seq chg received!\n");
         }
+
+		VDP_PipeStartSeqChange(ucFbgId);
 #ifndef CC_VDEC_RM_SUPPORT
 #ifdef CC_B2R_RM_SUPPORT
 

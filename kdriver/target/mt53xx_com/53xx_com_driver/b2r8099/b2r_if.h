@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/03 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -135,6 +135,7 @@ EXTERN BOOL VDP_PipeIsConnected(UCHAR ucVdpId,UCHAR ucEsId);
 EXTERN VOID VDP_PipeConnectFromVdp(UCHAR ucVdpId,UCHAR ucEsId);
 EXTERN VOID VDP_PipeConnectFromVdec(UCHAR ucEsId,UCHAR ucFbgId);
 EXTERN VOID VDP_PipeGetInifor(VOID);
+EXTERN VOID VDP_PipeStartSeqChange(UCHAR ucFbgId);
 
 #endif
 
