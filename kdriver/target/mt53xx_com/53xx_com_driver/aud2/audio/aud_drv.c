@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/02 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8301,10 +8301,18 @@ BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
     // Address translation, translate virtual address to DSP internal address
     rPes.u4Wp = DSP_INTERNAL_ADDR(rPes.u4Wp);
 
+    if (_arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount == 1)
+    {
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        AUD_Aproc_Skip_Pts(u1DecId, 0, TRUE);
+#endif
+    }
+
     if(!fgDulplicatedPts[u1DecId])
     {
         u8Pts32 = u8Div6432(rPes.u8Pts * 9,100,NULL);
         GST_MMQueueSyncInfo(u1DecId, rPes.u8Pts, rPes.u4Wp, FALSE,u8Pts32>>32);
+        AUD_DrvPtsQueueInsert(u1DecId, rPes.u4Wp, (UINT32)u8Pts32);
     }
 
     if(!fgDulplicatedPts[u1DecId])
@@ -8335,6 +8343,8 @@ BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
     }
     return TRUE;
 }
+
+#ifndef CC_AUD_ARM_RENDER 
 #ifdef CC_53XX_SWDMX_V2
 extern void STC_SetStcValue(UCHAR ucStcId, UINT32 u4Stc);
 extern UINT32 STC_GetStcValue(UCHAR ucStcId);
@@ -8402,6 +8412,94 @@ UINT64 GST_GetSTCVal(UINT8 stcId)
     u8STC = (((UINT64)g_u4AomxPTS_H)<<32)|((UINT64)u4STC);
     return u8STC;
 }
+#else
+typedef struct
+{
+    BOOL fgStart;
+    UINT32 u4PtsLow;
+    UINT32 u4PtsHigh;
+    UINT32 u4PtsLowLast;
+    struct timeval nTimeVal;
+} GST_TIME_STAMPL_T;
+
+static GST_TIME_STAMPL_T GstTimeStampe[AUD_DEC_MAX] = {{0}};
+void GST_StartSTC(UINT8 u1DecId)
+{
+    if (!GstTimeStampe[u1DecId].fgStart)
+    {
+        do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+        GstTimeStampe[u1DecId].fgStart = TRUE; 
+    }
+}
+
+void GST_StopSTC(UINT8 u1DecId)
+{
+    struct timeval tv;
+    INT32 i4Diff;
+
+    if (GstTimeStampe[u1DecId].fgStart)
+    {
+        do_gettimeofday(&tv);
+        i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
+            (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
+        GstTimeStampe[u1DecId].u4PtsLow += (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+        GstTimeStampe[u1DecId].fgStart = FALSE;
+    }
+}
+
+void GST_SetSTCVal(UINT8 u1DecId, UINT64 u8Stc)
+{
+    GstTimeStampe[u1DecId].u4PtsLow = u8Stc & 0xffffffff;;
+    GstTimeStampe[u1DecId].u4PtsHigh = (u8Stc>>32) & 0xffffffff;
+    GstTimeStampe[u1DecId].u4PtsLowLast = GstTimeStampe[u1DecId].u4PtsLow; 
+}
+
+void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
+{
+    GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
+    do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+}
+
+UINT32 GST_GetPtsVal(UINT8 u1DecId)
+{
+    UINT32 u4PTS;
+    struct timeval tv;
+    INT32 i4Diff;    
+
+    if (GstTimeStampe[u1DecId].fgStart)
+    {
+        do_gettimeofday(&tv);
+        i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
+            (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
+        u4PTS = GstTimeStampe[u1DecId].u4PtsLow + (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+
+    }
+    else
+    {
+        u4PTS = GstTimeStampe[u1DecId].u4PtsLow;
+    }
+    return u4PTS; 
+}
+
+UINT64 GST_GetSTCVal(UINT8 u1DecId)
+{
+    UINT32 u4STC;
+    UINT64 u8STC;
+
+    u4STC = GST_GetPtsVal(u1DecId);
+    if((u4STC < GstTimeStampe[u1DecId].u4PtsLowLast) && 
+        (GstTimeStampe[u1DecId].u4PtsLowLast > (90000*60)) && 
+        (u4STC < (90000*60)))
+    {
+        LOG(0, "H round plus one, %d, S %d, L %d \n", u1DecId, u4STC, GstTimeStampe[u1DecId].u4PtsLowLast);
+        GstTimeStampe[u1DecId].u4PtsHigh++;
+    }
+    GstTimeStampe[u1DecId].u4PtsLowLast = u4STC;
+
+    u8STC = (((UINT64)GstTimeStampe[u1DecId].u4PtsHigh)<<32)|((UINT64)u4STC);
+    return u8STC;
+}
+#endif
 #endif
 
 #if (defined(LINUX_TURNKEY_SOLUTION) && defined(CC_ENABLE_ADECOMX)) || defined(CC_ENABLE_AOMX)
@@ -14618,17 +14716,23 @@ void AUD_Aproc_Calc_StcDiff(UINT8 u1DecID, UINT32 u4PTS) //ISR !!!
         if ((u4Valid) && (u4RealPTS) && (!fgDiscardPts))
         {
             if ((u4Reg0 == u1DecID) &&
-                 ((_gu1AprocLogItems&AUD_DBG_APROC_UPDATE_STC)==AUD_DBG_APROC_UPDATE_STC) )
+                 ((_gu1AprocLogItems&AUD_DBG_APROC_UPDATE_STC)==AUD_DBG_APROC_UPDATE_STC))
             {
                 LOG(6, "Dec(%d) Update STC to 0x%x\n", u1DecID, u4PTS);
+            } 
+#ifdef CC_ENABLE_AOMX
+            if (_arAudDecoder[AUD_DSP0][u1DecID].eStreamFrom == AUD_STREAM_FROM_GST)
+            {
+                GST_SetPtsVal(u1DecID, u4PTS);
             }
-            //STC_StopStc(0);
-            STC_SetStcValue(0, u4PTS); //Test, StcID is fixed to 0
+            else
+#endif
+            {
+                STC_SetStcValue(0, u4PTS); //Test, StcID is fixed to 0
+            }
         }
         return;
     }
-
-
 }
 
 inline void AUD_Aproc_Do_Skip(UINT8 u1DecID, INT32 i4Size, INT32 i4Diff) //new_arm_pts_table
