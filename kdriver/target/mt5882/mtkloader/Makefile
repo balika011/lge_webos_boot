@@ -179,7 +179,9 @@ endif
 endif
 
 endif
-
+ifdef SIGGEN_KEY_LOADER
+DEFINES += -DSIGGEN_KEY_LOADER
+endif
 .PHONY:	all preloader loader packprog packing
 
 #all: preloader loader packprog packing
@@ -242,6 +244,11 @@ endif
 endif
 
 loader: preloader
+ifdef SIGGEN_KEY_LOADER
+	chmod +x ./bin2header
+	./bin2header $(SIGGEN_KEY_LOADER)
+	cp  -f public_key.h $(VM_LINUX_ROOT)/project_x/target/mt53xx_com/53xx_com_driver/loaderlib
+endif
 	$(MAKE) -C $(DRV_ROOT)/loader EXE_NAME=$(EXE_NAME)
 ifeq "$(BUILD_LINUX_LOADER)" "true"
 	$(OBJCOPY) ${OBJCFLAGS} -O binary $(LOADER_BIN_DIR)/$(EXE_NAME)  $(MTKLOADER_BIN_DIR)/$(EXE_NAME)_loader.bin

@@ -543,6 +543,9 @@ static UINT32 _LdrImageDecompressOther(LDR_DATA_T *prLdrData)
 
     return 0;
 }
+#ifdef SIGGEN_KEY_LOADER
+#include "public_key.h"
+#else
 #define test
 #ifdef test
 #define RSA_SIZE 280
@@ -598,6 +601,8 @@ static UINT8 au1RSAPublicKey[RSA_SIZE]=
 };
 #endif
 #endif
+#endif
+
 
 //-----------------------------------------------------------------------------
 /** LDR_ImageDecompress(): decompress image to dram on the offset of entry.
@@ -865,6 +870,14 @@ if (BIM_IS_SECURE_BOOT)
 			LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 			x_memcpy((void*)prLdrEnv->au4CustKey, (void*)au1RSAPublicKey, 256);
 		}while(0);
+#else
+do
+	{
+		
+		LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
+		x_memcpy((void*)prLdrEnv->au4CustKey, (void*)customer_pub_mtka5lr_key, 256);
+	}while(0);
+
 #endif
 
     #if defined(CC_SECURE_BOOT_V2) && defined(CC_SECURE_BOOT_ALL)
