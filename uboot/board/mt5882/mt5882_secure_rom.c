@@ -1217,6 +1217,7 @@ static int getFlashPartFileSize(const char* szPartName, unsigned int* pu4Size)
 //{
 //    return BIM_READ32(REG_RW_TIMER2_LOW);
 //}
+UINT32 au4CheckSumTemp[SIGNATURE_SIZE];
 
 int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char *pu1EncryptedSignature)
 {
@@ -1257,15 +1258,22 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
 
     if (SECURE_BOOT_EFUSE == SECURE_BOOT)
     {
-        UINT32 au4CheckSum[SIGNATURE_SIZE];
         INT32 i4Ret = -1;
-
+		static INT32 IsAlradyHaveKey = 0;
+		
+		UINT32 au4CheckSum[SIGNATURE_SIZE];
 #ifdef SECURE_DEBUG
         printf("verifySignature u4StartAddr=%x, u4Size=%x\n", u4StartAddr, u4Size);
 #endif
 
 #ifndef SECURE_DEBUG
-        memcpy((void*)au4CheckSum, (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
+	if (!IsAlradyHaveKey)
+		{
+        	memcpy((void*)au4CheckSumTemp, (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
+			IsAlradyHaveKey = 1;
+		}
+			
+        memcpy((void*)au4CheckSum, (void*)au4CheckSumTemp, sizeof(au4CheckSum));
 #else  //use vendor public key
         memcpy((void*)au4CheckSum, (void*)au4CustKey, 256);
 
@@ -1560,6 +1568,7 @@ u4FragSize = 4096;
 	printf("preloaded = %d\n", preloaded);
 	printf("u4FragNum  = %d\n", u4FragNum);
 	printf("u4FragSize  = %d\n", u4FragSize);
+	printf("image_size  = %d\n", image_size);
     // if image size is smaller less than group size, do full verification
     group_num = (image_size - ((u4FragNum+1)*256)) / (u4FragNum*u4FragSize);
 	
