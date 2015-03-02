@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/02 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -222,6 +222,7 @@ typedef struct
     UCHAR aucChgFldPlayBackNs[FBM_MAX_FB_NS_PER_GROUP];
     BOOL   afgRefList[FBM_MAX_FB_NS_PER_GROUP];    //for H264 to maintain reference list
     BOOL   afgIsOwner[FBM_MAX_FB_NS_PER_GROUP]; // Is fb owned by FBM or by others, like OMX
+    BOOL   afgWaitDisplay[FBM_MAX_FB_NS_PER_GROUP]; // Is fb owned by FBM or by others, like OMX
     BOOL   fgCreateFromInst;                 // Init fbg from external FBM inst
     BOOL   fgSendEOS;
     BOOL   fgPtsSync;
