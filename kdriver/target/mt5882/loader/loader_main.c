@@ -219,12 +219,15 @@ VOID CMain()
     //ARM_SendEvent();
     LDR_SetDramTimeLog(11);
 
+#ifndef LGE_BOOT_TIME_REDUCE
     // Query boot/standby decision by eeprom and wakeup reason.
     if (LDR_IsGoBootup(prLdrData) == 0)
     {
         // Enter standby if the decision is standby from above data structure.
         LDR_EnterStandby(prLdrData);
     }
+#endif	
+
     LDR_SetDramTimeLog(12);
 
     // Initialize boot up settings (GPIO, LED, ...etc.)
