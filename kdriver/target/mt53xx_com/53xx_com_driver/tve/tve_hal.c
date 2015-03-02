@@ -3634,8 +3634,8 @@ void Bypass_HalSrcBypass(UCHAR DAC, UCHAR bSrc)
 			if((VSS_MAJOR(_bSrcMainNew) == VSS_SV)||((VSS_MAJOR(_bSrcMainNew) == VSS_SCART)&&(bDrvGetScartInputMode() == SCART_COLOR_SV)))  //while sv data clock = 54M
 			{
 				//CVBS data/clock set to 54m
-			    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_TVD_TVE_DATA); 
-			    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 2, RG_VDOIN_TVD_CLK); 
+			    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_TVD_TVE_DATA); 
+			    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_VDOIN_TVD_CLK); 
 			    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 1;
 			    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
 			    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
@@ -3739,7 +3739,7 @@ void Bypass_HalSrcBypass(UCHAR DAC, UCHAR bSrc)
 					   			//CVBS data/clock set to 108m
 			    
 	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_TVD_TVE_DATA);  //need set CHB=108M
-	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_VDOIN_TVD_CLK);
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_VDOIN_TVD_CLK);
 	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 0;
 	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
 	   		    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);
@@ -3748,7 +3748,7 @@ void Bypass_HalSrcBypass(UCHAR DAC, UCHAR bSrc)
 	   		{
 	   			//CVBS data/clock set to 108m
 	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_TVD_TVE_DATA);  //need set CHB=108M
-	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 0, RG_VDOIN_TVD_CLK);
+	   		    vIO32WriteFldAlign(REG_TVD_VDAC_CFG0, 1, RG_VDOIN_TVD_CLK);
 	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgYCUpsSel = 0;
 	   		    rTveMainReg.uMuxCtrl.rMuxCtrl.fgTvdTveFifoSrcSel = 1;
 	   		    TVE_WRITE32(TVE1_REG_MUX_CTRL, rTveMainReg.uMuxCtrl.u4MuxCtrl);

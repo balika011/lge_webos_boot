@@ -753,8 +753,8 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
 					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_11);
 					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_13);
 					Bypass_HalSrcBypass(u1Dac_id,TVE_SIF_MIXER);
-					IO_WRITE32(0xf0020000,0x28b4, 0x42878);
-					IO_WRITE32(0xf0020000,0x28b4, 0x42858);
+					//IO_WRITE32(0xf0020000,0x28b4, 0x42878);
+					IO_WRITE32(0xf0020000,0x28b4, 0x56858);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
 					
                 }
@@ -766,7 +766,7 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
 					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_13);
                     Bypass_HalSrcBypass(u1Dac_id,TVE_VDOIN_MIXER);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
-					IO_WRITE32(0xf0020000,0x28b4, 0x78);
+					//IO_WRITE32(0xf0020000,0x28b4, 0x78);
 					IO_WRITE32(0xf0020000,0x28b4, 0x58);
                 }
             }
