@@ -262,7 +262,8 @@ int stdio_init (void)
 	drv_jtag_console_init ();
 #endif
 #ifdef CONFIG_USB_PL2303
-	usb_check_dev(0);
+	if (DDI_NVM_GetDebugStatus() == DEBUG_LEVEL)
+    	usb_check_dev(0);
 #endif
 
 	return (0);
