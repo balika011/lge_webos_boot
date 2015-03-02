@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/25 $
+ * $Date: 2015/03/02 $
  * $RCSfile: mloop_video.c $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -463,7 +463,7 @@ LOG(1, "***** MAIN_FLG_MODE_CHG*****\n");
                 }
 
 #if defined(CC_SUPPORT_TVE) || defined(CC_SUPPORT_TVE_82xx)
-                vApiTVEVideoStatusNotify(SV_VP_MAIN, SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
+               // vApiTVEVideoStatusNotify(SV_VP_MAIN, SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
 #endif
 
                 if(!(_fgAutoSearch && fgIsMainTvd3d()))
@@ -531,7 +531,7 @@ LOG(1, "***** MAIN_FLG_MODE_CHG*****\n");
                     {
                         // will done in mode change
 #if defined(CC_SUPPORT_TVE) ||defined(CC_SUPPORT_TVE_82xx)
-                        vApiTVEVideoStatusNotify(SV_VP_MAIN,SV_TVE_NOTIFY_VIDEO_NO_SIGNAL);
+                        //vApiTVEVideoStatusNotify(SV_VP_MAIN,SV_TVE_NOTIFY_VIDEO_NO_SIGNAL);
 #endif
 						// Notify audio for AV initial synchronization in ATV mode, assume in this time video is ready to display
 						if (fgIsMainVga() || fgIsMainYPbPr() || fgIsMainTvd3d()
@@ -611,7 +611,7 @@ LOG(1, "***** MAIN_FLG_MODE_CHG*****\n");
                         _u4NSDFrameRate=0xff;
 #endif
 #if defined(CC_SUPPORT_TVE) ||defined(CC_SUPPORT_TVE_82xx)
-                        vApiTVEVideoStatusNotify(SV_VP_MAIN,SV_TVE_NOTIFY_VIDEO_STABLE_SIGNAL);
+                        //vApiTVEVideoStatusNotify(SV_VP_MAIN,SV_TVE_NOTIFY_VIDEO_STABLE_SIGNAL);
 #endif
 #ifdef CC_DRV_SUPPORT_SMICRO
                         vSMicroInputSignalChange();
@@ -740,7 +740,7 @@ PRIVATE void vVdoPipState(void)
 #endif
                     _bPipState = (UINT8)VDO_STATE_WAIT_MODE_DET;
 #if defined(CC_SUPPORT_TVE)||defined(CC_SUPPORT_TVE_82xx)
-                    vApiTVEVideoStatusNotify(SV_VP_PIP,SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
+                    //vApiTVEVideoStatusNotify(SV_VP_PIP,SV_TVE_NOTIFY_VIDEO_MODE_CHANGE);
 #endif
                 }
 
@@ -889,7 +889,7 @@ PRIVATE void vVdoPipState(void)
                         vSetPicSettingByUI(SV_VP_PIP);//XuYing 20090206
 #endif
 #if defined(CC_SUPPORT_TVE) ||defined(CC_SUPPORT_TVE_82xx)
-                        vApiTVEVideoStatusNotify(SV_VP_PIP,SV_TVE_NOTIFY_VIDEO_STABLE_SIGNAL);
+                        //vApiTVEVideoStatusNotify(SV_VP_PIP,SV_TVE_NOTIFY_VIDEO_STABLE_SIGNAL);
 #endif
 #ifdef TVE_WA
                         TVE_FirstReset = 20;

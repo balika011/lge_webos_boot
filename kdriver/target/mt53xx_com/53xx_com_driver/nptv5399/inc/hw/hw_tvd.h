@@ -93,11 +93,11 @@
  * 
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/05/31 9:52p $
  * 
- * $Revision: #1 $
+ * $Revision: #2 $
 *************************************************************************/
 
 // *********************************************************************
@@ -2013,8 +2013,8 @@
 #endif 
 //----------DFE CLAMP Related Define---------------------------//
 #if TVD_MAX_CLAMP_TABLE
-#define DFE_CLAMP_TBL_05_IN_VP_ON  0x2d229325
-#define DFE_CLAMP_TBL_05_IN_VP_OFF 0x17215313
+#define DFE_CLAMP_TBL_05_IN_VP_ON  0x55C29325
+#define DFE_CLAMP_TBL_05_IN_VP_OFF 0x55C29325
 #define DFE_CLAMP_TBL_05_IN_VSAG 0x55C29325
 #endif 
 #if TVD_COCH_FLICKER
