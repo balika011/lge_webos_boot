@@ -1273,24 +1273,25 @@ void DRVCUST_SetGamutOnOSMatrix(void)
 {
 	INT32  dwTable[15];
 	INT32  dwGamutTable[9];
-	INT32 i4TempMatrix[9];
+	INT32 i4TempMatrix[12];
 	UINT8 i;
 	
 	if(IO32ReadFldAlign(MATRIX_05, GAMUT_ENABLE) == SV_ON)
 	{
 
-        dwGamutTable[0] = IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_00);
-        dwGamutTable[1] = IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_01);
-        dwGamutTable[2] = IO32ReadFldAlign(MATRIX_05, GAMUT_MATRIX_02);
-        dwGamutTable[3] = IO32ReadFldAlign(MATRIX_05, GAMUT_MATRIX_10);
-        dwGamutTable[4] = IO32ReadFldAlign(MATRIX_06, GAMUT_MATRIX_11);        
-        dwGamutTable[5] = IO32ReadFldAlign(MATRIX_06, GAMUT_MATRIX_12);        
-        dwGamutTable[6] = IO32ReadFldAlign(MATRIX_07, GAMUT_MATRIX_20);        
-        dwGamutTable[7] = IO32ReadFldAlign(MATRIX_07, GAMUT_MATRIX_21);        
-        dwGamutTable[8] = IO32ReadFldAlign(MATRIX_08, GAMUT_MATRIX_22);      
+		dwGamutTable[0] = IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_00);
+		dwGamutTable[1] = IO32ReadFldAlign(MATRIX_04, GAMUT_MATRIX_01);
+		dwGamutTable[2] = IO32ReadFldAlign(MATRIX_05, GAMUT_MATRIX_02);
+		dwGamutTable[3] = IO32ReadFldAlign(MATRIX_05, GAMUT_MATRIX_10);
+		dwGamutTable[4] = IO32ReadFldAlign(MATRIX_06, GAMUT_MATRIX_11); 	   
+		dwGamutTable[5] = IO32ReadFldAlign(MATRIX_06, GAMUT_MATRIX_12); 	   
+		dwGamutTable[6] = IO32ReadFldAlign(MATRIX_07, GAMUT_MATRIX_20); 	   
+		dwGamutTable[7] = IO32ReadFldAlign(MATRIX_07, GAMUT_MATRIX_21); 	   
+		dwGamutTable[8] = IO32ReadFldAlign(MATRIX_08, GAMUT_MATRIX_22); 	 
 
-        x_memcpy(dwTable, COLOR_TRANSFORM_ADJ, sizeof(dwTable));
+		x_memcpy(dwTable, COLOR_TRANSFORM_ADJ, sizeof(dwTable));
 
+		//for Matix
 		for(i=0; i<9; i++)
 		{
 			dwGamutTable[i] = dwGamutTable[i]&0x7FFF;
@@ -1303,45 +1304,66 @@ void DRVCUST_SetGamutOnOSMatrix(void)
 			LOG(5, "%d(0x%x)\n", dwTable[i+3], dwTable[i+3]);
 		}
 
+		//for R/G/B ofst
+		for(i=0; i<3; i++)
+		{
+			dwTable[i+12] = dwTable[i+12]&0x7FF;
+			dwTable[i+12] = dwTable[i+12]&0x400 ? (dwTable[i+12] - 0x800) : dwTable[i+12];
+			LOG(5, "%d(0x%x)\n", dwTable[i+12], dwTable[i+12]);
+		}
+
 		i4TempMatrix[0] = 
-			((dwTable[3] * dwGamutTable[0]) +
-			(dwTable[4] * dwGamutTable[3]) +
-			(dwTable[5] * dwGamutTable[6]) + (1<<13)) >> 14; 
+			((dwGamutTable[0] * dwTable[3]) +
+			 (dwGamutTable[1] * dwTable[6]) +
+			 (dwGamutTable[2] * dwTable[9]) + (1<<13)) >> 14; 
 		i4TempMatrix[1] = 
-			((dwTable[3] * dwGamutTable[1]) +
-			(dwTable[4] * dwGamutTable[4]) +
-			(dwTable[5] * dwGamutTable[7]) + (1<<13)) >> 14; 
+			((dwGamutTable[0] * dwTable[4]) +
+			 (dwGamutTable[1] * dwTable[7]) +
+			 (dwGamutTable[2] * dwTable[10]) + (1<<13)) >> 14; 
 		i4TempMatrix[2] = 
-			((dwTable[3] * dwGamutTable[2]) +
-			(dwTable[4] * dwGamutTable[5]) +
-			(dwTable[5] * dwGamutTable[8]) + (1<<13)) >> 14; 
+			((dwGamutTable[0] * dwTable[5]) +
+			 (dwGamutTable[1] * dwTable[8]) +
+			 (dwGamutTable[2] * dwTable[11]) + (1<<13)) >> 14; 
 		
 		i4TempMatrix[3] = 
-			((dwTable[6] * dwGamutTable[0]) +
-			(dwTable[7] * dwGamutTable[3]) +
-			(dwTable[8] * dwGamutTable[6]) + (1<<13)) >> 14; 
+			((dwGamutTable[3] * dwTable[3]) +
+			 (dwGamutTable[4] * dwTable[6]) +
+			 (dwGamutTable[5] * dwTable[9]) + (1<<13)) >> 14; 
 		i4TempMatrix[4] = 
-			((dwTable[6] * dwGamutTable[1]) +
-			(dwTable[7] * dwGamutTable[4]) +
-			(dwTable[8] * dwGamutTable[7]) + (1<<13)) >> 14; 
+			((dwGamutTable[3] * dwTable[4]) +
+			 (dwGamutTable[4] * dwTable[7]) +
+			 (dwGamutTable[5] * dwTable[10]) + (1<<13)) >> 14; 
 		i4TempMatrix[5] = 
-			((dwTable[6] * dwGamutTable[2]) +
-			(dwTable[7] * dwGamutTable[5]) +
-			(dwTable[8] * dwGamutTable[8]) + (1<<13)) >> 14; 
+			((dwGamutTable[3] * dwTable[5]) +
+			 (dwGamutTable[4] * dwTable[8]) +
+			 (dwGamutTable[5] * dwTable[11]) + (1<<13)) >> 14; 
 
 		i4TempMatrix[6] = 
-			((dwTable[9] * dwGamutTable[0]) +
-			(dwTable[10] * dwGamutTable[3]) +
-			(dwTable[11] * dwGamutTable[6]) + (1<<13)) >> 14; 
+			((dwGamutTable[6] * dwTable[3]) +
+			 (dwGamutTable[7] * dwTable[6]) +
+			 (dwGamutTable[8] * dwTable[9]) + (1<<13)) >> 14; 
 		i4TempMatrix[7] = 
-			((dwTable[9] * dwGamutTable[1]) +
-			(dwTable[10] * dwGamutTable[4]) +
-			(dwTable[11] * dwGamutTable[7]) + (1<<13)) >> 14; 
+			((dwGamutTable[6] * dwTable[4]) +
+			 (dwGamutTable[7] * dwTable[7]) +
+			 (dwGamutTable[8] * dwTable[10]) + (1<<13)) >> 14; 
 		i4TempMatrix[8] = 
-			((dwTable[9] * dwGamutTable[2]) +
-			(dwTable[10] * dwGamutTable[5]) +
-			(dwTable[11] * dwGamutTable[8]) + (1<<13)) >> 14; 
+			((dwGamutTable[6] * dwTable[5]) +
+			 (dwGamutTable[7] * dwTable[8]) +
+			 (dwGamutTable[8] * dwTable[11]) + (1<<13)) >> 14; 
 
+		i4TempMatrix[9] = 
+			((dwGamutTable[0] * dwTable[12]) +
+			 (dwGamutTable[1] * dwTable[13]) +
+			 (dwGamutTable[2] * dwTable[14]) + (1<<13)) >> 14; 
+		i4TempMatrix[10] = 
+			((dwGamutTable[3] * dwTable[12]) +
+			 (dwGamutTable[4] * dwTable[13]) +
+			 (dwGamutTable[5] * dwTable[14]) + (1<<13)) >> 14; 
+		i4TempMatrix[11] = 
+			((dwGamutTable[6] * dwTable[12]) +
+			 (dwGamutTable[7] * dwTable[13]) +
+			 (dwGamutTable[8] * dwTable[14]) + (1<<13)) >> 14; 
+		//for matrix
 		for(i=0; i<9; i++)
 		{
 			LOG(5, "%d(0x%x)	%d(0x%x)	", i4TempMatrix[i], i4TempMatrix[i], COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
@@ -1352,9 +1374,21 @@ void DRVCUST_SetGamutOnOSMatrix(void)
 			COLOR_TRANSFORM_ADJ[i+3] = (COLOR_TRANSFORM_ADJ[i+3]&0xC000) | i4TempMatrix[i];
 			LOG(5, "%d(0x%x)\n", COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
 		}
+		//for R/G/B ofst
+		for(i=9; i<12; i++)
+		{
+			LOG(5, "%d(0x%x)	%d(0x%x)	", i4TempMatrix[i], i4TempMatrix[i], COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
+			i4TempMatrix[i] = i4TempMatrix[i]>0x3FF ? 0x3FF : i4TempMatrix[i];
+			i4TempMatrix[i] = i4TempMatrix[i]<-0x400 ? -0x400 : i4TempMatrix[i];
+
+			COLOR_TRANSFORM_ADJ[i+3] = i4TempMatrix[i];
+			LOG(5, "%d(0x%x)\n", COLOR_TRANSFORM_ADJ[i+3], COLOR_TRANSFORM_ADJ[i+3]);
+		}
+		
 		vIO32WriteFldAlign(MATRIX_04, SV_OFF, GAMUT_MATRIX_LOAD);
-    }
+	}
 }
+
 
 void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
 {    
