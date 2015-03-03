@@ -1362,31 +1362,35 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
     UINT8 bLevel = GET_BLK_LVL(bPath);
     if (bPath == SV_VP_MAIN)
     {
-        if(fgIsMainDVI() || fgIsMainDec())
+        switch(bGetSignalType(bPath))
         {
-            SET_MATRIX_PED(SV_OFF);
-            switch (bLevel)
-            {
-                case SV_OFF:
-                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_LIMIT);
-                    break;
-                case SV_ON:
-                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_FULL);
-                    break;
-                default:
-                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
-                    break;                
-            }
-        }
-        else if (fgIsMainTvd3d() || fgIsMainYPbPr())
-        {
-            SET_MATRIX_PED(!bLevel);
-            vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
-        }
-        else
-        {
-            SET_MATRIX_PED(SV_OFF);
-            vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
+        	case SV_ST_DVI:
+			case SV_ST_MPEG:
+	            SET_MATRIX_PED(SV_OFF);
+	            switch (bLevel)
+	            {
+	                case SV_OFF:
+	                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_LIMIT);
+	                    break;
+	                case SV_ON:
+	                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_FULL);
+	                    break;
+	                default:
+	                    vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
+	                    break;                
+	            }
+				break;
+			case SV_ST_TV:
+			case SV_ST_AV:
+			case SV_ST_SV:
+			case SV_ST_YP:
+				SET_MATRIX_PED(!bLevel);
+				vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
+				break;
+			default:
+				SET_MATRIX_PED(SV_OFF);
+				vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
+				break;			
         }
     }
     else

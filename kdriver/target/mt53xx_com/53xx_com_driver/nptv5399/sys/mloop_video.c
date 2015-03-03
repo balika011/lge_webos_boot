@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/03 $
  * $RCSfile: mloop_video.c $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -238,7 +238,7 @@ void vVdoPEModeChgDone(UINT8 bPath)
 {
     // Fire Scaler mode change
     vScpipReconfig(bPath);
-    //vVdoSetColorTransform(bPath);
+    vVdoSetColorTransform(bPath);
     vDrvDIModeChangeDone(bPath);
 #ifdef CC_MT5399
     vDrvMJCModeChangeDone(bPath);

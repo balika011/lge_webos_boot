@@ -439,7 +439,7 @@ void vVdoSetColorTransform(UINT8 bPath)
     switch (u1DecType)
     {
         case SV_VD_TVD3D:
-            switch (bTvd3dGetColorSystem())
+            switch (bTvd3dGetColorSystemLg())
             {
                 case SV_CS_SECAM:
                 case SV_CS_PAL:

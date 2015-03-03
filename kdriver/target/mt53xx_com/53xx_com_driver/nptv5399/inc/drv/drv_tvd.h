@@ -96,7 +96,7 @@
  *
  * $Modtime: 04/05/31 9:52p $
  *
- * $Revision: #2 $
+ * $Revision: #3 $
 *************************************************************************/
 /**
 * @file drv_tvd.h
@@ -421,6 +421,7 @@ extern void vTvd3dBHModeChg(void);
 extern void vTvd3dBHModeDone(void);
 extern void vTvd3dGetUIDelay(void);
 extern UINT8 bTvd3dGetColorSystem(void);
+extern UINT8 bTvd3dGetColorSystemLg(void);
 extern void vDrvTvd3dSetColorSystem(UINT8 bColSys);
 extern UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys);
 #if TVD_SET_ENABLED_CS

@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #24 $
+* $Revision: #25 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8632,6 +8632,24 @@ UINT8 bTvd3dGetColorSystem(void)
     }
 }
 
+UINT8 bTvd3dGetColorSystemLg(void)
+{
+    if((fgIsMainTvd3d()||fgIsPipTvd3d()) && _rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE)
+    {
+        if(fgHwTvdIsMMode())
+        {
+            return (bHwTvdMMode());
+        }
+        else
+        {
+            return (bHwTvdMode());
+        }
+    }
+    else
+    {
+        return (SV_CS_UNSTABLE);
+    }
+}
 #if TVD_SET_ENABLED_CS
 BOOL bDrvTvd3dCheckModeChgForEnabledCS(void)
 {
