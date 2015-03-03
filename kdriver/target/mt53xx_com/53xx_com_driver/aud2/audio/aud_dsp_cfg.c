@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #31 $
+ * $Revision: #32 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -10580,6 +10580,10 @@ void _AUD_DspHdmiModeMuteEnable(UINT8 u1DecId, BOOL fgEnable)
         AUD_DEC_ID_VALIDATE(u1DecId);
         VOL_CTL_SEMA_LOCK(u1DecId);
 
+        _AUD_DspPlayMuteSpdifEnable(!fgEnable); 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        _AudAprocInputMute(u1DecId, fgEnable);
+#else
         _aafgChDecPlayMute[u1DecId][AUD_CH_FRONT_LEFT] = fgEnable;
         _aafgChDecPlayMute[u1DecId][AUD_CH_FRONT_RIGHT] = fgEnable;
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -10596,7 +10600,6 @@ void _AUD_DspHdmiModeMuteEnable(UINT8 u1DecId, BOOL fgEnable)
         _aafgChDecPlayMute[u1DecId][AUD_CH_REAR_RIGHT] = fgEnable;
 
 
-        _AUD_DspPlayMuteSpdifEnable(!fgEnable);
         _AUD_DspVolumeChange(AUD_DSP0, u1DecId, AUD_CH_FRONT_LEFT);
         _AUD_DspVolumeChange(AUD_DSP0, u1DecId, AUD_CH_FRONT_RIGHT);
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -10611,9 +10614,6 @@ void _AUD_DspHdmiModeMuteEnable(UINT8 u1DecId, BOOL fgEnable)
         _AUD_DspVolumeChange(AUD_DSP0, u1DecId, AUD_CH_DMX_RIGHT);
         _AUD_DspVolumeChange(AUD_DSP0, u1DecId, AUD_CH_REAR_LEFT);
         _AUD_DspVolumeChange(AUD_DSP0, u1DecId, AUD_CH_REAR_RIGHT);
-
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-        _AudAprocInputMute(u1DecId, fgEnable);
 #endif
         
         VOL_CTL_SEMA_UNLOCK(u1DecId);
