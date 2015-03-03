@@ -1766,7 +1766,7 @@ static verify_list_t verify_list[] =
 	{"rootfs", BOOT_COLD},
 	{"swue",		BOOT_COLD | BOOT_SNAPSHOT},
 	{"tzfw",		BOOT_COLD | BOOT_SNAPSHOT},
-	{"tvservice",	BOOT_COLD | BOOT_SNAPSHOT},
+	{"tvservice",	BOOT_COLD },
 	{"otncabi",		BOOT_COLD},
 	{"otycabi",		BOOT_COLD},
 	{"smartkey",	BOOT_COLD},
@@ -1830,7 +1830,22 @@ int verify_apps(int boot_mode)
 //              printf("\033[0;32m skip swue verification ... \033[0m\n");
 //              continue;
 //          }
-            
+            if(get_swumode())
+            	{
+            		if(strcmp(verify_list[idx].part_name,"swue") )
+            			{
+            				 printf("\033[0;32m skip %s verification ... \033[0m\n",verify_list[idx].part_name);
+				             continue;
+            			}
+            	}
+			else
+				{
+					if(!strcmp(verify_list[idx].part_name,"swue") )
+						{
+							printf("\033[0;32m skip swue verification ... \033[0m\n");
+              				continue;
+						}
+				}
             printf("\033[0;32m[%d]Verifying image in the '%s' partition idx[%d] \033[0m\n", readMsTicks(), pi->name, idx);
             printf("\033[0;32m[%d] %s start \n", readMsTicks(), __FUNCTION__);
 

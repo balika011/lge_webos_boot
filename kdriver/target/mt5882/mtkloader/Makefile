@@ -244,10 +244,15 @@ endif
 endif
 
 loader: preloader
+ifeq "$(CTRIX_ENV)" "true"
+	$(SIGN_TOOL_DIR)/bin2header	$(SIGGEN_KEY_LOADER)
+	cp  -f public_key.h $(VM_LINUX_ROOT)/project_x/target/mt53xx_com/53xx_com_driver/loaderlib
+else
 ifdef SIGGEN_KEY_LOADER
 	chmod +x ./bin2header
 	./bin2header $(SIGGEN_KEY_LOADER)
 	cp  -f public_key.h $(VM_LINUX_ROOT)/project_x/target/mt53xx_com/53xx_com_driver/loaderlib
+endif
 endif
 	$(MAKE) -C $(DRV_ROOT)/loader EXE_NAME=$(EXE_NAME)
 ifeq "$(BUILD_LINUX_LOADER)" "true"
