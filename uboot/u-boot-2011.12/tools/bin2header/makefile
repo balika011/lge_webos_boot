@@ -1,1 +1,2 @@
-gcc -g -o bin bin2header.cr_key
+all:
+	gcc -g -o bin bin2header.c
