@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/03/03 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2003,9 +2003,9 @@ void vTdcAdaptiveFW2DSoftswitch(void)  // check begin  here.
         }
 
         bK4HGain = MIN(bK4HGain, 0x8);
-        vRegWriteFldAlign(COMB2D_00, bK4HGain+1, REG_HFY_HDGAIN);
-        vRegWriteFldAlign(COMB2D_00, bK4HGain, REG_HFY_HYD_GAIN);
-        vRegWriteFldAlign(COMB2D_00, bK4HGain, REG_HFY_HCD_GAIN);
+        vRegWriteFldAlign(COMB2D_08, bK4HGain+1, REG_HFY_HDGAIN);
+        vRegWriteFldAlign(COMB2D_08, bK4HGain, REG_HFY_HYD_GAIN);
+        vRegWriteFldAlign(COMB2D_08, bK4HGain, REG_HFY_HCD_GAIN);
         
     }
     
