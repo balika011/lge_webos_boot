@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/03/03 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -416,7 +416,7 @@ extern BOOL _AUD_DspIECConfig(AUD_IEC_T eIecCfg, BOOL fgEnable);
 extern BOOL _AUD_GetDspIECConfig(void);
 extern BOOL _AUD_IsIECRaw(void);
 extern void _AUD_DspSetIEC(UINT8 u1DecId);
-extern BOOL _AUD_SetSPDIFEnable(BOOL fgEnable);
+extern BOOL _AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight);
 extern BOOL _AUD_DspIecChannel(AUD_IEC_CH_T eIecChannel);
 extern void _AUD_DspSetIecRawFlag (UINT8 u1Flag);
 extern void _AUD_DspSetIecRawDelay (INT16 i2Delay);

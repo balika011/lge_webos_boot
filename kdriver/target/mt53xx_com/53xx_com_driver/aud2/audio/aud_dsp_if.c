@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/03/03 $
  * $RCSfile: aud_dsp_if.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2570,9 +2570,9 @@ BOOL AUD_GetDspIECConfig(void)
  *  @retval  TRUE
  */
 //-----------------------------------------------------------------------------
-BOOL AUD_SetSPDIFEnable(BOOL fgEnable)
+BOOL AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
-	return _AUD_SetSPDIFEnable(fgEnable);
+	return _AUD_SetSPDIFEnable(fgEnable, fgLight);
 }
 
 

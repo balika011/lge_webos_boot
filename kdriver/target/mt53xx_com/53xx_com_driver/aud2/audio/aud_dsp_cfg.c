@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/25 $
+ * $Date: 2015/03/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #30 $
+ * $Revision: #31 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3103,7 +3103,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 }
 
 
-static void _AudSetSPDIFEnable(BOOL fgEnable)
+static void _AudSetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
     UINT8 u1fgMute;
         //check HDMI's command
@@ -3130,7 +3130,7 @@ static void _AudSetSPDIFEnable(BOOL fgEnable)
         vWriteShmUINT8(AUD_DSP0, B_IEC_MUTE, u1fgMute);
     }
     _afgIecEnable = fgEnable;
-    AUD_SPDIF_Enable(fgEnable);
+    AUD_SPDIF_Enable(fgLight);
     if((fgEnable) && _fgHpPlugFlag)
     {
          _fgHpPlugFlag = FALSE;
@@ -12455,7 +12455,7 @@ BOOL _AUD_GetDspIECConfig(void)
  *  @retval  TRUE
  */
 //-----------------------------------------------------------------------------
-BOOL _AUD_SetSPDIFEnable(BOOL fgEnable)
+BOOL _AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
     VERIFY(x_sema_lock(_ahSpdifCtlSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     if(fgEnable)
@@ -12471,7 +12471,7 @@ BOOL _AUD_SetSPDIFEnable(BOOL fgEnable)
     }
     _aafgMWSetSpdifFlag = fgEnable;
    // _AudDspSetIec(_aeMWIec, fgEnable);
-    _AudSetSPDIFEnable(fgEnable);
+    _AudSetSPDIFEnable(fgEnable, fgLight);
     VERIFY(x_sema_unlock(_ahSpdifCtlSema) == OSR_OK);
 
     return TRUE;

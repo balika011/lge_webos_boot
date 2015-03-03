@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/03/03 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -10568,7 +10568,7 @@ extern void ADAC_AmpMute(UINT8 u1Data);
 #ifdef CC_DSP_SUPPORT_ARC
 extern void ADAC_ArcEnable(BOOL fgEnable);
 #endif
-extern BOOL AUD_SetSPDIFEnable(BOOL fgEnable);
+extern BOOL AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight);
 
 #ifdef CC_FAST_INIT
 //-----------------------------------------------------------------------------
