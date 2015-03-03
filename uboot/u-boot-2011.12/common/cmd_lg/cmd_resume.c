@@ -232,8 +232,6 @@ int verify_snapshot_image(struct snapshot_header *header)
 {
 	int index = 0,i;
 	unsigned char *signature_offset = decomp_buf  + header->image_size -PAGE_SIZE ;
-	unsigned char signature[32];
-	static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
 
 	if((NUMBER_OF_FRAGMENT * FRAGMENT_UNIT_SIZE) > (header->image_size - HEADER_SIZE))
 	{
@@ -241,68 +239,27 @@ int verify_snapshot_image(struct snapshot_header *header)
 		return -1;
 	}
 
-
-//partial verify
-	//sign_area = (char *) malloc(FRAGMENT_UNIT_SIZE * sizeof(char) + 4096);
-	//sign_area =	((int)sign_area + 0x10) & (~0xf);
-	
-#ifdef SNAPSHOT_DEBUG
-				printf("sign_area = 0x%8x:\n",sign_area);	// first 16 bytes
-			
-#endif
 	index = (get_timer(0) % NUMBER_OF_FRAGMENT);
 #ifdef SNAPSHOT_DEBUG
-			printf("index = %d:\n",index);  // first 16 bytes
-		
-#endif
-
-	#if 0
+	printf("index = %d:\n",index);  // first 16 bytes		
+	printf("verify_snapshot_image snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
 	
-	if(-1 == storage_read(Global_offset_cur  + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE, decomp_buf))
-	{
-		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		//free(sign_area);
-		return -1;
+	for(i =0;i<32;i++)
+	{	
+		printf("%02x  ", (decomp_buf + (index * FRAGMENT_UNIT_SIZE))[i]);
 	}
-	#else
-	memcpy(sign_area,decomp_buf + (index * FRAGMENT_UNIT_SIZE),FRAGMENT_UNIT_SIZE);
-	memcpy(decomp_buf,sign_area,FRAGMENT_UNIT_SIZE);
-	#endif
+	printf("\n");
+
+	printf("signature snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
 	
-#ifdef SNAPSHOT_DEBUG
-		printf("verify_snapshot_image snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
-	
-		for(i =0;i<32;i++)
-		{	
-			printf("%02x  ", decomp_buf[i]);
-		}
-		printf("\n");
-	
-#endif
-#if 0
-	if(-1 == storage_read(Global_offset_cur  + header->image_size  + ((index + 1) *SIGNATURE_SIZE), SIGNATURE_SIZE, signature))
-	{
-		printf("io read error %s (%d)\n", __FUNCTION__, __LINE__);
-		//free(sign_area);
-		return -1;
+	for(i =0;i<32;i++)
+	{	
+		printf("%02x  ", (signature_offset + ((index + 1) * SIGNATURE_SIZE))[i]);
 	}
-#else
-
-	memcpy(signature,signature_offset + ((index + 1) * SIGNATURE_SIZE),SIGNATURE_SIZE);
-#endif
-#ifdef SNAPSHOT_DEBUG
-			printf("signature snapshot debug: sign data from hib partition (fisrt 32bytes ):\n");  // first 16 bytes
-		
-			for(i =0;i<32;i++)
-			{	
-				printf("%02x  ", signature[i]);
-			}
-			printf("\n");
-		
+	printf("\n");
 #endif
 
-
-	if( !snapshot_image_verify(signature, decomp_buf, FRAGMENT_UNIT_SIZE) )
+	if( !snapshot_image_verify(signature_offset + ((index + 1) * SIGNATURE_SIZE), decomp_buf + (index * FRAGMENT_UNIT_SIZE), FRAGMENT_UNIT_SIZE) )
 	{
 		printf("snapshot partial verification successed! (index:%d)\n", index);
 	}
@@ -506,7 +463,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	struct snapshot_header *header = GET_SNAP_HEADER(info);
 
 	/* compressed payload size = total size - header size - metadata size */
-	unsigned long snapshot_image_payload_size = get_signed_image_size(header);;
+	unsigned long snapshot_image_payload_size = get_signed_image_size(header) - PAGE_SIZE;
 
 	pfn_merge_info = (struct pfn_merge_info *)meta_page_ptr;
 	processed_pfn_mi_index = 0;
