@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #25 $
+* $Revision: #26 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8604,7 +8604,7 @@ UINT8 bTvd3dGetColorSystem(void)
    // static UINT8 _bColorburstLock;
     //static UINT8 _bcolorsystemmcnt;
     
-    if((fgIsMainTvd3d()||fgIsPipTvd3d()) && (_rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE)&&(_sbTvdModeCnt>25))
+    if((fgIsMainTvd3d()||fgIsPipTvd3d()) && (_rTvd3dStatus.bSigStatus==(UINT8)SV_VDO_STABLE)&&(_sbTvdModeCnt>20))
     {
         
         if(fgHwTvdIsMMode())
@@ -8694,7 +8694,7 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
 {
     LOG(1, "[TVD_DBG_MSG] SetEnabledColorSystem mask=0x%X\n", u4ColSys);
     _rTvd3dStatus.bColSys = SV_CS_AUTO;
-    if(fgIsMainTvd3d()||fgIsPipTvd3d())
+    //if(fgIsMainTvd3d()||fgIsPipTvd3d())
     {
 #if TVD_SET_ENABLED_CS
         RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
@@ -8781,10 +8781,12 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
 #endif
         return TRUE;
     }
+	/*
     else
     {
         return FALSE;
     }
+	*/
 }
 
 #if TVD_SET_ENABLED_CS
@@ -8795,7 +8797,7 @@ void vDrvTvd3dCheckMModeForEnabledCS(void)
 
     if(!_rTvd3dStatus.fgVPres)
     {
-        return;
+        //return;
     }
 
     if(_rTvd3dStatus.eSourceType==SV_ST_TV)

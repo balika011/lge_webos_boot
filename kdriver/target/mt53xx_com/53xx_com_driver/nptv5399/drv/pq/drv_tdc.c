@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/03 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -146,7 +146,7 @@ UINT8 _bTDCEnable;
 
 REGTBL_T const CODE REGTBL_COMB_NTSC_AV[] = {
 	{COMB_CTRL_00, 0x000B101F, 0x1FFFFFFF},
-	{COMB_CTRL_01, 0x08000000, 0xFE000000},
+	{COMB_CTRL_01, 0x00000000, 0xFE000000},
 	{COMB_CTRL_02, 0x0A64CADD, 0xFFFFFFFF},
 	{COMB_CTRL_03, 0x28FF0210, 0xFFFFFFFF},
 	{COMB_CTRL_04, 0x02F70000, 0x8FFFFFFF},

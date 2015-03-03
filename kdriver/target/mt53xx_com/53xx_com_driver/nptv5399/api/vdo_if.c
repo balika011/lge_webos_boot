@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/03 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #43 $
+ * $Revision: #44 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1610,12 +1610,13 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 	LOG(0, "bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
 	 _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
 	
-	if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
+	//if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
+	if((fgMainCh))
 	{
 		vDrvSetInternalMuxVFE_AVD(0,_fVFEAVDSourceMainNew);   // connect VFE and ADC
 	}
 
-	if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
+	if((fgMainCh))
 	{
 		vTvd3dConnect(0x0, SV_ON);//just  connect TVD
 
