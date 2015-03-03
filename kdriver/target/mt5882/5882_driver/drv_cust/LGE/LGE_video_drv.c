@@ -982,9 +982,9 @@ void DRVCUST_InputCSCAdj(UINT8 bPath)
 		case  SOURCE_TYPE_TIMING_CVBS_PAL_M:
 		case  SOURCE_TYPE_TIMING_CVBS_PAL_N:
 			//CVBS other
-			vIO32WriteFldAlign(MATRIX_01, 0x206, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x202, IN_Y_GAIN);
 			vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_OFST);
-			vIO32WriteFldAlign(MATRIX_01, 0x200, IN_C_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x209, IN_C_GAIN);
 			break;
 		case SOURCE_TYPE_TIMING_SCART_RGB:			
 			//SCART 
@@ -1417,6 +1417,23 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
 			case SV_ST_TV:
 			case SV_ST_AV:
 			case SV_ST_SV:
+				switch (bTvd3dGetColorSystemLg())
+				{
+				//when blacklevel is auto, set secam\pal\pal60 to high and NTSC443 to low
+					case SV_CS_SECAM:
+					case SV_CS_PAL:
+					case SV_CS_PAL_60:
+						SET_MATRIX_PED(SV_OFF);						
+						break;
+					case SV_CS_NTSC443:
+						SET_MATRIX_PED(SV_ON);						
+						break;
+					default:
+						SET_MATRIX_PED(!bLevel);
+						break;						
+				}
+				vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
+				break;
 			case SV_ST_YP:
 				SET_MATRIX_PED(!bLevel);
 				vSetHDMIRangeMode(SV_HDMI_RANGE_FORCE_AUTO);
