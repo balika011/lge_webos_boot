@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/03 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3372,7 +3372,6 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
            {
            
                FBM_MUTEX_UNLOCK(ucFbgId);
-               ucVdpId = VDP_Es2Vdp(ucEsId);
 #if defined(CC_MT5890)
                VDP_VsyncMutexLock(ucVdpId);
 #else
