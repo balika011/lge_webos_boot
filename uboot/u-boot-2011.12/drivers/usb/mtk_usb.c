@@ -4,7 +4,7 @@
  * MT53xx USB driver
  *
  * Copyright (c) 2008-2012 MediaTek Inc.
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -59,7 +59,7 @@ static inline void delay (unsigned long loops)
 }
 
 
-#define mdelay(n) ({unsigned long msec=(n); while (msec--) delay(1000000);})
+#define mdelay(n) ({unsigned long msec=(n); while (msec--) udelay(1000);})
 
 #ifdef CONFIG_ARCH_MT5890
 #define XHCI_REG_READ32(r) \
