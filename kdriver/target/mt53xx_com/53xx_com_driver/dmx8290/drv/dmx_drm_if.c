@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/26 $
+ * $Date: 2015/03/03 $
  * $RCSfile: dmx_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -353,7 +353,7 @@ int sign_snapshot(char* blkdev, unsigned int size, unsigned int snapoffset,unsig
 //    u4ImageSize = size;
 	
 
-	u4fullImageSize += 0x1000; // add another header size --> don't know the reason
+	//u4fullImageSize += 0x1000; // add another header size --> don't know the reason
 	
 	u4fullImageSize += 32;     // add fullimage signature size 
 	

@@ -154,7 +154,7 @@ static unsigned int get_signed_image_size(struct snapshot_header *header)
 	size =  ALIGN(header->image_size, 16);
 
 #if defined (CONFIG_SECURITY_BOOT)
-	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1) + 8192;
+	size += SIGNATURE_SIZE * (NUMBER_OF_FRAGMENT+1);
 #endif
 	return size;
 }
@@ -231,7 +231,7 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
 int verify_snapshot_image(struct snapshot_header *header)
 {
 	int index = 0,i;
-	unsigned char *signature_offset = decomp_buf  + header->image_size  ;
+	unsigned char *signature_offset = decomp_buf  + header->image_size -PAGE_SIZE ;
 	unsigned char signature[32];
 	static unsigned char sign_area[FRAGMENT_UNIT_SIZE];
 
@@ -506,7 +506,7 @@ static int compressed_snapshot_image_restore(loff_t offset_cur, int verify, int 
 	struct snapshot_header *header = GET_SNAP_HEADER(info);
 
 	/* compressed payload size = total size - header size - metadata size */
-	unsigned long snapshot_image_payload_size = get_signed_image_size(header)- PAGE_SIZE;;
+	unsigned long snapshot_image_payload_size = get_signed_image_size(header);;
 
 	pfn_merge_info = (struct pfn_merge_info *)meta_page_ptr;
 	processed_pfn_mi_index = 0;
