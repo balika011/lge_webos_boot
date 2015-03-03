@@ -1,2 +1,2 @@
 all:
-	gcc -g -o bin bin2header.c
+	gcc -m32 -g -o bin bin2header.c
