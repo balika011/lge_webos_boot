@@ -216,8 +216,8 @@ int snapshot_image_verify(unsigned char * signature,unsigned char * sign_area,un
 		printf("snapshot signature check fail!\n");
 	   // writeFullVerifyOTP();
 	
-	    while(1);
-	//return -1;
+	    //while(1);
+		return -1;
 	}
 	else
 	{
