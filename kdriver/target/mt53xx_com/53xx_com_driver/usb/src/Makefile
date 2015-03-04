@@ -98,7 +98,8 @@ SRC = musb_if.c
 
 OBJ =
 
-SUB_COMPONENTS = cd drivers examples qmu
+
+SUB_COMPONENTS = cd drivers examples
 # SUB_COMPONENTS += functions
 SUB_COMPONENTS += systems
 #SUB_COMPONENTS += lib

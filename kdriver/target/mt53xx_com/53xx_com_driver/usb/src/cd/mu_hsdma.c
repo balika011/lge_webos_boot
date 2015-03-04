@@ -75,7 +75,7 @@
 
 /*
  * DMA implementation for high-speed controllers.
- * $Revision: #2 $
+ * $Revision: #3 $
  */
 
 #include "mu_impl.h"
@@ -99,10 +99,8 @@ extern int printk(const char *format, ...);
 #endif
 
 #if !defined (CONFIG_ARCH_MT85XX)
-#ifndef MUSB_QMU
 #define MGC_O_HSDMA_BASE    0x200
 #define MGC_O_HSDMA_INTR    0x200
-#endif
 #define MGC_O_HSDMA_INTR_MASK    0x201   
 #define MGC_O_HSDMA_INTR_CLEAR   0x202
 #define MGC_O_HSDMA_INTR_SET     0x203
@@ -156,9 +154,6 @@ extern int printk(const char *format, ...);
 
 /******************************** TYPES **********************************/
 
-#ifdef MUSB_QMU
-uint8_t bADataEnable = 0;
-#endif
 
 #if defined(MUSB_DMA) && defined(MUSB_HSDMA) && (MUSB_HSDMA_CHANNELS > 0)
 
@@ -194,10 +189,6 @@ typedef struct _MGC_HsDmaController
 #endif /* MUSB_HSDMA && have at least one channel */
 
 #if !defined (CONFIG_ARCH_MT85XX)
-#ifdef MUSB_QMU
-extern void _MUSB_QMU_Transfer(uint8_t end_num, uint32_t u4Type, 
-	                             uint32_t framenum, uint8_t isHost, uint8_t num_of_packet);
-#endif
 #endif
 
 /******************************* FORWARDS ********************************/
@@ -1970,10 +1961,6 @@ uint32_t MGC_Dev_GetISOPkt(uint32_t bPortNum, uint32_t bEnd, uint8_t *buf, uint3
         intr = MGC_Read8(pBase, MGC_O_HDRC_INTRUSB);      
         Printf(" Dev Get USB Interrupt count=%d:\n", count);
 		Printf("interrrupt=0%x, 0%x, 0%x.\n", intr, MGC_Read16(pBase, MGC_O_HDRC_INTRTX), MGC_Read16(pBase, MGC_O_HDRC_INTRRX));
-		#ifdef MUSB_QMU
-		if((count + 1) >= framenum) 
-		    break;
-		#endif
 
         if (intr)
         {
@@ -3440,10 +3427,6 @@ uint32_t MGC_Dev_GetISOPkt(uint32_t bEnd, uint8_t *buf, uint32_t framenum)
         intr = MGC_Read8(pBase, MGC_O_HDRC_INTRUSB);      
         Printf(" Dev Get USB Interrupt count=%d:\n", count);
 	Printf("interrrupt=0%x, 0%x, 0%x.\n", intr, MGC_Read16(pBase, MGC_O_HDRC_INTRTX), MGC_Read16(pBase, MGC_O_HDRC_INTRRX));
-	#ifdef MUSB_QMU
-	if((count + 1) >= framenum) 
-	    break;
-	#endif
 
         if (intr)
         {
@@ -3524,206 +3507,6 @@ uint32_t MGC_Dev_GetISOPkt(uint32_t bEnd, uint8_t *buf, uint32_t framenum)
 
 #endif /* MUSB_ISO_EMULATION enabled */
 
-#ifdef MUSB_QMU
-void MGC_QMU_Host_SendPkt(uint8_t btxEnd, uint32_t u4Type,uint32_t framenum, 
-                                     uint8_t ishost, uint8_t num_of_packet)
-{
-    uint8_t *pBase;
-    MGC_Port *pPort;
-    MUSB_Port *pUsbPort = NULL;
-    MGC_Controller *pController;
-    const MUSB_Device* pDevice = NULL;
-    uint16_t wCount;
-    int temp;
-    uint8_t reg;    
-    uint32_t bEnd = btxEnd;
-    pUsbPort = MUSB_GetPort(0);
-		if(!pUsbPort)
-		{
-			LOG(0, "Wrong Port number[%d].\n", bPortNum);
-			return;
-		}
-		
-		//MUSB_ASSERT(pUsbPort);		
-    pPort = (MGC_Port *)pUsbPort->pPrivateData;
-    MUSB_ASSERT(pPort);
-    pController = pPort->pController;
-    MUSB_ASSERT(pController);
-    pBase = (uint8_t *)pController->pControllerAddressIst;
-    MUSB_ASSERT(pBase);
-
-    // disable USB interrupt.   
-    BIM_DisableIrq(VECTOR_USB); 
-
-    // select ep
-    MGC_SelectEnd(pBase, bEnd);
-
-    // get the last device to test iso.
-    wCount = MUSB_ListLength(&(pPort->ConnectedDeviceList));
-    MUSB_ASSERT(wCount > 0);
-    pDevice = (MUSB_Device *)MUSB_ListFindItem(&(pPort->ConnectedDeviceList), (wCount-1));
-
-    reg = (0x10 |bEnd);
-    /* speed field in proto reg */
-    switch(pDevice->ConnectionSpeed)
-    {
-        case MUSB_CONNECTION_SPEED_LOW:
-            // iso do not support low speed.
-            MUSB_ASSERT(0);
-            break;
-        case MUSB_CONNECTION_SPEED_FULL:
-            reg |= 0x80;
-            break;
-        default:
-            reg |= 0x40;
-    }
-    // set tx ep type.
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_TXTYPE, bEnd, reg);
-
-    // set ep tx mode.
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_TXCSR2, bEnd, 0x20);
-
-    BIM_EnableIrq(VECTOR_USB);
-    _MUSB_QMU_Transfer(bEnd, u4Type, framenum, ishost, num_of_packet);
-
-        // clear ep tx mode.
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_TXCSR2, bEnd, 0x0);
-    temp = 0xff;
-    MGC_QMU_Write8 (MGC_O_HDRC_INTRUSBE, temp);
-    MGC_QMU_Write16 (MGC_O_HDRC_INTRTXE, 0xff);
-    MGC_QMU_Write16 (MGC_O_HDRC_INTRRXE, 0xff);
-    return;
-}
-
-
-void MGC_QMU_Host_GetPkt(uint8_t rxend, uint32_t u4Type, 
-			uint32_t framenum, uint8_t ishost, uint8_t num_of_packet)
-{
-
-    uint32_t csr;    
-    uint8_t *pBase;
-    MGC_Port *pPort;
-    MUSB_Port *pUsbPort = NULL;
-    MGC_Controller *pController;
-    const MUSB_Device* pDevice = NULL;
-    uint16_t wCount;
-    uint8_t reg;    
-
-    uint32_t bEnd = rxend;
-    
-    pUsbPort = MUSB_GetPort(0);
-    MUSB_ASSERT(pUsbPort);        
-    pPort = (MGC_Port *)pUsbPort->pPrivateData;
-    MUSB_ASSERT(pPort);
-    pController = pPort->pController;
-    MUSB_ASSERT(pController);
-    pBase = (uint8_t *)pController->pControllerAddressIst;
-    MUSB_ASSERT(pBase);
-
-    // disable USB interrupt.   
-    BIM_DisableIrq(VECTOR_USB); 
-
-    // select ep
-    MGC_SelectEnd(pBase, bEnd);    
-
-    // get the last device to test iso.
-    wCount = MUSB_ListLength(&(pPort->ConnectedDeviceList));
-    MUSB_ASSERT(wCount > 0);
-    pDevice = (MUSB_Device *)MUSB_ListFindItem(&(pPort->ConnectedDeviceList), (wCount-1));
-
-    reg = (0x10 |bEnd);
-    /* speed field in proto reg */
-    switch(pDevice->ConnectionSpeed)
-    {
-        case MUSB_CONNECTION_SPEED_LOW:
-            // iso do not support low speed.
-            MUSB_ASSERT(0);
-            break;
-        case MUSB_CONNECTION_SPEED_FULL:
-            reg |= 0x80;
-            break;
-        default:
-            reg |= 0x40;
-    }
-    // set rx ep type.
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_RXTYPE, bEnd, reg);        
-
-    BIM_EnableIrq(VECTOR_USB);
-    _MUSB_QMU_Transfer(bEnd,u4Type, framenum, ishost, num_of_packet);
-        
-    // clear rx status.
-    csr = MGC_ReadCsr8(pBase, MGC_O_HDRC_RXCSR, bEnd);
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_RXCSR, bEnd, (csr & ~MGC_M_RXCSR_RXPKTRDY));        
-   
-    return;
-}
-
-
-
-/*
- *  MGC_Dev_GetISOPkt 
- *  TEST command: receive ISO packet from host.
- */
-uint32_t MGC_QMU_Device_GetPkt(uint8_t rxend, uint32_t u4Type, 
-									uint32_t framenum, uint8_t ishost, uint8_t num_of_packet)
-{
-    uint32_t   count = 0;
-    uint32_t   rxcount = 0;
-	uint8_t *pBase;
-	uint8_t bEnd;
-    MGC_Port *pPort;
-    MUSB_Port *pUsbPort = NULL;
-    MGC_Controller *pController;
-
-    pUsbPort = MUSB_GetPort(0);
-		if(!pUsbPort)
-		{
-			LOG(0, "Wrong Port number[%d].\n", bPortNum);
-			return;
-		}
-		//MUSB_ASSERT(pUsbPort);		
-    pPort = (MGC_Port *)pUsbPort->pPrivateData;
-    MUSB_ASSERT(pPort);
-    pController = pPort->pController;
-    MUSB_ASSERT(pController);
-    pBase = (uint8_t *)pController->pControllerAddressIst;
-    MUSB_ASSERT(pBase);
-
-	bEnd = rxend;
-	
-    // disable USB interrupt.   
-    BIM_DisableIrq(VECTOR_USB); 
-
-    // select ep
-    MGC_SelectEnd(pBase, bEnd);    
-
-    //  set special device address to test.
-    MGC_Write8(pBase, MGC_O_HDRC_FADDR, 100);
-
-    // set fifo size and address.
-    MGC_Write8(pBase, MGC_O_HDRC_RXFIFOSZ, 0x9);
-
-    MGC_Write16(pBase, MGC_O_HDRC_RXFIFOADD, 8);
-	
-    // set rx maximum data size.   
-    MGC_WriteCsr16(pBase, MGC_O_HDRC_RXMAXP, bEnd, 0x1400);       	
-
-    // set rx ep type.
-    MGC_WriteCsr16(pBase, MGC_O_HDRC_RXTYPE, bEnd, (0x10 |bEnd));
-    
-    // set ISO mode in device mode.
-    MGC_WriteCsr8(pBase, MGC_O_HDRC_RXCSR2, bEnd, 0x40);
-    
-    Printf("Start Dev GetISOPacket count = %d, framenum = %d:\n", count, framenum);    
-
-	BIM_EnableIrq(VECTOR_USB);
-	_MUSB_QMU_Transfer(bEnd,u4Type, framenum, ishost, num_of_packet);
-
-    return rxcount;
-}
-
-
-#endif
 
 #endif //#if defined(CONFIG_ARCH_MT85XX)
 

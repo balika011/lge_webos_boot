@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/04 $
  * $RCSfile: musb_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -147,10 +147,6 @@ LINT_EXT_HEADER_END
 #define MUSB_CDC
 #endif
 
-//#define MUSB_QMU
-#ifdef MUSB_QMU
-#define MUSB_ISO_EMULATION
-#endif
 //#define MUSB_POWERDOWN
 #define MGC_Printf Printf
 //#define MGC_Printf
@@ -224,12 +220,6 @@ extern UINT32 MGC_Dev_GetISOPkt(UINT32 bEnd, UINT8 *buf, UINT32 framenum);
 
 #endif
 
-#ifdef MUSB_QMU
-extern void MGC_QMU_Device_GetPkt(UINT8 bRxEnd, UINT32 u4type, 
-									UINT32 framenum, UINT8 ishost, UINT8 num_of_packet);
-extern void MGC_QMU_Host_SendPkt(UINT8 bTxEnd, UINT32 u4type, 
-									UINT32 framenum, UINT8 ishost, UINT8 num_of_packet);
-#endif
 
 //---------------------------------------------------------------------------
 // Static function forward declarations
@@ -2114,81 +2104,6 @@ static INT32 _USBDeviceISOGetCmd(INT32 i4Argc, const CHAR **szArgv)
 
 #endif
 
-#ifdef MUSB_QMU
-//-------------------------------------------------------------------------
-/** _USBHostISOGetCmd
- *  USB CLI Isochronous host get packet command test function.
- *  @param  i4Argc		user's CLI input length.
- *  @param  szArgv		user's CLI input string.
- *  @retval  1 	SUCCESS.
- *  @retval  0	FAIL. 
- */
-//-------------------------------------------------------------------------
-static INT32 _MUSBQmuSendCmd(INT32 i4Argc, const CHAR **szArgv)
-{       
-    uint32_t u4type;
-    uint8_t ishost;
-    uint8_t txend = 0x02;
-    uint32_t framenum;
-	uint8_t num_of_packet;
-	
-    if (i4Argc < 3)
-    {
-        MGC_Printf("Arg: [framenum] [num_of_packet]\n");
-        MGC_Printf("[framenum]\n");
-		MGC_Printf("[num_of_packet]\n");
-		return 0;
-    }
-
-    //txend = StrToInt(szArgv[1]);
-    u4type = 0x01; //  ISO type   
-    ishost = 0x01; //  tx
-    num_of_packet = StrToInt(szArgv[2]);
-    framenum = StrToInt(szArgv[1]);
-	
-    
-    MGC_QMU_Host_SendPkt(txend, u4type, framenum, ishost, num_of_packet);    
-       
-    return 0;
-}
-
-
-
-//-------------------------------------------------------------------------
-/** _USBHostISOGetCmd
- *  USB CLI Isochronous host get packet command test function.
- *  @param  i4Argc		user's CLI input length.
- *  @param  szArgv		user's CLI input string.
- *  @retval  1 	SUCCESS.
- *  @retval  0	FAIL. 
- */
-//-------------------------------------------------------------------------
-static INT32 _MUSBQmuGetCmd(INT32 i4Argc, const CHAR **szArgv)
-{       
-    uint32_t u4type;
-    uint8_t ishost;
-    uint8_t rxend;
-	uint8_t num_of_packet;
-    uint32_t framenum;
-
-    if (i4Argc < 3)
-    {
-        MGC_Printf("Arg: [framenum] [num_of_packet]\n"); 
-        MGC_Printf("[framenum number]\n");
-		MGC_Printf("[num_of_packet]\n");
-        return 0;
-    }
-
-    rxend = 0x02;
-    u4type = 0x01;
-    ishost = 0;
-    framenum = StrToInt(szArgv[1]);
-	num_of_packet = StrToInt(szArgv[2]);
-    MGC_QMU_Device_GetPkt(rxend, u4type, framenum, ishost, num_of_packet);    
-       
-    return 0;
-}
-#endif
 
 
 #ifdef MUSB_POWERDOWN
@@ -3390,10 +3305,6 @@ static CLI_EXEC_T _arMUSBCmdTbl [] =
     { "dig", "dig", _USBDeviceISOGetCmd, NULL, "USB device isochronous get packet test", CLI_GUEST }, 
 
 #endif 
-#ifdef MUSB_QMU
-    {"qmus", "qmus", _MUSBQmuSendCmd, NULL, "USB QMU host send packet tst", CLI_GUEST},
-    {"qmug", "qmug", _MUSBQmuGetCmd, NULL, "USB QMU host get packet test", CLI_GUEST},
-#endif
 #ifdef MUSB_POWERDOWN
     {"powerdown", "pd", _MUSBPowerDownCmd, NULL, "USB Power Down and Hot Plug Test", CLI_GUEST},
 #endif

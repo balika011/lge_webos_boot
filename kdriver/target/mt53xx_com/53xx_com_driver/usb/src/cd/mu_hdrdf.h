@@ -83,7 +83,7 @@ extern unsigned int enableUsbOtg;
 
 /*
  * HDRC-specific definitions
- * $Revision: #1 $
+ * $Revision: #2 $
  */
 extern unsigned int _u4UsbQDebugLevel;
 
@@ -224,17 +224,6 @@ extern unsigned int _u4UsbQDebugLevel;
 #define MGC_O_QIRQ_QIMCR		0x0008
 #define MGC_O_QIRQ_QIMSR		0x000C
 
-#ifdef MUSB_QMU
-#define MGC_O_HSDMA_BASE    0x200
-#define MGC_O_HSDMA_INTR    0x200
-#define MGC_O_HSDMA_LIMITER 0x210
-#define MGC_O_HSDMA_CONFIG    0x220
-
-#define MGC_O_HSDMA_CONTROLLER( _n )  (0x204 + (((_n)-1)*0x10) )
-#define MGC_O_HSDMA_ADDRESS1( _n )     (0x208 + (((_n)-1)*0x10) )
-#define MGC_O_HSDMA_COUNT1( _n )       (0x20c + (((_n)-1)*0x10) )
-#define MGC_O_HSDMA_REALCNT( _n )     (0x280 + (((_n)-1)*0x10) )
-#endif
 #endif // #if !defined (CONFIG_ARCH_MT85XX)
 
 /*

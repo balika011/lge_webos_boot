@@ -75,7 +75,7 @@
 
 /*
  * MUSBStack-S HDRC implementation.
- * $Revision: #1 $
+ * $Revision: #2 $
  */
 #if defined(CONFIG_ARCH_MT85XX) //#ifdef CONFIG_DRV_LINUX
 #include <linux/delay.h>
@@ -211,9 +211,7 @@ static uint32_t MGC_POWERDWN_CASE = 0;
 static uint32_t MGC_WAKEUP_CASE = 0;
 static uint32_t MGC_INT_SHOW_ENABLE = FALSE;
 #endif
-#ifdef MUSB_QMU
-extern void Qmu_handler(unsigned int wQmuVal);
-#endif
+
 
 #if !defined (CONFIG_ARCH_MT85XX)
 extern uint8_t MGC_Ep_No(void *pBase);
@@ -694,10 +692,7 @@ int32_t MGC_HdrcIsr(void *pParam)
 
     uint8_t bIntrUsbValue;
     uint16_t wIntrTxValue, wIntrRxValue;
-    #ifdef MUSB_QMU
-    uint32_t wIntrQMUValue;
-    //uint32_t dwDmaIntrValue;
-    #endif
+
 #ifdef UNIFIED_USB
 #if USB_SUSPEND_TEST
     uint32_t u4IntrL1ints, u4Reg;
@@ -740,31 +735,6 @@ int32_t MGC_HdrcIsr(void *pParam)
 #endif
 
 #if !defined (CONFIG_ARCH_MT85XX)
-#ifdef MUSB_QMU
-/* read registers */
-    /* read registers */
-    bIntrUsbValue = MGC_Read8(pBase, MGC_O_HDRC_INTRUSB);
-    wIntrTxValue = MGC_Read16(pBase, MGC_O_HDRC_INTRTX);
-    wIntrRxValue = MGC_Read16(pBase, MGC_O_HDRC_INTRRX);
-    wIntrQMUValue = MGC_ReadQIRQ32(MGC_O_QIRQ_QISAR);
-
-    //  write clear interrupt register value.
-    MGC_Write8(pBase, MGC_O_HDRC_INTRUSB, bIntrUsbValue);
-    MGC_Write16(pBase, MGC_O_HDRC_INTRTX, wIntrTxValue);
-    MGC_Write16(pBase, MGC_O_HDRC_INTRRX, wIntrRxValue);
-    MGC_WriteQIRQ32(MGC_O_QIRQ_QISAR, wIntrQMUValue);
-
-    //  Only handle enabled interrupt.
-    bIntrUsbValue &= MGC_Read8(pBase, MGC_O_HDRC_INTRUSBE);
-    wIntrTxValue &= MGC_Read16(pBase, MGC_O_HDRC_INTRTXE);
-    wIntrRxValue &= MGC_Read16(pBase, MGC_O_HDRC_INTRRXE);
-    wIntrQMUValue &= (~(MGC_ReadQIRQ32(MGC_O_QIRQ_QIMR)));
-
-if((wIntrQMUValue))
-{
-    LOG(6, "Interrupt: IntrUsb [%x] IntrTx[%x] IntrRx [%x]  IntrQMU [%x]\r\n", bIntrUsbValue, wIntrTxValue, wIntrRxValue, wIntrQMUValue);        
-}
-#else
     /* read registers */
     bIntrUsbValue = MGC_Read8(pBase, MGC_O_HDRC_INTRUSB);
     wIntrTxValue = MGC_Read16(pBase, MGC_O_HDRC_INTRTX);
@@ -779,7 +749,6 @@ if((wIntrQMUValue))
     bIntrUsbValue &= MGC_Read8(pBase, MGC_O_HDRC_INTRUSBE);
     wIntrTxValue &= MGC_Read16(pBase, MGC_O_HDRC_INTRTXE);
     wIntrRxValue &= MGC_Read16(pBase, MGC_O_HDRC_INTRRXE);
-#endif
 #else //#if !defined (CONFIG_ARCH_MT85XX)
     /* read registers */
     bIntrUsbValue = MGC_Read8(pBase, MGC_O_HDRC_INTRUSB);
@@ -1098,14 +1067,6 @@ if((wIntrQMUValue))
 	#endif
     }
 
-#if !defined (CONFIG_ARCH_MT85XX)
-    #ifdef MUSB_QMU
-    if(wIntrQMUValue)
-    {
-        Qmu_handler(wIntrQMUValue);
-    }
-    #endif
-#endif //#if !defined (CONFIG_ARCH_MT85XX)
 
     /* call common ISR */
     result = MGC_DrcIsr(pControllerImpl, bIntrUsbValue, wIntrTxValue, wIntrRxValue);
@@ -1159,11 +1120,7 @@ uint32_t MGC_HdrcStart(MGC_Controller *pController)
 	#if defined (CONFIG_ARCH_MT85XX)
    val |= 0x0f; 
 	#else
-	#ifdef MUSB_QMU
-   val |= 0x2f; 
-	#else
 	val |= 0x0f;
-	#endif
 	#endif
 
    MGC_Write32(pBase, M_REG_INTRLEVEL1EN, val);
@@ -1351,11 +1308,7 @@ uint32_t MGC_HdrcStop(MGC_Controller *pController)
 	#if defined (CONFIG_ARCH_MT85XX)
    u4Reg &= ~((uint32_t)0x0f); 
 	#else
-    #ifdef MUSB_QMU
-        u4Reg &=~((uint32_t)0x2f);
-    #else
-        u4Reg &= ~((uint32_t)0x0f);
-    #endif
+    u4Reg &= ~((uint32_t)0x0f);
 	#endif
     MGC_Write32(pBase, M_REG_INTRLEVEL1EN, u4Reg);
 #endif

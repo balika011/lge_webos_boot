@@ -75,7 +75,7 @@
 
 /*
  * Top-level mass-storage class driver module
- * $Revision: #1 $
+ * $Revision: #2 $
  */
 
 #include "mu_bits.h"
@@ -462,7 +462,7 @@ static void MGC_MsdTimerExpired(void *pControllerPrivateData, uint16_t wTimerInd
 /** Callback function when device acknowledges set config reqeust. */
 static void MGC_MsdSetConfigCallback(void *pContext, MUSB_ControlIrp *pControlIrp)
 {
-#if (defined(MUSB_ISO_EMULATION) || defined(MUSB_QMU)) && (!defined(CONFIG_ARCH_MT85XX))
+#if (defined(MUSB_ISO_EMULATION)) && (!defined(CONFIG_ARCH_MT85XX))
      UNUSED(pContext);
      UNUSED(pControlIrp);
      return;
@@ -521,6 +521,6 @@ static void MGC_MsdSetConfigCallback(void *pContext, MUSB_ControlIrp *pControlIr
 
     MUSB_ASSERT(bStatus);
     UNUSED(pControlIrp);
-    #endif //#if (defined(MUSB_ISO_EMULATION) || defined(MUSB_QMU)) && (!defined(CONFIG_ARCH_MT85XX))
+    #endif //#if (defined(MUSB_ISO_EMULATION)) && (!defined(CONFIG_ARCH_MT85XX))
 
 }

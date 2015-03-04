@@ -77,7 +77,7 @@
  * MUSBStack-S handling of architecture-specific means to
  * define MUSB_SWAP16, MUSB_SWAP32, MGC_Read8, MGC_Read16,
  * MGC_Read32, MGC_Write8, MGC_Write16, and MGC_Write32.
- * $Revision: #1 $
+ * $Revision: #2 $
  */
 
 #ifndef __MUSB_ARCH_H__
@@ -151,10 +151,6 @@
 #else
 #define MUSB_FM_BASE                                    (0xF00)
 #endif
-
-
-#define MUSB_QMU_RX_BASE                                    (0x800)
-#define MUSB_QMU_TX_BASE                                    (0xA00)
 
 #else
 #define MUSB_COREBASE                                   (0x800)
