@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/23 $
+ * $Date: 2015/03/04 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1425,7 +1425,7 @@ UINT8 bHdtvInterlace(void)
         return (Get_VGAMODE_INTERLACE(_bHdtvTiming));
     }
 
-    return 0;
+    return 1;// hal default need be interlace
 }
 
 
@@ -2739,6 +2739,10 @@ UINT16 wHdtvGetPorch(UINT8 bPath,UINT8 bPorchType)
             }
 
 #endif
+			if((_bHdtvTiming == MODE_NOSUPPORT)||(_bHdtvTiming == MODE_NOSIGNAL))
+				return 0;
+			else
+
             return (IO32ReadFldAlign(HDTV_01, HDTV_AV_START) >> u1Cen);
 
         case 	SV_HPORCH_DEFAULT:
@@ -2752,6 +2756,9 @@ UINT16 wHdtvGetPorch(UINT8 bPath,UINT8 bPorchType)
             return (Get_VGAMODE_IPH_BP(_bHdtvTiming)>> u1Cen);
 
         case	SV_VPORCH_CURRENT:
+			if((_bHdtvTiming == MODE_NOSUPPORT)||(_bHdtvTiming == MODE_NOSIGNAL))
+				return 0;
+			else
             return  IO32ReadFldAlign(ASYNC_11, AS_NEW_VS_OUTP_S1);
 
         case	SV_VPORCH_DEFAULT:
