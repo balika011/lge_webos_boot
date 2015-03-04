@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/04 $
  * $RCSfile: nptv_vrm_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  * Description:
  *         This file contains CLI implementation of NPTV Video.
@@ -113,7 +113,7 @@ static INT32 _VRMSetForceOvsnModule(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _VRMSetGetOvsnModule(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _VRMSetAppMode(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _VRMGetAppMode(INT32 i4Argc, const CHAR **szArgv);
-
+static INT32 _VRMSetTriggeMode(INT32 i4Argc, const CHAR **szArgv);
 #endif
 
 CLIMOD_DEBUG_FUNCTIONS(SCPOS)
@@ -132,7 +132,8 @@ CLI_EXEC_T arVrmCmdTbl[] =
     {"Force ovsn module",   "fom",   _VRMSetForceOvsnModule,NULL, "Set Forced overscan module",  CLI_GUEST},
     {"Get ovsn module",     "gom",   _VRMSetGetOvsnModule,  NULL, "Get overscan module",         CLI_GUEST},
     {"Set App mode",        "appset",_VRMSetAppMode,        NULL, "Set application mode",        CLI_SUPERVISOR},
-    {"Get App mode",        "appget",_VRMGetAppMode,        NULL, "Get application mode",        CLI_SUPERVISOR},    
+    {"Get App mode",        "appget",_VRMGetAppMode,        NULL, "Get application mode",        CLI_SUPERVISOR},
+    {"Set Trig mode",       "st",    _VRMSetTriggeMode,     NULL, "Set Trigger mode",            CLI_SUPERVISOR},
     #endif
     CLIMOD_DEBUG_CLIENTRY(SCPOS),    
     {NULL, NULL, NULL, NULL, NULL, CLI_SUPERVISOR}
@@ -395,6 +396,31 @@ static INT32 _VRMGetAppMode(INT32 i4Argc, const CHAR **szArgv)
     return 0;    
 }
 
+static INT32 _VRMSetTriggeMode(INT32 i4Argc, const CHAR **szArgv)
+{
+	UINT8 bPath;
+    UINT8 bTriggerMode;
+    
+    if(i4Argc != 3 && i4Argc != 2)
+    {  
+        Printf("[path]   0:main 1:sub\n");
+        Printf("[status] 0:B2R_TRIG_START 1:B2R_TRIG_WAITING 2:B2R_TRIG_OFF\n");        
+        return 0;
+    }
 
+	bPath = ((UINT8)StrToInt(szArgv[1])==0)? SV_VP_MAIN:SV_VP_PIP;
+	
+	if(i4Argc == 3)
+	{
+	    bTriggerMode = (UINT8)StrToInt(szArgv[2]);
+		vVRMSetB2RTriggerStatus(bPath, bTriggerMode);		
+	}
+	else if(i4Argc == 2)
+	{
+		vDrvFirePDSImportTrigger(bPath); 
+	}
+	return 0; 	
+
+}
 #endif 
  

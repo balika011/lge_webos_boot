@@ -260,8 +260,8 @@ void vVRMDumpAllVRMInfo(void)
     {
         LOG(0, "SCART: %d\n", SCPIP_READ_FLD(SCPIP_SCSYS_14, SCSYS_14_SC_TVE_SRC_SEL)); // FIXME
     }
-    LOG(2,"Seamless change %d\n",VDP_GetSeamlessInfo(bPath, &b2rVrmInfo)!=VDP_SET_ERROR);
-    LOG(2,"Seamless change with %d height %d\n",b2rVrmInfo.u4SrcWidth,b2rVrmInfo.u4SrcHeight);
+    LOG(1,"Seamless change %d\n",VDP_GetSeamlessInfo(bPath, &b2rVrmInfo)!=VDP_SET_ERROR);
+    LOG(1,"Seamless change with %d height %d\n",b2rVrmInfo.u4SrcWidth,b2rVrmInfo.u4SrcHeight);
     LOG(0, "========================================================================\n");
     LOG(0, "FW STA DUMP\n");        
     LOG(0, "========================================================================\n");
@@ -275,8 +275,8 @@ void vVRMDumpAllVRMInfo(void)
         LOG(2, "\tForce Import Module 0x%X\n",_importInfo[bPath].forcedImportModule);
         LOG(2, "\tImport Module       0x%X\n",_importInfo[bPath].importModule);
         LOG(2, "\tImport Flag         0x%X\n",_importInfo[bPath].importWaitFlag); 
-        LOG(2, "\tVRMRdyForB2R          %d\n",bVRMReadyForB2R(bPath));
-        LOG(2, "\tvVRMB2RTrigge         %d\n",_eVRMWaitForB2RTrigger[bPath]);
+        LOG(1, "\tVRMRdyForB2R          %d\n",bVRMReadyForB2R(bPath));
+        LOG(1, "\tvVRMB2RTrigge         %d\n",_eVRMWaitForB2RTrigger[bPath]);
         LOG(2, "========================================================================\n");
     }
 
@@ -3205,6 +3205,12 @@ void vVRMB2RTrigger(UINT8 bPath)
 {
     _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_OFF;
     LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_OFF\n", bPath);
+}
+
+void vVRMSetB2RTriggerStatus(UINT8 bPath, UINT8 bStatus)
+{
+    _eVRMWaitForB2RTrigger[bPath] = bStatus;
+    LOG(2, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_OFF\n", bPath);
 }
 
 UINT8 bVRMUpdatingSrcRegDone(UINT8 bPath)

@@ -312,6 +312,7 @@ void vVrmUpdateOvsnModule(UINT8 bPath);
 /******B2R interface**************/
 UINT8 bVRMReadyForB2R(UINT8 bPath);
 void vVRMB2RTrigger(UINT8 bPath);
+void vVRMSetB2RTriggerStatus(UINT8 bPath, UINT8 bStatus);
 UINT8 bVRMUpdatingSrcRegDone(UINT8 bPath);
 
 #endif

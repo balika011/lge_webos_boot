@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/30 $
+ * $Date: 2015/03/04 $
  * $RCSfile: pmx_hw.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -818,6 +818,13 @@ void _PMX_Set_ALPHA_MIX_VIDEO_TOP(const UINT32* pu4Alpha)
 //-----------------------------------------------------------------------------
 void _PMX_SetBgColor(UINT32 u4Value, BOOL fgYuvMode, BOOL fgInVsync)
 {
+	//need to review,to make sure background effective align Vsync after loader
+	#if !defined(CC_MTK_LOADER)
+		fgInVsync = SV_TRUE;
+	#else
+		fgInVsync = SV_FALSE;
+	#endif
+	
     if (fgYuvMode)
     {
         _u4BgColor = _PmxRgb2Ybr(u4Value);
@@ -908,7 +915,7 @@ void PMX_OnOutputVSync(void)
 	}
 	if (_u4UpdateEvent & PMX_UPDATE_BG_COLOR)
     	{
-    	    #if defined(CC_MT5368)||defined(CC_MT5396)||defined(CC_MT5398)||defined(CC_MT5880)||defined(CC_MT5881)||defined(CC_MT5399)||defined(CC_MT5890)
+    	    #if defined(CC_MT5368)||defined(CC_MT5396)||defined(CC_MT5398)||defined(CC_MT5880)||defined(CC_MT5881)||defined(CC_MT5399)||defined(CC_MT5890)||defined(CC_MT5882)
 		    vRegWriteFldAlign(MUTE_00,_u4BgColor,BGR_BACKGROUND);
 		    vRegWriteFldAlign(MUTE_04,_u4BgColor,BGR_BACKGROUND_MJC);
 	        #else
