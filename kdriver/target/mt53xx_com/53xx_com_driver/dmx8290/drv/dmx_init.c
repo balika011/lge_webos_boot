@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/04 $
  * $RCSfile: dmx_init.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -608,21 +608,49 @@ static void _DmxSetExtPinmux(DMX_PINMUX_SEL_T ePin)
         break;
 
     case DMX_PINMUX_EXT_P:
-        //PAD_DEMOD_TSCLK    -->TSCLK
-        //PAD_DEMOD_TSVAL    -->TSVAL
-        //PAD_DEMOD_TSSYNC  -->TSSYNC
-        //PAD_CI_TSCLK           -->TSDATA1
-        //PAD_CI_TSVAL           -->TSDATA2
-        //PAD_CI_TSSYNC         -->TSDATA3
-        //PAD_CI_TSDATA0        -->TSDATA4
-        //PAD_PVR_TSCLK          -->TSDATA5
-        //PAD_PVR_TSVAL          -->TSDATA6
-        //PAD_PVR_TSSYNC        -->TSDATA7
+        if((!IS_IC_5882_ES3()) && (!IS_IC_5882_ES4()))
+        {
+            //For IC before Capri ES2 use this config
+            //PAD_DEMOD_TSCLK    -->TSCLK
+            //PAD_DEMOD_TSVAL    -->TSVAL
+            //PAD_DEMOD_TSSYNC  -->TSSYNC
+            //PAD_DEMOD_TSDATA0  -->TSDATA0
+            //PAD_CI_TSCLK           -->TSDATA1
+            //PAD_CI_TSVAL           -->TSDATA2
+            //PAD_CI_TSSYNC         -->TSDATA3
+            //PAD_CI_TSDATA0        -->TSDATA4
+            //PAD_PVR_TSCLK          -->TSDATA5
+            //PAD_PVR_TSVAL          -->TSDATA6
+            //PAD_PVR_TSSYNC        -->TSDATA7
         
-        i4Ret = BSP_PinSet(PIN_DEMOD_TSCLK, 1);
-        i4Ret = BSP_PinSet(PIN_CI_TSCLK, 1);
-        i4Ret = BSP_PinSet(PIN_CI_TSDATA0, 1);
-        i4Ret = BSP_PinSet(PIN_PVR_TSCLK, 1);
+            i4Ret = BSP_PinSet(PIN_DEMOD_TSCLK, 1);
+            i4Ret = BSP_PinSet(PIN_CI_TSCLK, 1);
+            i4Ret = BSP_PinSet(PIN_CI_TSDATA0, 1);
+            i4Ret = BSP_PinSet(PIN_PVR_TSCLK, 1);
+        }
+        else
+        {
+            //For Capri ES3, ES4
+            //PAD_DEMOD_TSCLK    -->TSCLK
+            //PAD_DEMOD_TSVAL    -->TSVAL
+            //PAD_DEMOD_TSSYNC  -->TSSYNC
+            //PAD_DEMOD_TSDATA0  -->TSDATA0
+            //PAD_GPIO42           -->TSDATA1
+            //PAD_GPIO43         -->TSDATA2
+            //PAD_GPIO44        -->TSDATA3
+            //PAD_GPIO45          -->TSDATA4
+            //PAD_GPIO46          -->TSDATA5
+            //PAD_GPIO47        -->TSDATA6
+            //PAD_RF_AGC       -->TSDATA7
+            i4Ret = BSP_PinSet(PIN_DEMOD_TSCLK, 1);
+            i4Ret = BSP_PinSet(PIN_GPIO42, 0);
+            i4Ret = BSP_PinSet(PIN_GPIO43, 0);
+            i4Ret = BSP_PinSet(PIN_GPIO44, 0);
+            i4Ret = BSP_PinSet(PIN_GPIO45, 0);
+            i4Ret = BSP_PinSet(PIN_GPIO46, 0);
+            i4Ret = BSP_PinSet(PIN_GPIO47, 0);
+            i4Ret = BSP_PinSet(PIN_RF_AGC, 0);
+        }
         break;
 
     case DMX_PINMUX_EXT_1_S:
