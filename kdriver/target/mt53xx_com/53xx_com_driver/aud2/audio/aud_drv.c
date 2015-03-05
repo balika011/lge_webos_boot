@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/05 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -773,6 +773,18 @@ static UINT32 u4OldPts = 0;
 #ifdef CC_ENABLE_AOMX
 static UINT64 u8LastGetPts = 0;
 static UINT16 u2LastGetIdx = 0xFFFF;
+#ifdef CC_AUD_ARM_RENDER
+typedef struct
+{
+    BOOL fgStart;
+    HANDLE_T hSema;
+    UINT32 u4PtsLow;
+    UINT32 u4PtsHigh;
+    UINT32 u4PtsLowLast;
+    struct timeval nTimeVal;
+} GST_TIME_STAMPL_T;
+static GST_TIME_STAMPL_T GstTimeStampe[AUD_DEC_MAX] = {{0}};
+#endif
 #endif
 static BOOL _bPanFadeUpdateEn = TRUE;
 static BOOL _bPanEnable = TRUE;
@@ -1786,6 +1798,15 @@ static void _DrvThreadInit(void)
 
 #ifdef CC_AUD_HP_DEPOP  ///For Remy, need remove "CC_DAC_DE_POP".
         VERIFY(x_sema_create(&_hSemaHpDepopWait, X_SEMA_TYPE_BINARY, X_SEMA_STATE_LOCK) == OSR_OK);
+#endif
+
+#ifdef CC_ENABLE_AOMX
+#ifdef CC_AUD_ARM_RENDER
+        VERIFY(x_sema_create(&GstTimeStampe[AUD_DEC_MAIN].hSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_UNLOCK) == OSR_OK);
+        VERIFY(x_sema_create(&GstTimeStampe[AUD_DEC_AUX].hSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_UNLOCK) == OSR_OK);
+        VERIFY(x_sema_create(&GstTimeStampe[AUD_DEC_THIRD].hSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_UNLOCK) == OSR_OK);
+        VERIFY(x_sema_create(&GstTimeStampe[AUD_DEC_4TH].hSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_UNLOCK) == OSR_OK);
+#endif
 #endif
 
         //-----------------------------------------------------------
@@ -8282,68 +8303,6 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
 }
 
 #ifdef CC_ENABLE_AOMX
-BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
-{
-    UINT8 u1DecId = rPesIn.u1DecId;
-    GST_AUDIO_PES_T rPes;
-    BOOL fgDulplicatedPts[AUD_DEC_MAX] = {FALSE};
-    static UINT64 u8LastPts[AUD_DEC_MAX] = {0};
-    
-    UINT64 u8Pts32;
-    x_memcpy((VOID *)VIRTUAL((UINT32)&rPes), (VOID *)VIRTUAL((UINT32)&rPesIn), sizeof(GST_AUDIO_PES_T));
-    // Check if dulplicated PTS
-    fgDulplicatedPts[u1DecId] = (rPes.u8Pts == u8LastPts[u1DecId]) ? TRUE : FALSE; 
-
-    u8LastPts[u1DecId] = rPes.u8Pts;
-    _arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount++; 
-    _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount ++;
-
-    // Address translation, translate virtual address to DSP internal address
-    rPes.u4Wp = DSP_INTERNAL_ADDR(rPes.u4Wp);
-
-    if (_arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount == 1)
-    {
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-        AUD_Aproc_Skip_Pts(u1DecId, 0, TRUE);
-#endif
-    }
-
-    if(!fgDulplicatedPts[u1DecId])
-    {
-        u8Pts32 = u8Div6432(rPes.u8Pts * 9,100,NULL);
-        GST_MMQueueSyncInfo(u1DecId, rPes.u8Pts, rPes.u4Wp, FALSE,u8Pts32>>32);
-        AUD_DrvPtsQueueInsert(u1DecId, rPes.u4Wp, (UINT32)u8Pts32);
-    }
-
-    if(!fgDulplicatedPts[u1DecId])
-    {
-        if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_SEND_PTS) == AUD_DBG_SYNC_SEND_PTS)
-        {
-            LOG(11,"PST=%lld, PTS=%08x, Wp=%x\n", rPes.u8Pts, (UINT32)u8Pts32, rPes.u4Wp);
-        }
-
-        if (DSP_SendPts(AUD_DSP0, u1DecId, (UINT32)u8Pts32, rPes.u4Wp) == DSP_FAIL)
-        {
-            LOG(11, "DspSendPts fail, DecId = %d\n", u1DecId);
-        }
-    }
-
-    // Check if send Play command to DSP ?
-    if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecState == AUD_DEC_PLAYING) &&
-        (_arAudDecoder[AUD_DSP0][u1DecId].eSynMode != AV_SYNC_FREE_RUN) &&
-        (!_afgIssuePlayComToDsp[AUD_DSP0][u1DecId]))
-    {
-        vDspSetFifoReadPtr(AUD_DSP0, u1DecId, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
-        DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
-
-        VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
-        _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-        LOG(1, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) for multimedia\n",
-            u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts,  _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
-    }
-    return TRUE;
-}
-
 #ifndef CC_AUD_ARM_RENDER 
 #ifdef CC_53XX_SWDMX_V2
 extern void STC_SetStcValue(UCHAR ucStcId, UINT32 u4Stc);
@@ -8413,23 +8372,17 @@ UINT64 GST_GetSTCVal(UINT8 stcId)
     return u8STC;
 }
 #else
-typedef struct
-{
-    BOOL fgStart;
-    UINT32 u4PtsLow;
-    UINT32 u4PtsHigh;
-    UINT32 u4PtsLowLast;
-    struct timeval nTimeVal;
-} GST_TIME_STAMPL_T;
-
-static GST_TIME_STAMPL_T GstTimeStampe[AUD_DEC_MAX] = {{0}};
 void GST_StartSTC(UINT8 u1DecId)
 {
+    LOG(0, "GST_StartSTC(%d)\n", u1DecId);
+    VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK);
+    
     if (!GstTimeStampe[u1DecId].fgStart)
     {
         do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
         GstTimeStampe[u1DecId].fgStart = TRUE; 
     }
+    VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
 
 void GST_StopSTC(UINT8 u1DecId)
@@ -8437,27 +8390,50 @@ void GST_StopSTC(UINT8 u1DecId)
     struct timeval tv;
     INT32 i4Diff;
 
+    LOG(0, "GST_StopSTC(%d)\n", u1DecId);
+    VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK);
+    
     if (GstTimeStampe[u1DecId].fgStart)
     {
+        GstTimeStampe[u1DecId].fgStart = FALSE; 
         do_gettimeofday(&tv);
         i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
             (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
         GstTimeStampe[u1DecId].u4PtsLow += (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
-        GstTimeStampe[u1DecId].fgStart = FALSE;
     }
+    VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
 
 void GST_SetSTCVal(UINT8 u1DecId, UINT64 u8Stc)
 {
+    LOG(0, "GST_SetSTCVal(%d), %lld\n", u1DecId, u8Stc);
+
+    VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK); 
     GstTimeStampe[u1DecId].u4PtsLow = u8Stc & 0xffffffff;;
     GstTimeStampe[u1DecId].u4PtsHigh = (u8Stc>>32) & 0xffffffff;
-    GstTimeStampe[u1DecId].u4PtsLowLast = GstTimeStampe[u1DecId].u4PtsLow; 
+    GstTimeStampe[u1DecId].u4PtsLowLast = GstTimeStampe[u1DecId].u4PtsLow;
+    VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
 
 void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
 {
-    GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
-    do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+    INT32 i4Ret;
+
+    //interrupt context: can't sleep
+    i4Ret = x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_NOWAIT);
+    if (i4Ret == OSR_OK)
+    {
+        if (GstTimeStampe[u1DecId].fgStart)
+        {
+            GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
+            do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+        }
+        else
+        {
+            LOG(0, "GST_SetPtsVal(%d), %d\n", u1DecId, u4Stc);
+        }
+        VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK);
+    }
 }
 
 UINT32 GST_GetPtsVal(UINT8 u1DecId)
@@ -8472,7 +8448,6 @@ UINT32 GST_GetPtsVal(UINT8 u1DecId)
         i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
             (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
         u4PTS = GstTimeStampe[u1DecId].u4PtsLow + (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
-
     }
     else
     {
@@ -8486,20 +8461,84 @@ UINT64 GST_GetSTCVal(UINT8 u1DecId)
     UINT32 u4STC;
     UINT64 u8STC;
 
+    VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK); 
     u4STC = GST_GetPtsVal(u1DecId);
     if((u4STC < GstTimeStampe[u1DecId].u4PtsLowLast) && 
-        (GstTimeStampe[u1DecId].u4PtsLowLast > (90000*60)) && 
+        (GstTimeStampe[u1DecId].u4PtsLowLast > (4289567296U)/*(0xFFFFFFFF - 90000*60)*/) && 
         (u4STC < (90000*60)))
     {
-        LOG(0, "H round plus one, %d, S %d, L %d \n", u1DecId, u4STC, GstTimeStampe[u1DecId].u4PtsLowLast);
+        LOG(0, "H round plus one, %d, Curret %d, Last %d \n", u1DecId, u4STC, GstTimeStampe[u1DecId].u4PtsLowLast);
         GstTimeStampe[u1DecId].u4PtsHigh++;
     }
     GstTimeStampe[u1DecId].u4PtsLowLast = u4STC;
+    VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK);
 
     u8STC = (((UINT64)GstTimeStampe[u1DecId].u4PtsHigh)<<32)|((UINT64)u4STC);
     return u8STC;
 }
 #endif
+
+BOOL GST_SendAudioPes(const GST_AUDIO_PES_T rPesIn)
+{
+    UINT8 u1DecId = rPesIn.u1DecId;
+    GST_AUDIO_PES_T rPes;
+    BOOL fgDulplicatedPts[AUD_DEC_MAX] = {FALSE};
+    static UINT64 u8LastPts[AUD_DEC_MAX] = {0};
+    
+    UINT64 u8Pts32;
+    x_memcpy((VOID *)VIRTUAL((UINT32)&rPes), (VOID *)VIRTUAL((UINT32)&rPesIn), sizeof(GST_AUDIO_PES_T));
+    // Check if dulplicated PTS
+    fgDulplicatedPts[u1DecId] = (rPes.u8Pts == u8LastPts[u1DecId]) ? TRUE : FALSE; 
+
+    u8LastPts[u1DecId] = rPes.u8Pts;
+    _arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount++; 
+    _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount ++;
+
+    // Address translation, translate virtual address to DSP internal address
+    rPes.u4Wp = DSP_INTERNAL_ADDR(rPes.u4Wp);
+
+    if (_arAudDecoder[AUD_DSP0][u1DecId].u4ReceiveValidPesCount == 1)
+    {
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        AUD_Aproc_Skip_Pts(u1DecId, 0, TRUE);
+#endif
+    }
+
+    if(!fgDulplicatedPts[u1DecId])
+    {
+        u8Pts32 = u8Div6432(rPes.u8Pts * 9,100,NULL);
+        GST_MMQueueSyncInfo(u1DecId, rPes.u8Pts, rPes.u4Wp, FALSE,u8Pts32>>32);
+        AUD_DrvPtsQueueInsert(u1DecId, rPes.u4Wp, (UINT32)u8Pts32);
+    }
+
+    if(!fgDulplicatedPts[u1DecId])
+    {
+        if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_SEND_PTS) == AUD_DBG_SYNC_SEND_PTS)
+        {
+            LOG(11,"PST=%lld, PTS=%08x, Wp=%x\n", rPes.u8Pts, (UINT32)u8Pts32, rPes.u4Wp);
+        }
+
+        if (DSP_SendPts(AUD_DSP0, u1DecId, (UINT32)u8Pts32, rPes.u4Wp) == DSP_FAIL)
+        {
+            LOG(11, "DspSendPts fail, DecId = %d\n", u1DecId);
+        }
+    }
+
+    // Check if send Play command to DSP ?
+    if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecState == AUD_DEC_PLAYING) &&
+        (_arAudDecoder[AUD_DSP0][u1DecId].eSynMode != AV_SYNC_FREE_RUN) &&
+        (!_afgIssuePlayComToDsp[AUD_DSP0][u1DecId]))
+    {
+        vDspSetFifoReadPtr(AUD_DSP0, u1DecId, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
+        DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, u1DecId)));
+
+        VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
+        _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
+        LOG(1, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) for multimedia\n",
+            u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4StartPts,  _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
+    }
+    return TRUE;
+}
 #endif
 
 #if (defined(LINUX_TURNKEY_SOLUTION) && defined(CC_ENABLE_ADECOMX)) || defined(CC_ENABLE_AOMX)
