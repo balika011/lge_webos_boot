@@ -181,7 +181,7 @@ void linux_param_set(char *kargs)
 
 			//copy pub key to mem		
 			memcpy((void *)0x4000000,  (void*)au4CheckSumTemp, sizeof(prLdrEnv->au4CustKey));
-			dump(au4CheckSumTemp,256,"publick_key");
+			//dump(au4CheckSumTemp,256,"publick_key");
 #endif
 
 	//default bootargs : default no args. So you can add.
