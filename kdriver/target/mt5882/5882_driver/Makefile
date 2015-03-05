@@ -98,7 +98,7 @@ endif
 MODULE_DIR += pmx
 MODULE_DIR += ir6896 rtc
 MODULE_DIR += uart sif5399
-MODULE_DIR += usb usb3
+MODULE_DIR += usb
 MODULE_DIR += cec
 MODULE_DIR += blkmgr
 ifdef ENABLE_SMARTCARD
