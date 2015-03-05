@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/05 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5500,8 +5500,8 @@ static UCHAR _B2R_RTFrameRateConvert(B2R_PRM_T* prFrcPrm, UCHAR ucIndex)
 
     case MPEG_FRAME_RATE_30_:
     case MPEG_FRAME_RATE_30:
-        prFrcPrm->ucInFrameRate = FBM_FRAME_RATE_60;
-        prFrcPrm->t_wfd_prm.fgDblClk = TRUE;
+        prFrcPrm->ucInFrameRate = FBM_FRAME_RATE_30;
+        //prFrcPrm->t_wfd_prm.fgDblClk = TRUE;
         break;
         
     case MPEG_FRAME_RATE_50:
