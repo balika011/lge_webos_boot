@@ -97,7 +97,7 @@ SRC =
 
 OBJ =
 
-SUB_COMPONENTS = drv_inc bsp drv_cust chip 
+SUB_COMPONENTS = drv_inc bsp drv_cust chip dmx8290
 
 # driver diag need optional directory list
 OPT_COMPONENTS +=

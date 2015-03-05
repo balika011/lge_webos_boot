@@ -103,7 +103,7 @@ LIB	= lib$(THIS_COMPONENT).a
 OBJS	:= appinit.o bim_if.o bootp.o chip_boot.o dbg_mw.o exception.o irq.o mem_mgr.o serial.o \
 	   	   board.o chip_txt.o lzhs.o printf.o timer.o assert.o \
 	   	   bsp_shadow.o chip_entry0.o chip_entry3.o nandboot.o hal_io.o \
-	   	   pcie_if.o sha256.o
+	   	   pcie_if.o gcpu_lite.o sha256.o
 
 ifeq "$(BOOT_TYPE)" "ROM2EMMC"
 OBJS += msdcboot.o
@@ -136,7 +136,7 @@ export DRV_ROOT = ../..
 endif
 
 SRC := assert.c printf.c serial.c timer.c bim_if.c  lzhs.c chip_boot.c \
-       main_boot.c bsp_shadow.c chip_entry0.c chip_entry3.c sha256.c
+       main_boot.c bsp_shadow.c chip_entry0.c chip_entry3.c gcpu_lite.c sha256.c
 
 
 SRC += nandboot.c hal_io.c
@@ -184,7 +184,7 @@ OPTIONAL_SUB_COMPONENTS =
 
 DEFINES +=
 
-CC_INC += -I./dram
+CC_INC += -I./dram -I../dmx8290/gcpu -I../dmx8290/gcpu/iram
 
 ifeq "$(5387_PRELOADER)" "y"
 else
