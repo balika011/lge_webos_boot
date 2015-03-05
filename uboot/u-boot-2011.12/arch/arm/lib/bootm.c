@@ -140,6 +140,25 @@ extern int get_blkdev_idx(const char *name);
 extern uint8_t gDispType;
 extern int getFullVerifyOTP(void);
 extern unsigned int tzcorestart;
+static void dump(unsigned char* bin, int size, char* name)
+{
+#if 1//def SECURE_DEBUG
+    int i = 0;
+    printf("%s=", name);
+
+    for (i = 0; i < size; i++)
+    {
+        if (i%16 == 0)
+        {
+            printf("\n");
+        }
+        printf("%02x ", bin[i]);
+    }
+
+    printf("\n");
+#endif
+}
+extern UINT32 au4CheckSumTemp[64];
 
 void linux_param_set(char *kargs)
 {
@@ -161,7 +180,8 @@ void linux_param_set(char *kargs)
 		LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 
 			//copy pub key to mem		
-			memcpy((void *)0x4000000,  (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
+			memcpy((void *)0x4000000,  (void*)au4CheckSumTemp, sizeof(prLdrEnv->au4CustKey));
+			dump(au4CheckSumTemp,256,"publick_key");
 #endif
 
 	//default bootargs : default no args. So you can add.
