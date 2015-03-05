@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/05 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1516,7 +1516,7 @@ BOOL VDP_PipeModeChangeing(UCHAR ucVdpId,UCHAR ucB2rId)
 VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
 {
     CONNECTION_ADAPTOR *prConnAdaptor;
-    UCHAR ucVdecId,ucConnectedCnt=0,ucPlayMode=FBM_FBG_DTV_MODE,ucFbgId ;
+    UCHAR ucVdecId,ucConnectedCnt=0,ucPlayMode=FBM_FBG_DTV_MODE;
 	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
     if(ucB2rId >= B2R_HW_MAX_ID || ucVdpId >=CONN_VDP_CNT)
     {
@@ -1524,7 +1524,6 @@ VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
         return;
     }
 
-	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
 	for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
 	{
 	   prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
@@ -1540,10 +1539,9 @@ VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
           if(ucVdecId < VDEC_MAX_ES)
           {
               prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
-              ucFbgId = FBM_GetFbgByEs(ucVdecId);
-              if(ucFbgId != FBM_FBG_ID_UNKNOWN)
+              if(prConnAdaptor->ucFbgId != FBM_FBG_ID_UNKNOWN)
               {
-                  FBM_GetPlayMode(ucFbgId,&ucPlayMode);
+                  FBM_GetPlayMode(prConnAdaptor->ucFbgId,&ucPlayMode);
                   if(ucPlayMode == FBM_FBG_MM_MODE && prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE)
                   {
                       _vDrvVideoSetMute(MUTE_MODULE_VDP, ucVdpId, 20, FALSE);
