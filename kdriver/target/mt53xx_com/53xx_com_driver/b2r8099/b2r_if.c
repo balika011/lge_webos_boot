@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/05 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1467,9 +1467,9 @@ VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
        if(rConnAdaptor[ucVdpId][ucVdecId].fgConnected && (prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE))
        {
           rConnAdaptor[ucVdpId][ucVdecId].fgModeChanging = TRUE;
-          LOG(1,"[Pipe]VDP_PipeStartSeqChange: (Vdp%d,Es%d,Fbg%d) PlayMode=%d\n",ucVdpId,ucVdecId,ucFbgId,ucPlayMode);
           prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
           FBM_GetPlayMode(ucFbgId,&ucPlayMode);
+          LOG(1,"[Pipe]VDP_PipeStartSeqChange: (Vdp%d,Es%d,Fbg%d) PlayMode=%d\n",ucVdpId,ucVdecId,ucFbgId,ucPlayMode);
           if(ucPlayMode == FBM_FBG_MM_MODE) 
           {
              _vDrvVideoSetMute(MUTE_MODULE_VDP, ucVdpId, -1, FALSE);
@@ -1525,11 +1525,6 @@ VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
     }
 
 	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
-    if(ucVdecId >= VDEC_MAX_ES)
-    {
-        return;
-    }
-    
 	for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
 	{
 	   prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
