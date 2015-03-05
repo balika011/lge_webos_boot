@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/05 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1080,7 +1080,7 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
         
 		if(bGetSignalType(ucVdpId)==SV_ST_AV)
 		{
-         _bCount=15;
+         _bCount=20;   
 		}
         #if ENABLE_PRBS_BY_DRIVER
         _bEnablePrbsByAPMute=FALSE;

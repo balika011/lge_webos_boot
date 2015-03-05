@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #26 $
+* $Revision: #27 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -6060,7 +6060,11 @@ void vDrvTvd3dSetVPresOnOffGain(UINT8 bOffGain, UINT8 bOnGain, UINT8 bThrs)
 void vDrvTvd3dSetSyncDetForTuning(BOOL fgLowSens)
 {
 #if TVD_MANUAL_VPRES_FOR_TUNING
-    _sbManualVPresForTuning = TRUE;
+    if(bGetSignalTypeAVD(0x0)==SV_ST_TV)
+    {
+		_sbManualVPresForTuning = TRUE;
+
+	}
     vIO32WriteFldMulti(DFE_0E,P_Fld(1, VPRES_SEL)|P_Fld(0x04, VPRES_MASK)); //Check VPRES 1 & VPRES 2
     vIO32WriteFldAlign(DFE_0F, DFE_NORMAL_ONOFF_THRD, VP1_THR);
     if(fgLowSens) //Lower sensitivity for auto tuning
@@ -8305,6 +8309,14 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 #if TVD_ANA_COPY_PROTECT_FILTER
     vDrvTvd3dAnaCopyProInit();
 #endif
+    if(bGetSignalTypeAVD(bPath)==SV_ST_TV)
+    {
+       vDrvTvd3dSetSyncDetForTuning(TRUE); //AVD need to fine tune the VPRES 
+	}
+	else
+	{
+	  _sbManualVPresForTuning=FALSE;
+	}
     // Connect
     if(bOnOff == SV_ON)
     {
