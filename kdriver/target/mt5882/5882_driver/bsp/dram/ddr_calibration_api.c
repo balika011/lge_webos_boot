@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/05 $
  * $RCSfile: pi_calibration_api.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2967,7 +2967,7 @@ pattern=1(0: ISI, 1: AUDIO, 2: TA4, 3: TA4-3) first_step=12 total pass=4 best_st
 #define fcTX_PERBIT_DQM 1
 #define fcTX_PERBIT_DQ 1
 
-#define fcTX_PI_OFFSET 0   // no offset
+#define fcTX_PI_OFFSET -2   // based on LGE window data
 //#define fcTX_PI_OFFSET -3   // based on waveform measurement
 
 #define DEFAULT_FIRST_DQDLY_L_PASS	-15
