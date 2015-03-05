@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/05 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1453,22 +1453,32 @@ VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
     UCHAR ucVdpId;
 	UCHAR ucVdecId,ucPlayMode = FBM_FBG_DTV_MODE ;
 	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
+    BOOL fgSeamless = TRUE;
 
-	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
-    if(ucVdecId >= VDEC_MAX_ES)
+    ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
+    if(ucVdecId < VDEC_MAX_ES)
     {
-        return ;
+        prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+        if(prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE)
+        {
+            fgSeamless = FALSE;
+        }
+    }
+    else if(FBM_GetFbgAppMode(ucFbgId) == FBM_FBG_APP_MTIMAGE)
+    {
+        fgSeamless = FALSE;
     }
 
-    prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+    if(fgSeamless)
+    {
+        return;
+    }
     
     for(ucVdpId = 0;ucVdpId < VDP_MAX; ucVdpId++)
     {  
-       if(rConnAdaptor[ucVdpId][ucVdecId].fgConnected && (prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE))
+       if(rConnAdaptor[ucVdpId][ucVdecId].fgConnected)
        {
           rConnAdaptor[ucVdpId][ucVdecId].fgModeChanging = TRUE;
-          prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
-          FBM_GetPlayMode(ucFbgId,&ucPlayMode);
           LOG(1,"[Pipe]VDP_PipeStartSeqChange: (Vdp%d,Es%d,Fbg%d) PlayMode=%d\n",ucVdpId,ucVdecId,ucFbgId,ucPlayMode);
           if(ucPlayMode == FBM_FBG_MM_MODE) 
           {
@@ -1476,6 +1486,7 @@ VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
           }
        } 
     }
+    
 	return ;
 }
 
