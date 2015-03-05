@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/05 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #32 $
+ * $Revision: #33 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -9105,7 +9105,7 @@ void _AUD_DspChannelVolShmRawValue(UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Vo
 //-----------------------------------------------------------------------------
 void _AUD_DspChannelMute(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, BOOL fgMute)
 {
-    LOG(5,"CMD: set ChannelMute: Dec(%d) Ch(%d) Mute(%d)\n",
+    LOG(0,"CMD: set ChannelMute: Dec(%d) Ch(%d) Mute(%d)\n",
         u1DecId, (UINT8)eChannel, (UINT8)fgMute);
 
 #ifndef CC_MT5391_AUD_3_DECODER
@@ -27351,7 +27351,8 @@ void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute)
     UINT32 pu4Addr[2];
 
     AUD_MIXSND_ID_VALIDATE(u4MixIdex);
-    
+
+    LOG(0, "Mixer Mute MIX(%d), MuteEnable(%d)\n", u4MixIdex, u1Mute); 
     _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute; 
     i4Vol = _AudDspToAprocVol(_au4MixSoundInputVolume[u4MixIdex]);
     if (_fgMixSoundInputMute[u4MixIdex])
@@ -27386,6 +27387,8 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     INT32 i4Vol;
 
     AUD_DEC_ID_VALIDATE(u1DecId);
+
+    LOG(0, "Input Mute Dec(%d), MuteEnable(%d)\n", u1DecId, fgMute);
 
     if (fgMute)
     {
@@ -27534,7 +27537,7 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
 
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
-    LOG(5, "%s, ouput_port = %d, DEC(%d)\n", __FUNCTION__, eAudioOutPort, u4OutSel);
+    LOG(0, "SoundConnect  current = %d, Input = %#x \n", __FUNCTION__, eAudioOutPort, u4OutSel);
     
     switch (eAudioOutPort)
     {
