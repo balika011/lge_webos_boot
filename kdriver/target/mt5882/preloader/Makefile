@@ -127,6 +127,9 @@ DEFINES += -DNDEBUG
 #DEFINES += -DNOLOG
 endif
 
+ifeq ($(LG_BOOT_TIME_REDUCE), true)
+DEFINES += -DNOLOG
+endif
 #export BUILD_LINUX_LOADER = false
 
 ifeq "$(BUILD_LINUX_LOADER)" "true"

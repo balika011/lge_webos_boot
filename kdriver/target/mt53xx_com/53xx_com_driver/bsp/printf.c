@@ -165,6 +165,11 @@ const CHAR hex2ascii_array[] = {    '0', '1', '2', '3', '4', '5', '6', '7',
 
 #define hex2ascii(h)    (hex2ascii_array[h])
 
+#if defined(NOLOG)&&defined(CC_MTK_LOADER)
+INT32
+Printf(const CHAR *fmt, ...)
+{} 
+#else
 INT32
 Printf(const CHAR *fmt, ...)
 {
@@ -197,7 +202,7 @@ Printf(const CHAR *fmt, ...)
     }
 	return retval;
 }
-
+#endif
 void
 vprintf(const char *fmt, VA_LIST ap)
 {

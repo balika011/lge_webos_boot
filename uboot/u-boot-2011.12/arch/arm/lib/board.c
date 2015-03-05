@@ -721,18 +721,6 @@ void init_tz(void)
 }
 
 #endif
-#define __raw_writelmask(addr, value, msk) \
-        __raw_writel((__raw_readl(addr) & ~(msk)) | ((value) & (msk)),addr)
-
-static void enable_tx (void)
-{
-	__raw_writelmask(0xf00280bc,0,0xe00);
-}
-
-static void disable_tx (void)
-{
-  __raw_writelmask(0xf00280bc,0x400,0xe00);
-}
 
 void board_init_f(ulong bootflag)
 {
@@ -750,7 +738,7 @@ void board_init_f(ulong bootflag)
 	__asm__ __volatile__("": : :"memory");
 
 	BIM_SetTimeLog(2);
-    enable_tx();
+
 	memset((void *)gd, 0, sizeof(gd_t));
 
 	gd->mon_len = _bss_end_ofs;

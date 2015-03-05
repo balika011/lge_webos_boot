@@ -163,6 +163,10 @@ DEFINES += -DCC_NO_CLI
 #DEFINES += -DNOLOG
 endif
 
+ifeq ($(LG_BOOT_TIME_REDUCE), true)
+DEFINES += -DNOLOG
+endif
+
 # For memory configuration
 DEFINES += -DFBM_MEM_CFG=FBM_MEM_CFG_$(FBM_MEM_CFG)
 DEFINES += -DCC_MTK_LOADER -DCC_CLI

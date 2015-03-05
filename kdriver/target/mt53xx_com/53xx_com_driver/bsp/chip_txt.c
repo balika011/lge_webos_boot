@@ -190,13 +190,6 @@ void CHIP_DisplayChar(UINT32 u4Char)
 #endif
 }
 
-void CHIP_Tx_Disable()
-{
-#if 0
-   //tx
-	IO_WRITE32MSK(0xf00280bc,0,0x400,0xe00);
-#endif
-}
 
 UINT32 CHIP_IsRemap(void)
 {

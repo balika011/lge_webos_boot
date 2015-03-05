@@ -175,11 +175,6 @@ static CHAR _CliGetCharFromBuffer(void)
 }
 #endif
 
-static void enable_tx (void)
-{
-	IO_WRITE32MSK(0xf00280bc,0,0x000,0xe00);
-}
-
 
 /******************************************************************************
 * Function		: CLI_Input(void)
@@ -203,7 +198,6 @@ void CLI_Input(void* pvArg)
 	{
 		_aszCliInputBuf[u4TempIdx][0] = ASCII_NULL;
 	}
-  enable_tx();
 #ifndef __KERNEL__
 	PrintChar(ASCII_KEY_CR);
 	PrintChar(ASCII_KEY_NL);
