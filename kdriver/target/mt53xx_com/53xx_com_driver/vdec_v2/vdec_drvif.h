@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/05 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -775,7 +775,7 @@ typedef enum
 {
     SUPER_DATA_DUMP_POINT_RECEIVE_ES,
     SUPER_DATA_DUMP_POINT_EMPTY_BUFFER,
-    SUPER_DATA_DUMP_POINT_EMPTY_TEST,
+    SUPER_DATA_DUMP_POINT_VCALLBACK,
    SUPER_DATA_DUMP_POINT_MAX
 }SUPER_DATA_DUMP_POINT_TYPE;
 
@@ -2370,6 +2370,8 @@ EXTERN UINT32 _VPUSH_GetDecoderCnt(void);
 EXTERN  ENUM_VDEC_STATE_T _VPUSH_GetDecoderStatus(UINT8 uDecId);
 EXTERN  BOOL _VPUSH_AllocDmx(VOID* prdec);
 EXTERN  BOOL _VPUSH_ReleaseDmx(VOID* prdec);
+EXTERN UINT32 VDEC_HWReadData(UCHAR ucEsId,INT32 u4StartAddr,UINT32 u4EndAddr,UINT32 u4ReadAddr,
+   UINT32 u4ReadSize,UCHAR *puOutBuf);
 
 #ifdef VDEC_DEC_REG_QUERY
 #define VDEC_REG_DUMP_DELAY( a )
@@ -2399,6 +2401,8 @@ EXTERN void vDumpRmChkSum(void);
 EXTERN inline void vDumpRvInputWnd(void);
 EXTERN inline void _VDEC_AVSDumpInputWnd(void);
 EXTERN void _VDEC_DumpAvsReg(void);
+
+
 #else
 #define VDEC_REG_DUMP_DELAY( a )    x_thread_delay( (a) )
 #endif

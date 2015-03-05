@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/05 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1594,9 +1594,14 @@ static UINT32 FBM_GetEmptyDelayTime(UCHAR ucFbgId, UINT32 *pu4Delay)
     {
         *pu4Delay = 0xfffff;
     }
+    
     if (FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE))
     {
         *pu4Delay = 0;
+    }
+    else if(_prFbg[ucFbgId].ucPlayMode == FBM_FBG_MM_MODE)
+    {
+        *pu4Delay = 0xfffff;
     }
 
     if (FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_AUTO_RENDER))
@@ -4730,6 +4735,7 @@ UCHAR FBM_GetLatestEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay)
     {
         u4Delay = 0xfffff;
     }
+    
     if (FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE))
     {
         u4Delay = 0;

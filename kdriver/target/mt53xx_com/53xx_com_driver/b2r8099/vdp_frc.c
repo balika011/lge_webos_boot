@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/05 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2630,7 +2630,7 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     }
 
 	ucEsId = prVdpConf->ucInputPort[0];
-    prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+    prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
 
 	if (prVdecEsInfo && (prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV))
 	  {
@@ -3080,7 +3080,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
 
 		prVdpConf = _B2R_GetDP(this);
 		ucEsId = prVdpConf->ucInputPort[0];
-		prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+		prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
 		 if(!prVdecEsInfo)
 		 {
 		     break;
@@ -3303,7 +3303,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                             FBM_PIC_HDR_T* prPicHdr = NULL;
                             prFrcPrm->ucFbId = FBM_GetFrameBufferFromDispQ(prFrcPrm->ucFbgId);
                             prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-                            LOG(5, "_B2R_GetFrameBufferForOMX fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
+                            LOG(5, "_B2R_GetFrameBufferForOMX fbid (%d,%d, %d)\n", prFrcPrm->ucFbgId, prFrcPrm->ucFbId,(prPicHdr?prPicHdr->i4TemporalRef:0));
                         }
                     }
                     else
@@ -5810,10 +5810,15 @@ static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
 
      x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
 
-	 
      prVdpConf = _B2R_GetDP(this);
+     
      ucEsId = prVdpConf->ucInputPort[0];
-     prVdecEsInfo = (ucEsId < MAX_ES_NS)? _VDEC_GetEsInfo(ucEsId) : NULL;
+     if(FBM_GetFbgAppMode(this->ptB2rPrm->ucFbgId) == FBM_FBG_APP_MTIMAGE)
+     {
+        return TRUE;
+     }
+     
+     prVdecEsInfo = (ucEsId < VDEC_MAX_ES) ? _VDEC_GetEsInfo(ucEsId) : NULL;
 	 if(!prVdecEsInfo)
 	 {
 	     return FALSE;
@@ -8492,7 +8497,7 @@ static INT32 _B2R_SeekErrHandle(B2R_OBJECT_T *this)
         }
 
         u1DecoderSrcId = FBM_GetDecoderSrcId(prFrcPrm->ucFbgId);
-        prVdecEsInfo = _VDEC_GetEsInfo(u1DecoderSrcId);
+        prVdecEsInfo = u1DecoderSrcId < VDEC_MAX_ES ? _VDEC_GetEsInfo(u1DecoderSrcId) : NULL;
         if(!prVdecEsInfo ||
             (prVdecEsInfo && prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_HIGH_SPEED_STORAGE))
         {

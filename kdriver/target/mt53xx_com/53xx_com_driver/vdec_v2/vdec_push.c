@@ -610,6 +610,7 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
 {
     VDEC_ES_INFO_T *prVdecEsInfo;    
     VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep;
+    VDEC_INFO_T *prVdecdInfo;
     VDEC_PES_INFO_T rPesInfo;
     UINT32 u4Addr;
     VDEC_T *prVdec;
@@ -672,6 +673,14 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
     #ifdef CC_VDEC_FMT_DETECT
     rPesInfo.u4DmxFrameType = prPes->u4FrameType;
     #endif
+
+    prVdecdInfo = _VDEC_GetInfo();
+    if(prVdecdInfo->pfnDumpData)
+    {
+        prVdecdInfo->pfnDumpData(SUPER_DATA_DUMP_POINT_VCALLBACK,rPesInfo.ucEsId,rPesInfo.u4FifoStart,
+            rPesInfo.u4FifoEnd,rPesInfo.u4VldReadPtr, 0);
+    }
+    
    // rPesInfo.fgMoveComplete = prPes->fgMoveComplete;
     //LOG(3, "%s: u4FrameAddr%x MoveComplete:%d\n", __FUNCTION__,prPes->u4FrameAddr, prPes->fgMoveComplete);
 #if 0
@@ -3678,6 +3687,10 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
 
     prVdec->fgPacketAppend = prBytesInfo->fgAppend;
     prVdec->u4PacketSize = prBytesInfo->u4BytesSize;
+    if(prBytesInfo->fgAppend)
+    {
+        LOG(3,"[VPUSH] Got a append data at 0x%llx\n",prBytesInfo->u8BytesPTS);
+    }
     
     if(prVdec->rDecryptInfo.fgDecryptPlayback)
     {
@@ -4444,13 +4457,20 @@ BOOL _VPUSH_Stop(VOID* prdec)
 
     prVdec = (VDEC_T*)prdec;
 
+    if(prVdec->eCurStateSync  == VPUSH_ST_STOP)
+    {
+        LOG(1,"_VPUSH_Stop Vpush(%d) already stoped\n");
+        return FALSE;
+    }
+    
     x_memset(&rNfyInfo, 0, sizeof(VDEC_DEC_NFY_INFO_T));
     rNfyInfo.pvTag = (void*)prdec;
     rNfyInfo.pfDecNfy = _VPUSH_VDEC_Nfy;
     VDEC_SetDecNfy(prVdec->ucVdecId, &rNfyInfo);
-
+    
     prVdec->eCurStateSync = VPUSH_ST_STOP;
     VDEC_Stop(prVdec->ucVdecId);
+
     return TRUE;
 }
 
@@ -5911,11 +5931,15 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
     FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
 #ifdef CC_VDEC_RM_SUPPORT
-    LOG(0,"Define Enable CC_VDEC_RM_SUPPORT");
+    LOG(0,"Define Enable CC_VDEC_RM_SUPPORT\n");
 #endif
 
 #ifdef CC_SUPPORT_VDEC_PREPARSE
-    LOG(0,"Define Enable CC_SUPPORT_VDEC_PREPARSE");
+    LOG(0,"Define Enable CC_SUPPORT_VDEC_PREPARSE \n");
+#endif
+
+#ifdef SUPPORT_VPUSH_TRUST_ZONE
+    LOG(0,"Define Enable SUPPORT_VPUSH_TRUST_ZONE\n");
 #endif
 
     prVdec->fgNonFirst = FALSE;
@@ -6016,6 +6040,13 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
         return;
     }
 
+    
+    if(_prVdecPush->fgOccupied[prVdec->ucVPushId] == FALSE)
+    {
+        LOG(0,"Vpush(%d) hase been released \n",prVdec->ucVPushId);
+        return ;
+    }
+    
 #if defined(CC_DTV_SUPPORT_LG)
     if (prVdec->hDataTimer)
     {

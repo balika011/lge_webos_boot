@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/05 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1309,11 +1309,11 @@ static VOID _VDP_PipeLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 	
 }
 
-
-static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcType)
+static BOOL _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcType)
 {
     B2R_HAL_OMUX_T rOmux;
     UCHAR ucPlayMode = FBM_FBG_DTV_MODE;
+
     if(prAdaptor->ucFbgId != FBM_FBG_ID_UNKNOWN)
     {
 	    B2R_OBJECT_T *this;
@@ -1322,11 +1322,13 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
             LOG(1,"[Pipe]_Vdp_PipConnect(VdpId=%d,EsId=%d,FbgId=%d,B2rId=%d SrcType=%d)\n",\
                 prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,prAdaptor->ucB2rId,eSrcType);
             prAdaptor->fgModeChanging = FALSE;
-
+            
 		   if(prAdaptor->ucVdpId == VDP_1 
-		   	  || (prAdaptor->ucVdpId == VDP_2 && B2R_GetVdpConf(VDP_1)==NULL && bApiQuearyScartOutStatus()))
+		   	  || (prAdaptor->ucVdpId == VDP_2 && bApiQuearyScartOutStatus() && B2R_GetVdpConf(VDP_1)==NULL) // sub scart out
+		   	  || (prAdaptor->ucVdpId == VDP_2 && bApiQuearyScartOutStatus() == FALSE))  //sub not scart out
 		   {
-			   
+          
+               
 			   _VDP_PipeLineSwitch(prAdaptor->ucVdpId,prAdaptor->ucB2rId); 
 			   
 			   LG_PipLine_VDP_SetEnable(prAdaptor->ucVdpId,TRUE); 
@@ -1336,8 +1338,9 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
 			   _vDrvVideoSetMute(MUTE_MODULE_B2R, prAdaptor->ucVdpId, 10, TRUE);
 			   
 			   _B2R_VsyncSendCmd(prAdaptor->ucB2rId, VDP_CMD_SET_INPUT);
-			   
-			   _VdpCheckFbgReady(prAdaptor->ucFbgId, prAdaptor->ucEsId);
+               FBM_SetFrameBufferFlag(prAdaptor->ucFbgId,FBM_FLAG_DISP_READY);
+               
+			   //_VdpCheckFbgReady(prAdaptor->ucFbgId, prAdaptor->ucEsId);
 			   
 			  //FBM_SetFrameBufferFlag(prAdaptor->ucFbgId, FBM_FLAG_SEQ_CHG);
 			   
@@ -1356,7 +1359,7 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
 		       if(ucPlayMode == FBM_FBG_MM_MODE)
 		       {
 		           LOG(0,"[Pipe]_Vdp_PipConnect scant can't connect to MM play\n");
-                   return ;
+                   return FALSE;
 		       }
 			   else
 			   {
@@ -1384,33 +1387,40 @@ static VOID _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
 
 			if(prAdaptor->ucVdpId == VDP_1)
 		    {
-               if(rConnAdaptor[VDP_2][prAdaptor->ucEsId].fgConnected)
+               if(rConnAdaptor[VDP_2][prAdaptor->ucEsId].fgConnected)  // scart out mode change.
                {
                   rConnAdaptor[VDP_2][prAdaptor->ucEsId].fgModeChanging = TRUE;
 				  vMpegModeChg(VDP_2);
 				  vMpegModeDetDone(VDP_2);
                }
 		    }
+
+            return TRUE;
             // and  fb will not been change from display to empty.
         }
         else 
         {
             LOG(0,"[Pipe][Error]_Vdp_PipConnect(VdpId=%d,EsId=%d,FbgId=%d,B2rId=%d,SrcType=%d) B2r Error\n",\
                 prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,prAdaptor->ucB2rId,eSrcType);
+
+            return FALSE;
         }
     }
     else
     {
+
         LOG(0,"[Pipe][Error]_Vdp_PipConnect(VdpId=%d,EsId=%d,ucFbgId=%d,SrcType=%d) Fbg Error\n",\
             prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,eSrcType);
+
+        return FALSE;
     }
     
-    return;
 }
 
 
 static VOID _Vdp_PipeDisConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcType)
 {   
+    UCHAR ucPlayMode = FBM_FBG_DTV_MODE;
     LOG(1,"[Pipe]_Vdp_PipDisConnect(VdpId=%d,EsId=%d,FbgId=%d,B2rId=%d SrcType=%d)\n",\
                 prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,prAdaptor->ucB2rId,eSrcType);
     B2R_MUTEX_UNLOCK(prAdaptor->ucB2rId);
@@ -1418,7 +1428,17 @@ static VOID _Vdp_PipeDisConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrc
     vMpegHdConnect(prAdaptor->ucVdpId,SV_OFF);
     _VDP_PipeLineSwitch(prAdaptor->ucVdpId,B2R_NS); 
     VDP_SetInput(prAdaptor->ucVdpId,0xff,0);    
+
     prAdaptor->fgModeChanging = FALSE;
+    
+    if(FBM_FbgValid(prAdaptor->ucFbgId))
+    {
+        FBM_GetPlayMode(prAdaptor->ucFbgId,&ucPlayMode);
+        if(eSrcType == E_CONNECT_SRC_VDP && ucPlayMode == FBM_FBG_DTV_MODE ) // MM mode need drop frame when send frame reander
+        {
+            FBM_ClrFrameBufferFlag(prAdaptor->ucFbgId,FBM_FLAG_DISP_READY);
+        }
+    }
     return;
 }
 
@@ -1432,20 +1452,30 @@ VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
 {
     UCHAR ucVdpId;
 	UCHAR ucVdecId,ucPlayMode = FBM_FBG_DTV_MODE ;
-	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
-	FBM_GetPlayMode(ucFbgId,&ucPlayMode);
-	
-	if((ucVdecId < VDEC_MAX_ES) && (ucPlayMode == FBM_FBG_DTV_MODE))
-    {
-       for(ucVdpId = 0;ucVdpId < VDP_MAX; ucVdpId++)
-       {
-          if(rConnAdaptor[ucVdpId][ucVdecId].fgConnected)
-          {
-             rConnAdaptor[ucVdpId][ucVdecId].fgModeChanging = TRUE;
-          }
-       }
-	}
+	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
 
+	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
+    if(ucVdecId >= VDEC_MAX_ES)
+    {
+        return ;
+    }
+
+    prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+    
+    for(ucVdpId = 0;ucVdpId < VDP_MAX; ucVdpId++)
+    {  
+       if(rConnAdaptor[ucVdpId][ucVdecId].fgConnected && (prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE))
+       {
+          rConnAdaptor[ucVdpId][ucVdecId].fgModeChanging = TRUE;
+          LOG(1,"[Pipe]VDP_PipeStartSeqChange: (Vdp%d,Es%d,Fbg%d) PlayMode=%d\n",ucVdpId,ucVdecId,ucFbgId,ucPlayMode);
+          prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+          FBM_GetPlayMode(ucFbgId,&ucPlayMode);
+          if(ucPlayMode == FBM_FBG_MM_MODE) 
+          {
+             _vDrvVideoSetMute(MUTE_MODULE_VDP, ucVdpId, -1, FALSE);
+          }
+       } 
+    }
 	return ;
 }
 
@@ -1486,25 +1516,48 @@ BOOL VDP_PipeModeChangeing(UCHAR ucVdpId,UCHAR ucB2rId)
 VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
 {
     CONNECTION_ADAPTOR *prConnAdaptor;
-    UCHAR ucVdecId,ucConnectedCnt=0;
+    UCHAR ucVdecId,ucConnectedCnt=0,ucPlayMode=FBM_FBG_DTV_MODE,ucFbgId ;
+	VDEC_ES_INFO_T* prVdecEsInfo = NULL;
     if(ucB2rId >= B2R_HW_MAX_ID || ucVdpId >=CONN_VDP_CNT)
     {
         LOG(0,"[Pipe][Error]VDP_PipeModeChangeDone(%d,%d) Param Error\n",ucVdpId,ucB2rId);
         return;
     }
 
+	ucVdecId = FBM_GetDecoderSrcId(ucFbgId);
+    if(ucVdecId >= VDEC_MAX_ES)
+    {
+        return;
+    }
+    
 	for(ucVdecId=0; ucVdecId < CONN_ES_CNT; ucVdecId++)
 	{
 	   prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
 	   
-	   if(/*prConnAdaptor->ucB2rId ==ucB2rId && */prConnAdaptor->fgModeChanging)
+	   if(prConnAdaptor->fgConnected && prConnAdaptor->fgModeChanging)
 	   {
 		  prConnAdaptor->fgModeChanging = FALSE;
+		  ucConnectedCnt++;
+          
 		  LOG(1,"[Pipe]Doing Mode change done, conn=%d,vdp=%d,es=%d,fbg=%d,b2r=%d\n",
 			prConnAdaptor->fgConnected,ucVdpId,ucVdecId,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId);
-		  ucConnectedCnt++;
-	   }
+
+          if(ucVdecId < VDEC_MAX_ES)
+          {
+              prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+              ucFbgId = FBM_GetFbgByEs(ucVdecId);
+              if(ucFbgId != FBM_FBG_ID_UNKNOWN)
+              {
+                  FBM_GetPlayMode(ucFbgId,&ucPlayMode);
+                  if(ucPlayMode == FBM_FBG_MM_MODE && prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE)
+                  {
+                      _vDrvVideoSetMute(MUTE_MODULE_VDP, ucVdpId, 20, FALSE);
+                  }
+              }
+          }
+       }
 	}
+
     
     LOG(1,"[Pipe]VDP_PipeModeChangeDone(%d,%d) cnt=%d\n",ucVdpId,ucB2rId,ucConnectedCnt);
     if(ucConnectedCnt > 0)
@@ -1528,6 +1581,64 @@ BOOL VDP_PipeIsConnected(UCHAR ucVdpId,UCHAR ucEsId)
         return FALSE;
     }
     return rConnAdaptor[ucVdpId][ucEsId].fgConnected;
+}
+
+BOOL VDP_PipeIsOutputReady(UCHAR ucEsId)
+{
+    UCHAR ucVdpId;
+    if(ucEsId >= CONN_ES_CNT)
+    {
+        LOG(0,"VDP_PipeIsOutputReady(%d) ParamErro\n",ucEsId);
+        return FALSE;
+    }
+    
+    PIPE_LOCK(_rPipeMutex);
+    for(ucVdpId = 0 ;ucVdpId < VDP_MAX; ucVdpId++)
+    {
+        if(rConnAdaptor[ucVdpId][ucEsId].fgVdpReady)
+        {
+            break;
+        }
+    }
+    PIPE_UNLOCK(_rPipeMutex);
+    
+    if(ucVdpId == VDP_MAX)
+    {
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }    
+}
+
+BOOL VDP_PipeIsInputReady(UCHAR ucVdpId)
+{
+    UCHAR ucEsId;
+
+    if(ucVdpId >= CONN_VDP_CNT)
+    {
+        LOG(0,"VDP_PipeIsInputReady(%d) ParamError\n",ucVdpId);
+        return FALSE;
+    }
+    PIPE_LOCK(_rPipeMutex);
+    for(ucEsId = 0;ucEsId < CONN_ES_CNT; ucEsId++)
+    {
+        if(rConnAdaptor[ucVdpId][ucEsId].fgVdecReady)
+        {
+            break;
+        }
+    }
+    PIPE_UNLOCK(_rPipeMutex);
+
+    if(ucEsId == CONN_ES_CNT)
+    {
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
 }
 
 VOID VDP_PipeGetInifor(VOID)
@@ -1601,8 +1712,10 @@ VOID VDP_PipeConnectFromVdp(UCHAR ucVdpId,UCHAR ucEsId)
         prConnAdaptor->fgVdpReady = TRUE;
         if(prConnAdaptor->fgConnected == FALSE && prConnAdaptor->fgVdecReady)
         {
-            _Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDP);
-            prConnAdaptor->fgConnected = TRUE;
+            if(_Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDP))
+            {
+                prConnAdaptor->fgConnected = TRUE;
+            }
         }
     }
     else 
@@ -1671,17 +1784,25 @@ void VDP_PipeConnectFromVdec(UCHAR ucEsId,UCHAR ucFbgId)
             {
                 prConnAdaptor->ucFbgId = ucFbgId;
                 prConnAdaptor->ucB2rId = FBM_B2rResIdAccess(ucFbgId, RES_R, NULL);
-                _Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDEC);
-                prConnAdaptor->fgConnected = TRUE;
+                if(_Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDEC))
+                {
+                    prConnAdaptor->fgConnected = TRUE;
+                }
             }
             else if(prConnAdaptor->fgConnected && prConnAdaptor->ucFbgId != ucFbgId)
             {
                LOG(1,"[Pipe]VDP_PipeConnectFromVdec,Es%d,Vdp%d do Fbg change %d->%d\n",\
                   ucEsId,ucVdpId,prConnAdaptor->ucFbgId,ucFbgId);
-                //_Vdp_PipeDisConnect(prConnAdaptor,E_CONNECT_SRC_VDEC);
+
                 prConnAdaptor->ucFbgId = ucFbgId;
                 prConnAdaptor->ucB2rId = FBM_B2rResIdAccess(ucFbgId, RES_R, NULL);
-                _Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDEC);
+                if(_Vdp_PipeConnect(prConnAdaptor,E_CONNECT_SRC_VDEC) ==  FALSE)
+                {
+                    prConnAdaptor->fgConnected = FALSE;
+                    LOG(1,"[Pipe]VDP_PipeConnectFromVdec Es%d to vdp%d change fbg%d fail, do disconnect\n",
+                        prConnAdaptor->ucEsId,prConnAdaptor->ucVdpId,ucFbgId);
+                    _Vdp_PipeDisConnect(prConnAdaptor,E_CONNECT_SRC_VDEC);
+                }
            }
            else
            {
