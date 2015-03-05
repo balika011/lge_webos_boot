@@ -123,6 +123,9 @@ IRQ_STACK_START_IN:
 
 reset:
 	bl	save_boot_params
+	
+  cpsid aif, #0x12
+	ldr sp, IRQ_STACK_START
 	/*
 	 * set the cpu to SVC32 mode
 	 */
@@ -468,13 +471,7 @@ cpu_init_crit:
 
 	.macro get_irq_stack			@ setup IRQ stack
 	
-	  ldr   r0, IRQ_STACK_START
-    mrc   p15, 0, r1, c0, c0, 5  
-    and   r1, r1, #0x03                                 /*r1 = cpu id*/
-    ldr   r2, =0x4000     /*STACK size*/
-    mul   r3,r1,r2                                  
-    sub   r0,r3
-    mov   sp, r0    /*r0 = stack pointer*/
+	  ldr   sp, IRQ_STACK_START
 	.endm
 
 	.macro get_fiq_stack			@ setup FIQ stack
@@ -518,7 +515,6 @@ not_used:
 
 	.align	5
 irq:
-	get_irq_stack
 	sub sp, sp, #S_FRAME_SIZE
   stmia   sp, {r0 - r11}          @ Calling r0-r11
   add r8, sp, #S_PC               @ !! R8 NEEDS to be saved !!
@@ -737,6 +733,19 @@ set_irq_sp:
     ldr         \cpu_reg, [r12]
     .endm
 
+	.globl secondary_setup_irq_stack			@ setup IRQ stack
+	secondary_setup_irq_stack:
+	  set_irq_mode
+	  ldr   r0, IRQ_STACK_START
+    mrc   p15, 0, r1, c0, c0, 5  
+    and   r1, r1, #0x03                                 /*r1 = cpu id*/
+    ldr   r2, =0x4000     /*STACK size*/
+    mul   r3,r1,r2                                  
+    sub   r0,r3
+    mov   sp, r0    /*r0 = stack pointer*/
+    set_svc32_mode
+	.endm
+	
     .globl setup_vector
     setup_vector:
 	/* Set V=0 in CP15 SCTRL register - for VBAR to point to vector */
@@ -825,6 +834,7 @@ set_irq_sp:
     smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_SECOND_INIT, r0 
     bl   secondary_setup_stack   
     smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_STACK_READY, r0
+    bl   secondary_setup_irq_stack
     bl   secondary_setup_mmu
     smp_dbg_wd   (SMP_RIU_BASE + (SMP_DUMMY_BANK << 1)), SMP_DBG_IN_MMU_ON, r0
 
