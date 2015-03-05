@@ -867,15 +867,20 @@ if (BIM_IS_SECURE_BOOT)
 	do
 		{
 			
+			CHAR LoadVesion[8] ={0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
 			LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 			x_memcpy((void*)prLdrEnv->au4CustKey, (void*)au1RSAPublicKey, 256);
+			x_memcpy((void*)prLdrEnv->LoadVesion, (void*)LoadVesion, 8);
+
 		}while(0);
 #else
 do
 	{
 		
+		CHAR LoadVesion[8] ={0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
 		LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 		x_memcpy((void*)prLdrEnv->au4CustKey, (void*)customer_pub_mtka5lr_key, 256);
+		x_memcpy((void*)prLdrEnv->LoadVesion, (void*)LoadVesion, 8);
 	}while(0);
 
 #endif

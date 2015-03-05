@@ -1218,6 +1218,7 @@ static int getFlashPartFileSize(const char* szPartName, unsigned int* pu4Size)
 //    return BIM_READ32(REG_RW_TIMER2_LOW);
 //}
 UINT32 au4CheckSumTemp[SIGNATURE_SIZE];
+char LoadVesion[8];
 
 int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char *pu1EncryptedSignature)
 {
@@ -1261,6 +1262,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
         INT32 i4Ret = -1;
 		static INT32 IsAlradyHaveKey = 0;
 		
+		int i = 0;
 		UINT32 au4CheckSum[SIGNATURE_SIZE];
 #ifdef SECURE_DEBUG
         printf("verifySignature u4StartAddr=%x, u4Size=%x\n", u4StartAddr, u4Size);
@@ -1270,9 +1272,20 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
 	if (!IsAlradyHaveKey)
 		{
         	memcpy((void*)au4CheckSumTemp, (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
+        	memcpy((void*)LoadVesion, (void*)prLdrEnv->LoadVesion, sizeof(prLdrEnv->LoadVesion));
 			IsAlradyHaveKey = 1;
 		}
 			
+#if 1//def SECURE_DEBUG
+			
+				for (i = 0; i < 8; i++)
+				{
+
+					printf("%02x ", LoadVesion[i]);
+				}
+			
+				printf("\n");
+#endif
         memcpy((void*)au4CheckSum, (void*)au4CheckSumTemp, sizeof(au4CheckSum));
 #else  //use vendor public key
         memcpy((void*)au4CheckSum, (void*)au4CustKey, 256);

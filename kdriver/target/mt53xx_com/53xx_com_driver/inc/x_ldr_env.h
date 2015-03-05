@@ -144,7 +144,8 @@ typedef struct
 	UINT8 aes_key2[16];  // preloader -> loader
 	UINT8 aes_iv2[16]; //preloader -> loader
 #endif
-
+	
+	CHAR LoadVesion[8];
 
 } LDR_ENV_T;
 
