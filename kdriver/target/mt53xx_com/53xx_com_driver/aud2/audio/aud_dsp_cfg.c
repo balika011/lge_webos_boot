@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/06 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #33 $
+ * $Revision: #34 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -16267,6 +16267,8 @@ void _AUD_DspSpeed(UINT8 u1DecId, UINT16 u1Speed)
 	
     vWriteShmUINT16(AUD_DSP0, u2ShmIndex, u1Speed);
     DSP_SendDspTaskCmd(AUD_DSP0, u2UopIndex);
+    
+    LOG(3, "_AUD_DspSpeed, u1DecId = %d, u1Speed = %d\n", u1DecId, u1Speed);
 }
 
 typedef struct {

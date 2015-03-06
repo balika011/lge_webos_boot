@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/27 $
+ * $Date: 2015/03/06 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1920,16 +1920,16 @@ void vDspFlushDone(UINT8 u1DspId, UINT8 u1DecId)
     if (u1DecId == AUD_DEC_MAIN)
     {
         WriteDspCommDram(u1DspId, ADDR_D2RC_RISC_INFO_APUT_BANK_DEC1,0); //dsp will not clear this common dram when stop. so we clean by driver
-        vWriteDspShmWORD(u1DspId, W_SPEED,0x0);
+        //vWriteDspShmWORD(u1DspId, W_SPEED,0x0); //not reset to 0 by driver, LGE Gstreamer will set to normal play mode.
     }
     else if (u1DecId == AUD_DEC_AUX)
     {
-        vWriteDspShmWORD(u1DspId, W_SPEED_DEC2,0x0);
+        //vWriteDspShmWORD(u1DspId, W_SPEED_DEC2,0x0); //not reset to 0 by driver, LGE Gstreamer will set to normal play mode.
         WriteDspCommDram(u1DspId, ADDR_D2RC_RISC_INFO_APUT_BANK_DEC2,0); //dsp will not clear this common dram when stop. so we clean by driver
     }
     else if (u1DecId == AUD_DEC_THIRD)
     {
-        vWriteDspShmWORD(u1DspId, W_SPEED_DEC3,0x0);
+        //vWriteDspShmWORD(u1DspId, W_SPEED_DEC3,0x0); //not reset to 0 by driver, LGE Gstreamer will set to normal play mode.
         WriteDspCommDram(u1DspId, ADDR_D2RC_RISC_INFO_APUT_BANK_DEC3,0); //dsp will not clear this common dram when stop. so we clean by driver
     }
 #ifdef DATA_DISC_WMA_SUPPORT
@@ -7464,7 +7464,7 @@ UINT8 DSP_GetAcmod(UINT8 u1DecId)
         u1Acmode = (dReadDspCommDram(AUD_DSP0, ADDR_D2RC_AC3_ACMOD)>>8);
         break;
    }
-    LOG(3, " DSP_GetAcmod: u1Acmode = 0x%x \n", u1Acmode);
+    LOG(7, " DSP_GetAcmod: u1Acmode = 0x%x \n", u1Acmode);
 
     return u1Acmode;
 }
@@ -7490,7 +7490,7 @@ UINT8 DSP_GetAc3DecType(UINT8 u1DecId)
         u1Ac3DecType = (dReadDspCommDram(AUD_DSP0, ADDR_D2RC_AC3_DECTYPE)>>8);
         break;
    }
-    LOG(3, " DSP_GetAc3DecType: u1Ac3DecType = 0x%x \n", u1Ac3DecType);
+    LOG(7, " DSP_GetAc3DecType: u1Ac3DecType = 0x%x \n", u1Ac3DecType);
 
     return u1Ac3DecType;
 }

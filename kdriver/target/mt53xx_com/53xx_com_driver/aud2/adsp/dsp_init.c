@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/06 $
  * $RCSfile: dsp_init.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4244,7 +4244,7 @@ void vDspPlayCommonInit (UINT8 u1DspId)
     vWriteDspWORD (u1DspId, ADDR_RC2D_1ST_PTS_STCL,
         u2ReadDspShmWORD (u1DspId, W_1ST_PTS_STCL));
 
-    //Reset Speed to 0
+    //not reset to 0 by driver, LGE Gstreamer will set to normal play mode.
     vWriteDspWORD (u1DspId, ADDR_RC2D_SPEED, u2ReadDspShmWORD (u1DspId, W_SPEED));
 
     vWriteDspWORD (u1DspId, ADDR_RC2D_KARAOKE_FLAG, uReadDspShmBYTE (u1DspId, B_KARAFLAG));
@@ -4656,8 +4656,8 @@ void vDspPlayCommonInitDec2 (UINT8 u1DspId)
     vWriteDspWORD (u1DspId, ADDR_RC2D_1ST_PTS_STCL_DEC2,
         u2ReadDspShmWORD (u1DspId, W_1ST_PTS_STCL_DEC2));
 
-    //Reset Speed to 0
-    vWriteDspWORD (u1DspId, ADDR_RC2D_SPEED_DEC2, u2ReadDspShmWORD (u1DspId, W_SPEED));
+    //not reset to 0 by driver, LGE Gstreamer will set to normal play mode.
+    vWriteDspWORD (u1DspId, ADDR_RC2D_SPEED_DEC2, u2ReadDspShmWORD (u1DspId, W_SPEED_DEC2));
     vWriteDspWORD (u1DspId, ADDR_RC2D_KARAOKE_FLAG_DEC2, uReadDspShmBYTE (u1DspId, B_KARAFLAG));
     WriteDspCommDram (u1DspId, ADDR_RC2D_LRCH_MIX_RATIO_DEC2,
         u4ReadDspShmDWRD (u1DspId, D_LRMIXRATIO));
