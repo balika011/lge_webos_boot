@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #27 $
+* $Revision: #28 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4223,7 +4223,7 @@ static void _svDrvTvdModeChgDone(void)
     //Restore 443 and PAL_UP PAL_DN gain. (Fast chennel is On in SetChNo() in srvext.c). Benson.06.02.27.
     if(_rTvd3dStatus.eSourceType==SV_ST_TV && _rTvd3dStatus.fgVPres)
     {
-        vTvd3dFastChannelChange(SV_OFF);
+        vTvd3dFastChannelChange(SV_ON);
     }
 
     if(_rTvd3dStatus.fgVPres == 0)
@@ -6808,7 +6808,7 @@ void vTvd3dBHModeDone(void)
             // Before Turn on TDC, Set the parameter of TDC
             vDrvTDCActive(SV_ON);
         }
-
+        
         if(_rTvd3dStatus.fgIs525)
         {
             // Set DEF VSYNC MASK to avoid BAD VBI affecting Peak white limit.
@@ -7850,6 +7850,28 @@ void vTvd3dVSyncISR(void)
 		 vIO32WriteFldAlign(DFE_02, DFE_BLANK_LPF_BW_CCI, BLANK_BW);
 		 vIO32WriteFldAlign(DFE_02, 0x1, Y4H_BW);
 		 LOG(1,"[TVD_DBG_MSG]change channel issue.\n");
+	}
+				
+#endif
+
+#if 1
+	if ((_svDrvTvdCheckSignalStatus((UINT8)SV_VDO_STABLE))
+				&& (_rTvd3dStatus.eSourceType == SV_ST_TV) && (_rTvd3dStatus.bTvdMode == SV_CS_PAL_M)
+				&& !fgHwTvdTrick()&& !fgHwTvdVCRBV()
+				&&(IO32ReadFldAlign(TG_STA_00, SERR_WIDTH)>0x90)&&(IO32ReadFldAlign(TG_STA_00, SERR_WIDTH)<0xB0)
+				&&	fgHwTvdVLock()&&fgHwTvdBLock()
+				&& !fgHwTvdFHPos() && !fgHwTvdFHNeg()
+				&& IO32ReadFldAlign(TG_STA_05, LINE_STDFH_FLAG)&&IO32ReadFldAlign(TG_STA_05, FRAME_STDFH_FLAG)
+				&& !fgHwTvdCoChannel()
+				&& !IO32ReadFldAlign(STA_CTG_02, CNR_LOW_FLAG)
+				&&((_sbTvdModeCnt>50))
+				)
+	
+	{
+		 vIO32WriteFldAlign(DFE_03, 0x1, AGC2_MODE);
+		 vIO32WriteFldAlign(DFE_02, DFE_BLANK_LPF_BW_CCI, BLANK_BW);//test impluse noise
+		 vIO32WriteFldAlign(DFE_02, 0x1, BLV_LIM_EN);//test impluse noise
+		 LOG(1,"[TVD_DBG_MSG]Brasil blank level issue.\n");
 	}
 				
 #endif

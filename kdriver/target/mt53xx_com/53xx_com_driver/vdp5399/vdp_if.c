@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/06 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1081,6 +1081,10 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 		if(bGetSignalType(ucVdpId)==SV_ST_AV)
 		{
          _bCount=20;   
+		}
+		if((bGetSignalType(ucVdpId)==SV_ST_TV)&&(_rTvd3dStatus.bTvdMode==SV_CS_PAL_N))
+		{
+         _bCount=15;   
 		}
         #if ENABLE_PRBS_BY_DRIVER
         _bEnablePrbsByAPMute=FALSE;
