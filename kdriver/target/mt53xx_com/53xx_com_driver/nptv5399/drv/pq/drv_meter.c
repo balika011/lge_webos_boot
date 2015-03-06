@@ -852,12 +852,19 @@ void vDrvGetSatHue2DWindowHW(void)
 
 UINT32 u4DrvGetTotalPixelCount(void)
 {
-    UINT32 u4W = IO32ReadFldAlign(SAT_HIST_X_CFG_MAIN, SAT_WIN_X_END) 
-                 - IO32ReadFldAlign(SAT_HIST_X_CFG_MAIN, SAT_WIN_X_START);
-    UINT32 u4H = IO32ReadFldAlign(SAT_HIST_Y_CFG_MAIN, SAT_WIN_Y_END) 
-                 - IO32ReadFldAlign(SAT_HIST_Y_CFG_MAIN, SAT_WIN_Y_START);
-    
-    return (u4W*u4H);    
+	VRM_INFO_T in;
+	VRM_INFO_T out;
+
+	VRMGetModuleVRMInfo(SV_VP_MAIN, VRM_MODULE_FSC, &in, &out);
+	return (out.u2Width * out.u2Height);
+#if 0
+	UINT32 u4W = IO32ReadFldAlign(SAT_HIST_X_CFG_MAIN, SAT_WIN_X_END) 
+				 - IO32ReadFldAlign(SAT_HIST_X_CFG_MAIN, SAT_WIN_X_START);
+	UINT32 u4H = IO32ReadFldAlign(SAT_HIST_Y_CFG_MAIN, SAT_WIN_Y_END) 
+				 - IO32ReadFldAlign(SAT_HIST_Y_CFG_MAIN, SAT_WIN_Y_START);
+	
+	return (u4W*u4H);	 
+#endif
 }
 
 UINT32 u4DrvGetSatHue2DWindowResult(UINT8 bWinSel, UINT16 u2NormBase)
