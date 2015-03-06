@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #28 $
+* $Revision: #29 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4223,7 +4223,14 @@ static void _svDrvTvdModeChgDone(void)
     //Restore 443 and PAL_UP PAL_DN gain. (Fast chennel is On in SetChNo() in srvext.c). Benson.06.02.27.
     if(_rTvd3dStatus.eSourceType==SV_ST_TV && _rTvd3dStatus.fgVPres)
     {
-        vTvd3dFastChannelChange(SV_ON);
+        if(_rTvd3dStatus.bTvdMode==SV_CS_PAL_N)
+        {
+			vTvd3dFastChannelChange(SV_ON);
+		}
+		else
+		{
+			vTvd3dFastChannelChange(SV_OFF);
+		}
     }
 
     if(_rTvd3dStatus.fgVPres == 0)
