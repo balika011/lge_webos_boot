@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/06 $
  * $RCSfile: gfx_common_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1096,7 +1096,11 @@ typedef enum _GFX_TASK_DCACHE_E
 
 #ifdef LINUX_TURNKEY_SOLUTION
 #ifndef ANDROID
+  #ifdef CC_GFX_MMU
 #define GFX_TASK_SUPPORT_FG            (GFX_TASK_SUPPORT_IMGRZ|GFX_TASK_SUPPORT_MMU)
+  #else
+#define GFX_TASK_SUPPORT_FG            (GFX_TASK_SUPPORT_IMGRZ)
+  #endif
 #define GFX_PRINT                       printk
 #define GFX_THREAD_PID                  (current->tgid) 
 #else
