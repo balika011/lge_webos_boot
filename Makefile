@@ -45,6 +45,11 @@ ifndef BUILD_SPC
 export BUILD_SPC := EU
 endif
 
+ifndef LG_BOOT_TIME_REDUCE
+export LG_BOOT_TIME_REDUCE := false
+endif
+
+
 PWD := $(shell pwd)
 include $(PWD)/kdriver/Makefile.mak
 export KDRIVER_ROOT = $(PWD)/kdriver
