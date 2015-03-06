@@ -466,10 +466,6 @@ if(!strcmp(bootmode,"auto"))
 					remake_hib();
 			}
 
-#ifdef SIGN_USE_PARTIAL
-			verify_apps(BOOT_COLD);
-//			BOOTLOG("verify_apps();\n");
-#endif			
 		}
 #endif
 

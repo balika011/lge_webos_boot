@@ -725,12 +725,6 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 	int part_mismatch = 0;
 	struct snapshot_header *header;
 
-#if defined(LG_CHG)
-#ifdef CONFIG_SECURITY_BOOT
-    verify_apps(BOOT_SNAPSHOT);
-#endif
-#endif
-
 	offset = g_snapshot_offset;
 	TIME_CHECK();
 	if( !offset ) {
