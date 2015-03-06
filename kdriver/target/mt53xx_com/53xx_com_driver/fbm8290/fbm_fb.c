@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/06 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2312,11 +2312,15 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
                 (_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_FIELD_READY)||
                 (_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_READY))
         {
+            if(_prFbg[ucFbgId].u1FbgAppMode != FBM_FBG_APP_MTIMAGE)
+            {
 #ifdef CC_53XX_SWDMX_V2
-            VDEC_GenPTS(_prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+                VDEC_GenPTS(_prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
 #else
-            VDEC_GenPTS(ucFbgId, ucFbId);
+                VDEC_GenPTS(ucFbgId, ucFbId);
 #endif
+            }
+
             _prFbg[ucFbgId].afgWaitDisplay[ucFbId] =  TRUE;
             _FbmPutFrameBufferToDispQ(ucFbgId, ucFbId);
 

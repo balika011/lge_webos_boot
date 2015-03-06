@@ -4264,10 +4264,20 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 {
                     ASSERT(zMsgSize == sizeof(VDEC_MSG_INTO_T));
                     if (rMsgTmp.eMsgType == VPUSH_MSG_DATA)
-                    {
-                        if (!_VPUSH_PutDataDone(prVdec, rMsgTmp.u.rBytesInfo.u4BytesAddr))
+                    {    
+                        if(prVdec->fgGstPlay)
                         {
-                            LOG(3, "%s(%d): _VPUSH_PutDataDone fail\n", __FUNCTION__, __LINE__);
+                            if (!_VPUSH_PutDataDone(prVdec, rMsgTmp.u.rBytesInfo.u4BytesTag))
+                            {
+                                LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
+                            }
+                        }
+                        else
+                        {
+                            if (!_VPUSH_PutDataDone(prVdec, prVdec->rMsg.u.rBytesInfo.u4BytesAddr))
+                            {
+                                LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
+                            }
                         }
                     }
                 }
@@ -6160,11 +6170,13 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
 
     if(prVdec->rInpStrm.fnCb.pfnVdecDecodeDone)
     {
-        prVdec->rInpStrm.fnCb.pfnVdecDecodeDone(
-            prVdec->rInpStrm.fnCb.u4DecodeTag,
-            prPicNfyInfo->ucFbgId,
-            prPicNfyInfo->ucFbId,
-            prPicNfyInfo->fgEos);
+        if(prVdec->rInpStrm.fnCb.pfnVdecDecodeDone(prVdec->rInpStrm.fnCb.u4DecodeTag,
+            prPicNfyInfo->ucFbgId,prPicNfyInfo->ucFbId,prPicNfyInfo->fgEos) == FALSE)
+        {
+            LOG(2,"_VPUSH_DecodeDone notify(%d,%d) fail\n",prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId);
+            //FBM_SetFrameBufferStatus(prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId, FBM_FB_STATUS_LOCK);
+           // FBM_SetFrameBufferStatus(prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId,FBM_FB_STATUS_EMPTY);
+        }
     }
     return;
 }

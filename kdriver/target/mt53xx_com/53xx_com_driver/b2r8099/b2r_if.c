@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/06 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #25 $
+ * $Revision: #26 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2970,7 +2970,7 @@ VOID VDP_DropB2RAysyncRenderFrame(UCHAR ucFbgId)
     {
         FBM_SetFrameBufferStatus(ucFbgId, u1DispFbId, FBM_FB_STATUS_LOCK);
         FBM_SetFrameBufferStatus(ucFbgId, u1DispFbId, FBM_FB_STATUS_EMPTY);
-        LOG(1,"VDP_DropB2RAysyncRenderFrame,fbg=%d,fb=%d\n",ucFbgId,u1DispFbId);
+        LOG(2,"VDP_DropB2RAysyncRenderFrame,fbg=%d,fb=%d\n",ucFbgId,u1DispFbId);
     }
     else
     {
