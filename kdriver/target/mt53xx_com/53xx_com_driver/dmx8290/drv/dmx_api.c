@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/03/06 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -545,7 +545,7 @@ void* _Dmx_AllocPsiBuffer(UINT32 u4Size)
     void *pBuf;
 
     pBuf = dlmalloc(u4Size);
-    LOG(0, "%s: 0x%x, line=%d\n", __FUNCTION__, (UINT32)pBuf, __LINE__);
+    LOG(7, "%s: 0x%x, line=%d\n", __FUNCTION__, (UINT32)pBuf, __LINE__);
 
     pBuf = (void *)PHYSICAL((UINT32)pBuf);
 
