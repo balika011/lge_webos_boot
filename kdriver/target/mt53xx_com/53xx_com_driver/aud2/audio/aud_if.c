@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/06 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1394,7 +1394,7 @@ INT32 AUD_DSPCmdPlay(UINT8 u1DspId, UINT8 u1DecId)
 #endif
 #endif    
 
-    LOG(0, "CMD: set Play: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Play: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1597,7 +1597,7 @@ INT32 AUD_DSPCmdPlayAsyn(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 {
-    LOG(0, "CMD: set Resume: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Resume: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1634,7 +1634,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
 {
-    LOG(0, "CMD: set Pause: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Pause: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1724,7 +1724,7 @@ INT32 AUD_DSPCmdStop(UINT8 u1DspId, UINT8 u1DecId)
 #endif    
 #endif
 
-    LOG(0, "CMD: set Stop: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Stop: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);

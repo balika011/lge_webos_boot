@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/06 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #34 $
+ * $Revision: #35 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27539,7 +27539,7 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
 
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
-    LOG(0, "SoundConnect  current = %d, Input = %#x \n", __FUNCTION__, eAudioOutPort, u4OutSel);
+    LOG(2, "SoundConnect  current = %#x, Input = %#x \n", __FUNCTION__, eAudioOutPort, u4OutSel);
     
     switch (eAudioOutPort)
     {
