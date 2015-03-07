@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #29 $
+* $Revision: #30 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -6439,7 +6439,7 @@ void vTvd3dSetAAF(UINT8 bValue)
 {
     if(_sbIsSetAAFbyAP == SV_ON)
     {
-        return;
+        //return;
     }
 
     vIO32WriteFldAlign(VSRC_07, bValue, AAF_SEL);
@@ -7061,6 +7061,11 @@ void vTvd3dVSyncISR(void)
     }
 
     _bTvdISRCnt++;
+	if((_rTvd3dStatus.bTvdMode==SV_CS_SECAM)&&(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV)&&(_svDrvTvdCheckSignalStatus((UINT8)SV_VDO_STABLE)))
+	{
+		vTvd3dSetAAF(1);
+		LOG(3, "[TVD_DBG_MSG] SECAM colorbar noise issue.\n");
+	}
 #if TVD_VCR_BV_STA
     _sbDrvTvdSetVCRBVSta(fgHwTvdVCRBV(), &_fgVCRBV);
 #endif
