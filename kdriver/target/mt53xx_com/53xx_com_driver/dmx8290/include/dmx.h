@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/08 $
  * $RCSfile: dmx.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -936,6 +936,7 @@ EXTERN INT32 _i4DmxErrReason;
 #define CT_TSIDX_SETTING        (*(volatile UINT32*)(DEMUX7_BASE + 0x8))
 #define SECTIONFILTER_SETTING   (*(volatile UINT32*)(DEMUX7_BASE + 0xC))
 #define B_FRAME_DROP_ENABLE     (*(volatile UINT32*)(DEMUX7_BASE + 0x10))
+#define VCT_SOFTFILTER_SETTING    (*(volatile UINT32*)(DEMUX7_BASE + 0x10))
 #endif
 
 #define RV_SETTING_SIZE         (33)//132 byte
@@ -1216,6 +1217,8 @@ EXTERN BOOL _DMX_Capture_ChannelChangeStart(void);
 //
 // PSI
 //
+EXTERN VOID _DMX_VCTSoftFilterEnable(BOOL fgEnable, UINT8 TableId);
+
 EXTERN void _DMX_SetFilterType(FILTER_TYPE_T eType);
 
 EXTERN FILTER_TYPE_T _DMX_GetFilterType(void);

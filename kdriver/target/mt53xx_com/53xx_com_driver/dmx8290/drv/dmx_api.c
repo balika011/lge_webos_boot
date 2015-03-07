@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/08 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1586,6 +1586,62 @@ BOOL _DMX_GetVideoPidx(UINT8 u1Channel, UINT8* pu1Pidx)
     return FALSE;
 }
 
+//-----------------------------------------------------------------------------
+/** _DMX_VCTSoftFilterEnable
+ *  fgEnable - filter enable flags,enable/disable
+ *                true means use old method to check duplicate packet
+ *  TableId -  pidval 0x1ffb's tableid that be filtered.for 0x1ffb psi 
+ *             need Micro-code soft filter(tableid 0xc8 0xc9)
+ */
+//-----------------------------------------------------------------------------
+VOID _DMX_VCTSoftFilterEnable(BOOL fgEnable, UINT8 TableId)
+{
+#ifndef CC_MT5890
+
+    UINT32 u4Ctrl;
+    UINT8 u1bitoffset;
+
+    _DMX_Lock();
+  
+    u4Ctrl = VCT_SOFTFILTER_SETTING;
+
+    //filter table id Micro-code just support table 0xc8,0xc9
+    //if((TableId!=0xc7)&&(TableId!=0xc8)&&(TableId!=0xc9)&&(TableId!=0xcd))
+    if((TableId!=0xc8)&&(TableId!=0xc9))
+    {
+           _DMX_Unlock();
+           LOG(5,"[%S],VCT softfilter error,table id not meet.\n",__FUNCTION__);
+           return;
+    }
+    switch(TableId)
+    {
+        case 0xc8:
+            u1bitoffset = 0;
+            break;
+        case 0xc9:
+            u1bitoffset = 1;
+            break;
+
+        default:
+            break;
+    }
+    
+    if (fgEnable)
+    {
+        // enable vct softfilter
+        u4Ctrl |= (0x1<<(u1bitoffset+8));
+    }
+    else
+    {
+        // disable vct softfilter
+        u4Ctrl &= (~(0x1<<(u1bitoffset+8)));
+    }
+    
+    VCT_SOFTFILTER_SETTING = u4Ctrl;   
+    _DMX_Unlock();
+    
+#endif
+}
 
 //-----------------------------------------------------------------------------
 /** _DMX_GetPidStruct
@@ -2271,7 +2327,13 @@ BOOL _DMX_SetGenFilter(UINT8 u1FilterIndex, UINT32 u4Flags,
                 (prFilter->au1PosNeg[6] << 8)  |
                 (prFilter->au1PosNeg[7]);
     }
-
+    //for VCT PSI,use _DMX_VCTSoftFilterEnable() must be called
+    prPidStruct = &_arPidStruct[prFilterStruct->rGeneric.u1Pidx];
+    if(prPidStruct->u2Pid==0x1FFB)
+    {
+        _DMX_VCTSoftFilterEnable(prFilter->fgEnable,prFilterStruct->rGeneric.au1Data[0]);
+        LOG(0,"_DMX_VCTSoftFilterEnable, enable %d,table id 0x%x.\n",prFilter->fgEnable,prFilterStruct->rGeneric.au1Data[0]);
+    }
     SECTION_FILTER_CTRL(u1FilterIndex) = u4FilterWord;
 
     _DMX_Unlock();
