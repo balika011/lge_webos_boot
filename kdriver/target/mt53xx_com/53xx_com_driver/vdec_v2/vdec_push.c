@@ -4290,8 +4290,11 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 {
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
+                
                 VDEC_ReleaseDispQ(prVdec->ucVdecId);
                 _VPUSH_FlushEsmQ(prVdec->ucVdecId);
+                VDEC_ReleaseDispQ(prVdec->ucVdecId);
+                
                 //flush again to free frame flushed.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL)
                 {
