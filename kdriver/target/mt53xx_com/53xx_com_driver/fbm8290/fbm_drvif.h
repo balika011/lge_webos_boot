@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/07 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1336,7 +1336,8 @@ typedef struct
     //Seamless playback info
     BOOL fgSeamlessPlay;
     UINT32 eSeamlessMode;
-    
+    UINT32 u41stPicInfoCbPts;
+	UINT32 u4AVSyncNGCnt;
 } FBM_SEQ_HDR_T;
 
 // This structure must be same with VDEC_PIC_EXTRA_INFO_T

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/07 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -186,6 +186,7 @@
 #include "x_bim.h"
 #include "b2r_hal.h"
 #include "vdo_rm.h"
+#include "stc_drvif.h"
 
 #include "x_lint.h"
 //LINT_EXT_HEADER_BEGIN
@@ -1170,7 +1171,7 @@ static UINT32 _B2R_FrmInit(UCHAR ucB2rId, UCHAR ucPort, BOOL fgCreateThread)
 
 #ifdef CC_B2R_WAIT_NPTV_STABLE
     prB2rVar->u4WaitNPTVStableCount = 0;
-    prB2rVar->fgNPTVStable = FALSE;
+    prB2rVar->fgNPTVStable = TRUE;
 #endif
 
     // default value
@@ -1420,12 +1421,12 @@ static void _B2R_ChangeFrameBuffer(B2R_OBJECT_T* this)
             
 
             LOG(5,"_B2R_ChangeFrameBuffer: Fbg=%d, Fb=%d,u2TargetNs=%d\n", prFrcPrm->ucFbgId,prFrcPrm->ucFbId,prFrcPrm->u2TargetNs);
-             prFrcPrm->u4FrameCount++;
-			if(prFrcPrm->u4FrameCount>=prFrcPrm->ucInFrameRate)
-			{
-				 prFrcPrm->u4FrameCount=0;
-				 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-			}
+    //         prFrcPrm->u4FrameCount++;
+	//		if(prFrcPrm->u4FrameCount>=prFrcPrm->ucInFrameRate)
+	//		{
+	//			 prFrcPrm->u4FrameCount=0;
+	//			 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+	//		}
             if ((prFrcPrm->u2TargetNs != 0) &&
                     (prFrcPrm->ucFbId != FBM_FB_ID_UNKNOWN))
             {
@@ -4547,7 +4548,7 @@ static void _B2R_GetNextDisp(B2R_OBJECT_T* this)
 #ifdef CC_3D_MM_DS_SUPPORT
     UINT8 u1AppModeSub =0;
 #endif
-    
+    FBM_SEQ_HDR_T *prFbmSeqHdr;
 
     if (!this)
     {
@@ -4606,6 +4607,55 @@ static void _B2R_GetNextDisp(B2R_OBJECT_T* this)
                 _B2R_GetFrameBuffer(this);
             }
         }
+        if(prFrcPrm->ucFbId != FBM_FB_ID_UNKNOWN)
+		{
+		     STC_CLOCK rStcClk;
+	         UCHAR ucAvSyncMode;
+             UCHAR ucStcSrc;
+             prFbmSeqHdr = FBM_GetFrameBufferSeqHdr(prFrcPrm->ucFbgId);
+			 if(prFbmSeqHdr && prFbmSeqHdr->u41stPicInfoCbPts)
+			{
+
+					FBM_GetSyncStc(prFrcPrm->ucFbgId, &ucAvSyncMode, &ucStcSrc);
+					STC_GetSrc(ucStcSrc, &rStcClk);
+					LOG(2,"u41stPicInfoCbPts=%x,rStcClk.u4Base=%x,->u4AVSyncNGCnt=%d,prFrcPrm->ucInFrameRate=%d\n",prFbmSeqHdr->u41stPicInfoCbPts ,rStcClk.u4Base,prFbmSeqHdr->u4AVSyncNGCnt ,prFrcPrm->ucInFrameRate);
+					if(prFbmSeqHdr->u41stPicInfoCbPts > rStcClk.u4Base)
+					{
+						
+						
+						if( (prFbmSeqHdr->u4AVSyncNGCnt > prFrcPrm->ucInFrameRate))
+						{
+							 FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+							 prFbmSeqHdr->u4AVSyncNGCnt = 0xffffffff;
+						}
+						else
+						{
+							prFbmSeqHdr->u4AVSyncNGCnt++;
+						}
+					
+						
+					}
+					else
+					{//if stc > pic info cb pts, then cb always. 
+						FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+					    prFbmSeqHdr->u4AVSyncNGCnt = 0xffffffff;
+					}
+			}
+			else
+			{
+			     LOG(2,"Error handle u41stPicInfoCbPts=%x,rStcClk.u4Base=%x,->u4AVSyncNGCnt=%d,prFrcPrm->ucInFrameRate=%d\n",prFbmSeqHdr->u41stPicInfoCbPts ,rStcClk.u4Base,prFbmSeqHdr->u4AVSyncNGCnt ,prFrcPrm->ucInFrameRate);
+			     if( (prFbmSeqHdr->u4AVSyncNGCnt > prFrcPrm->ucInFrameRate))
+				 {
+				      FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+					  prFbmSeqHdr->u4AVSyncNGCnt = 0xffffffff;
+				 }
+				 else
+                 {
+					  prFbmSeqHdr->u4AVSyncNGCnt++;
+				 }
+			     
+			}
+		}
 #ifdef CC_B2R_SUPPORT_GAME_MODE
         else if((eGameMode[ucB2rId]==B2R_GAME_MODE_LOW_DELAY)||(eGameMode[ucB2rId]==B2R_GAME_MODE_HIGHT_QUALITY))
         {

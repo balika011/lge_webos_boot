@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/07 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1041,7 +1041,7 @@ static BOOL _B2R_StartToPlay(B2R_OBJECT_T* this, UINT32 u4Delta, UINT32 u4Stc)
 #endif
     return TRUE;
 }
-
+/*
 static BOOL _B2R_IsPathMute(B2R_OBJECT_T *this)
 {
     BOOL fgRet = FALSE;
@@ -1067,7 +1067,7 @@ static BOOL _B2R_IsPathMute(B2R_OBJECT_T *this)
 
     return fgRet;
 }
-
+*/
 #ifdef CC_SUPPORT_NPTV_SEAMLESS 
 
 VOID _B2R_NPTVSeamlessStatus(B2R_OBJECT_T* this, UCHAR ucMode)
@@ -1136,147 +1136,127 @@ VOID _B2R_NPTVSeamlessStatus(B2R_OBJECT_T* this, UCHAR ucMode)
 
 static BOOL _B2R_IsNptvStable(B2R_OBJECT_T *this, UCHAR ucStcSrc, STC_CLOCK* prStcClk)
 {
-    B2R_VAR_T* prB2rVar = NULL;
-    B2R_PRM_T* prFrcPrm = NULL;
-    UCHAR ucB2rId;
-    BOOL fgRet = FALSE;
-    
-    do 
-    {
-        if (!this || !prStcClk)
-        {
-            break;
-        }
+	B2R_VAR_T* prB2rVar = NULL;
+	B2R_PRM_T* prFrcPrm = NULL;
+	UCHAR ucB2rId;
+	BOOL fgRet = FALSE;
+	
+	do 
+	{
+		if (!this || !prStcClk)
+		{
+			break;
+		}
 
-        ucB2rId  = this->ucB2rId;
-        if(ucB2rId >= B2R_NS)
-        {
-            break;
-        }
-        
-        prB2rVar = this->ptB2rVar;
-        prFrcPrm = this->ptB2rPrm;
-        if(!prB2rVar || !prFrcPrm)
-        {
-            break;
-        }
-        
-        FBM_GetPlayMode(prFrcPrm->ucFbgId,&(prB2rVar->u1PlayMode));
-        if ( (FBM_FBG_MM_MODE == prB2rVar->u1PlayMode) &&
+		ucB2rId  = this->ucB2rId;
+		if(ucB2rId >= B2R_NS)
+		{
+			break;
+		}
+		
+		prB2rVar = this->ptB2rVar;
+		prFrcPrm = this->ptB2rPrm;
+		if(!prB2rVar || !prFrcPrm)
+		{
+			break;
+		}
+		
+		FBM_GetPlayMode(prFrcPrm->ucFbgId,&(prB2rVar->u1PlayMode));
+		if ( (FBM_FBG_MM_MODE == prB2rVar->u1PlayMode) &&
 #ifdef ENABLE_MULTIMEDIA
-              (_B2R_GetContainerType(this) != SWDMX_FMT_MPEG2_TS_TIME_SHIFT) &&
+			  (_B2R_GetContainerType(this) != SWDMX_FMT_MPEG2_TS_TIME_SHIFT) &&
 #endif
-              (prFrcPrm->ucReady ==1) && !(prB2rVar->fgNPTVStable) && !(prFrcPrm->fgB2R3DEnable))
-        {
-        
-            BOOL fgSeamlessReady = FALSE;
-            #ifndef CC_SUPPORT_NPTV_SEAMLESS 
-            if (FBM_ChkSeamlessMode(prFrcPrm->ucFbgId, SEAMLESS_BY_NPTV))
-            {
-                fgSeamlessReady = FALSE;
-                if ((prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_PREPARE_WHILE_START_PLAY) && bVRMReadyForB2R(_B2R_GetVdpId(this->ucB2rId)))
-                {
-                    _B2R_NPTVSeamlessStatus(this, VDP_SMLS_READY_WHILE_START_PLAY);
-                    fgSeamlessReady = TRUE;
-                }
-                else if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_READY_WHILE_START_PLAY)
-                {
-                    fgSeamlessReady = TRUE;
-                }
-            }
-            else
-            #endif                
-            {
-                fgSeamlessReady = TRUE;
-            }
-            
-            if ((_B2R_IsPathMute(this) || !fgSeamlessReady) && (prFrcPrm->ucFbId !=FBM_FB_ID_UNKNOWN))
-            {
-                FBM_SetFrameBufferGlobalFlag(prFrcPrm->ucFbgId, FBM_FLAG_FB_NO_TIMEOUT);
+			  (prFrcPrm->ucReady ==1) && !(prB2rVar->fgNPTVStable) && !(prFrcPrm->fgB2R3DEnable))
+		{
+		
+			BOOL fgSeamlessReady = FALSE;
+        #ifndef CC_SUPPORT_NPTV_SEAMLESS 
+			if (FBM_ChkSeamlessMode(prFrcPrm->ucFbgId, SEAMLESS_BY_NPTV))
+			{
+				fgSeamlessReady = FALSE;
+				if ((prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_PREPARE_WHILE_START_PLAY) && bVRMReadyForB2R(_B2R_GetVdpId(this->ucB2rId)))
+				{
+					_B2R_NPTVSeamlessStatus(this, VDP_SMLS_READY_WHILE_START_PLAY);
+					fgSeamlessReady = TRUE;
+				}
+				else if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_READY_WHILE_START_PLAY)
+				{
+					fgSeamlessReady = TRUE;
+				}
+			}
+			else
+        #endif                
+			{
+				fgSeamlessReady = TRUE;
+			}
+			
+			if ((!fgSeamlessReady) && (prFrcPrm->ucFbId !=FBM_FB_ID_UNKNOWN))
+			{
+				// LOG(3,"wait %d vsyncs for NPTV statlbe\n",_au4WaitNPTVStableCount[prFrcPrm->ucVdpId]);
+				if (prB2rVar->fgPendingForSTC)
+				{
+					if (prStcClk->u4Base + prFrcPrm->u4OutStcPeriod < prFrcPrm->u4Pts)
+					{
+						// pending for the 1st PTS
+						_B2R_PreparePendingForNextVsync(this);
 
-                prB2rVar->fgNPTVStable = FALSE;
+						LOG(2, "%d)----Waiting for STC:x%X Frm:0x%X Prd:0x%X\n",
+							ucB2rId, prStcClk->u4Base,
+							prFrcPrm->u4Pts, prFrcPrm->u4OutStcPeriod);
 
-                (prB2rVar->u4WaitNPTVStableCount)++;
+						break;
+					}
 
-                // pending for the 1st PTS
-                _B2R_PreparePendingForNextVsync(this);
+					_B2R_SetBlack(ucB2rId, FALSE);
+					prB2rVar->fgPendingForSTC = FALSE;
+				}
+				else
+				{
+					STC_StopStc(ucStcSrc);
+					STC_SetStcValue(ucStcSrc,(UINT32)(prFrcPrm->u4Pts));
+					prStcClk->u4Base = (UINT32)(prFrcPrm->u4Pts);
+					STC_StartStc(ucStcSrc);
+					prStcClk->u4Base = prFrcPrm->u4Pts;
+				}
 
-                if (prB2rVar->fgPendingForSTC)
-                {
-                    _B2R_SetBlack(ucB2rId, TRUE);
-                }
+				prB2rVar->u4WaitNPTVStableCount = 0;
+				prB2rVar->fgNPTVStable = TRUE;
 
-                LOG(5, "VDP(%d)----Pending for wating NPTV stable %d. VRM_Ready(%d).\n",
-                    ucB2rId, prB2rVar->u4WaitNPTVStableCount, fgSeamlessReady);
+				//LOG(3,"wait %d vsyncs for NPTV statlbe\n",_au4WaitNPTVStableCount[prFrcPrm->ucVdpId]);
+            #ifndef CC_SUPPORT_NPTV_SEAMLESS  
+				if (prFrcPrm->ucSeamlessVDPMode)
+				{
+					_B2R_NPTVSeamlessStatus(this, VDP_SMLS_FRAME_COMING);
+				}
+            #endif
 
-                break;
-            }
-            else if ((!_B2R_IsPathMute(this) /*|| (_au4WaitNPTVStableCount[prFrcPrm->ucVdpId] >= 150)*/) && !(prB2rVar->fgNPTVStable))
-            {
-                // LOG(3,"wait %d vsyncs for NPTV statlbe\n",_au4WaitNPTVStableCount[prFrcPrm->ucVdpId]);
-                if (prB2rVar->fgPendingForSTC)
-                {
-                    if (prStcClk->u4Base + prFrcPrm->u4OutStcPeriod < prFrcPrm->u4Pts)
-                    {
-                        // pending for the 1st PTS
-                        _B2R_PreparePendingForNextVsync(this);
-
-                        LOG(2, "%d)----Waiting for STC:x%X Frm:0x%X Prd:0x%X\n",
-                            ucB2rId, prStcClk->u4Base,
-                            prFrcPrm->u4Pts, prFrcPrm->u4OutStcPeriod);
-
-                        break;
-                    }
-
-                    _B2R_SetBlack(ucB2rId, FALSE);
-                    prB2rVar->fgPendingForSTC = FALSE;
-                }
-                else
-                {
-                    STC_StopStc(ucStcSrc);
-                    STC_SetStcValue(ucStcSrc,(UINT32)(prFrcPrm->u4Pts));
-                    prStcClk->u4Base = (UINT32)(prFrcPrm->u4Pts);
-                    STC_StartStc(ucStcSrc);
-                    prStcClk->u4Base = prFrcPrm->u4Pts;
-                }
-
-                prB2rVar->u4WaitNPTVStableCount = 0;
-                prB2rVar->fgNPTVStable = TRUE;
-
-                //LOG(3,"wait %d vsyncs for NPTV statlbe\n",_au4WaitNPTVStableCount[prFrcPrm->ucVdpId]);
-                #ifndef CC_SUPPORT_NPTV_SEAMLESS  
-                if (prFrcPrm->ucSeamlessVDPMode)
-                {
-                    _B2R_NPTVSeamlessStatus(this, VDP_SMLS_FRAME_COMING);
-                }
-                #endif
-
-                FBM_ClrFrameBufferGlobalFlag(prFrcPrm->ucFbgId, FBM_FLAG_FB_NO_TIMEOUT);
-                FBM_SetFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_DISPLAYING);
-                LOG(3, "%d)----ready for waiting NPTV stable\n", ucB2rId);
-            }
-        }
-        else if ( prFrcPrm->fgB2R3DEnable 
+				FBM_ClrFrameBufferGlobalFlag(prFrcPrm->ucFbgId, FBM_FLAG_FB_NO_TIMEOUT);
+				FBM_SetFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_DISPLAYING);
+				LOG(3, "%d)----ready for waiting NPTV stable\n", ucB2rId);
+			}
+		}
+		else if ( prFrcPrm->fgB2R3DEnable 
 #ifdef ENABLE_MULTIMEDIA
-            || (_B2R_GetContainerType(this) == SWDMX_FMT_MPEG2_TS_TIME_SHIFT)
+			|| (_B2R_GetContainerType(this) == SWDMX_FMT_MPEG2_TS_TIME_SHIFT)
 #endif
-                 )
-        {
-            prB2rVar->fgNPTVStable = TRUE;
-            FBM_SetFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_DISPLAYING);
-        }
-        else if(0 == prFrcPrm->ucReady &&
+				 )
+		{
+			prB2rVar->fgNPTVStable = TRUE;
+			FBM_SetFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_DISPLAYING);
+		}
+		else if(0 == prFrcPrm->ucReady &&
 			FBM_FBG_MM_MODE == prB2rVar->u1PlayMode)
 		{
 			break;
 		}
 
-        fgRet = TRUE;
-        
-    }while (0);
+		fgRet = TRUE;
+		
+	}while (0);
 
-    return fgRet;
+	return fgRet;
 }
+
 
 static void _B2R_CalPtsStcDiff(UINT32 u4Pts, UINT32 u4Stc, UINT32 *pu4Diff, INT32 *pi4Diff)
 {
@@ -1877,7 +1857,7 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
     UCHAR ucB2rId;
     B2R_VAR_T* prB2rVar = NULL;
     B2R_PRM_T* prFrcPrm = NULL;
-    
+	
     if (!this)
     {
         return;
@@ -1957,21 +1937,10 @@ static void _B2R_AVSyncProc(B2R_OBJECT_T* this)
 #ifdef ENABLE_MULTIMEDIA
                 _B2R_RTAVsyncProc(this);
 #endif
-                if(i4Delta<0)
-              	{
-              	    if(i4Delta>(-u4OutFrameStc))
-              	    {
-              	         FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-              	    }
-              	}
-				else
-			    {
-			          if(i4Delta<u4OutFrameStc)
-			          {
-			              FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-			          }
-			    }
+					
+					
 
+					
                 if (!_B2R_IsPtsDrift(this, u4Delta, i4Delta, u4ZeroPtsNs, ucAvSyncMode))
                 {
                     HAL_GetTime(&(prFrcPrm->rLastAvSyncTime));
