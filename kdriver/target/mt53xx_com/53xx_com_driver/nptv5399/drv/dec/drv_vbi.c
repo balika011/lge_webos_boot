@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_vbi.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -220,6 +220,7 @@ UINT8 _u1VBI0CCRdyRatio[2] = {100, 100};
  *************************************************************************/
 extern RTvdStatus  _rTvd3dStatus;
 extern UINT8 _na_state;
+
 /**************************************************************************
  * Type definitions
  *************************************************************************/
@@ -2411,9 +2412,14 @@ void VBI_ISR(void)
 #endif
         /* VBI0: CC, V-Chip */
 #if (SUPPORT_CLOSE_CAPTION_VCHIP)
-
+        
         if(_t_VbiMode == VBI_CC_VCHIP_MODE)
         {
+            if(_gVBIInitCCDone==TRUE)
+            {
+               _u1VbiCCMainNotify=SV_ON;
+ 
+			}
             _VBI_CC_Coch_Patch(VBI0);
 
             if(IsCCEnable() && IsCCRdy())
@@ -4330,18 +4336,18 @@ void VBI_StartNotifyCCOnOff(UINT8 u1Path, UINT8 u1OnOff, NPTV_PFN_CC_NFY pfnCCno
     }
     #endif
     
-    VERIFY(x_sema_lock(_hVbiMutex, X_SEMA_OPTION_WAIT) == OSR_OK);
+    //VERIFY(x_sema_lock(_hVbiMutex, X_SEMA_OPTION_WAIT) == OSR_OK);
 
     if(u1Path == SV_VP_MAIN)
     {
-        _u1VbiCCMainNotify = u1OnOff;
+        _u1VbiCCMainNotify = u1OnOff; //when notify trhe CC data will check it again
     }
     else if(u1Path == SV_VP_PIP)
     {
         _u1VbiCCSubNotify = u1OnOff;
     }
 
-    VERIFY(x_sema_unlock(_hVbiMutex) == OSR_OK);
+    //VERIFY(x_sema_unlock(_hVbiMutex) == OSR_OK);
 }
 
 /**
