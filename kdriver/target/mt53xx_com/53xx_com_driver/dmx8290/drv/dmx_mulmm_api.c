@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/09 $
  * $RCSfile: dmx_multimm_api.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -171,10 +171,10 @@ static BOOL _DMX_MUL_UpdatePVRUse(UINT8 u1TsIdx, DMX_INPUT_TYPE_T eInputType)
 UINT8 _DMX_MUL_AllocTsIdx(UINT8 u1Inst, DMX_CONN_TYPE_T eConnType)
 {
 	INT32 i;
+    DMX_FRONTEND_CONFIG_T* prDmxFeCfgTable;
 
 	if(eConnType < DMX_CONN_TYPE_TUNER_MAX)
 	{
-        DMX_FRONTEND_CONFIG_T* prDmxFeCfgTable;
         UINT8 u1TunerID = 0;
 
         //turn 0 -- TsIdx 0 , turn 1 -- TsIdex 1 , turn 2 -- TsIdex 3
@@ -219,6 +219,12 @@ UINT8 _DMX_MUL_AllocTsIdx(UINT8 u1Inst, DMX_CONN_TYPE_T eConnType)
 				continue;
 			}
 			#endif
+        
+            UNUSED(DRVCUST_OptQuery(eDmxFrontendConfigTable, (UINT32 *)(void *)&prDmxFeCfgTable));
+            if (prDmxFeCfgTable[i].fgEnable)
+            {
+                continue;
+            }
 			
 			if(_arDmxTsIdxInfo[i].fgUsed == FALSE)
 			{
