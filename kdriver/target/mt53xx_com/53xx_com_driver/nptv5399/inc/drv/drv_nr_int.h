@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_nr_int.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_NR_INT_H_
@@ -398,6 +398,11 @@ EXTERN void vDrvAnrSetRNR(void);
 EXTERN void vDrvAnrResetRNR(void);
 EXTERN void vDrvAnrRnrProc(UINT8 u1StrLvl);
 
+//MO RNR
+EXTERN BOOL fgDrvAnrAutoOnMORNR(void);
+EXTERN BOOL fgDrvAnrFromSWMORNR(void);
+EXTERN void vDrvAnrSetMORNR(void);
+EXTERN void vDrvAnrResetMORNR(void);
 
 // MONR
 EXTERN BOOL fgDrvAnrAutoOnMOANR(void);

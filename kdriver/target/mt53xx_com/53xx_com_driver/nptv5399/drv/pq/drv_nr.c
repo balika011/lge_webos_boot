@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -505,6 +505,10 @@ void vDrvNRChromaLineAvgCfg(UINT8 bPath)
             MDDI_WRITE_FLD(VDP_1, MCVP_KC_2F, SV_OFF, PAL_C_AVG_HALF);
             break;
 
+        case SV_CS_SECAM:
+            MDDI_WRITE_FLD(VDP_1, MCVP_KC_00, SV_ON, PAL_C_AVG_EN);
+            MDDI_WRITE_FLD(VDP_1, MCVP_KC_2F, SV_ON, PAL_C_AVG_HALF);
+            break;
         default://NTSC358, NTSC443 Secam
             MDDI_WRITE_FLD(VDP_1, MCVP_KC_00, SV_OFF, PAL_C_AVG_EN);
             break;
@@ -1087,7 +1091,7 @@ void vDrvNRSetQuality(UINT8 u1Interlace, UINT16 u2Width, UINT16 u2Height)
     _SWW(NR_NM_03, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() || u1UseMoAnr ? 1 : 0), UPDATE_NL_SC);
     //_SWW(NR_NM_03, (NR_NM_TDF_BASE == u1DrvNRGetNoiseMeterSupport() || u1UseMoAnr ? 1 : 0), UPDATE_NL_SC);
     //_SWW(NR_NM_10,   u1UseMoAnr ? 0 : 1, NM_ADJ_BY_MOFBK);
-    //_SWW(NR_CTRL_01, u1UseMoAnr, ANR_SEL);
+    _SWW(NR_CTRL_01, u1UseMoAnr, ANR_SEL);
 
     _SWW(NR_CTRL_00, u4SupportHBlkMeter, EN_SUPPORT_HBLK);
 
