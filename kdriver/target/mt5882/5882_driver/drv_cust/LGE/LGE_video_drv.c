@@ -154,6 +154,7 @@ extern MMAppInfo sMMAppInfo;
 #ifdef SCE_BY_SOURCE
 extern UINT8 bSrcTimingInverseTbl[SOURCE_TYPE_TIMING_MAX+1];
 #endif
+extern UINT8 u1PreBLVL;
 
 extern void SetPeUiRangeDft_CUSTUI(PE_ARG_TYPE PeArgType);
 
@@ -1006,7 +1007,8 @@ void DRVCUST_InputCSCAdj(UINT8 bPath)
 void DRVCUST_VdoModeChgDone(UINT8 bPath)
 {
    // UNUSED(bPath);
-   DRVCUST_InputCSCAdj(bPath);
+	DRVCUST_InputCSCAdj(bPath);
+	u1PreBLVL = 0xFF; // force reload matrix when mode change.
 }
 
 

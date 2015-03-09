@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/26 $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -3157,8 +3157,17 @@ void vDrvDIForce3DModeWithDelay(void)
 {
     if ((IS_INTERLACE(VDP_1)) && (DiSta.IfSta.u4Homo == 0) && (DiSta.IfSta.u4HomoDiff == 0))
     {
-        DiPar.IfPar.bFroce3DDealy = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_IF_02, DI_FORCE_MODE_DELAY);        
+		DiPar.IfPar.bFroce3DDealy = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_IF_02, DI_FORCE_MODE_DELAY);
     }
+	else
+	{
+		DiPar.IfPar.bFroce3DDealy = 0;
+	}
+}
+
+void vDrvDISetForce3DDelay(UINT8 u1Value)
+{
+	DiPar.IfPar.bFroce3DDealy = u1Value;
 }
 
 void vDrvDISetChromaMaxMoLevel(UINT8 u1MaxMoC)

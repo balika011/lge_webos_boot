@@ -115,6 +115,8 @@
 #include "drv_tdtv_drvif.h"
 #include "hw_od.h"
 #include "drv_scaler_gfx.h"
+#include "drv_ycproc.h" 
+
 // === DEFINE =============================================================================
 #define  vDrvPoclkSetClock(x)      (vIO32WriteFldAlign(OSTG_00, x, R_POST_POCLK_EN))
 #define  vDrvOclkSetClock(x)      (vIO32WriteFldAlign(OSTG_00, x, R_POST_OCLK_EN))
@@ -179,6 +181,8 @@ static Region DemoRec; //, b4ScalerDemoRec;
 static INT8 bHMove=1, bVMove=1;
 static REGTBL_T aRegisterBuffer[REG_BUFFER_NUM];
 static UINT32 u4RegBufIndex = 0;
+static UINT8 u1VsyncCounter = 0;
+UINT8 u1PreBLVL = 0xFF;
 
 // === BODY ===============================================================================
 UINT8 bDrvCheckPqReg(UINT32* pu4Table, UINT32 u4Size)
@@ -1048,9 +1052,21 @@ void vDrvGlobalPQAdj(void)
 
 	if (IO32ReadFldAlign(PEUI_00, PEUI_IN_CSC_MODE_CHANGE_M))
 	{
-	    vDrvDIForce3DModeWithDelay();   // Avoid 3x3 matrix change then DI flicker       
-		vVdoSetColorTransform(SV_VP_MAIN);
-		vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_M);	
+    	if(vDrvGetImportWaitFlag(VDP_1) != VRM_IMPORT_WAIT_NONE)
+		{
+			u1VsyncCounter = 4;			// add for change picture mode garbage issue caused by force 3d when there is overscan change.
+		}
+
+		u1VsyncCounter = (u1VsyncCounter > 0) ? (u1VsyncCounter - 1) : 0 ;
+		
+		if((u1VsyncCounter == 0) && ((u1PreBLVL != GET_BLK_LVL(SV_VP_MAIN))))
+		{	
+			u1PreBLVL = GET_BLK_LVL(SV_VP_MAIN);
+			vDrvDIForce3DModeWithDelay();   // Avoid 3x3 matrix change then DI flicker       
+			vVdoSetColorTransform(SV_VP_MAIN);
+			vIO32WriteFldAlign(PEUI_00, SV_OFF, PEUI_IN_CSC_MODE_CHANGE_M);	
+		}
+
 	}
 
 	if (IO32ReadFldAlign(PEUI_00, PEUI_IN_CSC_MODE_CHANGE_P))

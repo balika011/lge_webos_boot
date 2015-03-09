@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: vdp_display.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -486,6 +486,7 @@ static UINT8 bVideoUpdateDispRegion(UINT8 bPath, UINT16 wXOff, UINT16 wYOff, UIN
 /**
  *  @6896 review done
  */
+extern void vDrvDISetForce3DDelay(UINT8 u1Value);
 UINT8 bVideoUpdateSrcRegion(UINT8 bPath)
 {
     UINT8 u1Interlace;
@@ -694,6 +695,7 @@ UINT8 bVideoUpdateSrcRegion(UINT8 bPath)
     //vScpipReconfig(getScalerVDP(bPath));
     if (FALSE == bVRMUpdatingSrcRegDone(bPath))
     {
+    	vDrvDISetForce3DDelay(0);
         fireVRMModeChange(bPath, VRM_EVENT_BY_VDP);
     }
     return (SV_SUCCESS);
