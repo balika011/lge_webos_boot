@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #30 $
+* $Revision: #31 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4324,7 +4324,6 @@ static void _svDrvTvdModeChgDone(void)
 
 #endif
     _svDrvTvdUpdateActiveWH();
-    
 #ifdef CC_SUPPORT_PIPELINE
 	_fVSCConnectMainAVD=((bApiQuearyVSCConnectStatus(SV_VP_MAIN)==SV_VD_TVD3D)?1:0);
 	_fVSCConnectSubAVD=((bApiQuearyVSCConnectStatus(SV_VP_PIP)==SV_VD_TVD3D)?1:0);
@@ -4679,6 +4678,7 @@ static void _svDrvTvdModeChg(void)
     #endif
 
 #if TVD_SET_ENABLED_CS
+	vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE); //Enable Menu Mode
     {
         RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
 
@@ -6840,6 +6840,9 @@ void vTvd3dBHModeDone(void)
             vIO32WriteFldAlign(TG_16, ATD_VMASK_START_PAL, ATD_VMASK_START);
             //vIO32WriteFldAlign(PQCRC_01, ATD_VMASK_START_PAL, ATD_VMASK_START_I2C);
         }
+		
+		vIO32WriteFldAlign(CDET_00, SV_ON, TVD_MMODE);
+		vIO32WriteFldAlign(CDET_00, _rTvd3dStatus.bTvdMode, TVD_MODE);
     }
 }
 
@@ -7676,7 +7679,7 @@ void vTvd3dVSyncISR(void)
 #if TVD_PHALT_MN_WA2
                     _sbForcePalMN = FALSE;
 #endif
-                    vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE);
+                    //vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE);
                     LOG(9,"[TVD_DBG_MSG] TVD_PHALT_MN_WA2 TVD_MMODE off (Low Noise) \n");
                 }
             }
@@ -8740,6 +8743,10 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
 {
     LOG(1, "[TVD_DBG_MSG] SetEnabledColorSystem mask=0x%X\n", u4ColSys);
     _rTvd3dStatus.bColSys = SV_CS_AUTO;
+	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&((u4ColSys & (1<<SV_CS_PAL_N))==1))
+	{
+		return 1;
+	}
     //if(fgIsMainTvd3d()||fgIsPipTvd3d())
     {
 #if TVD_SET_ENABLED_CS
