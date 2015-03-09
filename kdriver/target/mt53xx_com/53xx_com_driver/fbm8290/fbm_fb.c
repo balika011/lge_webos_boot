@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/09 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2457,6 +2457,13 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
                 &rPicNfyInfo);
                 
         }
+		  if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB],
+                                     _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB]))
+        {
+
+            ((FBM_FB_FAME_TYPEINFO_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB])(
+                _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
+        }
     }
     
 }
@@ -2611,7 +2618,8 @@ UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId)
         _prFbg[ucFbgId].rDisplayQ.ucReadIdx =
             (UCHAR)(_prFbg[ucFbgId].rDisplayQ.ucReadIdx + 1) % FBM_MAX_FB_NS_PER_GROUP;
         _prFbg[ucFbgId].rDisplayQ.ucCount--;
-
+		//LOG(0,"ucFbgId(%d) ucFbId(%d) FbStatus(%d)\n",ucFbgId,ucFbId, _prFbg[ucFbgId].rDisplayQ.ucCount);
+		
         if (ucFbId >= FBM_MAX_FB_NS_PER_GROUP)
         {
             LOG(0,"ucFbId(%d)\n",ucFbId);

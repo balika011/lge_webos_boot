@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/07 $
+ * $Date: 2015/03/09 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1486,6 +1486,7 @@ typedef UINT32 (*FBM_GDMA_TASK_MEMSET_DONE_FUNC)(UINT64 u8TaskId);
 
 typedef INT32 (*FBM_B2R_RES_CHG_FUNC)(UCHAR ucFbgId, B2R_CHG_INFO_T* pt_change);
 typedef VOID  (*FBM_FB_DISP_START_FUNC)(UCHAR ucEsId,UCHAR ucFbgId,UCHAR ucFbId);
+typedef VOID  (*FBM_FB_FAME_TYPEINFO_FUNC)(UCHAR ucEsId,UCHAR ucFbgId,UCHAR ucFbId);
 
 
 /** Brief of FBM_CB_FUNC_ENUM_T
@@ -1507,6 +1508,7 @@ typedef enum
     FBM_CB_FUNC_GDMA_TASK_MEMSET,
     FBM_CB_FUNC_GDMA_TASK_MEMSET_DONE,
     FBM_CB_FUNC_FB_DISPLAY_START,
+    FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB,
     FBM_CB_FUNC_NS
 } FBM_CB_FUNC_ENUM_T;
 
