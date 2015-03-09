@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/04 $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -122,6 +122,8 @@
 #include "x_typedef.h"
 #include "vdo_misc.h"
 #include "mute_if.h"
+#include "hw_ospe.h"
+
 #if HDTV_MV_DETECT_SUPPORT
 #include "api_notify.h"
 #endif
@@ -2223,7 +2225,7 @@ vSetDefaultSlicer();
                     {
                         _bUnLockCnt++;
 
-                        if((_bUnLockCnt>10) && (!fgIsAutoFlgSet(SP0_AUTO_ALL)))  // vga auto may be unlock
+                        if((_bUnLockCnt>0) && (!fgIsAutoFlgSet(SP0_AUTO_ALL)))  // vga auto may be unlock
                         {
                             DBG_Printf(DBG_MDET,"Mchg : Unlock %d\n",	_bUnLockCnt);
                             bModChg = MCHG_UNLOCK ;
@@ -2236,7 +2238,7 @@ vSetDefaultSlicer();
                         _bUnLockCnt++;
                      DBG_Printf(DBG_SLICER," [SA7] _bUnLockCnt %d vDDS_MAX_PERR %d\n", _bUnLockCnt,wDDS_MAX_PERR_temp);
 
-                        if((_bUnLockCnt>15) && (!fgIsAutoFlgSet(SP0_AUTO_ALL)))
+                        if((_bUnLockCnt>10) && (!fgIsAutoFlgSet(SP0_AUTO_ALL)))
                         {
                        DBG_Printf(DBG_SLICER,"[SA7] Lock but Error to large : vDDS_MAX_PERR %d\n", wDDS_MAX_PERR_temp);
                             bModChg = MCHG_UNLOCK ;
@@ -2248,6 +2250,13 @@ vSetDefaultSlicer();
                     {
                         _bUnLockCnt=ZERO;
                     }
+					if(bModChg  == MCHG_UNLOCK)
+					{
+						DBG_Printf(DBG_SLICER,"unlock immediately mute \n");
+						vIO32WriteFldAlign(MUTE_00, 1, R_MUTE_VS_LATCH_OFF);
+						vIO32WriteFldAlign(MUTE_00, 1, R_M_MUTE_FRONT_EN);
+						vIO32WriteFldAlign(MUTE_00, 0, R_MUTE_VS_LATCH_OFF);
+					}
 
                     // check non-standard signal
 #if ADAPTIVE_MONITOR_SLICER_MEASURE_ONLINE
