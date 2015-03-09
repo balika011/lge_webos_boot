@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/09 $
  * $RCSfile: drv_nr.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_NR_H_
@@ -100,8 +100,10 @@
 #define NR_WMSK(u4Addr, u4Value, u4Msk) \
     vIO32Write4BMsk((u4Addr), (u4Value), (u4Msk))
 
+#define _SWR_1B(addr) u1IO32Read1B(addr)
 #define _SWR_4B(addr) u4IO32Read4B(addr)
 #define _SWR(addr, fld) IO32ReadFldAlign((addr), (fld))
+#define _SWW_1B(addr, val) vIO32Write1B((addr), (val))
 #define _SWW_4B(addr, val) vIO32Write4B((addr), (val))
 #define _SWW(addr,val,fld) vIO32WriteFldAlign((addr), (val), (fld))
 #define _SWWM(addr,list) vIO32WriteFldMulti((addr),(list))

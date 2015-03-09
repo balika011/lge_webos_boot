@@ -3318,6 +3318,30 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define MONR_HIGH_FREQ_TH1             Fld(5,16,AC_MSKDW)//[20:16]
     #define MONR_HIGH_FREQ_TH2           Fld(5,24,AC_MSKDW)//[28:24]
     #define MONR_SUB_WEI_EN           Fld(1,31,AC_MSKDW)//[31:31]
+#define NR_MO_06     u4SWReg(0x7A68)
+    #define MONR_CORING_H1_MO   Fld(8,0,AC_MSKDW)//[7:0]
+    #define MONR_CORING_H1_ST     Fld(8,8,AC_MSKDW)//[15:8]
+    #define MONR_CORING_H2_MO     Fld(8,16,AC_MSKDW)//[23:16]
+    #define MONR_CORING_H2_ST  Fld(8,24,AC_MSKDW)//[31:24]
+#define NR_MO_07     u4SWReg(0x7A6C)
+    #define MONR_CORING_H3_MO   Fld(8,0,AC_MSKDW)//[7:0]
+    #define MONR_CORING_H3_ST     Fld(8,8,AC_MSKDW)//[15:8]
+    #define MONR_CORING_D1_MO     Fld(8,16,AC_MSKDW)//[23:16]
+    #define MONR_CORING_D1_ST  Fld(8,24,AC_MSKDW)//[31:24]
+#define NR_MO_08     u4SWReg(0x7A70)
+    #define MONR_CORING_D2_MO   Fld(8,0,AC_MSKDW)//[7:0]
+    #define MONR_CORING_D2_ST     Fld(8,8,AC_MSKDW)//[15:8]
+    #define MONR_CORING_D3_MO     Fld(8,16,AC_MSKDW)//[23:16]
+    #define MONR_CORING_D3_ST  Fld(8,24,AC_MSKDW)//[31:24]
+#define NR_MO_09     u4SWReg(0x7A74)
+    #define MONR_CORING_V1_MO   Fld(8,0,AC_MSKDW)//[7:0]
+    #define MONR_CORING_V1_ST     Fld(8,8,AC_MSKDW)//[15:8]
+    #define MONR_CORING_V2_MO     Fld(8,16,AC_MSKDW)//[23:16]
+    #define MONR_CORING_V2_ST  Fld(8,24,AC_MSKDW)//[31:24]
+#define NR_MO_10     u4SWReg(0x7A78)
+    #define MONR_CORING_V3_MO   Fld(8,0,AC_MSKDW)//[7:0]
+    #define MONR_CORING_V3_ST     Fld(8,8,AC_MSKDW)//[15:8]
+
 
 //=============================================================
 // Addr : 0x7B00 - 0x7BFF

@@ -1833,3 +1833,21 @@ void DRVCUST_SendEvent(E_CUST_EVENT eCustEvent, UINT8 u1Option)
 
 }
 
+void DRVCUST_SetCorST(UINT8 *u1CorSTArray)
+{
+	UINT8 i;
+	for(i=0; i<9; i++)
+	{
+		if(SV_ST_TV == bGetSignalType(SV_VP_MAIN))
+		{
+			//MONR_CORING_H1~V3_ST
+			vIO32Write1B(NR_MO_06+1+i*2, u1CorSTArray[i]*50/100);
+		}
+		else
+		{
+			vIO32Write1B(NR_MO_06+1+i*2, u1CorSTArray[i]*100/100);
+		}
+	}
+	
+	return;
+}
