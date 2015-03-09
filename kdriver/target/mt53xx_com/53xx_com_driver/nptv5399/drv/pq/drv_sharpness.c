@@ -93,6 +93,7 @@
 #include "hw_scpip_pq.h"
 #include "hw_sw.h"
 #include "hw_di_int.h"
+#include "source_select.h"
 
 // === DEFINE =============================================================================
 #define TDS_GLOBAL_GAIN_UNIT 0x20
@@ -470,6 +471,20 @@ void vDrvCTIRParam(void)
 	                  CTIR_V_STB_OFST2);
 	vIO32WriteFldAlign(CTIR_05, wReadQualityTable(QUALITY_CTIR_COR),
 	                  CTIR_COR);	                  
+}
+
+void vDrvInitHueTie(void)  //sync A2
+{
+    if (bGetSignalType(SV_VP_MAIN)==SV_ST_TV)
+    {
+        vRegWriteFldAlign(CTIR_00, 1, CTIR_HUE_TIE);
+        vRegWriteFldAlign(ECTIF_00, 1, ECTIF_HUE_TIE);
+    }
+    else
+    {
+        vRegWriteFldAlign(CTIR_00, 0, CTIR_HUE_TIE);
+        vRegWriteFldAlign(ECTIF_00, 0, ECTIF_HUE_TIE);
+    }
 }
 
 /*****************************************************************************************/

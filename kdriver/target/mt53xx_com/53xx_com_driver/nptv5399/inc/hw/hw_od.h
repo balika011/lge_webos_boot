@@ -93,11 +93,11 @@
  *
  * Last changed:
  * ------------- 
- * $Author: dtvbm11 $ 
+ * $Author: p4admin $ 
  *
  * $Modtime: 10/02/04 1:22p $  
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 ****************************************************************************/
 #ifndef _HW_OD_H
 #define _HW_OD_H
@@ -423,7 +423,7 @@
     #define ODT_BYPASS_FSYNC Fld(1,27,AC_MSKB3)//[27:27]
     #define FBT_BYPASS_FSYNC Fld(1,28,AC_MSKB3)//[28:28]
     #define PCLK_EN Fld(1,30,AC_MSKB3)//[30:30]
-    #define MCLK_EN Fld(1,31,AC_MSKB3)//[31:31]
+    #define OD_MCLK_EN Fld(1,31,AC_MSKB3)//[31:31]
 #define OD_REG50 (OD_BASE + 0x93D0)
     #define DUMP_STADR_A Fld(16,0,AC_FULLW10)//[15:0]
     #define DUMP_STADR_B Fld(16,16,AC_FULLW32)//[31:16]

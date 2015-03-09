@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/21 $
+ * $Date: 2015/03/09 $
  * $RCSfile: drv_ycproc.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -437,6 +437,7 @@ void vDrvPostSharpGainDOffset(UINT8 u1GainD1, UINT8 u1GainD2, UINT8 u1GainD3);
 void vDrvPostSharpCorzHOffset(UINT8 u1CorzH1, UINT8 u1CorzH2, UINT8 u1CorzH3);
 void vDrvPostSharpCorzVOffset(UINT8 u1CorzV1, UINT8 u1CorzV2, UINT8 u1CorzV3);
 void vDrvPostSharpCorzDOffset(UINT8 u1CorzD1, UINT8 u1CorzD2, UINT8 u1CorzD3);
+void vDrvInitHueTie(void);  //sync A2
 
 /*****************************************************************************************/
 /*****************************   GLOBAL PQ ADJUSTMENT   **********************************/

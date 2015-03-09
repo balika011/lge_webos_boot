@@ -111,6 +111,8 @@
 #include "hw_tdsharp.h"
 #include "hw_di_int.h"
 #include "drv_di.h"
+#include "hw_nr.h"
+#include "hw_od.h"
 
 #if defined(CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
 #include "mtk_video_drv_4k2k.c"
@@ -1006,10 +1008,124 @@ void DRVCUST_InputCSCAdj(UINT8 bPath)
 
 void DRVCUST_VdoModeChgDone(UINT8 bPath)
 {
-   // UNUSED(bPath);
-	DRVCUST_InputCSCAdj(bPath);
-	u1PreBLVL = 0xFF; // force reload matrix when mode change.
+	UINT32 u4SrcType = bGetSignalType(bPath);
+	UINT32 u4SrcHeight = wDrvVideoInputHeight(bPath);
+	//UINT32 u4ScrTiming = bDrvVideoGetSourceTypeTiming(bPath);
+   // UINT16 wActiveWin[4];
+
+   DRVCUST_InputCSCAdj(bPath);
+   
+   u1PreBLVL = 0xFF; // force reload matrix when mode change.
+   
+	//reset CCS patch value
+   vIO32WriteFldAlign(METER_INFO_17, 16, METER_CC_RATIO);
+	
+  // Set Y Lev sharpness
+	if ((u4SrcType == SV_ST_DVI) && (u4SrcHeight < 500))
+	{
+		// HDMI 480 
+		vIO32WriteFldAlign(SHARP_4B, 1, TDS_YLEV_EN); 
+		vIO32WriteFldAlign(SHARP_4B, 1, TDS_YLEV_SEL); 
+		vIO32WriteFldAlign(SHARP_4B, 0x10, TDS_YLEV_ALPHA); 
+		vIO32WriteFldAlign(TDPROC_YLEV_00, 0xF, TDS_YLEV_APL_ZERO);
+		vIO32WriteFldAlign(TDPROC_YLEV_00, 0xF, TDS_YLEV_APL_THR);	
+		vIO32WriteFldAlign(TDPROC_YLEV_01, 0x2,  TDS_YLEV_P1);
+		vIO32WriteFldAlign(TDPROC_YLEV_01, 0x3,  TDS_YLEV_P2);
+		vIO32WriteFldAlign(TDPROC_YLEV_01, 0xA,  TDS_YLEV_P3);
+		vIO32WriteFldAlign(TDPROC_YLEV_01, 0xF,  TDS_YLEV_P4);
+		vIO32WriteFldAlign(TDPROC_YLEV_02, 0x40, TDS_YLEV_G1);
+		vIO32WriteFldAlign(TDPROC_YLEV_02, 0x80, TDS_YLEV_G2);
+		vIO32WriteFldAlign(TDPROC_YLEV_02, 0x80, TDS_YLEV_G3);
+		vIO32WriteFldAlign(TDPROC_YLEV_02, 0x80, TDS_YLEV_G4);	
+	}
+	else
+	{
+		vIO32WriteFldAlign(SHARP_4B, 0, TDS_YLEV_EN); 
+	}
+	
+	// Set OD setting
+	//if (u4SrcType == SV_ST_VGA)
+	if(fgApiVideoIsVgaTiming(SV_VP_MAIN))
+	{
+		vIO32WriteFldAlign(OD_REG00, 0x10, DC_CNT);
+		vIO32WriteFldAlign(OD_REG00, 0x8, BTC_ERR_CNT);
+		vIO32WriteFldAlign(OD_REG77, 0x10, IP_SAD_TH);
+	}
+	else
+	{
+		vIO32WriteFldAlign(OD_REG00, 0x2, DC_CNT);
+		vIO32WriteFldAlign(OD_REG00, 0x4, BTC_ERR_CNT);
+		vIO32WriteFldAlign(OD_REG77, 0x8, IP_SAD_TH);
+	}
+
+	//Enable Hue Tie for TV
+	vDrvInitHueTie();
+
+	// Set CUE setting for PDP model
+	//if (IS_PANEL_L12R12)
+#if 0
+	if (IS_PANEL_2D_N_3D_L12R12)
+	{
+		vIO32WriteFldAlign(MCVP_DARE_00, 
+			!((u4ScrTiming >= SOURCE_TYPE_TIMING_DIGI_1080I_50) && (u4ScrTiming <= SOURCE_TYPE_TIMING_3D_1080I_60_FP)), 
+			DARE_CUE_EN);
+	}
+	else
+	{
+		vIO32WriteFldAlign(MCVP_DARE_00, SV_TRUE, DARE_CUE_EN);
+	}
+#endif
+
+	//for DTV mpeg noise
+	if (u4SrcType == SV_ST_MPEG) 
+	{
+		NR_W(NXNR_10, 0x0, NX_MNR_GRAD_REDUCTION);
+		NR_W(NXNR_0E, 0x2, NX_MNR_FILTER_QUANT);	
+	}
+	else
+	{
+		NR_W(NXNR_10, 0x4, NX_MNR_GRAD_REDUCTION);
+		NR_W(NXNR_0E, 0x0, NX_MNR_FILTER_QUANT);
+	}
+
+	if (u4SrcHeight < 700)	//SD
+	{
+		vIO32WriteFldAlign(SCFIR_0F, 0, ADAPT_EDGE_THR_H);
+		vIO32WriteFldAlign(NR_NM_10, 0xF8, NM_STABLIZER_IIR);
+		vIO32WriteFldAlign(NR_NM_07, 0x14, NM_SC_HIST_SKIP);
+	}
+	else	//HD
+	{
+		vIO32WriteFldAlign(SCFIR_0F, 0xA, ADAPT_EDGE_THR_H);
+		vIO32WriteFldAlign(NR_NM_10, 0xA0, NM_STABLIZER_IIR);
+		vIO32WriteFldAlign(NR_NM_07, 0x10, NM_SC_HIST_SKIP);
+	}
+	
+	if ((u4SrcHeight < 500) && 
+		((u4SrcType == SV_ST_DVI) ||(u4SrcType == SV_ST_YP) || (u4SrcType == SV_ST_MPEG)))
+	{
+		//turn on dot-crawl reduction
+		vDrvNRSetDotCrawlNROnOff(SV_ON);
+	}
+	else
+	{
+		vDrvNRSetDotCrawlNROnOff(SV_OFF);
+	}
+
+#if 0
+	if(IS_PANEL_2D_N_3D_L12R12 && PANEL_GetPanelWidth()<1200)
+	{
+		vIO32WriteFldMulti(TTD_FW_REG_00, P_Fld(SV_OFF, TTD_FW_FORCE_SC) |
+										  P_Fld(3, TTD_FW_FORCE_SC_CNT));
+	}
+	else
+	{
+		vIO32WriteFldMulti(TTD_FW_REG_00, P_Fld(SV_ON, TTD_FW_FORCE_SC) |
+										  P_Fld(60, TTD_FW_FORCE_SC_CNT));
+	}
+#endif   
 }
+
 
 
 
