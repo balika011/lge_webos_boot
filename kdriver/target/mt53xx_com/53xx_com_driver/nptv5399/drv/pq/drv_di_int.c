@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/10 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,7 +609,7 @@ static void _vDrvDISetIFQuality(UINT8 bPath)
             {
                 // Enable DTV tearing detection in DTV 1080i
                 DiPQMode.bDTVTear = DI_DTV_TEAR_EN ? 
-                    ((bGetSignalType(VDP_1) == SV_ST_TV) && (bGetSignalType(VDP_1) == SV_ST_MPEG)) : SV_OFF;
+                    ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE) && (bGetSignalType(VDP_1) == SV_ST_MPEG)) : SV_OFF;
             }
             break;
         default:            
