@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/03/10 $
  * $RCSfile: dsp_op.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3117,6 +3117,11 @@ void vResetDecInfo (UINT8 u1DspId, UINT8 u1DecId)
         {
             WriteDspCommDram (u1DspId, ADDR_RC2D_CTRL3_BASE + i, 0);
         }
+
+        for (i = 0; i < DSP_D2RC_INFO_AREA_SZ; i++)
+        {
+            WriteDspDecCacheDram(u1DspId, i, 0); 
+        }
     }
 #ifdef CC_MT5391_AUD_3_DECODER
     else if (u1DecId == AUD_DEC_THIRD)
@@ -3134,6 +3139,11 @@ void vResetDecInfo (UINT8 u1DspId, UINT8 u1DecId)
         {
             WriteDspCommDram (u1DspId, ADDR_RC2D_CTRL6_DEC_BASE + i, 0);
         }
+
+        for (i = 0; i < DSP_D2RC_INFO_AREA_SZ; i++)
+        {
+            WriteDspDec3CacheDram(u1DspId, i, 0); 
+        }        
     }
 #endif
 #ifdef CC_AUD_4_DECODER_SUPPORT
@@ -3171,6 +3181,11 @@ void vResetDecInfo (UINT8 u1DspId, UINT8 u1DecId)
         {
             WriteDspCommDram (u1DspId, ADDR_RC2D_CTRL5_BASE + i, 0);
         }
+
+        for (i = 0; i < DSP_D2RC_INFO_AREA_SZ; i++)
+        {
+            WriteDspDec2CacheDram(u1DspId, i, 0); 
+        }              
     }
 }
 
