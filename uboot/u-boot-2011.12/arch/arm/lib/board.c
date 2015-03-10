@@ -525,8 +525,8 @@ void get_kernel_size(ulong src)
 		
 		 if (TCMGET_CHANNELA_SIZE() == 0x300) /* 768M case */
 		 {
-			  kmemsize += 48 * 0x100000;	 /* increase kmemsize by 48MB */
-			  chb_kmemsize -= 48 * 0x100000; /* decrease FBDFB size by 48MB */
+			  kmemsize += 49 * 0x100000;	 /* increase kmemsize by 49MB */
+			  chb_kmemsize -= 49 * 0x100000; /* decrease FBDFB size by 49MB */
 		 }
 		 
 		chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_SIZE - tzsize;

@@ -285,7 +285,7 @@
 
 
 
-#define FB_MEM_SIZE                         (94 * 1024 * 1024)
+#define FB_MEM_SIZE                         (99 * 1024 * 1024)
 
 #define ETHDES_MEM_SIZE                     (2 * 1024 * 1024)
 
