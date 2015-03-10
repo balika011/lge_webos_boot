@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/08 $
+ * $Date: 2015/03/10 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2332,7 +2332,7 @@ BOOL _DMX_SetGenFilter(UINT8 u1FilterIndex, UINT32 u4Flags,
     if(prPidStruct->u2Pid==0x1FFB)
     {
         _DMX_VCTSoftFilterEnable(prFilter->fgEnable,prFilterStruct->rGeneric.au1Data[0]);
-        LOG(0,"_DMX_VCTSoftFilterEnable, enable %d,table id 0x%x.\n",prFilter->fgEnable,prFilterStruct->rGeneric.au1Data[0]);
+        LOG(5,"_DMX_VCTSoftFilterEnable, enable %d,table id 0x%x.\n",prFilter->fgEnable,prFilterStruct->rGeneric.au1Data[0]);
     }
     SECTION_FILTER_CTRL(u1FilterIndex) = u4FilterWord;
 
