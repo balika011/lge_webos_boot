@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #5 $
+ * $Revision: #6 $
 *************************************************************************/
 
 #ifndef _VDO_MISC_H_
@@ -276,5 +276,9 @@ BOOL fgIs4k2kPhoto3DSupport(UINT8 bPath);
 UINT8 bDrvVideoIsDecDualMode(void);
 void vDrvVideoForceDualMode(UINT8 u1OnOff);
 BOOL fgIsVideoDone(UINT8 bPath);
+
+#ifdef CC_SUPPORT_VDO_TIME_STAMPS
+void vVdoSetTimeStamps(CHAR* String);
+#endif
 
 #endif

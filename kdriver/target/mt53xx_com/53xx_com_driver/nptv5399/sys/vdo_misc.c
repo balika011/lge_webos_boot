@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #12 $
+ * $Revision: #13 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -4523,4 +4523,93 @@ void vVdoInVIrqOnOff(UINT8 u1VdpId, UINT8 u1OnOff, UINT8 u1Module)
     
 }
 
+#ifdef CC_SUPPORT_VDO_TIME_STAMPS
 
+static UINT8 u1TimeStampsCnt = 0;
+#define MAX_CHECK_POINTS_NUM  32
+#define MAX_POINTS_NAME_LEN   32
+
+typedef struct
+{
+	HAL_TIME_T _rTime;
+	CHAR String[32];
+	UINT8 u1RecFlag;
+}TIME_STAMP;
+TIME_STAMP VdoTimeStamps[32];
+void vVdoSetTimeStamps(CHAR* String)
+{
+	HAL_TIME_T rTime;
+	UINT8 u1Cnt = 0;
+
+    CRIT_STATE_T csState;
+    csState = x_crit_start();
+    
+	HAL_GetTime(&rTime);
+    VdoTimeStamps[u1TimeStampsCnt]._rTime.u4Seconds = rTime.u4Seconds;
+    VdoTimeStamps[u1TimeStampsCnt]._rTime.u4Micros = rTime.u4Micros;
+
+	while(*String != '\0')
+	{
+		VdoTimeStamps[u1TimeStampsCnt].String[u1Cnt] = *String;
+		
+		u1Cnt++;
+		String++;
+		if(u1Cnt > MAX_POINTS_NAME_LEN-2)break;
+	}
+	VdoTimeStamps[u1TimeStampsCnt].String[u1Cnt]='\0';
+	if(u1TimeStampsCnt > MAX_CHECK_POINTS_NUM-1)
+	{
+		u1TimeStampsCnt = MAX_CHECK_POINTS_NUM-1;
+	}
+	
+	VdoTimeStamps[u1TimeStampsCnt].u1RecFlag = 1;
+	u1TimeStampsCnt++;
+
+	x_crit_end(csState);
+}	
+
+void vVdoResetTimeStamps(void)
+{
+	UINT8 u1Cnt = 0;
+	
+    CRIT_STATE_T csState;
+    csState = x_crit_start();
+    
+	u1TimeStampsCnt = 0;
+	
+	for(u1Cnt = 0;u1Cnt < MAX_CHECK_POINTS_NUM ;u1Cnt++)
+	{
+		VdoTimeStamps[u1Cnt].u1RecFlag = 0;
+	}
+
+	x_crit_end(csState);
+}
+void vVdoGetTimeStamps(void)
+{
+	UINT8 u1Cnt =0;
+	UINT32 u4StartTime = 0;
+	UINT32 u4CurTime = 0;
+	CRIT_STATE_T csState;
+	Printf("*********Following is timestamp of each check point.************\n");
+
+    
+    csState = x_crit_start();
+    u4StartTime = VdoTimeStamps[0]._rTime.u4Seconds*1000 + VdoTimeStamps[0]._rTime.u4Micros/1000;
+	for(u1Cnt = 0;u1Cnt < MAX_CHECK_POINTS_NUM ;u1Cnt++)
+	{
+		if(VdoTimeStamps[u1Cnt].u1RecFlag)
+		{
+		    u4CurTime = VdoTimeStamps[u1Cnt]._rTime.u4Seconds*1000+VdoTimeStamps[u1Cnt]._rTime.u4Micros/1000;
+			Printf("[%02d]%16s: DIFF %08d ms.\n",u1Cnt,VdoTimeStamps[u1Cnt].String,(u4CurTime-u4StartTime));
+		}
+		else
+		{
+			break;
+		}
+		
+	}
+	
+	x_crit_end(csState);
+}
+
+#endif

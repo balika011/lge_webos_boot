@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/10 $
  * $RCSfile: nptv_cmd.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  * Description:
  *         This file contains CLI implementation of NPTV Video.
@@ -156,6 +156,10 @@ static INT32 _NptvFixColorSpace(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _NptvSetScanModeCmd(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _NptvVideoQuery(INT32 i4Argc, const CHAR **szArgv);
 static INT32 _NptvVideoDelay(INT32 i4Argc, const CHAR **szArgv);
+#ifdef CC_SUPPORT_VDO_TIME_STAMPS
+static INT32 _NptvVideoTimeStamps(INT32 i4Argc, const CHAR **szArgv);
+#endif
+
 #ifdef REAL_TIME_FRAME_DELAY_EN
 static INT32 _NptvVideoRealDelay(INT32 i4Argc, const CHAR **szArgv);
 #endif
@@ -291,6 +295,9 @@ CLI_EXEC_T arVdoCmdTbl[] = {
     #ifdef CC_CLI
     {"VideoQuery",      "q",     _NptvVideoQuery,     NULL, "Video Query",                 CLI_GUEST},
     {"VideoDelay",      "dly",   _NptvVideoDelay,     NULL, "Video Delay",                 CLI_GUEST},
+    #ifdef CC_SUPPORT_VDO_TIME_STAMPS
+    {"TimeStamps",      "time",   _NptvVideoTimeStamps,     NULL, "Time Stamps",                 CLI_GUEST},
+    #endif
     #ifdef REAL_TIME_FRAME_DELAY_EN
     {"RealDelay",      "rdly",  _NptvVideoRealDelay,NULL, "Real time video delay",       CLI_GUEST},
     #endif
@@ -635,6 +642,34 @@ static INT32 _NptvVideoDelay(INT32 i4Argc, const CHAR **szArgv)
 
     return 0;
 }
+
+#ifdef CC_SUPPORT_VDO_TIME_STAMPS
+
+extern void vVdoGetTimeStamps(void);
+extern void vVdoResetTimeStamps(void);
+static INT32 _NptvVideoTimeStamps(INT32 i4Argc, const CHAR **szArgv)
+{
+	UINT8 u1Type = 0;
+    if (i4Argc != 2)
+    {
+        Printf("Arg: Get/Reset\n");
+        Printf("0: Reset\n");
+        Printf("1: Get\n");
+        return 1;
+    }
+    u1Type = StrToInt(szArgv[1]) ? SV_ON : SV_OFF;
+	if(u1Type == SV_ON)
+	{
+	    vVdoGetTimeStamps();
+	}
+	else
+	{
+		vVdoResetTimeStamps();
+	}
+
+    return 0;
+}
+#endif
 
 #ifdef REAL_TIME_FRAME_DELAY_EN
 extern void vDrvVideoDelayCreateThread(void);
