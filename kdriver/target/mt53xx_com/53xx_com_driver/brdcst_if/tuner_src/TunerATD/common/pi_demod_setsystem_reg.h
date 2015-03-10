@@ -448,8 +448,12 @@ ATD_REG_T ATD_SetSystem_Reg[] =
 {0x782,  {0x10 ,   0x10 ,  0x10 ,  0x10 ,  0x10 ,0x10}},  // d110327_Haibo:What the meaning of register bank 0xFxx                                                                   
 {0x783,  {0x20 ,   0x20 ,  0x20 ,  0x20 ,  0x20 ,0x20}},  //  
 #if defined(CC_MT5890) || defined(CC_MT5882)
+#ifdef CC_SUPPORT_SIF_BYPASS
+{0x786,  {0x80 ,   0x80 ,  0x80 ,  0x80 ,  0x80 ,0x80}},  // d20150310_steven: enable dsm4  over flow design change to prevent sif signal is too strong in sif bypass function
+#else
 {0x786,  {0x80 ,   0x80 ,  0x80 ,  0x00 ,  0x00 ,0x80}},  // d20140409_steven:oryx design change---enable dsm4  over flow design change  
-#endif                                                                 
+#endif
+#endif                                                                
 {0x787,  {0x1A ,   0x1A ,  0x1A ,  0x20 ,  0x20 ,0x1A}},  //                                                                    
 {0x790,  {0x48 ,   0x48 ,  0x48 ,  0xc8 ,  0xc8 ,0x48}},  //                                                                    
 {0x791,  {0x40 ,   0x40 ,  0x40 ,  0x45 ,  0x45 ,0x40}},  //                                                                    
