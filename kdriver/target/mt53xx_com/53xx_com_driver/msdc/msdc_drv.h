@@ -359,6 +359,7 @@ typedef struct
     UINT32 DDR52Delay;
     UINT32 HS200Sample;
     UINT32 HS200Delay;
+	UINT32 HS200Common;
 } EMMC_FLASH_DEV_T;
 #else
 typedef struct
