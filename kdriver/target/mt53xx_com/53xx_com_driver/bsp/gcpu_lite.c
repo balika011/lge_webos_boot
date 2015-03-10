@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/10 $
  * $RCSfile: assert.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -502,7 +502,7 @@ static INT32 _GCPU_AES_CmdEx(UINT32 u4Handle, UINT32 u4Id, void* prParam, BOOL f
             if(u4Handle != 0)
             {
                 prGcpu = (GCPU_STRUCT_T *)u4Handle;
-                LOG(7, "Use GCPU handler\n");
+               // LOG(7, "Use GCPU handler\n");
             }
             else
             {
@@ -583,18 +583,18 @@ static INT32 _GCPU_AES_CmdEx(UINT32 u4Handle, UINT32 u4Id, void* prParam, BOOL f
                 {
                     if(IsValidSecureSlot(prGcpu->u4AesKeyPtr))
                     {
-                        LOG(7, "Use secure aes key ptr\n");
+                       // LOG(7, "Use secure aes key ptr\n");
                         rHwCmd.u4Param[5] = prGcpu->u4AesKeyPtr;
                     }
                     else
                     {
-                        LOG(3, "Wrong seucre aes key slot ptr\n");
+                       // LOG(3, "Wrong seucre aes key slot ptr\n");
                         rHwCmd.u4Param[5] = GCPU_PARAM_AES_KEY_PTR;
                     }
                 }
                 else
                 {
-                    LOG(5, "Use normal aes key slot ptr\n");
+                   // LOG(5, "Use normal aes key slot ptr\n");
                     rHwCmd.u4Param[5] = GCPU_PARAM_AES_KEY_PTR;
                 }
 
@@ -602,18 +602,18 @@ static INT32 _GCPU_AES_CmdEx(UINT32 u4Handle, UINT32 u4Id, void* prParam, BOOL f
                 {
                     if(IsValidSecureSlot(prGcpu->u4AesIvPtr))
                     {
-                        LOG(7, "Use secure aes iv ptr\n");
+                      //  LOG(7, "Use secure aes iv ptr\n");
                         rHwCmd.u4Param[6] = prGcpu->u4AesIvPtr;
                     }
                     else
                     {
-                        LOG(3, "Wrong seucre aes iv slot ptr\n");
+                      //  LOG(3, "Wrong seucre aes iv slot ptr\n");
                         rHwCmd.u4Param[6] = GCPU_PARAM_AES_IV_PTR;
                     }
                 }
                 else
                 {
-                    LOG(5, "Use normal aes iv slot ptr\n");
+                   // LOG(5, "Use normal aes iv slot ptr\n");
                     rHwCmd.u4Param[6] = GCPU_PARAM_AES_IV_PTR;
                 }
 
@@ -621,18 +621,18 @@ static INT32 _GCPU_AES_CmdEx(UINT32 u4Handle, UINT32 u4Id, void* prParam, BOOL f
                 {
                     if(IsValidSecureSlot(prGcpu->u4AesRetIvPtr))
                     {
-                        LOG(7, "Use secure aes ret iv ptr\n");
+                      //  LOG(7, "Use secure aes ret iv ptr\n");
                         rHwCmd.u4Param[7] = prGcpu->u4AesRetIvPtr;
                     }
                     else
                     {
-                        LOG(3, "Wrong seucre aes ret iv slot ptr\n");
+                      //  LOG(3, "Wrong seucre aes ret iv slot ptr\n");
                         rHwCmd.u4Param[7] = GCPU_PARAM_AES_RET_IV_PTR;
                     }
                 }
                 else
                 {
-                    LOG(5, "Use normal aes ret iv slot ptr\n");
+                    //LOG(5, "Use normal aes ret iv slot ptr\n");
                     rHwCmd.u4Param[7] = GCPU_PARAM_AES_RET_IV_PTR;
                 }
             }
