@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/10 $
  * $RCSfile: swdmx_drvif.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -444,6 +444,7 @@ typedef enum
     SWDMX_SRC_TYPE_NETWORK_MHEG5,
     SWDMX_SRC_TYPE_YOUTUBE,
     SWDMX_SRC_TYPE_NETWORK_MSS,
+    SWDMX_SRC_TYPE_GAME_CLOUD,
     SWDMX_SRC_TYPE_MAX
     // this definition is exactly same with MM_SRC_TYPE_T.
     // please do not change it's sequence
