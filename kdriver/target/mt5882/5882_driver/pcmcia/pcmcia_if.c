@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/10 $
  * $RCSfile: pcmcia_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *---------------------------------------------------------------------------*/
  
  //-----------------------------------------------------------------------------
@@ -331,13 +331,8 @@ void PCMCIA_SetTsPath(BOOL fgExternalDemod, BOOL fgThroughCard, BOOL fgWithCas)
                     else
                     {
                         // P3. DMX : Set front end -------------------------------------
-#ifdef CC_DUAL_TUNER_SUPPORT
-                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT2_1_S);
-                        DMX_SetFrontEnd(DMX_FE_EXT2_1_S);
-#else
-                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT_S);
-                        DMX_SetFrontEnd(DMX_FE_EXT_S);
-#endif
+                        LOG(1, "    Set d.sfe %d\n", DMX_FE_EXT_P);
+                        DMX_SetFrontEnd(DMX_FE_EXT_P);
                     }
                 }
                 else    // CAM not Connected
