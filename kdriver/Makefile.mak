@@ -74,8 +74,8 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: Makefile,v $
-# $Revision: #15 $
-# $Date: 2015/02/24 $
+# $Revision: #16 $
+# $Date: 2015/03/11 $
 # $Author: p4admin $
 # $CCRevision: /main/DTV_X_HQ_int/DTV_X_ATSC/51 $
 # $SWAuthor: Felisa Hsiao $
@@ -456,6 +456,10 @@ endif
 
 ifndef REBUILD_3RD_PARTY
     export REBUILD_3RD_PARTY := true
+endif
+
+ifndef LG_BOOT_TIME_REDUCE
+export LG_BOOT_TIME_REDUCE := false
 endif
 
 # path customization for project_x/target/$(OS_TARGET)
