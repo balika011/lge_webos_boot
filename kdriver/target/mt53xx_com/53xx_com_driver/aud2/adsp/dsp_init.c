@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/11 $
  * $RCSfile: dsp_init.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3642,7 +3642,7 @@ void vDspShareInfoInit (UINT8 u1DspId)
     vWriteDspShmBYTE (u1DspId, B_DTS_BC_DRC,0x9);
     vWriteDspShmBYTE (u1DspId, B_DTS_BC_Dialnrom,0x9);
 
-    vWriteDspShmBYTE (u1DspId, B_DTS_BC_LFE_MIXTO_FRONT_DEC2,0x1);
+    vWriteDspShmBYTE (u1DspId, B_DTS_BC_LFE_MIXTO_FRONT_DEC2,0x0);
     vWriteDspShmBYTE (u1DspId, B_DTS_BC_DRC_DEC2,0x9);
     vWriteDspShmBYTE (u1DspId, B_DTS_BC_Dialnrom_DEC2,0x9);
 
