@@ -6370,11 +6370,8 @@ BOOL _VPUSH_SetAppType(VOID* prdec, char *pcAppType, UINT32 u4AppTypeLen)
         if (0 == x_strncmp(pcAppType, _arVdecAppType[i].pcAppType, _arVdecAppType[i].u4AppTypeSize))
         {
             prVdecEsInfo->eMMSrcType = _arVdecAppType[i].eMMSrcType;
-            if (SWDMX_SRC_TYPE_NETWORK_SKYPE == prVdecEsInfo->eMMSrcType)
-            {
-                LOG(1, "VPush(%d) Vdec(%d) AppType:%s\n", prVdec->ucVPushId, prVdec->ucVdecId,
-                        _arVdecAppType[i].pcAppType);
-            }
+            LOG(1, "VPush(%d) Vdec(%d) AppType:%s\n", prVdec->ucVPushId, prVdec->ucVdecId,
+                    _arVdecAppType[i].pcAppType);
         }
     }
 
