@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/09 $
+ * $Date: 2015/03/12 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1595,8 +1595,11 @@ void vDrvSetPanelTiming(void)
 
 
     #ifndef CC_MTK_LOADER
+    vDrvVsyncISRSetPosition_PDP(0);
     if ((fgIsVsyncIsrStart) && (_fgVOPLLPowerOn))
     {
+        CRIT_STATE_T csState;
+        csState = x_crit_start();
         if(fgTimigChg)
     	{ 
     		fgApplyScalerSetData = 1;
@@ -1604,6 +1607,7 @@ void vDrvSetPanelTiming(void)
 		    u1ScanPwmCrossFlg = 2;
 		    LOG(2, "fgApplyScalerSetData = SV_TRUE, _u4VSyncCountSD=%d \n", _u4VSyncCountSD);
     	}
+    	x_crit_end(csState);
     }	
     else
     #endif
