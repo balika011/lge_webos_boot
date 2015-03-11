@@ -119,6 +119,7 @@ typedef struct __CODEC_ENTRY_T
 static VDEC_APP_TYPE_T _arVdecAppType[] =
 {
     {"SKYPE", 5, SWDMX_SRC_TYPE_NETWORK_SKYPE},
+    {"RTC", 3, SWDMX_SRC_TYPE_NETWORK_RTC},
 };
 #endif
 
@@ -4383,14 +4384,6 @@ BOOL _VPUSH_Play(VOID* prdec)
     prVdecEsInfo->fgMMPlayback = TRUE;    
     prVdecEsInfoKeep->fgLowLatency = FALSE;
     
-    if(prVdec->eFmt == VDEC_FMT_H264 || prVdec->eFmt == VDEC_FMT_H265)
-    {
-       prVdecEsInfo->eMMSrcType = SWDMX_SRC_TYPE_NETWORK_NETFLIX; // enable seamless
-       prVdecEsInfo->u4SeamlessWidth = 1920;
-       prVdecEsInfo->u4SeamlessHeight = 1080;
-       VDEC_ChkSeamlessModeChg(prVdec->ucVdecId,prVdecEsInfo->u4SeamlessWidth,prVdecEsInfo->u4SeamlessHeight);
-    }
-    
     if(prVdec->fgLowLatencyMode)
     {
         prVdecEsInfoKeep->fgLowLatency = TRUE;
@@ -4824,9 +4817,27 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
     if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_LGE_GST)
     {
         prVdec->fgGstPlay=TRUE;
-        prVdecEsInfo->fgLGSeamless = TRUE;
         LOG(3, "VPush Marsk VDEC_PUSH_SET_INFO_LGE_GST\n");
     }
+
+    if(prVdecSetInfo->u4InfoMask & VDEC_PUSH_SET_INFO_SEAMLESS_INFO)
+    {
+        prVdecEsInfo->fgSeamlessPlay = prVdecSetInfo->fgSeamlessPlay;
+        prVdecEsInfo->eSeamlessMode = prVdecSetInfo->u4SeamlessMode;
+        if(prVdecEsInfo->fgSeamlessPlay)
+        {
+            prVdecEsInfo->fgLGSeamless = TRUE;
+            prVdecEsInfo->u4SeamlessWidth = 1920;
+            prVdecEsInfo->u4SeamlessHeight = 1080;
+        }
+        else 
+        {
+            prVdecEsInfo->fgLGSeamless = FALSE;
+            prVdecEsInfo->eSeamlessMode = SEAMLESS_NONE;
+            prVdecEsInfo->fgLGSeamless = FALSE;
+        }
+    }
+    
     return TRUE;
 }
 BOOL _VPUSH_GetInfo(VOID* prdec, VDEC_GET_INTO_T *prVdecGetInfo)
@@ -6361,9 +6372,17 @@ BOOL _VPUSH_SetAppType(VOID* prdec, char *pcAppType, UINT32 u4AppTypeLen)
             prVdecEsInfo->eMMSrcType = _arVdecAppType[i].eMMSrcType;
             if (SWDMX_SRC_TYPE_NETWORK_SKYPE == prVdecEsInfo->eMMSrcType)
             {
-                LOG(6, "VPush(%d) Vdec(%d) skype\n", prVdec->ucVPushId, prVdec->ucVdecId);
+                LOG(1, "VPush(%d) Vdec(%d) AppType:%s\n", prVdec->ucVPushId, prVdec->ucVdecId,
+                        _arVdecAppType[i].pcAppType);
             }
         }
+    }
+
+    if(prVdecEsInfo->eMMSrcType == SWDMX_SRC_TYPE_NETWORK_RTC)
+    {
+        prVdecEsInfo->fgSeamlessPlay =  FALSE;
+        prVdecEsInfo->fgLGSeamless = FALSE;
+        prVdecEsInfo->eSeamlessMode = SEAMLESS_NONE;
     }
 
     return TRUE;

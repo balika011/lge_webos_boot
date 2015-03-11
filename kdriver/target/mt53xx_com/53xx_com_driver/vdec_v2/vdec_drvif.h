@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/11 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -388,6 +388,7 @@ typedef enum{
 #define VDEC_PUSH_SET_INFO_VDP_ID            (1<<7)
 #define VDEC_PUSH_SET_INFO_LOW_LATENCY      (1<<8)
 #define VDEC_PUSH_SET_INFO_LGE_GST          (1<<9)
+#define VDEC_PUSH_SET_INFO_SEAMLESS_INFO    (1<<10)
 
 
 // VP6 alpha
@@ -897,8 +898,10 @@ typedef struct {
     BOOL fgVPushDecodeOnly;
     BOOL fgVPushFBGFromInst;
     BOOL fgVPushDecrypt;
+    BOOL fgSeamlessPlay;
     VDEC_PUSH_MODE_T eVpushPlayMode;    
     UCHAR ucVdpId;
+    UINT32 u4SeamlessMode;
     UINT32 reserved;
 } VDEC_SET_INTO_T;
 
