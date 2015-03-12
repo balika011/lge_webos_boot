@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/11 $
+ * $Date: 2015/03/12 $
  * $RCSfile: dsp_init.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1494,7 +1494,16 @@ void vDecCommonInitDec2 (UINT8 u1DspId)
         }
         break;
     case DTSDEC_STREAM:
-        vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC2, 0xffd9);
+        if (AUD_GetDTSInfo())
+        {
+            //Big Endian
+            vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC2, 0xffd9);
+        }
+        else
+        {
+            //Little Endian
+            vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC2, 0xfffb);
+        }
 	    vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_LFE_mixto_FRONT_DEC2, uReadDspShmBYTE(u1DspId, B_DTS_BC_LFE_MIXTO_FRONT_DEC2));
 	    vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_ONOFF_DEC2, uReadDspShmBYTE(u1DspId, B_DTS_BC_DRC_DEC2));
 	    vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DIALNORM_ONOFF_DEC2, uReadDspShmBYTE(u1DspId, B_DTS_BC_Dialnrom_DEC2));
