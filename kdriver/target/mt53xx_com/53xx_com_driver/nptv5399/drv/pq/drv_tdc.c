@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/13 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -161,7 +161,7 @@ REGTBL_T const CODE REGTBL_COMB_NTSC_AV[] = {
 	{COMB_CTRL_0D, 0x00000004, 0xFFFFFFFF},
 	{COMB_CTRL_0E, 0x4E554E55, 0xFFFFFFFF},
 	{COMB2D_00, 0x304859C8, 0xFFFFFFFE},   //bypass y2d_cshap_en
-	{COMB2D_01, 0x809E2001, 0xFFFFFFFF},
+	{COMB2D_01, 0x809E3001, 0xFFFFFFFF},   //enable reg_enspct
 	{COMB2D_02, 0x08051020, 0x0FFFFFFF},
 	{COMB2D_03, 0x08081E03, 0xFFFFFF7F},
 	{COMB2D_04, 0x00100008, 0xFFFF03FF},
