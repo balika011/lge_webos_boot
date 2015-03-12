@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/12 $
  * $RCSfile: pi_basic_api.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -946,7 +946,7 @@ void DramcInit(void)
 	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_SPCMD), 0x00001100);
 
 	//[2] CKE control by HW
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_PADCTL4), 0x000000b2);
+	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_PADCTL4), 0x000000b6);
 
 	//A60806: 0x1e0=0x88000000
 	//[31] DRAM address decode
@@ -1063,9 +1063,9 @@ void DramcConfig(void)
     //DDR3 SBS pinmux should be set to 00 (reg0xd8[31:30])
 
 #ifdef DRAM_CAPRI_MCM_CFG
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x80100900);
+	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x80900900);
 #else
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x00100900);
+	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x00900900);
 #endif
 
     //0x4[9:8]  control the number of the column address, 
