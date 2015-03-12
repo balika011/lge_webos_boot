@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/12 $
+ * $Date: 2015/03/12 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1224,7 +1224,7 @@ void vDrvNRPQInit(void)
     
 
     NR_WM(MCNR_00, P_Fld(1, MCNR_FORCE_SCENE_CHANGE_EN)|P_Fld(0, MCNR_FORCE_SCENE_CHANGE));
-    NR_W(MCNR_00, 0, MCNR_ACDC_MODE);
+    NR_W(MCNR_00, 2, MCNR_ACDC_MODE);
     NR_W(MCNR_01, 0, MCNR_DCNR_ALPHA);
     NR_W(MCNR_3A, 4, DNR0_MV0_CONF_TH); 
     //R2C
@@ -1242,6 +1242,7 @@ void vDrvNRPQInit(void)
 
     //snr
     NR_W(NXNR_04, 4, NX_SNR_GAIN_Y);
+	NR_W(NXNR_04, 0x10, NX_BNR_GAIN);
 	
     _SWW_4B(NR_CTRL_00, 0x80011434);
     
@@ -1326,8 +1327,8 @@ void vDrvNRPQInit(void)
     _SWW(NR_NM_06, 1, NM_SC_NL_MODE);
         
     _SWW(NR_NM_07, 1, SNR_THM_SEL);
-    _SWW(NR_NM_07, 1, NM_SC_HIST_SKIP);
-    _SWW(NR_NM_07, 0x1, NM_SC_HIST_SKIP_MO);
+    _SWW(NR_NM_07, 5, NM_SC_HIST_SKIP);
+    _SWW(NR_NM_07, 0x3, NM_SC_HIST_SKIP_MO);
     _SWW(NR_NM_07, 0x0, NM_SC_MO_EN);
     _SWW(NR_NM_07, 0x1, NM_SC_MO_MTHD2_EN);
     _SWW(NR_NM_08, 0xA, NM_SC_MO_TH);
@@ -1368,7 +1369,7 @@ void vDrvNRPQInit(void)
     //MONR APL
     _SWW(NR_MO_03,  0x10, MONR_APL_TH1);
     _SWW(NR_MO_03,  0x40, MONR_APL_TH2);
-    _SWW(NR_MO_03,  0xA0, MONR_APL_GAIN);
+    _SWW(NR_MO_03,  0x02, MONR_APL_GAIN);
     //MONR High freq
     _SWW(NR_MO_05,  0x00, MONR_HIGH_FREQ_EN);
     _SWW(NR_MO_04, 0x04, MONR_HIGH_FREQ_GAIN);
@@ -1482,17 +1483,17 @@ void vDrvNRPQInit(void)
     _SWW(NR_PQ_19, 0x38, RNR_NL_AGG_THD_MAX);
     _SWW(NR_PQ_19, 0x18, RNR_NL_AGG_THD_MIN);
     
-    _SWW(NR_MO_00,    0x01, MONR_MOTION_LEVEL_TH1);
-    _SWW(NR_MO_00,    0x2A, MONR_MOTION_LEVEL_TH2);
+    _SWW(NR_MO_00,    0x02, MONR_MOTION_LEVEL_TH1);
+    _SWW(NR_MO_00,    0x20, MONR_MOTION_LEVEL_TH2);
     _SWW(NR_MO_01,    0xD8, MONR_IIR_FACTOR);
     _SWW(NR_MO_02,    0xFB, MONR_IIR_FACTOR_DEC);
     
-    _SWW(NR_AUTO_02, 0x10, MOTNR_MAX_NL_TH);
-    _SWW(NR_AUTO_02, 0x09, MOTNR_MIN_NL_TH);
-    _SWW(NR_AUTO_00, 0x04, TNR_THR_GAIN_ST);
-    _SWW(NR_AUTO_00, 0x0, TNR_THR_GAIN_MO);
-    _SWW(NR_MO_04, 0x10, MOSNR_MAX_NL_TH);
-    _SWW(NR_MO_04, 0x07, MOSNR_MIN_NL_TH);
+    _SWW(NR_AUTO_02, 0x14, MOTNR_MAX_NL_TH);
+    _SWW(NR_AUTO_02, 0x08, MOTNR_MIN_NL_TH);
+    _SWW(NR_AUTO_00, 0x10, TNR_THR_GAIN_ST);
+    _SWW(NR_AUTO_00, 0x8, TNR_THR_GAIN_MO);
+    _SWW(NR_MO_04, 0x14, MOSNR_MAX_NL_TH);
+    _SWW(NR_MO_04, 0x08, MOSNR_MIN_NL_TH);
 
     _SWW(NR_AUTO_00, 0x10, SNR_ADP_MAX);
     _SWW(NR_AUTO_00, 0x04, SNR_ADP_MIN);

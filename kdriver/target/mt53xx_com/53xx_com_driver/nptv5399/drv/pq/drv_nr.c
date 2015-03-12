@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/12 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -265,7 +265,7 @@ const REGTBL_T CODE _DNR_PQ_COMMON[] =
 {
 	{MCNR_28, 0x60000000, 0x70000000},
 	{MCNR_38, 0x8A043F08, 0x9F1F7F1F},
-	{MCNR_39, 0x33643360, 0xF7F777F7},
+	{MCNR_39, 0x33643360, 0x77F777F7},
 	{MCNR_3A, 0xA0191040, 0xFFFF77FF},
 	#ifdef CC_MT5398
 	{MCNR_3B, 0x00060A00, 0x001F3F00},
@@ -273,7 +273,7 @@ const REGTBL_T CODE _DNR_PQ_COMMON[] =
 	{MCNR_3B, 0x80060A00, 0xC01F3F00},
 	#endif
 	{NXNR_38, 0xA0103F20, 0xBF3FFF3F},
-	{NXNR_39, 0x0000C446, 0x800FF77F},
+	{NXNR_39, 0x0000C446, 0x000FF77F},
     {REGTBL_END, 0x00000000, 0x00000000}
 };
 
