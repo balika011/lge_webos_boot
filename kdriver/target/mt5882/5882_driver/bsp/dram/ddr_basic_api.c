@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/12 $
  * $RCSfile: pi_basic_api.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -196,15 +196,15 @@ void DdrPhyInit(void)
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x080), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x084), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x088), 0x00200000|(SR_VALUE<<16));
-	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x08c), 0x00200000|(SR_VALUE<<16));
+	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x08c), 0x00200f00|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x090), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x094), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x098), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x09c), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0a0), 0x00200000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0a4), 0x00200000|(SR_VALUE<<16));
-	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0a8), 0x00200000|(SR_VALUE<<16));
-	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0ac), 0x00200000|(SR_VALUE<<16));
+	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0a8), 0x00200f00|(SR_VALUE<<16));
+	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0ac), 0x00200f00|(SR_VALUE<<16));
 	//--RG_TX_ARCS_CSBEN, [22]=1 for differential CS
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0b0), 0x00600000|(SR_VALUE<<16));
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0b4), 0x00200000|(SR_VALUE<<16));
@@ -217,7 +217,7 @@ void DdrPhyInit(void)
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0c0), 0x00000002);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d0), (DEFAULT_PI_A1_DQA<<24)|(DEFAULT_PI_A1_DQB<<8));
 	//only for channel A, clk pi delay 14*T/64
-    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d4), 0x3d000010);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d4), 0x3d00001d);
 	//--RG_MEMPHYPLL_A1_TEST_EN (10D8H[4]) may be set later?, use default values here
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0d8), 0x00230000);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0dc), 0x00000000);
@@ -227,6 +227,7 @@ void DdrPhyInit(void)
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0e0), 0xf0001717);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0e4), 0x0000b8b8);
 	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0e8), 0x00000300);
+	ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0ec), 0x0000001e);
     if(TCMGET_DDR_CLK() > CLK_1700MHZ)
 	{
 		ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x004), 0x00400000|(SR_VALUE<<16));
@@ -1112,9 +1113,9 @@ void DramcConfig(void)
     //[3] A60807 R/W ODT are enabled
     //2012/10/03, for 2133MHz, DATLAT e -> [6:4] = 110, tR2W [15:12] = 0100
     if(TCMGET_DDR_CLK() > CLK_1700MHZ)
-		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xea8743ed); 
+    	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xe28743ed);	
 	else
-		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xea8733dd);
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_DDR2CTL), 0xe28733dd);
 	
     //A60807 verification plan has no this setting? default is 0x00000000
     //[12] CS0 is also applied to CS1

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/12 $
  * $RCSfile: pi_calibration_api.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -737,6 +737,22 @@ void DramcImpedanceCalApply(void)
     // CLK driving is different from others (based on waveform result), may need offset?!
     DramcClkDriving(uctx_ocd_drvp, uctx_ocd_drvn);
     DramcCaDriving(uctx_ocd_drvp, uctx_ocd_drvn);
+    
+    u4value = ucDram_Register_Read(mcSET_PHY_REG_ADDR(0x08c));
+    mcSET_FIELD(u4value, 0xff, 0x000000ff, 0);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x08c), u4value);
+
+    u4value = ucDram_Register_Read(mcSET_PHY_REG_ADDR(0x090));
+    mcSET_FIELD(u4value, 0xff, 0xff000000, 24);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x090), u4value);
+    
+    u4value = ucDram_Register_Read(mcSET_PHY_REG_ADDR(0x0a8));
+    mcSET_FIELD(u4value, 0xff, 0x000000ff, 0);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0a8), u4value);
+
+    u4value = ucDram_Register_Read(mcSET_PHY_REG_ADDR(0x0ac));
+    mcSET_FIELD(u4value, 0xff, 0xff000000, 24);
+    ucDram_Register_Write(mcSET_PHY_REG_ADDR(0x0ac), u4value);
 
 }
 #endif
