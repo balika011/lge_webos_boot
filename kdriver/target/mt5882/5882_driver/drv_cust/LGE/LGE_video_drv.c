@@ -113,6 +113,7 @@
 #include "drv_di.h"
 #include "hw_nr.h"
 #include "hw_od.h"
+#include "drv_scart.h"
 
 #if defined(CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
 #include "mtk_video_drv_4k2k.c"
@@ -1537,6 +1538,21 @@ void DRVCUST_SetBlackLvlCtrl(UINT8 bPath)
 					case SV_CS_PAL:
 					case SV_CS_PAL_60:
 						SET_MATRIX_PED(SV_OFF);						
+					#if SUPPORT_SCART		
+						if((bPath == SV_VP_MAIN && VSS_MAJOR(_bSrcMainNew) == VSS_SCART) ||
+						(bPath == SV_VP_PIP && VSS_MAJOR(_bSrcSubNew) == VSS_SCART))
+							{								
+								switch(bDrvGetScartInputMode())
+								{
+									case SV_SCART_RGB:
+										SET_MATRIX_PED(!bLevel);
+										break;
+									default:										
+										SET_MATRIX_PED(SV_OFF);
+									break;
+								}
+						}					
+					#endif					
 						break;
 					case SV_CS_NTSC443:
 						SET_MATRIX_PED(SV_ON);						
@@ -1601,12 +1617,18 @@ UINT32 DRVCUST_GetOSMatrix709(UINT8 bPath)
 {
     UINT32 u4Matrix709;
     UINT32 u4ScrTiming = bDrvVideoGetSourceTypeTiming(bPath);
+	UINT32 u4SignalType = bGetSignalType(bPath);
 
-    if((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase)  & 0xc0) == 0x40)
+	//Ignore hdmiRegBase flag when HDMI PC timing
+    if((u4SignalType == SV_ST_DVI) 
+		&& (u4ScrTiming != SOURCE_TYPE_TIMING_PC_RGB)
+		&& ((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase)  & 0xc0) == 0x40))
     {
         u4Matrix709 = SV_FALSE;
     }
-    else if((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase) & 0xc0) == 0x80)
+    else if((u4SignalType == SV_ST_DVI) 
+		&& (u4ScrTiming != SOURCE_TYPE_TIMING_PC_RGB)
+		&& ((u1IO32Read1B(AVIRX1_1 + u4ActiveHdmiRegBase) & 0xc0) == 0x80))
     {
         u4Matrix709 = SV_TRUE;
     }
