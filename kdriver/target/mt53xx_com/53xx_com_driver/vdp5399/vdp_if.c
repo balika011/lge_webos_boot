@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/12 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1082,9 +1082,9 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
 		{
          _bCount=20;   
 		}
-		if((bGetSignalType(ucVdpId)==SV_ST_TV)&&(_rTvd3dStatus.bTvdMode==SV_CS_PAL_N))
+		if((bGetSignalType(ucVdpId)==SV_ST_TV))
 		{
-         _bCount=15;   
+          _bCount=12;    //LGE target is 700ms  ATV to ATV  ,the value can meet LGE request
 		}
         #if ENABLE_PRBS_BY_DRIVER
         _bEnablePrbsByAPMute=FALSE;

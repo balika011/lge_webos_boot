@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #31 $
+* $Revision: #32 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -192,7 +192,7 @@
 #define TVD_FORCE_FAST_VALIGN 1
 #define TVD_8222_NONSTANDARD 1
 #define TVD_NO_BYPASS_TRICK 1
-#define TVD_VCR_PALSW_FAST 0
+#define TVD_VCR_PALSW_FAST 1
 #define TVD_VCR_SECAM_DARK 0
 #define TVD_OLD_VCR 0
 #define TVD_FAST_MODEGAIN_CHANNEL_CHANGE 0
@@ -3327,8 +3327,10 @@ static UINT16 _swDrvTvdGetMenuAvDelay(UINT8 bTvdMode)
  */
 static void _svDrvTvdSetMenuAvDelay(UINT8 bTvdMode, UINT16 wAvDelay)
 {
+    /*
     if(IO32ReadFldAlign(TG_09, IIR_LLOCK_EN))
         wAvDelay = wAvDelay + 3;
+	*/
     switch(bTvdMode)
     {
         case SV_CS_PAL_60:
@@ -8354,6 +8356,8 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 	{
 	  _sbManualVPresForTuning=FALSE;
 	}
+	vIO32WriteFldAlign(DFE_15, 0x90, HALF_BLANK);
+	vIO32WriteFldAlign(DFE_15, 0x35, MAXMIN_LARGE_TH);
     // Connect
     if(bOnOff == SV_ON)
     {

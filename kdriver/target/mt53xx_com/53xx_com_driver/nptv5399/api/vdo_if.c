@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/12 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #44 $
+ * $Revision: #45 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1624,6 +1624,8 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 
 	if(bOnOff==0)
 	{
+		VBI_DisableBySlicer(0x1);  
+		VBI_DisableBySlicer(0x2);
 		vTvd3dConnect(0x0, SV_OFF);
 		LOG(0, "bApiVFEAVDdisconnect:clean the AVMUX and power down the ADC.\n");
 	}
