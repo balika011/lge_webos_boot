@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/12 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #26 $
+ * $Revision: #27 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -470,6 +470,7 @@ void VDP_SetB2rEnable(UCHAR ucVdpId)
         }
         else
         {
+           //  _B2R_SetBlack(ucB2rId,TRUE);
             //remove this one, but still exsit another DP
             if (ptFirstDP != NULL && ptFirstDP != ptDP)
             {
@@ -524,7 +525,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
      B2R_OBJECT_T *this;
     
     
-    LOG(3, "DTV(%d) Event(%d)\n", ucVdpId, u4Status);
+    LOG(2, "DTV(%d) Event(%d)\n", ucVdpId, u4Status);
     VERIFY_VDP_ID_RET_VOID(ucVdpId);
      ucB2rId = VDP2B2RID(ucVdpId);
     VERIFY_B2R_ID_RET_VOID(ucB2rId);
@@ -677,6 +678,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 		#else
 		     LOG(0, "ucVdpId(%d) DTV Mode Change,ucB2rId=%d\n\n", ucVdpId,this->ucB2rId);
 		#endif
+		    
 #ifdef TIME_MEASUREMENT
             TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME_DRV, "B2R Mode Change");
 #endif
@@ -691,6 +693,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 				#ifdef CC_SUPPORT_PIPELINE
                 VDP_PipeModeChangeDone(ucVdpId,this->ucB2rId);
 				#endif
+				
             }
             //#ifdef CC_B2R_RM_SUPPORT
             if((u4Status == VDP_B2R_START_PLAY)&&(_prVdpCfg[ucVdpId]->u4SrcWidth>1920||_prVdpCfg[ucVdpId]->u4SrcHeight>1088)&&_prVdpCfg[ucVdpId]->fgBypssEnabe)
@@ -1306,6 +1309,10 @@ static VOID _VDP_PipeLineSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 #endif
       
 		_B2R_ProcDPs(this, ptDP);
+         if(ucB2rId!=B2R_NS)
+         {
+             _B2R_SetBlack(ucB2rId,TRUE);
+         }
 	
 }
 

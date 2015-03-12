@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/22 $
+ * $Date: 2015/03/12 $
  * $RCSfile: b2r_drvif.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -383,8 +383,34 @@ VOID _B2R_GetYCStart(UCHAR ucB2rId,UINT32 *pu4YStart, UINT32 *pu4CStart, UINT32 
 
 VOID _B2R_SetBlack(UCHAR ucB2rId, BOOL fgBlack)
 {
-    UNUSED(ucB2rId);
-    UNUSED(fgBlack);
+
+
+    B2R_OBJECT_T *this;
+    B2R_HAL_TP_T tPat;
+    this = _B2R_GetObj(ucB2rId);
+
+    if (!this)
+    {
+        return;
+    }
+
+   
+	if (fgBlack != 0)
+        {
+            tPat.fgEnable  = TRUE;
+            tPat.eMode     = B2R_TP_NO_GRID;
+            tPat.u4Color   = 0x00108080;
+            tPat.u4Reserve = 0;
+            B2R_HAL_Set(this->hB2r, B2R_HAL_PATTERN, &tPat);
+        }
+        else
+        {
+            tPat.fgEnable  = FALSE;
+            tPat.eMode     = B2R_TP_NO_GRID;
+            tPat.u4Color   = 0x00108080;
+            tPat.u4Reserve = 0;
+            B2R_HAL_Set(this->hB2r, B2R_HAL_PATTERN, &tPat);
+        }
 }
 
 VOID _B2R_ForceBg(UCHAR ucB2rId, UCHAR ucForce)

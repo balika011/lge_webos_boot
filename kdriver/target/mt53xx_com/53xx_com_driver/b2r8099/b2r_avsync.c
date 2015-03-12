@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/07 $
+ * $Date: 2015/03/12 $
  * $RCSfile: b2r_avsync.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1207,7 +1207,7 @@ static BOOL _B2R_IsNptvStable(B2R_OBJECT_T *this, UCHAR ucStcSrc, STC_CLOCK* prS
 						break;
 					}
 
-					_B2R_SetBlack(ucB2rId, FALSE);
+				//	_B2R_SetBlack(ucB2rId, FALSE);
 					prB2rVar->fgPendingForSTC = FALSE;
 				}
 				else

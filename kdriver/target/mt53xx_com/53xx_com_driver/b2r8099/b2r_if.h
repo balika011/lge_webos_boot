@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/12 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -157,6 +157,7 @@ typedef struct
     UINT32 u4DispMode;
     UCHAR  ucFbgId;
     UCHAR  ucFbId;
+	UINT8  u4FrameNum;
 } VDP_B2R_CHG_FRAME_MSG_T;
 
 

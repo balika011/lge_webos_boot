@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/12 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1674,7 +1674,8 @@ void FBM_SetFrameBufferFlag(UCHAR ucFbgId, UINT32 u4Flag)
     FBM_MUTEX_LOCK(ucFbgId);
     if (u4Flag == FBM_FLAG_SEQ_CHG || u4Flag == FBM_FLAG_SEQ_CHG_SPEEDUP)
     {
-      _prFbg[ucFbgId].fgGotFirstSeqChg = TRUE;
+             u4Flag = FBM_FLAG_SEQ_CHG_SPEEDUP;//for LG only
+            _prFbg[ucFbgId].fgGotFirstSeqChg = TRUE;
 #ifdef TIME_MEASUREMENT
               TMS_DIFF_EX(TMS_FLAG_CHG_CHL, TMS_CHL_CHE_TIME, "Vdec_SEQ_CHG");
               TMS_DIFF_EX(TMS_FLAG_BOOT, TMS_COOL_BOOT_TIME, "Vdec_SEQ_CHG");
