@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/05 $
+ * $Date: 2015/03/12 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5303,9 +5303,11 @@ static void _AudWaitPlayProcess(UINT8 u1DspId, UINT8 u1DecId)
 #ifndef CC_AUD_ENABLE_PLAY_MUTE_CONTROL
         AUD_DspInputChannelDelay(_arAudDecoder[u1DspId][u1DecId].eStreamFrom);
 #endif
+#ifndef CC_AUD_DDI //cause Aout Reinit
 #ifndef CC_AUD_USE_NVM
         AUD_DspInputChangeAVCPara(_arAudDecoder[u1DspId][u1DecId].eStreamFrom);
-#endif 
+#endif
+#endif
 #ifdef CC_AUD_LOUDNESS_FROM_SOURCE_SOUNDMODE
         AUD_DspInputChangeLoudnessPara(_arAudDecoder[u1DspId][u1DecId].eStreamFrom);
 #endif
@@ -14988,9 +14990,10 @@ void AUD_Aproc_Aout_Routine(UINT8 u1DecID) //new_arm_pts_table
             LOG(5, "(Aproc_Sync)Start HOLD for Dec(%d)\n", u1DecID);
         }
     }
-
-    _vAprocSetRoutine (APROC_ROUTINE_ID_ER_SP_PATH);
-    _vAprocSetRoutine (APROC_ROUTINE_ID_ER_HP_PATH);
+	//Routine is processed at APROC DSP thread, it is common for all decoder. 
+	//If background DEC send ER Routine cmd to APROC, it will affect foregournd DEC playing.
+    //_vAprocSetRoutine (APROC_ROUTINE_ID_ER_SP_PATH);
+    //_vAprocSetRoutine (APROC_ROUTINE_ID_ER_HP_PATH);
     
 }
 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/12 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #35 $
+ * $Revision: #36 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3263,7 +3263,7 @@ void _AUD_DspCfgSetDecType(UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStreamFrom, AUD
            DRVCUST_SendAudEvent(E_CUST_AUD_SOURCE_CHANGE, u1DecId);
        }
    }   
-
+#ifndef CC_AUD_DDI
     if (u1DecId<= AUD_DEC_AUX)
     {
         // Adjust agc
@@ -3276,6 +3276,7 @@ void _AUD_DspCfgSetDecType(UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStreamFrom, AUD
             _AudDspAgcEnalbe(u1DecId, FALSE);
         }
     }
+#endif
 
 #ifdef CC_MT5391_AUD_3_DECODER
     if (u1DecId < AUD_DEC_THIRD)
@@ -10579,8 +10580,10 @@ void _AUD_DspHdmiModeMuteEnable(UINT8 u1DecId, BOOL fgEnable)
     {
         AUD_DEC_ID_VALIDATE(u1DecId);
         VOL_CTL_SEMA_LOCK(u1DecId);
-
+    //background DEC play/stop affect SPDIF output.
+#ifndef CC_AUD_DDI
         _AUD_DspPlayMuteSpdifEnable(!fgEnable); 
+#endif
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
         _AudAprocInputMute(u1DecId, fgEnable);
 #else
