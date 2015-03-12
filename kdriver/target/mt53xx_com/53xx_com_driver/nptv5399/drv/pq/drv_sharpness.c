@@ -128,6 +128,12 @@ UINT8 TDS_YLEV_APL[17] =
     0x80       
 };
 
+UINT8 TDS_YLEV_CUST[17] =
+{
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+    0x80, 0x80, 0x80, 0x80, 0x69, 0x51, 0x3D, 0x38,
+    0x20
+};
 UINT32 TDS_YLEV_32BIT_VALUE[5];
 
 static UINT32 const TDS_CURVE_REGADDR[TDS_BAND_NUM]=
@@ -1310,6 +1316,7 @@ void vDrvPostSharpParam(void)
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADAP_ENA), TDS_YLEV_ADAP_ENA);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADL_ENA), TDS_YLEV_ADL_ENA);
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_APL_ENA), TDS_YLEV_APL_ENA);
+    vIO32WriteFldAlign(TDPROC_YLEV_00, SV_ON, TDS_YLEV_CUST_ENA);	
     vIO32WriteFldAlign(TDPROC_YLEV_00, wReadQualityTable(QUALITY_TDSHARPALL_YLEV_ADL_GAIN), TDS_YLEV_ADL_GAIN);
 	
 	//No need to set this regster by mtk fw, this control by LGE HAL VPQ
@@ -2003,6 +2010,15 @@ void vDrvCalYLevAplTable(void)
     }
 }
 
+void DrvCustYLevTable(void)
+{
+	UINT8 Index;
+	
+	for(Index=0; Index<17; Index++)
+	{
+		TDS_YLEV[Index] = (UINT16)(TDS_YLEV[Index] * TDS_YLEV_CUST[Index]) >> 7;		
+	}
+}
 #if 0
 void vDrvGlobalGainbyYLEV(void)
 {
@@ -2056,6 +2072,13 @@ void vDrvAdapYLev(void)
 	        {	
 	            vDrvCalYLevAplTable();        
 	        }              
+	        if (IO32ReadFldAlign(TDPROC_YLEV_00, TDS_YLEV_CUST_ENA))
+	        {
+				if(bGetSignalType(SV_VP_MAIN) == SV_ST_TV)
+				{
+					DrvCustYLevTable();  // add for ATV ring control.
+				}				
+	        }
 	    }
     }
 		//vDrvGlobalGainbyYLEV();

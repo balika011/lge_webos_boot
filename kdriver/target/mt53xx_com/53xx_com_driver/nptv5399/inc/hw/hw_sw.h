@@ -1242,6 +1242,7 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define TDS_YLEV_ADAP_ENA Fld(1, 0, AC_MSKB0)       
     #define TDS_YLEV_ADL_ENA Fld(1, 1, AC_MSKB0)        
     #define TDS_YLEV_APL_ENA Fld(1, 2, AC_MSKB0)
+	#define TDS_YLEV_CUST_ENA Fld(1, 3, AC_MSKB0)	
     #define TDS_YLEV_APL_ZERO Fld(4, 8, AC_MSKB1)
     #define TDS_YLEV_APL_THR Fld(4, 12, AC_MSKB1)       
     #define TDS_YLEV_ADL_GAIN Fld(8, 24, AC_FULLB3)                
