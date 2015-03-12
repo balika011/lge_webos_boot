@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/03/12 $
  * $RCSfile: drv_mpeg.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -478,14 +478,9 @@ UINT16 u2MpegHdInputValidDataWidth(void)
 
     if (_prB2rConf[ucB2rId])
     {
-        UINT32 u4ResizeWidth = 0;
-        UINT32 u4ResizeHeight = 0;
-        if (VDP_GetSeamlessResizeSize(bPath, &u4ResizeWidth, &u4ResizeHeight))
-        {
-            return (UINT16)u4ResizeWidth;
-        }
-        
-        return _prB2rConf[ucB2rId]->u4SrcWidth;
+      
+    
+        return _prB2rConf[ucB2rId]->rOutInfo.u4Width;
     }
 
     return 0;
@@ -517,14 +512,8 @@ UINT16 u2MpegSdInputValidDataWidth(void)
 #ifdef SUPPORT_2_B2R
     if (_prB2rConf[ucB2rId])
     {
-        UINT32 u4ResizeWidth = 0;
-        UINT32 u4ResizeHeight = 0;
-        if (VDP_GetSeamlessResizeSize(bPath, &u4ResizeWidth, &u4ResizeHeight))
-        {
-            return (UINT16)u4ResizeWidth;
-        }
-        
-        return _prB2rConf[ucB2rId]->u4SrcWidth;
+       
+        return _prB2rConf[ucB2rId]->rOutInfo.u4Width;
     }
 #endif
     return 0;
@@ -554,14 +543,8 @@ UINT16 u2MpegHdInputHeight(void)
 
     if (_prB2rConf[ucB2rId])
     {
-        UINT32 u4ResizeWidth = 0;
-        UINT32 u4ResizeHeight = 0;
-        if (VDP_GetSeamlessResizeSize(bPath, &u4ResizeWidth, &u4ResizeHeight))
-        {
-            return (UINT16)u4ResizeHeight;
-        }
-
-        return _prB2rConf[ucB2rId]->u4SrcHeight;
+        
+        return _prB2rConf[ucB2rId]->rOutInfo.u4Height;
     }
 
     return 0;
@@ -592,14 +575,8 @@ UINT16 u2MpegSdInputHeight(void)
 #ifdef SUPPORT_2_B2R
     if (_prB2rConf[ucB2rId])
     {
-        UINT32 u4ResizeWidth = 0;
-        UINT32 u4ResizeHeight = 0;
-        if (VDP_GetSeamlessResizeSize(bPath, &u4ResizeWidth, &u4ResizeHeight))
-        {
-            return (UINT16)u4ResizeHeight;
-        }
-        
-        return _prB2rConf[ucB2rId]->u4SrcHeight;
+       
+        return _prB2rConf[ucB2rId]->rOutInfo.u4Height;
     }
 #endif
     return 0;
