@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/13 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -342,6 +342,62 @@ extern AUD_DEC_MUTE_TYPE_T _aeMuteType[AUD_DEC_NUM];
 extern void vAprocMain_Close(void);
 #endif
 #endif
+
+const AUD_ENUM_TO_NAME_T eAudStreamFromTbl[] = 
+{
+    {AUD_STREAM_FROM_OTHERS, "OTHERS"},
+    {AUD_STREAM_FROM_DIGITAL_TUNER, "DTV"},
+    {AUD_STREAM_FROM_ANALOG_TUNER, "ATV"},
+    {AUD_STREAM_FROM_SPDIF, "SPDIF_IN"},
+    {AUD_STREAM_FROM_LINE_IN, "LINE_IN"},
+    {AUD_STREAM_FROM_HDMI, "HDMI"},
+    {AUD_STREAM_FROM_MEMORY, "MEMORY"},
+    {AUD_STREAM_FROM_BUF_AGT, "BUF_AGT"},
+    {AUD_STREAM_FROM_FEEDER, "FEEDER"},
+    {AUD_STREAM_FROM_MULTI_MEDIA, "MEDIA"},
+    {AUD_STREAM_FROM_LINE_IN_2, "LINE_IN2"},
+    {AUD_STREAM_FROM_LINE_IN_3, "LINE_IN3"},
+#ifdef CC_ENABLE_AOMX 
+    {AUD_STREAM_FROM_GST, "Gstreamer"},
+#endif
+#ifdef CC_AUD_I2S_IN
+    {AUD_STREAM_FROM_I2S, "I2S_IN"}
+#endif
+};
+
+const AUD_ENUM_TO_NAME_T eAudDrvFmtTbl[] = 
+{
+    {AUD_FMT_UNKNOWN, "UNKNOWN"},
+    {AUD_FMT_MPEG, "MPEG"},
+    {AUD_FMT_AC3, "AC3"},
+    {AUD_FMT_PCM, "PCM"},
+    {AUD_FMT_MP3, "MP3"},
+    {AUD_FMT_AAC, "AAC"},
+    {AUD_FMT_DTS, "DTS"},
+    {AUD_FMT_WMA, "WMA"},
+    {AUD_FMT_RA, "RA"},
+    {AUD_FMT_MTS, "MTS"},
+    {AUD_FMT_PAL, "PAL"},
+    {AUD_FMT_A2, "PAL"},
+    {AUD_FMT_DETECTOR, "DETECTOR"},
+    {AUD_FMT_LPCM, "LPCM"},
+    {AUD_FMT_FMRDO, "FMRDO"},
+    {AUD_FMT_FMRDO_DET, "FMRDO_DET,"},
+    {AUD_FMT_SBCDEC, "SBCDEC"},
+    {AUD_FMT_SBCENC, "SBCENC"},
+    {AUD_FMT_G729DEC, "G729"},
+    {AUD_FMT_VORBISDEC, "VORBIS"},
+    {AUD_FMT_WMAPRO, "WMAPRO"},
+    {AUD_FMT_HE_AAC, "HE_AAC"},
+    {AUD_FMT_HE_AAC_V2, "HE_AAC_V2"},
+    {AUD_FMT_AMR, "AMR"},
+    {AUD_FMT_AWB, "AWB"},
+    {AUD_FMT_FLAC, "FLAC"},
+    {AUD_FMT_G726, "G726"},
+    {AUD_FMT_TV_SYS, "TV_SYS"},
+    {AUD_FMT_WMA10LOSSLESS, "WMA10LOSSLESS"},
+    {AUD_FMT_WMA10SPEECH, "WMA10SPEECH"}
+};
 
 //-----------------------------------------------------------------------------
 // Static functions
@@ -870,8 +926,9 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
     UINT8 u1OriMainID;
 
     UNUSED(u1OriMainID);    
-    LOG(0, "CMD: set DecType: Dsp(%d) Dec(%d) StreamFrom(%d) Fmt(%d)\n",
-        u1DspId, u1DecId, (UINT8)eStreamFrom, (UINT8)eDecFmt);
+    LOG(0, "CMD: set DecType: Dsp(%d) AUD_DEC%d Input(%s) Codec(%s)\n", u1DspId, u1DecId, 
+        AUD_EnumToName(eAudStreamFromTbl, AUD_ARRAY_SIZE(eAudStreamFromTbl), eStreamFrom), 
+        AUD_EnumToName(eAudDrvFmtTbl, AUD_ARRAY_SIZE(eAudDrvFmtTbl), eDecFmt));
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1394,7 +1451,7 @@ INT32 AUD_DSPCmdPlay(UINT8 u1DspId, UINT8 u1DecId)
 #endif
 #endif    
 
-    LOG(2, "CMD: set Play: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Play: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1597,7 +1654,7 @@ INT32 AUD_DSPCmdPlayAsyn(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 {
-    LOG(2, "CMD: set Resume: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Resume: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1634,7 +1691,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
 {
-    LOG(2, "CMD: set Pause: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Pause: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1724,7 +1781,7 @@ INT32 AUD_DSPCmdStop(UINT8 u1DspId, UINT8 u1DecId)
 #endif    
 #endif
 
-    LOG(2, "CMD: set Stop: Dsp(%d) Dec(%d)\n", u1DspId, u1DecId);
+    LOG(2, "CMD: set Stop: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -7184,6 +7241,18 @@ void AUD_SetUiSpkOnOff(BOOL fgEnable)
 }
 #endif
 
+const CHAR* AUD_EnumToName(const AUD_ENUM_TO_NAME_T *eTable, UINT32 u4Size, UINT32 u4Value)
+{
+    UINT32 i;
+    for (i = 0; i < u4Size; i++) 
+    {
+        if (eTable[i].u4Value == u4Value) 
+        {
+            return eTable[i].paName;
+        }
+    }
+    return "";
+}
 
 void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
             UINT32 u4Arg1, UINT32 u4Arg2, UINT32 u4Arg3, UINT32 u4Arg4)

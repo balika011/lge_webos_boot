@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/13 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6983,6 +6983,10 @@ static void _DtvLockCheck(UINT8 u1DecId)
             AUD_DrvMMNoDataNotify(AUD_DEC_MAIN);
 #endif
         }
+        if (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)
+        {
+            LOG(1, "DTV input DMX(SDEC) doesn't feed data to AUD_DEC%d\n", u1DecId);
+        }
         eDecStatus = AUD_DECODE_NO_DATA;
     }
 #ifndef CC_ENABLE_AOMX 
@@ -8158,7 +8162,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
             DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, rPes.u4Pts, u4StartDecWp[u1DecId]);
             VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
             _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-            LOG(5, "===> AD on Dec (%d) First decode PTS (0x%x), AudPTS = 0x%x, Aud PES cnt (%d) \n",
+            LOG(0, "===> AD on Dec (%d) First decode PTS (0x%x), AudPTS = 0x%x, Aud PES cnt (%d) \n",
                 u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].rFristDecodePes.u4Pts, (UINT32)(rPes.u4Pts & 0xffffffff), _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
         }
 #endif
@@ -8181,7 +8185,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
                 DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, (UINT32)(rPes.u4Pts & 0xffffffff), u4StartDecWp[u1DecId]);
                 VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
                 _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-                LOG(5, "===> Dec (%d) StartPTS = 0x%x, AudPTS = 0x%x, Aud PES cnt after I (%d) \n",
+                LOG(0, "===> Dec (%d) StartPTS = 0x%x, AudPTS = 0x%x, Aud PES cnt after I (%d) \n",
                     u1DecId, (UINT32)(_arAudDecoder[AUD_DSP0][u1DecId].u4StartPts & 0xffffffff),
                     (UINT32)(rPes.u4Pts & 0xffffffff),
                     _arAudDecoder[AUD_DSP0][u1DecId].u4PesCntAfterIPicReceived);
@@ -8215,7 +8219,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
             DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, rPes.u4Pts, u4StartDecWp[u1DecId]);
             VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
             _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-            LOG(5, "===> Dec (%d) First decode PTS (0x%x), AudPTS = 0x%x, Aud PES cnt (%d) \n",
+            LOG(0, "===> Dec (%d) First decode PTS (0x%x), AudPTS = 0x%x, Aud PES cnt (%d) \n",
                 u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].rFristDecodePes.u4Pts, (UINT32)(rPes.u4Pts & 0xffffffff), _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
         }
         else /* (_afgFirstIPicArrived[ucDevId] == FALSE) */
@@ -8250,9 +8254,9 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
                 DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, (UINT32)(rPes.u4Pts & 0xffffffff), u4StartDecWp[u1DecId]);
                 VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
                 _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-                LOG(3, "Dec (%d) No recieve I after a long time. Aud PES cnt (%d)\n", u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
-                LOG(3, "Dec (%d) DeltaPts (0x%x)\n", u1DecId, u4DeltaPts);
-                LOG(5, "Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) \n",
+                LOG(0, "Dec (%d) No recieve I after a long time. Aud PES cnt (%d)\n", u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
+                LOG(0, "Dec (%d) DeltaPts (0x%x)\n", u1DecId, u4DeltaPts);
+                LOG(0, "Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) \n",
                     u1DecId, (UINT32)(_arAudDecoder[AUD_DSP0][u1DecId].rFristDecodePes.u4Pts & 0xffffffff), _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
             }
             else
@@ -8284,8 +8288,8 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
         DSP_SetStartPtsToShm(AUD_DSP0, u1DecId, rPes.u4Pts, u4StartDecWp[u1DecId]);
         VERIFY(AUD_DRVCmd(AUD_DSP0, u1DecId, AUD_CMD_AVSYNC));
         _afgIssuePlayComToDsp[AUD_DSP0][u1DecId] = TRUE;
-        LOG(5, "===>Send Av sync command in free run mode it is being waited\n");
-        LOG(5, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) \n",
+        LOG(0, "===>Send Av sync command in free run mode it is being waited\n");
+        LOG(0, "===> Dec (%d) First decode PTS (0x%x), Aud PES cnt (%d) \n",
             u1DecId, _arAudDecoder[AUD_DSP0][u1DecId].rFristDecodePes.u4Pts, _arAudDecoder[AUD_DSP0][u1DecId].u4ReceivePesCount);
     }
     else if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecState == AUD_DEC_STOP) && (!_afgIssuePlayComToDsp[AUD_DSP0][u1DecId]) &&
@@ -14786,7 +14790,7 @@ inline void AUD_Aproc_Do_Skip(UINT8 u1DecID, INT32 i4Size, INT32 i4Diff) //new_a
     {
         i4Size = (i4Diff/i4Size);             // STC(90k based) to ms
         //i4FrameSz = (i4FrameSz >= 9)? 9 : i4FrameSz;
-        LOG(5,"(Aproc_Sync)Diff is %d, So Dec(%d) Skip %d\n", i4Diff, u1DecID, i4Size);
+        LOG(2,"(Aproc_Sync)Diff is %d, So Dec(%d) Skip %d\n", i4Diff, u1DecID, i4Size);
         if (i4Size > 0) //i4FrameSz is now number of frames need to be skipped.
         {
             DSP_SetSkipFrame(u1DecID, i4Size);
@@ -14897,7 +14901,7 @@ void AUD_Aproc_Avsync_Ctrl(UINT8 u1DecID)
             vAprocReg_Write(APROC_ASM_ADDR(APROC_ASM_ID_AVSYNC_0,(APROC_REG_AVSYNC_CMD_SRC0+u1DecID)), AVSYNC_CMD_WAIT_ON);
             _gi4StcDiff[u1DecID] = 0;
             fgSkipUnderHold[u1DecID] = FALSE;
-            LOG(5,"(Aproc_Sync)Dec(%d) stc_diff=%d, HOLD!!\n", u1DecID, i4LocalStcDiff);
+            LOG(2,"(Aproc_Sync)Dec(%d) stc_diff=%d, HOLD!!\n", u1DecID, i4LocalStcDiff);
         }
     }
     else if ((i4LocalStcDiff < i4HighBound) && (i4LocalStcDiff > i4LowBound)) // === Audio Slow, Skip ===

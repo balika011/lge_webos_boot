@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/03/13 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -104,6 +104,9 @@
 //-----------------------------------------------------------------------------
 // Audio table enum and structure
 //-----------------------------------------------------------------------------
+
+#define AUD_ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
 #define DUAL_AUD_DEC_CONNECT 0
 #define DUAL_AUD_DEC_DISCONNECT 1
 
@@ -655,6 +658,11 @@ typedef void (*AMP_SET_DAC_GAIN)(UINT8 u1HpId, INT16 i2Gain);
 typedef void (*AMP_REG_WRITE)(UINT8 u1Offset, UINT8 u1Data);
 typedef UINT8 (*AMP_REG_READ)(UINT8 u1Offset);
 #endif
+
+typedef struct  {
+    UINT32 u4Value;
+    const CHAR *paName; 
+}AUD_ENUM_TO_NAME_T;
 
 /// Audio codec function table.
 typedef struct
@@ -6396,6 +6404,7 @@ extern INT32 DrvCust_AQ_SetGet(AUD_DrvCust_AQ_OP_T eType, void* arg1, void* arg2
 //---------------------------------------------------------------------------
 // Public functions
 //---------------------------------------------------------------------------
+extern const CHAR* AUD_EnumToName(const AUD_ENUM_TO_NAME_T *eTable, UINT32 u4Size, UINT32 u4Value); 
 
 //-----------------------------------------------------------------------------
 // AUD_IsDecoderPlay

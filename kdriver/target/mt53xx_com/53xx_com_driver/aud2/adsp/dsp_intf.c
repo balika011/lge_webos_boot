@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/13 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3246,7 +3246,7 @@ TOP_ENERGY_655M                .set TOP_ENERGY_585M+1
 
     _u4AtvTvSys =   u4TvSys;
 
-    LOG(5, "TV sys = %s \n", _aszTvSysMode[eTvSys]);
+    LOG(0, "Detect ATV sys = %s \n", _aszTvSysMode[eTvSys]);
 
         LOG(5, "Detector at decoder(%d) : \n", u1DecId);
         LOG(5, "Top_45M = %x\n", u4Energy45M);
@@ -6710,7 +6710,7 @@ void vDspDemodDetModeNotify(UINT32 u4IntGroup , UINT32 u4IntVector)
 #endif
     }
 
-    LOG(5, "Detect audio mode (0x%x, 0x%x) => %s\n", u4IntGroup, u4IntVector, _aszAudOutputMode[rAudDecInfo.e_aud_type]);
+    LOG(0, "Detect ATV audio mode (0x%x, 0x%x) => %s\n", u4IntGroup, u4IntVector, _aszAudOutputMode[rAudDecInfo.e_aud_type]);
 
     // To suppress warning message in release mode
     UNUSED(_aszAudOutputMode);

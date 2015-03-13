@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/15 $
+ * $Date: 2015/03/13 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2805,6 +2805,14 @@ static void AUD_AprocMixSndEnable(AUD_MIXSND_ID_T eMixSndId, BOOL fgEnable)
     }
 
     LOG(2, "%s %d : %#x : %d", __FUNCTION__, eMixSndId, u4Idx, fgEnable);
+    if (fgEnable)
+    {
+        LOG(0, "%s  Play PCM_MIX%d\n", __FUNCTION__, eMixSndId); 
+    }
+    else
+    {
+        LOG(0, "%s Stop PCM_MIX%d\n", __FUNCTION__, eMixSndId); 
+    }
 
     vAprocReg_Write(APROC_ASM_ADDR (u4Idx, u4Addr), fgEnable); 
 }

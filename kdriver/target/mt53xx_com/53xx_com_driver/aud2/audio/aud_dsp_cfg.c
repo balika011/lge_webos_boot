@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/13 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #36 $
+ * $Revision: #37 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1352,6 +1352,15 @@ LGSE_FN_PARAM_T _argLgseFnPara[AUDIO_LGSE_FUNC_NUM];
 #define APROC_DELAYBUF_BLOCK_SAMPLE_NUM	256   // samples in one block
 const UINT32 u4DelayConstant = APROC_DELAYBUF_BLOCK_SAMPLE_NUM*34/(48*5);
 #endif
+
+const AUD_ENUM_TO_NAME_T eChannelOutMap[] = 
+{
+    {AUD_CH_FRONT_LEFT, "Speaker"},
+    {AUD_CH_IEC_LEFT, "SPDIF"},
+    {AUD_CH_DMX_LEFT, "HeadPhone"},
+    {AUD_CH_AUX_FRONT_LEFT, "SCART"},
+    {AUD_CH_BYPASS_LEFT, "MONITER"},
+};
 
 //-----------------------------------------------------------------------------
 // Static functions
@@ -2838,6 +2847,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     SPDIF_BURST_INFO_T eBurstInfo;
     UINT16 u2Nsnum;
     AUD_INPUT_ID_T eInputId = _AUD_DspGetAvInputSrcId();
+    CHAR *pAudFmt = "";
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
     UINT32 u4Reg0;
 #endif    
@@ -3024,12 +3034,12 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
         u4Reg0 = APROC_RAW_PCM;
 #endif
         
-
         if (eIecFlag == AUD_IEC_CFG_RAW)
         {
             switch (eDecFormat)
             {
             case AUD_FMT_AC3:
+                pAudFmt = "AC3"; 
                 eBurstInfo = BURST_INFO_AC3;
                 u2Nsnum = 0x600; // 1536 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -3039,6 +3049,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
             case    AUD_FMT_AAC: // DDCO
                 if (_AUD_DspIsDDCOEnable())
                 {
+                    pAudFmt = "AC3(DDCO)"; 
                     eBurstInfo = BURST_INFO_AC3;
                     u2Nsnum = 0x600; // 1536 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -3047,6 +3058,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 }
                 else
                 {
+                    pAudFmt = "AAC"; 
                     eBurstInfo = BURST_INFO_AAC;
                     u2Nsnum = 0x400;//0x400; // 1024 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -3055,6 +3067,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 }
                 break;
             case AUD_FMT_DTS:
+                pAudFmt = "DTS";
                 eBurstInfo = BURST_INFO_DTS;
                 u2Nsnum = 0x200; // 512 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -3070,9 +3083,13 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
         }
         else
         { // PCM
+            pAudFmt = "PCM";
             eBurstInfo = BURST_INFO_NULL_DATA;
             u2Nsnum = 0x100; // 256 samples
         }
+
+        LOG(0, "SPDIF Output AUD_DEC%d, Enable(%d) Codec = %s\n", _u1SpdifRawDec, fgEnable, pAudFmt);
+
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);         
 #endif        
@@ -3083,7 +3100,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     if ((_aeIecMode != eIecFlag) || (_afgIecEnable != fgEnable) || (_aeIecRawSrc != eRawSource))
     {
         /* set IEC clock */
-        if ((eIecFlag==AUD_IEC_CFG_RAW) & (u1fgMute==FALSE))
+        if ((eIecFlag==AUD_IEC_CFG_RAW) && (u1fgMute==FALSE))
         {
             AUD_WRITE32(REG_IEC_DIV, IEC_AUDCK_SEL | IEC_CLK_INDEPENDENT_SEL | IEC_LRCK_CYCLE | IEC_UPDATE_SEL_2T); // Sync from [DTV00094645] (IEC_UPDATE_SEL fine tune)
         }
@@ -9106,14 +9123,29 @@ void _AUD_DspChannelVolShmRawValue(UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Vo
 //-----------------------------------------------------------------------------
 void _AUD_DspChannelMute(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, BOOL fgMute)
 {
-    LOG(0,"CMD: set ChannelMute: Dec(%d) Ch(%d) Mute(%d)\n",
-        u1DecId, (UINT8)eChannel, (UINT8)fgMute);
-
+    const CHAR *pStr = NULL;
 #ifndef CC_MT5391_AUD_3_DECODER
     AUD_DEC_ID_VALIDATE_2(u1DecId);
 #else
     AUD_DEC_ID_VALIDATE_3(u1DecId);
 #endif
+#ifndef CC_AUD_DDI
+    LOG(5,"CMD: set ChannelMute: Dec(%d) Ch(%d) Mute(%d)\n",u1DecId, (UINT8)eChannel, (UINT8)fgMute);
+#else
+    pStr = AUD_EnumToName(eChannelOutMap, AUD_ARRAY_SIZE(eChannelOutMap), eChannel);
+    if (x_strcmp(pStr, "") != 0)
+    {
+        if (u1DecId == AUD_DEC_MAIN)
+        {
+            LOG(0, "Output Mute %-10s, MuteEnable(%d)\n", pStr, fgMute);
+        }
+        else if ((u1DecId == AUD_DEC_AUX) && (eChannel == AUD_CH_FRONT_LEFT))
+        {
+            LOG(0, "Output Mute SCART     , MuteEnable(%d)\n", fgMute);
+        }
+    }
+#endif
+
     VOL_CTL_SEMA_LOCK(u1DecId);
     _aafgChlMute[u1DecId][eChannel] = fgMute;
     _AUD_DspVolumeChange(u1DspId, u1DecId, eChannel);
@@ -12460,6 +12492,7 @@ BOOL _AUD_GetDspIECConfig(void)
 //-----------------------------------------------------------------------------
 BOOL _AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
+    LOG(0, "Output Mute SPDIF     , MuteEnable(%d)\n", !fgEnable);
     VERIFY(x_sema_lock(_ahSpdifCtlSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     if(fgEnable)
     {
@@ -27309,6 +27342,32 @@ BOOL _fgMixSoundInputMute[AUD_MIXSND_NUM] = {FALSE};
 BOOL _fgSpdifConnet[AUD_DEC_MAX] = {FALSE};
 BOOL _fgInputMute[AUD_DEC_MAX] = {FALSE};
 
+CHAR *_paAudOutPortName[AUD_OUT_PORT_NUM] = 
+{
+    "Speaker",
+    "Headphone",
+    "SPDIF",
+    "AV_Out",
+    "Monitor",
+    "SCART",
+    "Bluetooth",
+    "LGSE"
+};
+
+AUD_ENUM_TO_NAME_T eAudOutSelTbl[] = 
+{
+    {APROC_OUT_SEL_DEC0, "AUD_DEC0"},
+    {APROC_OUT_SEL_DEC1, "AUD_DEC1"},
+    {APROC_OUT_SEL_MIX0, "PCM_MIX0"},
+    {APROC_OUT_SEL_MIX1, "PCM_MIX1"},
+    {APROC_OUT_SEL_MIX2, "PCM_MIX2"},
+    {APROC_OUT_SEL_MIX3, "PCM_MIX3"},
+    {APROC_OUT_SEL_MIX4, "PCM_MIX4"},
+    {APROC_OUT_SEL_MIX5, "PCM_MIX5"},
+    {APROC_OUT_SEL_MIX6, "PCM_MIX6"},
+    {APROC_OUT_SEL_MIX7, "PCM_MIX7"},
+    {APROC_OUT_SEL_LGSE, "LGSE"}
+};
 static UINT32 _AUD_UserGetDrvVol(UINT8 u1MainVol, UINT8 u1FineVol)
 {
     UINT32 u4Volumn;
@@ -27357,7 +27416,7 @@ void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute)
 
     AUD_MIXSND_ID_VALIDATE(u4MixIdex);
 
-    LOG(0, "Mixer Mute MIX(%d), MuteEnable(%d)\n", u4MixIdex, u1Mute); 
+    LOG(0, "Mixer Mute PCM_MIX%d, MuteEnable(%d)\n", u4MixIdex, u1Mute); 
     _fgMixSoundInputMute[u4MixIdex] = (BOOL) u1Mute; 
     i4Vol = _AudDspToAprocVol(_au4MixSoundInputVolume[u4MixIdex]);
     if (_fgMixSoundInputMute[u4MixIdex])
@@ -27393,7 +27452,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 
     AUD_DEC_ID_VALIDATE(u1DecId);
 
-    LOG(0, "Input Mute Dec(%d), MuteEnable(%d)\n", u1DecId, fgMute);
+    LOG(0, "Input Mute AUD_DEC%d, MuteEnable(%d)\n", u1DecId, fgMute);
 
     if (fgMute)
     {
@@ -27539,10 +27598,12 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
 {
     UINT32 u4Reg, u4OutSelVal;
     UINT8 u1DecId = 0xFF;
-
+    CHAR * paConnect[2] = {"Disconnect", "Connect"};
+    
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
-    LOG(2, "SoundConnect  current = %#x, Input = %#x \n", __FUNCTION__, eAudioOutPort, u4OutSel);
+    LOG(0, "SoundConnect:  %-10s %-10s %s\n", _paAudOutPortName[eAudioOutPort],paConnect[fgEnable], 
+        AUD_EnumToName(eAudOutSelTbl, AUD_ARRAY_SIZE(eAudOutSelTbl), u4OutSel));
     
     switch (eAudioOutPort)
     {
