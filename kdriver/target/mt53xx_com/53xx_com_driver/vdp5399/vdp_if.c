@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/13 $
  * $RCSfile: vdp_if.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -336,6 +336,7 @@ extern BOOL _bATVChannelChange;
 #if ENABLE_PRBS_BY_DRIVER
 extern BOOL _bEnablePrbsByAPMute;
 #endif
+extern BOOL  _bEnableByAPMuteCnt;
 
 //-----------------------------------------------------------------------------
 // Macro definitions
@@ -1077,7 +1078,7 @@ UINT32 VDP_SetMode(UCHAR ucVdpId, UCHAR ucMode)
         }
         // only unmute when vdp is enable,
         // else you will see some garbage frame buffer
-        
+        _bEnableByAPMuteCnt=TRUE;
 		if(bGetSignalType(ucVdpId)==SV_ST_AV)
 		{
          _bCount=20;   

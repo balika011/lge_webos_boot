@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #32 $
+* $Revision: #33 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -157,7 +157,7 @@
 #include "tvd_debug.h"
 #include "tve_if.h"
 #include "vdo_if.h"
-
+#include "mute_if.h"
 /**************************************************************************
  * Local Constant/Configure Definitions
  *************************************************************************/
@@ -427,6 +427,7 @@ static UINT8 _sbForcePalMN=FALSE;
 #endif
 
 //Mode Change Counter
+static UINT32   _sbConnectTvdCnt=0;
 static UINT8   _sbTvdModeCnt;
 static UINT8   _sbTvd_McDone_cnt = 12;
 #if TVD_CTRL_STABLE_MCNT
@@ -786,6 +787,7 @@ RTvdEnabledCS_T _rAvEnabledCS;
 RTvdEnabledCS_T _rPrevEnabledCS;
 #endif
 
+BOOL _bEnableByAPMuteCnt = FALSE;
 #if ENABLE_PRBS_BY_DRIVER
 BOOL _bEnablePrbs = TRUE;
 BOOL _bEnablePrbsByAPMute = FALSE;
@@ -4619,7 +4621,11 @@ static void _svDrvTvdNAStop(void)
 static void _svDrvTvdModeChg(void)
 {
     LOG(0, "[TVD_DBG_MSG] _svDrvTvdModeChg\n");
-
+	if((_sbConnectTvdCnt==1)&&(_bEnableByAPMuteCnt!=TRUE))
+	{
+		_vDrvVideoSetMute(MUTE_MODULE_VDP, SV_VP_MAIN, 15, FALSE);
+		LOG(1, "[TVD_DBG_MSG]modechange set the mute.\n");
+	}
     #if TVD_BP_ATV_MODECHG
     LOG(1, "[TVD_DBG_MSG] BypassModeChg = %d\n", _sbBypassModeChg);
     #endif
@@ -4680,7 +4686,7 @@ static void _svDrvTvdModeChg(void)
     #endif
 
 #if TVD_SET_ENABLED_CS
-	vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE); //Enable Menu Mode
+	//vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE); //Enable Menu Mode
     {
         RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
 
@@ -6843,8 +6849,8 @@ void vTvd3dBHModeDone(void)
             //vIO32WriteFldAlign(PQCRC_01, ATD_VMASK_START_PAL, ATD_VMASK_START_I2C);
         }
 		
-		vIO32WriteFldAlign(CDET_00, SV_ON, TVD_MMODE);
-		vIO32WriteFldAlign(CDET_00, _rTvd3dStatus.bTvdMode, TVD_MODE);
+		//vIO32WriteFldAlign(CDET_00, SV_ON, TVD_MMODE);
+		//vIO32WriteFldAlign(CDET_00, _rTvd3dStatus.bTvdMode, TVD_MODE);
     }
 }
 
@@ -7681,7 +7687,7 @@ void vTvd3dVSyncISR(void)
 #if TVD_PHALT_MN_WA2
                     _sbForcePalMN = FALSE;
 #endif
-                    //vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE);
+                    vIO32WriteFldAlign(CDET_00, SV_OFF, TVD_MMODE);
                     LOG(9,"[TVD_DBG_MSG] TVD_PHALT_MN_WA2 TVD_MMODE off (Low Noise) \n");
                 }
             }
@@ -7887,7 +7893,7 @@ void vTvd3dVSyncISR(void)
 	{
 		 vIO32WriteFldAlign(DFE_03, 0x1, AGC2_MODE);
 		 vIO32WriteFldAlign(DFE_02, DFE_BLANK_LPF_BW_CCI, BLANK_BW);//test impluse noise
-		 vIO32WriteFldAlign(DFE_02, 0x1, BLV_LIM_EN);//test impluse noise
+		 //vIO32WriteFldAlign(DFE_02, 0x1, BLV_LIM_EN);//test impluse noise
 		 LOG(1,"[TVD_DBG_MSG]Brasil blank level issue.\n");
 	}
 				
@@ -8361,6 +8367,7 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     // Connect
     if(bOnOff == SV_ON)
     {
+        _sbConnectTvdCnt++;
         if(bPath == SV_VP_MAIN)
         {
             _rTvd3dStat.bIsMain = TRUE;
@@ -8749,7 +8756,7 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
     _rTvd3dStatus.bColSys = SV_CS_AUTO;
 	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&((u4ColSys & (1<<SV_CS_PAL_N))==1))
 	{
-		return 1;
+		//return 1;
 	}
     //if(fgIsMainTvd3d()||fgIsPipTvd3d())
     {

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/13 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #45 $
+ * $Revision: #46 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1701,6 +1701,13 @@ UINT8 bApiVideoGetAnalogCopyProtect(UINT8 bPath, UINT8 *pu1Psp, UINT8 *pu1CStrip
  */
 UINT8 bApiVideoGetColorSystem(void)
 {
+    static UINT8 color1,color2;
+	color1=bTvd3dGetColorSystem();
+	if(color1!=color2)
+	{
+        color2=color1;
+		LOG(6, "bApiVideoGetColorSystem=%d.\n",color2);
+	}
     return bTvd3dGetColorSystem();
 }
 
