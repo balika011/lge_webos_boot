@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/13 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #27 $
+ * $Revision: #28 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -552,6 +552,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
         UINT32 u4IssueModeChange = 0;
 
         // When DTV signal not ready, mute SCPOS
+        #if 0
         if ((u4Status == VDP_B2R_NO_SIGNAL))
         {
             _vDrvVideoSetMute(MUTE_MODULE_DTV, ucVdpId, FOREVER_MUTE, FALSE);
@@ -615,7 +616,7 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
 #endif
             }
         }
-
+#endif
         if (u4Status == VDP_B2R_NO_SIGNAL)
         {
             if (_prVdpCfg[ucVdpId]->ucStatus != VDP_STATUS_NOSIGNAL)
