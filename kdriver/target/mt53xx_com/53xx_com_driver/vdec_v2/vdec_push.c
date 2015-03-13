@@ -319,7 +319,7 @@ static BOOL u4AllocFbmBuffer(VDEC_T *prVdec, FBM_TYPE_T eType, UINT32 *puAddress
         if (!prVdec->prFeederPool)
         {
             prVdec->prFeederPool = FBM_Alloc(FBM_TYPE_FEEDER);
-            if (!prVdec->prFeederPool)
+            if (!prVdec->prFeederPool || (prVdec->prFeederPool->u4Size==0))
             {
                 LOG(0,"[VPUSH-%d] Error, no available feeder\n", prVdec->ucVPushId);
                 return FALSE;
@@ -340,7 +340,7 @@ static BOOL u4AllocFbmBuffer(VDEC_T *prVdec, FBM_TYPE_T eType, UINT32 *puAddress
         if (!prVdec->prDmxPool)
         {
             prVdec->prDmxPool = FBM_Alloc(eType);
-            if (!prVdec->prDmxPool)
+            if (!prVdec->prDmxPool || (prVdec->prDmxPool->u4Size==0))
             {
                 LOG(0,"[VPUSH-%d] Error, no available dmx[%d]\n", prVdec->ucVPushId, eType);
                 return FALSE;
