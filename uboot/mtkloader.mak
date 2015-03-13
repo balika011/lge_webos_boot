@@ -4,7 +4,7 @@
 # SMP core init                                                               
 #                                                                             
 # Copyright (c) 2010-2012 MediaTek Inc.                                       
-# $Author: dtvbm11 $                                                    
+# $Author: p4admin $                                                    
 #                                                                             
 # This program is free software; you can redistribute it and/or modify        
 # it under the terms of the GNU General Public License version 2 as           
@@ -183,7 +183,7 @@ RLS_LIB_ROOT = $(KDRIVER_ROOT)/mtk_obj/$(CUSTOMER)/$(MODEL_NAME)/$(OBJECT_TYPE)/
 
 # --no-print-directory -s
 
-all: do_drv_inc lib_to_obj
+all: check_version do_drv_inc lib_to_obj
 	@$(call if_file_notexist_w_sym_fct, $(VM_LINUX_ROOT)/project_x/x_inc, $(PROJECT_ROOT)/target/$(TARGET_IC)/x_inc);
 	$(MAKE) $(if $(filter -j,$(MAKEFLAGS)),,-j $(PARALLEL)) -C $(PROJECT_ROOT)/target/$(TARGET_IC)/mtkloader TARGET=$(TARGET_IC) LINUX_SOLUTION=false UBOOT_LIBRARY=
 	@$(CP) $(PROJECT_ROOT)/target/$(TARGET_IC)/mtkloader/$(EXE_NAME)_mtkloader.bin $(VM_LINUX_ROOT)/chiling/uboot/pack/$(MODEL)_$(MODE)_mtkloader_$(BOOT).bin
@@ -229,6 +229,10 @@ lib_to_obj:
 do_drv_inc :
 	@$(call if_file_notexist_w_sym_fct, $(DRV_INC_ROOT), $(PROJECT_ROOT)/target/$(TARGET_IC)/$(TARGET_DRIVER)/drv_inc);
 
+check_version :
+ifneq ($(BOOT_SUBMISSION), )
+DEFINES += -DBUILD_VERS="TO_STR($(BOOT_SUBMISSION))"
+endif
 	
 clean:
 ifeq "$(TRUSTZONE)" "true"

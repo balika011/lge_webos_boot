@@ -164,6 +164,13 @@ static UINT32 _u415MBImageAddr = 0;
 	 (((x) & 0x0000ff00) <<  8) | \
 	 (((x) & 0x000000ff) << 24))
 
+#ifndef TO_STR
+#define TO_STR(x)	#x
+#endif
+#ifndef BUILD_VERS
+#define BUILD_VERS "0"
+#endif
+
 INT32 Loader_GetPartIDByName(char *szPartName, UINT32  *pu4PartId)
 {
     UINT32 u4PartId;
@@ -877,7 +884,7 @@ if (BIM_IS_SECURE_BOOT)
 do
 	{
 		
-		CHAR LoadVesion[8] ={0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
+		CHAR LoadVesion[8] = BUILD_VERS;
 		LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
 		x_memcpy((void*)prLdrEnv->au4CustKey, (void*)customer_pub_mtka5lr_key, 256);
 		x_memcpy((void*)prLdrEnv->LoadVesion, (void*)LoadVesion, 8);

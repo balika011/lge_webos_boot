@@ -140,6 +140,8 @@ extern int get_blkdev_idx(const char *name);
 extern uint8_t gDispType;
 extern int getFullVerifyOTP(void);
 extern unsigned int tzcorestart;
+extern char LoadVesion[];
+
 static void dump(unsigned char* bin, int size, char* name)
 {
 #if 1//def SECURE_DEBUG
@@ -174,7 +176,6 @@ void linux_param_set(char *kargs)
 	
 	ulong keymem = 0;	/* key memory addr */
 	ulong keymem_len = 0;	/* key  memory  length */
-	
 
 #ifdef SIGN_USE_PARTIAL	
 		LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
@@ -291,7 +292,7 @@ void linux_param_set(char *kargs)
 	sprintf(arg_next(kargs), "countryGrp=%d ", gModelInfoDB.group_code);
 	sprintf(arg_next(kargs), "modelName=%s ", gModelInfoDB.aModelName);
 	sprintf(arg_next(kargs), "serialNum=%s ", gModelInfoDB.aSerialNum);
-	sprintf(arg_next(kargs), "sver=%s ", "3.00.00");		// 1st Boot version
+	sprintf(arg_next(kargs), "sver=%s ", LoadVesion);		// 1st Boot version
 	sprintf(arg_next(kargs), "bver=%s ", second_boot_ver);	// 2nd Boot version
 	
 
