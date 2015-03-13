@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/06 $
+ * $Date: 2015/03/13 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3909,7 +3909,7 @@ void vDspFlowControlNotify(UINT8 u1DspId, UINT32 u4DspRIntData)
     case D2RC_FLOW_CONTROL_FLUSH_DONE:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_STOP);
         vResetIecConfig();
-        _aeAudType[u1DspId][AUD_DEC_MAIN] = AUD_TYPE_UNKNOWN;
+        //_aeAudType[u1DspId][AUD_DEC_MAIN] = AUD_TYPE_UNKNOWN;     //for lg nicam-bg detect alway 
         break;
     case D2RC_FLOW_CONTROL_PAUSE_OK:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_PAUSE);
