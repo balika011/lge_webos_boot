@@ -165,7 +165,7 @@ COBJS-$(CONFIG_CMD_XIMG) += cmd_ximg.o
 COBJS-$(CONFIG_YAFFS2) += cmd_yaffs2.o
 
 
-CFLAGS += -I.. -I$(COMMON_INC) -I$(OSAI_INC) $(CC_SECURE_ROM_DEF)
+CFLAGS += -I.. -I$(COMMON_INC) -I$(OSAI_INC) $(CC_SECURE_ROM_DEF) -I$(ROOTDIR)/u-boot-2011.12/smp/include
 
 # others
 ifdef CONFIG_DDR_SPD

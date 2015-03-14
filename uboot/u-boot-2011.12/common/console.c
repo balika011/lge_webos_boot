@@ -30,6 +30,15 @@
 #include <lg_modeldef.h>
 #endif
 
+#ifdef CONFIG_MULTICORES_PLATFORM
+#include <spinlock.h>
+extern spin_lock_t g_print_lock;
+//#define readl(addr) (*(volatile unsigned int*)(addr))
+extern volatile int LogEnable;
+extern volatile int megic_number_cleaned;
+#endif
+
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SYS_CONSOLE_IS_IN_ENV
@@ -450,12 +459,8 @@ void puts(const char *s)
 		//serial_puts(s);
 	}
 }
-#include <../smp/include/spinlock.h>
 
-extern spin_lock_t g_print_lock;
-//#define readl(addr) (*(volatile unsigned int*)(addr))
-extern volatile int LogEnable ;
-extern volatile int megic_number_cleaned ;
+
 
 int printf(const char *fmt, ...)
 {
@@ -471,9 +476,9 @@ int printf(const char *fmt, ...)
 		return 0;
 #endif
 
-#if defined(CONFIG_MULTICORES_PLATFORM)
-//if(LogEnable == 2 && !megic_number_cleaned)
-	//spin_lock(&g_print_lock);
+#if defined(CFG_LG_CHG) && defined(CONFIG_MULTICORES_PLATFORM)
+	if(LogEnable == 2 && !megic_number_cleaned)
+		spin_lock(&g_print_lock);
 #endif
 
 	va_start(args, fmt);
@@ -488,9 +493,9 @@ int printf(const char *fmt, ...)
 	/* Print the string */
 	serial_puts(printbuffer);
 	
-#if defined(CONFIG_MULTICORES_PLATFORM)
-	//if(LogEnable == 2 && !megic_number_cleaned)
-	//spin_unlock(&g_print_lock);
+#if defined(CFG_LG_CHG) && defined(CONFIG_MULTICORES_PLATFORM)
+		if(LogEnable == 2 && !megic_number_cleaned)
+			spin_unlock(&g_print_lock);
 #endif
 
 	return i;
