@@ -2761,7 +2761,7 @@ void vDrvSetImportTriggerModule(UINT8 bPath, IMPORT_MODULE_E module)
     {
         if (_importInfo[bPath].importModule == IMPORT_MODULE_B2R)
         {
-            _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_START;
+            _eVRMWaitForB2RTrigger[bPath] = B2R_TRIG_OFF;
             LOG(1, "VRM(%d) VRMWaitForB2RTrigger B2R_TRIG_START\n", bPath);
         }    
         vVrmAllImportEn(bPath, SV_ON);
