@@ -837,7 +837,8 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 #endif
 
 	kernel_resume_func = (void (*))header->pa_resume_func;
-
+    BIM_SetTimeLog(3);
+	
 	display_boottime_log();
 	kernel_resume_func();
 
