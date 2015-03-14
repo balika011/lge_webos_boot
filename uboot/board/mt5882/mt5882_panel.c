@@ -143,7 +143,7 @@ static const UINT32 g_au4PlaneArray[PMX_MAX_INPORT_NS] = { PMX_OSD2, PMX_MAX_INP
 //-----------------------------------------------------------------------------
 // Public functions
 //-----------------------------------------------------------------------------
-
+u32 Get_DrawAddr(void);
 #if 1 // def LOADER_LOGO_FLASHOFFSET
 
 #ifdef  PANEL_LG_32_EUD_SDA1
@@ -809,7 +809,11 @@ INT32 load_bmp_content(BMP_INFO_T* pt_bmp_info, UCHAR* src_buf, UCHAR** dst_buf)
 
         if(u4DstAddr == 0)
         {
+        #if 0
             u4DstAddr =  TOTAL_MEM_SIZE - FBM_MEM_CFG_SIZE;
+		#else 
+			u4DstAddr = Get_DrawAddr()-0x1b0000;
+		#endif
         }
         if(*dst_buf == NULL)
         {
@@ -1656,9 +1660,13 @@ void Splash_DrawImage(unsigned int x, unsigned int y, unsigned int u4Width,
     UINT32 u4FBBuffer = 0, u4HeaderBuffer = 0, u4FirstRegionAddr = 0;
     UINT8 *pu1TmpBuf = NULL;
 	
+#if 0
     u4FBBuffer = TOTAL_MEM_SIZE - 0xB00000;
     u4HeaderBuffer = TOTAL_MEM_SIZE - 0xC00000;
-
+#else
+	u4FBBuffer = Get_DrawAddr()- 0x1000000;;
+	u4HeaderBuffer = Get_DrawAddr() - 0x1100000;
+#endif 
 
     Printf("Color:%d BmpAddr:0x%08x Width:%d Height:%d\n", (int)u4ColorMode, u4BmpAddr, (int)u4Width, (int)u4Height);
 #if 1

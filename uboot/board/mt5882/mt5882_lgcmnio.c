@@ -89,7 +89,7 @@
 
 #include <mt5882_lgcmnio.h>
 #include <cmnio_type.h>
-
+#include <spinlock.h>
 //-----------------------------------------------------------------------------
 // Configurations
 //-----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ UINT32 u4ScanPWM_DblFreq = 0;
 //---------------------------------------------------------------------------
 static unsigned int gEndPosition = 0;
 static unsigned int gPhaseShift = 0;
-
+static spin_lock_t g_read_lock = INIT_SPIN_LOCK;
 //-----------------------------------------------------------------------------
 // Local Functions
 //-----------------------------------------------------------------------------
@@ -142,6 +142,7 @@ int DDI_CMNIO_I2C_Read(uchar chNum, uchar transMode, uchar slaveAddr, uint subAd
     uchar ucSifId;
     uint  uiClkVal=100;
     uint  uiAddr;
+	uint flags;
     switch(chNum)
     {
 		case 0:
@@ -171,7 +172,9 @@ int DDI_CMNIO_I2C_Read(uchar chNum, uchar transMode, uchar slaveAddr, uint subAd
 
     for(i=0;i<=retry;i++)
     {
+    	spin_lock_save(&g_read_lock,flags);
         ret = SIF_X_Read(ucSifId, (27000/uiClkVal), slaveAddr, subAddrMode, uiAddr, rxBuf, nBytes);
+		spin_unlock_restore(&g_read_lock,flags);
         if(ret)
         {
             break;

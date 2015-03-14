@@ -821,7 +821,7 @@ int snapshot_boot(int verify, int load_only, int header_print, int desc_print, i
 	if(load_only)
 		return 0;
 
-#if 0//defined(CONFIG_MULTICORES_PLATFORM)
+#if defined(CONFIG_MULTICORES_PLATFORM)
 		extern thread_t *thread_logo;
 		if( thread_logo ) thread_join(thread_logo, NULL);
 #endif

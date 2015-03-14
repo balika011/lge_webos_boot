@@ -1112,9 +1112,6 @@ void BootSplash(void)
 	static unsigned int	_loadAddr;
 	static unsigned int _uncompAddr;
 
-	//return 0;
-	//	_loadAddr  = Get_DrawAddr();
-	//	_uncompAddr = _loadAddr + IMAGE_OFFSET;
 
 	_uncompAddr = Get_DrawAddr();
 	_loadAddr	= _uncompAddr - IMAGE_OFFSET;
@@ -1318,7 +1315,7 @@ void display_logo(void)
 {
 	printf("Bootlogo Initializing...\n");
 	
-#if 0 //defined(CONFIG_MULTICORES_PLATFORM)
+#if defined(CONFIG_MULTICORES_PLATFORM)
 	int cpu_id = 2, priority = THREAD_MAX_PRIORITY;
 
 	printf("Creating thread=%s, pri=%d, cpu= %d\n", "logo", priority, cpu_id);
