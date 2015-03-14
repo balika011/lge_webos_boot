@@ -812,7 +812,7 @@ INT32 load_bmp_content(BMP_INFO_T* pt_bmp_info, UCHAR* src_buf, UCHAR** dst_buf)
         #if 0
             u4DstAddr =  TOTAL_MEM_SIZE - FBM_MEM_CFG_SIZE;
 		#else 
-			u4DstAddr = Get_DrawAddr()-0x1b0000;
+			u4DstAddr = Get_DrawAddr()-0x1b00000;
 		#endif
         }
         if(*dst_buf == NULL)
