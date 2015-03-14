@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/21 $
+ * $Date: 2015/03/14 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -149,6 +149,9 @@ LINT_EXT_HEADER_BEGIN
 #include "x_mid.h"
 #include "x_assert.h"
 #include "x_util.h"
+#ifdef CC_SUPPORT_NPTV_SEAMLESS
+#include "b2r_if.h"
+#endif
 
 #ifdef CHANNEL_CHANGE_LOG
 #include "x_timer.h"
@@ -967,6 +970,9 @@ static void _vScpipConfigFrameTrack(UINT32 u4Step)
     UINT8 fgLRTrack;
     UINT8 bLockWin;
     VRM_INFO_T* inRes;
+#ifdef CC_SUPPORT_NPTV_SEAMLESS
+    VDP_SEAMLESS_INFO_T tb2rVrmInfo;
+#endif
 
     /**************************************
      ** Determine Frame track parameter  **
@@ -1017,6 +1023,12 @@ static void _vScpipConfigFrameTrack(UINT32 u4Step)
         {
         	u4TrackTargetVal = wDISPLAY_HEIGHT / 4;
         }
+#ifdef CC_SUPPORT_NPTV_SEAMLESS 
+        else if((bGetSignalType(VDP_1) == SV_ST_MPEG) && (VDP_SET_ERROR != VDP_GetSeamlessInfo(VDP_1, &tb2rVrmInfo)))
+        {//For seamless small height/frame rate frame tear issue
+            u4TrackTargetVal = wDISPLAY_HEIGHT *3 /4;
+        }
+#endif
         else
         {
         	u4TrackTargetVal = wDISPLAY_HEIGHT / 8;
