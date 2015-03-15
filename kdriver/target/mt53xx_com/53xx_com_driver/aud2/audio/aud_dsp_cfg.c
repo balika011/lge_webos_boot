@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/16 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #37 $
+ * $Revision: #38 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7796,6 +7796,9 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
     UINT16 u2DelayLRMix=0,u2DelayBypassMix=0,u2DelayDownmixMix=0;
     INT16  u2ExtraDelay=0;
     VDEC_HDR_INFO_T rHdrInfo;
+    UINT32 u4Factor;
+    UINT32 u4FrameSample;
+    UINT32 u4RawDelayFrame;
 
     AUD_DSP_ID_VALIDATE(u1DspId);
 #ifdef CC_AUD_DDI
@@ -8037,6 +8040,45 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
             vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
+#ifdef CC_AUD_DDI
+            switch (AUD_GetSampleFreq(_u1SpdifRawDec))
+            {
+            case FS_192K:
+                u4Factor = 192;
+                break;
+            case FS_96K:
+                u4Factor = 96;
+                break;
+            case FS_48K:
+                u4Factor = 48;
+                break;
+            case FS_44K:
+                u4Factor = 44;
+                break;
+            case FS_32K:
+                u4Factor = 32;
+                break;
+            default:
+                u4Factor = 48; 
+                break;
+            }
+            
+            switch (u2ReadShmUINT16(AUD_DSP0, W_IEC_BURST_INFO))
+            {
+            case BURST_INFO_AC3:
+            case BURST_INFO_DTS:
+            case BURST_INFO_AAC:
+                if ((u4FrameSample = u2ReadShmUINT16(AUD_DSP0, W_IEC_NSNUM)) != 0)
+                {
+                    //u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 34 + u4FrameSample/2)/u4FrameSample;
+                    u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 17 + u4FrameSample)/(2*u4FrameSample);
+                    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
+                }
+                break;
+            default:
+                break;
+            }
+#endif
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)            
             break;
         case AUD_CH_BYPASS_RIGHT:
@@ -8123,6 +8165,9 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
     UINT16 u2DelayLRMix=0,u2DelayBypassMix=0,u2DelayDownmixMix=0;
     INT16  u2ExtraDelay=0;
     VDEC_HDR_INFO_T rHdrInfo;
+    UINT32 u4Factor;
+    UINT32 u4FrameSample;
+    UINT32 u4RawDelayFrame;
    
     UNUSED(u2ShmIndex);
     if(_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_DIGITAL_TUNER)
@@ -8228,6 +8273,45 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
             x_thread_delay(30);
             vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2DelayBypassMix/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
+#ifdef CC_AUD_DDI
+            switch (AUD_GetSampleFreq(_u1SpdifRawDec))
+            {
+            case FS_192K:
+                u4Factor = 192;
+                break;
+            case FS_96K:
+                u4Factor = 96;
+                break;
+            case FS_48K:
+                u4Factor = 48;
+                break;
+            case FS_44K:
+                u4Factor = 44;
+                break;
+            case FS_32K:
+                u4Factor = 32;
+                break;
+            default:
+                u4Factor = 48; 
+                break;
+            }
+            
+            switch (u2ReadShmUINT16(AUD_DSP0, W_IEC_BURST_INFO))
+            {
+            case BURST_INFO_AC3:
+            case BURST_INFO_DTS:
+            case BURST_INFO_AAC:
+                if ((u4FrameSample = u2ReadShmUINT16(AUD_DSP0, W_IEC_NSNUM)) != 0)
+                {
+                    //u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 34 + u4FrameSample/2)/u4FrameSample;
+                    u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 17 + u4FrameSample)/(2*u4FrameSample);
+                    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
+                }
+                break;
+            default:
+                break;
+            }
+#endif
         }
 #else
         u2ShmIndex = W_CHDELAY_CH7;
