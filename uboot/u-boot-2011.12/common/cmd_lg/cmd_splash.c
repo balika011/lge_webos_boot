@@ -189,7 +189,7 @@ int Get_modelOpt(HW_OPT_T option_mask)
 			break;
 
 		case PANEL_RES_OPT_SEL:
-#ifndef CC_L_PANEL_FLOW
+#if 0//ndef CC_L_PANEL_FLOW
             printf ("Get_modelOpt force fhd\n");
             return 1;
 #else
@@ -206,7 +206,7 @@ int Get_modelOpt(HW_OPT_T option_mask)
 			break;
 
 		case EPI_OPT_SEL:
-#ifndef CC_L_PANEL_FLOW
+#if 0//ndef CC_L_PANEL_FLOW
             printf ("Get_modelOpt force not support epi\n");
             return 0;       //low, not support
             break;
@@ -216,7 +216,7 @@ int Get_modelOpt(HW_OPT_T option_mask)
 			break;
 
 		case DISPLAY_TYPE_OPT_SEL:
-#ifndef CC_L_PANEL_FLOW
+#if 0//ndef CC_L_PANEL_FLOW
 		printf("Get_modelOpt force return LCD type\n");
 		return 0;
 #else

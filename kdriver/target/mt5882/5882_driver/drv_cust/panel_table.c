@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/03/16 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1142,16 +1142,25 @@ void SelectPanel(UINT32 u4Index)
 
 		if(gPanelInfo.panel_resolution)
 		{
-			if(gPanelInfo.bSupport_frc==0)
+			if(gPanelInfo.bSupport_frc==0)//fhd
+			{
 				_u4PanelIndex=PANEL_LG_37_WU1;
+				_pu4PanelLVDSLaneSwap = (UINT32*)_au4PanelLvds10bitPinMap_LCD_FHD;
+            	_pu4PanelLVDSLanePNSwap = (UINT32*)_au4PanelLvds10bitPNSwap_LCD_FHD;
+
+			}
 			else if(gPanelInfo.bSupport_frc==1)
 				_u4PanelIndex=PANEL_LG_42_WUD_SAC1_10BIT_NS;
 		
 		}
 		else
 		{
-			if(gPanelInfo.bSupport_frc==0)
-				_u4PanelIndex=PANEL_LG_26_WX2;
+			if(gPanelInfo.bSupport_frc==0)//hd
+			{
+				_u4PanelIndex=PANEL_LCD_HD_60HZ;
+				_pu4PanelLVDSLaneSwap = (UINT32*)_au4PanelLvds10bitPinMap_LCD_HD;
+         	   _pu4PanelLVDSLanePNSwap = (UINT32*)_au4PanelLvds10bitPNSwap_LCD_HD;
+			 }
 			else if(gPanelInfo.bSupport_frc==1)
 		   		_u4PanelIndex=PANEL_LG_42_WX4_SLB1_8280;
 
@@ -1189,7 +1198,9 @@ void SelectPanel(UINT32 u4Index)
 		_prPanelAttributeExt =	& _arPanelAttributeExt[u4ExtIdx];
     }
 	#endif
-}
+		
+	printf("#panel id: %d %d\n",_u4PanelIndex,u4ExtIdx);// 0
+	}
 
 
 //-----------------------------------------------------------------------------

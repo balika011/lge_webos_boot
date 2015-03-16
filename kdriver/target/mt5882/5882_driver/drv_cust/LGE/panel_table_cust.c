@@ -74,8 +74,8 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
   * $RCSfile: panel_table_cust.c,v $
-  * $Revision: #2 $
-  * $Date: 2015/02/02 $
+  * $Revision: #3 $
+  * $Date: 2015/03/16 $
   * $Author: p4admin $
   * Description:
   *
@@ -437,6 +437,39 @@ static PANEL_ATTRIBUTE_EXT_T _arPanelAttributeExt[]=
 			0,	// u4ScanPWMDuty, permillage, 1 means 0.001
 	#endif		
 		},
+#endif
+	#if ((PANEL_SELECT == PANEL_LCD_HD_60HZ) || CC_MULTI_PANEL) 
+				{
+					PANEL_LCD_HD_60HZ,
+        #ifdef SUPPORT_PANEL_48HZ
+					72390528,				   //u4PixelClk48Hz
+					1528,					   // u2HTotal48Hz
+					987,					 // u2VTotal48Hz
+					144,
+        #endif    
+        #ifdef SUPPORT_PANEL_CUSTOMER_SPEC
+					{30, 30, 30},			//u1HSyncWidth[3]; 5bits, 1 represents 1 pixel in 5387
+					{4, 4, 4},				// u1VSyncWidth[3]; 4bits, 1 represents 1 line
+					{16, 16, 16},		  // H front porch, 1 represents 1 pixel
+					{120, 100, 15}, 		 // V back porch, 1represents 1 line
+					HSYNC_LOW,
+					VSYNC_LOW,
+        #endif
+        #ifdef SUPPORT_PANEL_DITHER
+					0xa000,
+        #endif
+        #ifdef SUPPORT_PANEL_DRIVING
+					0x3,
+        #endif
+        #ifdef SUPPORT_PANEL_SS
+					20,
+					0,
+        #endif	
+        #ifdef SUPPORT_PANEL_SCAN_PWM
+					0,	// u4ScanPWMStart, 0 means 0%
+					0,	// u4ScanPWMDuty, 0 means 0%
+        #endif	
+				},
 #endif
     #if defined(CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
     #if ((PANEL_SELECT == PANEL_AUO_4K2K_FHD60) || CC_MULTI_PANEL) 
@@ -1213,49 +1246,50 @@ static PANEL_ATTRIBUTE_T _arPanelAttribute[] =
     0,              // u2Reserved
     },
 #endif
-#if ((PANEL_SELECT == PANEL_LG_32_W1) || CC_MULTI_PANEL)
+#if ((PANEL_SELECT == PANEL_LCD_HD_60HZ) || CC_MULTI_PANEL)
     {
     1366,           // u2PanelWidth
-    768,            // u2PanelHeight
+    768,           // u2PanelHeight
 
-    80000000,       // u4PixelClkMax
-	75441600,		// u4PixelClk60Hz
-	75426000,		// u4PixelClk50Hz
-    68000000,       // u4PixelClkMin
+    75470976,   // u4PixelClkMax
+    72427200,      // u4PixelClk60Hz
+    72427200,      // u4PixelClk50Hz
+    46353408,   // u4PixelClkMin
 
-    1776,           // u2HTotalMax
-	1560,			// u2HTotal60Hz
-	1560,			// u2HTotal50Hz
-    1416,           // u2HTotalMin
+    1824,           // u2HTotalMax
+    1528,           // u2HTotal60Hz
+    1528,           // u2HTotal50Hz
+    1216,           // u2HTotalMin
 
-    1063,            // u2VTotalMax
-    806,            // u2VTotal60Hz
-    967,            // u2VTotal50Hz
-    775,            // u2VTotalMin
-    63,             // u1VClkMax
-    47,             // u1VClkMin
+    1029,         // For Dispmode, original:  1148,           // u2VTotalMax
+    790,           // u2VTotal60Hz
+    948,           // u2VTotal50Hz
+    632,           // u2VTotalMin
+    78,             // u1VClkMax
+    46,             // u1VClkMin...spec not defined
 
     30,             // u1HSyncWidth
-    3,              // u1VSyncWidth
+    4,              // u1VSyncWidth
     0x810,          // u1HPosition
     0x400,          // u1VPosition
-    SINGLE_PORT | DISP_24BIT | LVDS_MSB_SW_ON | LVDS_ODD_SW_OFF |
+
+    SINGLE_PORT | DISP_24BIT | LVDS_NS | LVDS_ODD_SW_OFF |
     PWM_LOW_PANEL_BRIGHT,
 
-    0x70,           // (100%) u1BacklightHigh
-    0xAB,           // (67%) u1BacklightMiddle
-    0xE6,           // (50%) u1BacklightLow
+    0x23, // (100%) u1BacklightHigh     // u1BacklightHigh
+    0x7D, // (67%) u1BacklightMiddle    // u1BacklightMiddle
+    0xC5, // (50%) u1BacklightLow       // u1BacklightLow
     0,              // u1Reserved
     0,              // u2DimmingFrequency60Hz
     0,              // u2DimmingFrequency50Hz
 
-    4,              // u1LvdsOnDalay
-    40,             // u1BacklightOnDelay
-    20,             // u1BacklightOffDelay
-    3,              // u1LvdsOffDalay
+    0,              // u1LvdsOnDalay
+    0,             // u1BacklightOnDelay
+    0,             // u1BacklightOffDelay
+    0,              // u1LvdsOffDalay
 
-    30,             // u2MaxOverscan
-    0,              // u2Reserved
+    50,             // u2MaxOverscan
+    0,              // u2ControlW2
     },
 #endif
 #if ((PANEL_SELECT == PANEL_LG_37_WX1) || CC_MULTI_PANEL)
@@ -10690,7 +10724,7 @@ CHAR* GetPanelName(UINT32 u4Index)
 
     case PANEL_LG_26_W1: return "PANEL_LG_26_W1";
     case PANEL_LG_26_WX2: return "PANEL_LG_26_WX2";
-    case PANEL_LG_32_W1: return "PANEL_LG_32_W1";
+	case PANEL_LCD_HD_60HZ: return "PANEL_LCD_HD_60HZ";    
     case PANEL_LG_32_WX3_SLB1: return "PANEL_LG_32_WX3_SLB1";
     case PANEL_LG_37_WX1: return "PANEL_LG_37_WX1";
     case PANEL_LG_37_WX1_SL2: return "PANEL_LG_37_WX1_SL2";
@@ -10872,19 +10906,73 @@ CHAR* GetPanelName(UINT32 u4Index)
     }
 }
 #ifdef CC_LGE_PROTO_PCBA
-static const UINT32 _au4PanelLvds10bitPinMap[24] =
+static const UINT32 _au4PanelLvds10bitPinMap_LCD_FHD[24] =
+{
+    // Port A (PADA) LLV0~LLV9, LLK_CK0,LLK_CK1
+    LVDS_A9, LVDS_A8, LVDS_ACLK2, LVDS_A6, LVDS_A5,
+    LVDS_A4, LVDS_A3, LVDS_ACLK1, LVDS_A1, LVDS_A0,
+    LVDS_A7, LVDS_A2, 
+
+    // Port B (PADB) RLV0~RLV9, RLK_CK0,RLK_CK1
+    LVDS_A9, LVDS_A8, LVDS_ACLK2, LVDS_A6, LVDS_A5,
+    LVDS_A4, LVDS_A3, LVDS_ACLK1, LVDS_A1, LVDS_A0,
+    LVDS_A7, LVDS_A2
+};
+
+static const UINT32 _au4PanelLvds10bitPinMap_LCD_HD[24] =
+{
+    // Port A (PADA) LLV0~LLV9, LLK_CK0,LLK_CK1	
+    LVDS_A9, LVDS_A5, LVDS_A6, LVDS_ACLK2, LVDS_A8,
+    LVDS_A4, LVDS_A0, LVDS_A1, LVDS_ACLK1, LVDS_A3,
+    LVDS_A7, LVDS_A2, 
+    
+    // Port B (PADB) RLV0~RLV9, RLK_CK0,RLK_CK1
+    LVDS_A9, LVDS_A5, LVDS_A6, LVDS_ACLK2, LVDS_A8,
+    LVDS_A4, LVDS_A0, LVDS_A1, LVDS_ACLK1, LVDS_A3,
+    LVDS_A7, LVDS_A2, 	
+};
+
+static const UINT32 _au4PanelLvds10bitPNSwap_LCD_FHD[24] =
+{
+    // Port A (PADA) RLV0~RLV9, LLK_CK0,LLK_CK1
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 
+
+    // Port B (PADB) RLV0~RLV9, RLK_CK0,RLK_CK1
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1
+};
+
+static const UINT32 _au4PanelLvds10bitPNSwap_LCD_HD[24] =
+{
+
+    // Port A (PADA) RLV0~RLV9, LLK_CK0,LLK_CK1
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 
+    
+    // Port B (PADB) RLV0~RLV9, RLK_CK0,RLK_CK1
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0		
+};
+
+
+static const UINT32 _au4PanelLvds10bitPinMap[24] =//default fhd
 {
 	9,8,11,6, 5,
  	4,3,10,1, 0,
  	7,2,
  	0,1,2,3,4,5,6,7,8,9,10,11};
 
-static const UINT32 _au4PanelLvds10bitPNMap[24] =
+static const UINT32 _au4PanelLvds10bitPNMap[24] =//default fhd
 {0,0,0,0,0,0,0,0,0,0,0,0,
  1,1,1,1,1,1,1,1,1,1,1,1};
 
-static UINT32 *_pu4PanelLVDSLaneSwap = (UINT32*)_au4PanelLvds10bitPinMap;
-static UINT32 *_pu4PanelLVDSLanePNSwap = (UINT32*)_au4PanelLvds10bitPNMap;
+UINT32 *_pu4PanelLVDSLaneSwap = (UINT32*)_au4PanelLvds10bitPinMap;
+UINT32 *_pu4PanelLVDSLanePNSwap = (UINT32*)_au4PanelLvds10bitPNMap;
 #endif
 
 
