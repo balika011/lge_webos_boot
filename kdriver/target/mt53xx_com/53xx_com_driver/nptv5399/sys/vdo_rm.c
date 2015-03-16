@@ -95,6 +95,8 @@
 #include "scpos_debug.h"
 #include "drv_di.h"
 #include "drv_display.h"
+#include "source_select.h"
+
 #ifdef CC_MT5399
 #include "drv_mjc.h"
 #endif
@@ -2899,6 +2901,9 @@ void vDrvVrmSetAppStage(void)
     UINT16 u2Width, u2Height, u2Scan;
     VRM_INFO_T* vrmInfo;
     MonOutPicInfo* pMonOutInfo;
+#ifdef CC_SUPPORT_NPTV_SEAMLESS
+    VDP_SEAMLESS_INFO_T tb2rVrmInfo;
+#endif
 
     if (u4DrvVrmGetAppFlag() & VRM_APP_GRAPHIC_DUMP)
     {
@@ -2934,8 +2939,18 @@ void vDrvVrmSetAppStage(void)
             break;
         case GFX_MAIN_PDS:
             vrmInfo = VRMGetVRMInfo(SV_VP_MAIN, VRM_MODULE_TTT);
-            u2Width  = vrmInfo->u2Width;
-            u2Height = vrmInfo->u2Height;
+            #ifdef CC_SUPPORT_NPTV_SEAMLESS
+            if((VDP_SET_ERROR != VDP_GetSeamlessInfo(SV_VP_MAIN, &tb2rVrmInfo)) && (bGetSignalType(SV_VP_MAIN) == SV_ST_MPEG))
+            {
+                u2Width  = wDrvVideoInputWidth(SV_VP_MAIN);
+                u2Height = wDrvVideoInputHeight(SV_VP_MAIN);
+            }
+            else
+            #endif
+            {
+                u2Width  = vrmInfo->u2Width;
+                u2Height = vrmInfo->u2Height;
+            }
             u2Scan   = vrmInfo->u2ScanMode;
             break;
         case GFX_SUB_PDS:
