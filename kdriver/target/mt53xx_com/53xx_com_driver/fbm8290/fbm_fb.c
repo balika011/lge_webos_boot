@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/16 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2571,10 +2571,12 @@ UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId)
     FBM_MUTEX_LOCK(ucFbgId);
 
     ucFbId = FBM_FB_ID_UNKNOWN;
+    #if 0  // For LG seamless, B2R used renderQ number to keep frame
     if (FBM_ChkSeamlessMode(ucFbgId, SEAMLESS_BY_NPTV))
     {
         ucKeepFbNs = _prFbg[ucFbgId].fgSendEOS ? 0 : 3;
     }
+    #endif
     if (_prFbg[ucFbgId].rDisplayQ.ucCount > ucKeepFbNs)
     {
         ucFbId = _prFbg[ucFbgId].rDisplayQ.aucQueue[_prFbg[ucFbgId].rDisplayQ.ucReadIdx];
