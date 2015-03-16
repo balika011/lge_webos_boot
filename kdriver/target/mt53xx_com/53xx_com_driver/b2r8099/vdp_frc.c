@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/16 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6156,6 +6156,28 @@ BOOL  VDP_SeamlessSeqChanging(UCHAR ucVdpId)
 
 #endif
 
+BOOL VDP_SecureVideoPlaying(UCHAR ucVdpId)
+{
+    VDP_CFG_T* prVdpConf = NULL;
+    UCHAR ucFbgId;
+    prVdpConf = _B2R_GetVdpConf(ucVdpId);
+    if(!prVdpConf || prVdpConf->ucB2rId >= B2R_NS)
+    {
+       LOG(3,"VDP_SecureVideoPlaying return FALSE 1\n");
+       return FALSE;
+    }
+    
+    ucFbgId = _B2R_GetFbg(prVdpConf->ucB2rId);
+    if(FBM_FbgValid(ucFbgId) && FBM_GetFbgAppMode(ucFbgId) == FBM_FBG_APP_OMX_DISP)
+    {
+        return _VPUSH_IsSecurePlaying(FBM_GetDecoderSrcId(ucFbgId));
+    }
+    else
+    {
+        return FALSE;
+    }
+    
+}
 
 
 static UINT32 _B2R_GetInput(UCHAR ucB2rId, UCHAR ucPort, UCHAR* pucFbgId)

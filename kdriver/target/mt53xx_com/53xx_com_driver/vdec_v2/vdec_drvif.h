@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/11 $
+ * $Date: 2015/03/16 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -2377,6 +2377,9 @@ EXTERN  BOOL _VPUSH_AllocDmx(VOID* prdec);
 EXTERN  BOOL _VPUSH_ReleaseDmx(VOID* prdec);
 EXTERN UINT32 VDEC_HWReadData(UCHAR ucEsId,INT32 u4StartAddr,UINT32 u4EndAddr,UINT32 u4ReadAddr,
    UINT32 u4ReadSize,UCHAR *puOutBuf);
+
+EXTERN VOID * _VPUSH_EsId2VPush(UINT8 ucEsId);
+EXTERN BOOL _VPUSH_IsSecurePlaying(UINT8 ucEsId);
 
 #ifdef VDEC_DEC_REG_QUERY
 #define VDEC_REG_DUMP_DELAY( a )

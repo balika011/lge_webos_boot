@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/16 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1090,6 +1090,7 @@ EXTERN BOOL VDP_FlushB2RChgFrameMsg(UCHAR ucVdpId);
 EXTERN VOID B2R_Init(VOID);
 
 EXTERN BOOL  VDP_SeamlessSeqChanging(UCHAR ucVdpId);
+EXTERN BOOL VDP_SecureVideoPlaying(UCHAR ucVdpId);
 #if 1// for 4K2K    vb1
 EXTERN UINT16 VDP_GetBypassHTotal(VOID);
 

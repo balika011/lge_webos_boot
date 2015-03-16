@@ -21,7 +21,6 @@ LINT_EXT_HEADER_BEGIN
 #include "x_mid.h"
 LINT_EXT_HEADER_END
 
-
 //static BOOL _fgPushInit = FALSE;
 VDEC_DECODER_T *_prVdecPush = NULL;
 //static BOOL _fgFirstVideoChunk = TRUE;
@@ -6663,6 +6662,38 @@ BOOL _VPUSH_GetDisplayInfor(VOID* prdec, VDEC_DISP_FRAME_T *prDispFrame,UINT8 u1
         __FUNCTION__, __LINE__, prVdecEsInfo->ucFbgId, u1FbId, u4Addr, u4AddrC);
 
     return TRUE;
+}
+
+VOID * _VPUSH_EsId2VPush(UINT8 ucEsId)
+{
+    UINT8 uIndex=0;
+    for(uIndex=0; uIndex < VDEC_PUSH_MAX_DECODER; uIndex++)
+    {
+        if(_prVdecPush->arDec[uIndex].eCurState != VPUSH_ST_STOP 
+            && _prVdecPush->arDec[uIndex].ucVdecId == ucEsId)
+        {
+            return (VOID * )(&_prVdecPush->arDec[uIndex]);
+        }
+    }
+    
+    return NULL;
+}
+
+BOOL _VPUSH_IsSecurePlaying(UINT8 ucEsId)
+{
+    VDEC_T *prVdec = NULL;
+    if(ucEsId >= VDEC_PUSH_MAX_DECODER)
+    {
+        return FALSE;
+    }
+    
+    prVdec = (VDEC_T *)_VPUSH_EsId2VPush(ucEsId);
+    if(prVdec)
+    {
+        return prVdec->fgIsSecureInput;
+    }
+
+    return FALSE;
 }
 
 /*----------------------------------------------------------------------------------------
