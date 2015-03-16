@@ -2005,7 +2005,7 @@ static const UINT8 _au1MtkTVFineTuneVol[SV_AUD_SYS_NUM] =
     20,//SV_MTS
     20,//SV_FM_FM
     20,//SV_NTSC_M
-    20,//SV_A2_BG
+    10,//SV_A2_BG
     20,//SV_A2_DK1
     20,//SV_A2_DK2
     20,//SV_A2_DK3
