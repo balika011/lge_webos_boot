@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/02 $
+ * $Date: 2015/03/17 $
  * $RCSfile: dtd_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -434,6 +434,8 @@ VOID DTD_SetIF(DEMOD_CTX_T * psDemodCtx,UINT16 u2If_Freq);
 
 
 // move the declaration from pi_demod.h, fixed io_mtfe_atsc.c build warning.(implicit declaration)
+VOID vDTDGetStatus(DEMOD_CTX_T *psDemodCtx);//MTK07043, 150317, Add declaration in dtd_if.h file
+
 VOID DTD_UpdateInfo(DEMOD_CTX_T *psDemodCtx);
 
 VOID DTD_AccumPER(DEMOD_CTX_T *psDemodCtx);
