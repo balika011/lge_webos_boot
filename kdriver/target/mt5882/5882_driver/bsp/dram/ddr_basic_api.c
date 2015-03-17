@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/17 $
  * $RCSfile: pi_basic_api.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -945,9 +945,17 @@ void DramcInit(void)
 
 	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_SPCMD), 0x00001100);
 
-	//[2] CKE control by HW
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_PADCTL4), 0x000000b6);
+	HAL_WRITE32(0xf000d608, HAL_READ32(0xf000d608)&(~0x7));
 
+	//[2] CKE control by HW
+	if((HAL_READ32(0xf000d748)&0x4)==0)
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_PADCTL4), 0x000000b6);
+	}
+	else
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_PADCTL4), 0x000000b2);
+	}
 	//A60806: 0x1e0=0x88000000
 	//[31] DRAM address decode
 	//[30] Select IO O1 as output
@@ -1063,9 +1071,24 @@ void DramcConfig(void)
     //DDR3 SBS pinmux should be set to 00 (reg0xd8[31:30])
 
 #ifdef DRAM_CAPRI_MCM_CFG
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x80900900);
+	if((HAL_READ32(0xf000d748)&0x4)==0)
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x80900900);
+	}
+	else
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x80100900);
+	}
 #else
-	ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x00900900);
+	if((HAL_READ32(0xf000d748)&0x4)==0)
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x00900900);
+	}
+	else
+	{
+		ucDram_Register_Write(mcSET_DRAMC_REG_ADDR(DRAMC_REG_MCKDLY), 0x00100900);
+	}
+
 #endif
 
     //0x4[9:8]  control the number of the column address, 
