@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/17 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6554,7 +6554,7 @@ VOID FBM_FrameDisplayStart(UCHAR ucFbgId,UCHAR ucFbId)
                                  _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START]))
     {
          LOG(7,"FBM_FrameDisplayStart(%d,%d)\n",ucFbgId,ucFbId);
-         if(_prFbg[ucFbgId].afgWaitDisplay[ucFbId] == TRUE)
+		 if((_prFbg[ucFbgId].afgWaitDisplay[ucFbId] == TRUE) && (_prFbg[ucFbgId].ucPlayMode == FBM_FBG_DTV_MODE))
          {
              ((FBM_FB_DISP_START_FUNC)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_DISPLAY_START])(
                  _prFbg[ucFbgId].u1DecoderSrcId, ucFbgId, ucFbId);
