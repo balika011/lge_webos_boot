@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #34 $
+* $Revision: #35 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -4031,7 +4031,7 @@ static void _svDrvTvdNAReset(void)
  * @param  bMode: TV mode enmu
  * @retval void
  */
-
+/*
 static void _svDrvTvdSetDftModeConnect(UINT8 bMode) reentrant
 {
     switch(bMode)
@@ -4070,6 +4070,7 @@ static void _svDrvTvdSetDftModeConnect(UINT8 bMode) reentrant
 
 }
 
+*/
 static void _svDrvTvdSetDftMode(UINT8 bMode) reentrant
 {
     switch(bMode)
@@ -4239,6 +4240,20 @@ static void _svDrvTvdModeChgDone(void)
     {
         _svDrvTvdSetDftMode(((_rTvd3dStatus.fgIs525)?SV_CS_NTSC358:SV_CS_PAL));
     }
+	/*
+	else
+	{
+	    if(_rTvd3dStatus.fgIs525)
+	    {
+            vIO32WriteFldAlign(CDET_00, 1, INI_V525);
+		}
+		else
+		{
+            vIO32WriteFldAlign(CDET_00, 0, INI_V525);
+		}
+	}
+	*/
+
 #endif
 
 #if TVD_SET_ENABLED_CS
@@ -8003,21 +8018,23 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     {  
         vTvd3dFastChannelChange(SV_ON);
         vIO32WriteFldAlign(DFE_0E, 0x0, VPRES4TVD_MODE);
+		/*
 		if((u1ConnectTvdEnNTSC358==TRUE)&&(u1ConnectTvdEnPAL==FALSE)&&(u1ConnectTvdEnPALN==FALSE)&&(u1ConnectTvdEnPALM==FALSE)&&(u1ConnectTvdEnSECAM==FALSE))
 		{
-			_svDrvTvdSetDftModeConnect(SV_CS_NTSC358);
-			LOG(0,"[TVD_DBG_MSG] US init to NTSC-M.\n");
+            vIO32WriteFldAlign(CDET_00, 1, INI_V525);
+			LOG(0,"[TVD_DBG_MSG] US init to 525.\n");
 		}
 		if((u1ConnectTvdEnPAL==TRUE)&&(u1ConnectTvdEnNTSC358==FALSE)&&(u1ConnectTvdEnSECAM==TRUE)&&(u1ConnectTvdEnPALM==FALSE)&&(u1ConnectTvdEnPALN==FALSE))
 		{
-			_svDrvTvdSetDftModeConnect(SV_CS_PAL);
-			LOG(0,"[TVD_DBG_MSG] EU init to PAL.\n");
+            vIO32WriteFldAlign(CDET_00, 0, INI_V525);
+			LOG(0,"[TVD_DBG_MSG] EU init to 625.\n");
 		}
 		if((u1ConnectTvdEnPAL==FALSE)&&(u1ConnectTvdEnNTSC358==TRUE)&&(u1ConnectTvdEnPALN==TRUE)&&(u1ConnectTvdEnPALM==TRUE)&&(u1ConnectTvdEnSECAM==FALSE))
 		{
-			_svDrvTvdSetDftModeConnect(SV_CS_NTSC358);
-			LOG(0,"[TVD_DBG_MSG] BRAZIL init to NTSC-M.\n");
+            vIO32WriteFldAlign(CDET_00, 1, INI_V525);
+			LOG(0,"[TVD_DBG_MSG] BRAZIL init to 525.\n");
 		}
+		*/
     }
 	else
 	{
