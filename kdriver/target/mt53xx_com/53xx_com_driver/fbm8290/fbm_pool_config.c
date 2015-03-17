@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/21 $
+ * $Date: 2015/03/17 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3808,8 +3808,8 @@ void ExpandFBM4SubPIP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4BaseDram
                 u4Width = 720;
             }
             else
-            {
-                u4Width = 960;
+            {//A5LR sub path used for scart out, 960 is not needed.
+                u4Width = 720;
             }
             #else
             u4Width = 720;
@@ -3830,8 +3830,8 @@ void ExpandFBM4SubPIP(UINT32 u4VdpId, FBM_AUTO_INC_ENV_T* env, UINT32 u4BaseDram
 
         // scaler
         #if !defined(CC_FBM_SUB_SUPPORT_FHD)
-        u4Width = 780;
-        u4Height = 578;
+        u4Width = 720;
+        u4Height = 576;
 		#endif
         CALCULATE_SCALER_422_PARAMETERS();
         UPDATE_PRPOOL(FBM_POOL_TYPE_SCPOS_DYN_SUB, SCPOS);
