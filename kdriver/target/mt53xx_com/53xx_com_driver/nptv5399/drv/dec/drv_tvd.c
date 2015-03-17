@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #33 $
+* $Revision: #34 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -785,6 +785,13 @@ BOOL _bMModeForEnabledCS = FALSE;
 RTvdEnabledCS_T _rTvEnabledCS;
 RTvdEnabledCS_T _rAvEnabledCS;
 RTvdEnabledCS_T _rPrevEnabledCS;
+BOOL u1ConnectTvdEnPALN=TRUE;
+BOOL u1ConnectTvdEnPAL=TRUE;
+BOOL u1ConnectTvdEnPALM=TRUE;
+BOOL u1ConnectTvdEnNTSC358=TRUE;
+BOOL u1ConnectTvdEnSECAM=TRUE;
+BOOL u1ConnectTvdEnPAL60=TRUE;
+BOOL u1ConnectTvdEnNTSC443=TRUE;
 #endif
 
 BOOL _bEnableByAPMuteCnt = FALSE;
@@ -4024,6 +4031,45 @@ static void _svDrvTvdNAReset(void)
  * @param  bMode: TV mode enmu
  * @retval void
  */
+
+static void _svDrvTvdSetDftModeConnect(UINT8 bMode) reentrant
+{
+    switch(bMode)
+    {
+        case SV_CS_PAL_N:
+            vIO32WriteFldMulti(CDET_00,  P_Fld(0,INI_IS443)|P_Fld(1,INI_PHALT)|P_Fld(0,INI_V525)|P_Fld(0,L525));
+            break;
+
+        case SV_CS_PAL:
+            vIO32WriteFldMulti(CDET_00, P_Fld(1,INI_IS443)|P_Fld(1,INI_PHALT)|P_Fld(0,INI_V525)|P_Fld(0,L525));
+            break;
+
+        case SV_CS_PAL_M:
+            vIO32WriteFldMulti(CDET_00, P_Fld(0,INI_IS443)|P_Fld(1,INI_PHALT)|P_Fld(1,INI_V525)|P_Fld(1,L525));
+            break;
+
+        case SV_CS_NTSC358:
+            vIO32WriteFldMulti(CDET_00,  P_Fld(0,INI_IS443)|P_Fld(0,INI_PHALT)|P_Fld(1,INI_V525)|P_Fld(1,L525));
+            break;
+
+        case SV_CS_SECAM:
+            vIO32WriteFldMulti(CDET_00,  P_Fld(1,INI_IS443)|P_Fld(0,INI_PHALT)|P_Fld(0,INI_V525)|P_Fld(0,L525));
+            break;
+
+        case SV_CS_PAL_60:
+            vIO32WriteFldMulti(CDET_00,  P_Fld(1,INI_IS443)|P_Fld(1,INI_PHALT)|P_Fld(1,INI_V525)|P_Fld(1,L525));
+            break;
+
+        case SV_CS_NTSC443:
+            vIO32WriteFldMulti(CDET_00,  P_Fld(1,INI_IS443)|P_Fld(0,INI_PHALT)|P_Fld(1,INI_V525)|P_Fld(1,L525));
+            break;
+
+        default:
+            break;
+    }
+
+}
+
 static void _svDrvTvdSetDftMode(UINT8 bMode) reentrant
 {
     switch(bMode)
@@ -4059,15 +4105,21 @@ static void _svDrvTvdSetDftMode(UINT8 bMode) reentrant
         default:
             break;
     }
+	LOG(1,"_svDrvTvdSetDftMode:m1=%d,m2=%d,m3=%d,m4=%d,m5=%d.\n",(_rTvEnabledCS.u1TvdEnNTSC358),(_rTvEnabledCS.u1TvdEnPALN),(_rTvEnabledCS.u1TvdEnPALM),(_rTvEnabledCS.u1TvdEnSECAM),
+
+	(_rTvEnabledCS.u1TvdEnPAL));
 #if TVD_NOBURST_SLOW_V625_WA
     #if TVD_SET_ENABLED_CS
-    if(_rTvd3dStatus.eSourceType==SV_ST_TV && _rTvEnabledCS.u1TvdEnNTSC358 && _rTvEnabledCS.u1TvdEnPAL)
+    if((_rTvd3dStatus.eSourceType==SV_ST_TV) && (_rTvEnabledCS.u1TvdEnNTSC358) && (_rTvEnabledCS.u1TvdEnPALN)&&(_rTvEnabledCS.u1TvdEnPALM))
     #else
     if(_rTvd3dStatus.eSourceType==SV_ST_TV)
     #endif
     {
-        if(bMode==SV_CS_NTSC358)
+        if((bMode==SV_CS_NTSC358)||(bMode==SV_CS_PAL_M))
+        {
             vIO32WriteFldAlign(CDET_00, 0, INI_V525);
+			LOG(1,"[TVD_DBG_MSG]DFT init to 625.\n");
+		}
     }
 #endif
 }
@@ -7070,7 +7122,7 @@ void vTvd3dVSyncISR(void)
     {
         return;
     }
-
+    
     _bTvdISRCnt++;
 	if((_rTvd3dStatus.bTvdMode==SV_CS_SECAM)&&(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_AV)&&(_svDrvTvdCheckSignalStatus((UINT8)SV_VDO_STABLE)))
 	{
@@ -7899,6 +7951,30 @@ void vTvd3dVSyncISR(void)
 				
 #endif
 
+#if 1
+
+if((_rTvd3dStatus.eSourceType==SV_ST_TV )&& (_rTvEnabledCS.u1TvdEnNTSC358) && (_rTvEnabledCS.u1TvdEnPALN)&&(_rTvEnabledCS.u1TvdEnPALM))
+	
+{
+		if(fgVPres==0)
+		{
+		  if(IO32ReadFldAlign(CDET_00, INI_V525)==1)  // init 525
+		  {
+			  _svDrvTvdSetDetV525V625Gain(0x2, 0x3);
+			  LOG(1,"[TVD_DBG_MSG]init to 525.\n");
+		  }
+		  else
+		  {
+			  _svDrvTvdSetDetV525V625Gain(0x3, 0x1);
+			  LOG(1,"[TVD_DBG_MSG]init to 625.\n");
+		  
+		  }
+
+         }
+}
+
+#endif
+
 }
 
 
@@ -7917,14 +7993,31 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     LOG(1,"======================================\n");
     LOG(0,"[TVD_DBG_MSG] vTvd3dConnect bPath=%d, bOnOff=%d ,type=%d.\n", bPath, bOnOff,bGetSignalType(bPath));
     LOG(1,"======================================\n");	
+    LOG(0,"[TVD_DBG_MSG] vTvd3dConnect NTSC-M=%d,PAL=%d,PAL-N=%d,PAL-M=%d,SECAM=%d.\n", u1ConnectTvdEnNTSC358,u1ConnectTvdEnPAL,u1ConnectTvdEnPALN,
+	u1ConnectTvdEnPALM,u1ConnectTvdEnSECAM);
     #ifdef CC_SUPPORT_PIPELINE
     if(bGetSignalTypeAVD(bPath)==SV_ST_TV)
 	#else
     if(bGetSignalType(bPath)==SV_ST_TV)
 	#endif
-    {
+    {  
         vTvd3dFastChannelChange(SV_ON);
         vIO32WriteFldAlign(DFE_0E, 0x0, VPRES4TVD_MODE);
+		if((u1ConnectTvdEnNTSC358==TRUE)&&(u1ConnectTvdEnPAL==FALSE)&&(u1ConnectTvdEnPALN==FALSE)&&(u1ConnectTvdEnPALM==FALSE)&&(u1ConnectTvdEnSECAM==FALSE))
+		{
+			_svDrvTvdSetDftModeConnect(SV_CS_NTSC358);
+			LOG(0,"[TVD_DBG_MSG] US init to NTSC-M.\n");
+		}
+		if((u1ConnectTvdEnPAL==TRUE)&&(u1ConnectTvdEnNTSC358==FALSE)&&(u1ConnectTvdEnSECAM==TRUE)&&(u1ConnectTvdEnPALM==FALSE)&&(u1ConnectTvdEnPALN==FALSE))
+		{
+			_svDrvTvdSetDftModeConnect(SV_CS_PAL);
+			LOG(0,"[TVD_DBG_MSG] EU init to PAL.\n");
+		}
+		if((u1ConnectTvdEnPAL==FALSE)&&(u1ConnectTvdEnNTSC358==TRUE)&&(u1ConnectTvdEnPALN==TRUE)&&(u1ConnectTvdEnPALM==TRUE)&&(u1ConnectTvdEnSECAM==FALSE))
+		{
+			_svDrvTvdSetDftModeConnect(SV_CS_NTSC358);
+			LOG(0,"[TVD_DBG_MSG] BRAZIL init to NTSC-M.\n");
+		}
     }
 	else
 	{
@@ -8715,7 +8808,7 @@ BOOL bDrvTvd3dCheckModeChgForEnabledCS(void)
 {
     RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
     
-    if(_rTvd3dStatus.eSourceType==SV_ST_TV)
+	if(bGetSignalTypeAVD(0x0)==SV_ST_TV)
     {
         pTvdEnabledCS = &_rTvEnabledCS;
     }
@@ -8763,7 +8856,7 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
 #if TVD_SET_ENABLED_CS
         RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
 
-        if(_rTvd3dStatus.eSourceType==SV_ST_TV)
+		if(bGetSignalTypeAVD(0x0)==SV_ST_TV)
         {
             pTvdEnabledCS = &_rTvEnabledCS;
         }
@@ -8780,36 +8873,43 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
         if((u4ColSys & (1<<SV_CS_PAL_N))==0)
         {
             pTvdEnabledCS->u1TvdEnPALN = FALSE;
+			u1ConnectTvdEnPALN=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_PAL))==0)
         {
             pTvdEnabledCS->u1TvdEnPAL = FALSE;
+			u1ConnectTvdEnPAL=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_PAL_M))==0)
         {
             pTvdEnabledCS->u1TvdEnPALM = FALSE;
+			u1ConnectTvdEnPALM=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_NTSC358))==0)
         {
             pTvdEnabledCS->u1TvdEnNTSC358= FALSE;
+			u1ConnectTvdEnNTSC358=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_SECAM))==0)
         {
             pTvdEnabledCS->u1TvdEnSECAM = FALSE;
+			u1ConnectTvdEnSECAM=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_PAL_60))==0)
         {
             pTvdEnabledCS->u1TvdEnPAL60 = FALSE;
+			u1ConnectTvdEnPAL60=FALSE;
         }
 
         if((u4ColSys & (1<<SV_CS_NTSC443))==0)
         {
             pTvdEnabledCS->u1TvdEnNTSC443 = FALSE;
+			u1ConnectTvdEnNTSC443=FALSE;
         }
 
 #if 0//TVD_RESET_MODE_CHCHG
