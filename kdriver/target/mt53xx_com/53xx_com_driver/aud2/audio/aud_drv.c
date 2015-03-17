@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/17 $
+ * $Date: 2015/03/18 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5751,7 +5751,8 @@ static void _AudDrvThread(void* pvArg)
                     _ChangeAudioState(u1DspId, u1DecId, eNewState);
                 }
             }
-            else if ((_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_ANALOG_TUNER) && (u1DecId != AUD_DEC_MAIN))
+            else if(_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_ANALOG_TUNER)
+          //if ((_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_ANALOG_TUNER) && (u1DecId != AUD_DEC_MAIN))
             {
                 _AudSetEvent(u1DspId, u1DecId, AUD_CMD_FLAG_STOP  |
                                                       AUD_CMD_FLAG_RESET |
@@ -6190,7 +6191,8 @@ static void _AudDrvThread(void* pvArg)
             AUD_StrInputEnable(u1DspId, u1DecId, _arAudDecoder[u1DspId][u1DecId].eStreamFrom, _arAudDecoder[u1DspId][u1DecId].eDecFormat, FALSE, 0);
 
             VERIFY(x_sema_lock(_hSemaLoadCode, X_SEMA_OPTION_WAIT) == OSR_OK);
-            if (((u1DecId == AUD_DEC_AUX)||(u1DecId == AUD_DEC_THIRD)) && (_guAudDspTrigAtvFmtchg))
+           // if (((u1DecId == AUD_DEC_AUX)||(u1DecId == AUD_DEC_THIRD)) && (_guAudDspTrigAtvFmtchg))
+           if(_guAudDspTrigAtvFmtchg)
             {
                 _guAudDspTrigAtvFmtchg = 0;
                 _LoadAdspCode(AUD_DSP0, AUD_DEC_AUX, _eAtvFmtChgDecFmt);

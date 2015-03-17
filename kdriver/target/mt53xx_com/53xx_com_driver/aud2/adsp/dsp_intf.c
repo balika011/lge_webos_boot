@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/18 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -327,6 +327,7 @@ TV_AUD_SYS_T    _eAudTvSystem = SV_MTS;
 static TV_AUD_SYS_T _eDetTvSrcMode = SV_PAL_DK;
 static BOOL _fgEuroCanalPlusMode = FALSE;
 
+BOOL _fgAudSysInit = FALSE;
 
 static UINT32 gu4Energy45M = 0;
 static UINT32 gu4Energy55M = 0;
@@ -3496,7 +3497,7 @@ void vDspTvSysChangeNotify(TV_AUD_SYS_T eTvSys)
     }
 
     _guAudDemodTypeChange = 0;
-    vDspTvSysDetectedNotify(AUD_DEC_AUX, eTvSys);
+    vDspTvSysDetectedNotify(AUD_DEC_MAIN, eTvSys);  //AUD_DEC_AUX
     UNUSED(u4DramValue);
 
 }
@@ -3909,7 +3910,11 @@ void vDspFlowControlNotify(UINT8 u1DspId, UINT32 u4DspRIntData)
     case D2RC_FLOW_CONTROL_FLUSH_DONE:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_STOP);
         vResetIecConfig();
-        //_aeAudType[u1DspId][AUD_DEC_MAIN] = AUD_TYPE_UNKNOWN;     //for lg nicam-bg detect alway 
+      if(_fgAudSysInit == FALSE)
+      {
+        _aeAudType[u1DspId][AUD_DEC_MAIN] = AUD_TYPE_UNKNOWN;     //for lg nicam-bg detect alway 
+        _fgAudSysInit = TRUE;
+      }
         break;
     case D2RC_FLOW_CONTROL_PAUSE_OK:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_PAUSE);

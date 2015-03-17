@@ -2095,7 +2095,7 @@ static const AUD_PAL_FAC_T _arPalFactory =
     1056,                                // parity error threshold
     512,                               // every number frames
     //****** high deviation mode  *******************//
-    TRUE,                              // enable/disable of high deviation mode
+    FALSE,                              // enable/disable of high deviation mode
     //****** AM mute mode  ******************//
     FALSE,                             // enable/disable of AM mute mode
     53,                                // higher threshold of AM mute
