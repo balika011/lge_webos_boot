@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/17 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -926,7 +926,7 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
     UINT8 u1OriMainID;
 
     UNUSED(u1OriMainID);    
-    LOG(0, "CMD: set DecType: Dsp(%d) AUD_DEC%d Input(%s) Codec(%s)\n", u1DspId, u1DecId, 
+    LOG(1, "CMD: set DecType: Dsp(%d) AUD_DEC%d Input(%s) Codec(%s)\n", u1DspId, u1DecId, 
         AUD_EnumToName(eAudStreamFromTbl, AUD_ARRAY_SIZE(eAudStreamFromTbl), eStreamFrom), 
         AUD_EnumToName(eAudDrvFmtTbl, AUD_ARRAY_SIZE(eAudDrvFmtTbl), eDecFmt));
 

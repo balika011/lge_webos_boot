@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/17 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -778,6 +778,7 @@ typedef struct
 {
     BOOL fgStart;
     HANDLE_T hSema;
+    UINT32 u4StartPts;
     UINT32 u4PtsLow;
     UINT32 u4PtsHigh;
     UINT32 u4PtsLowLast;
@@ -7502,7 +7503,7 @@ void AUD_ResetDspReadPtr(UINT8 u1DspId, UINT8 u1DecId)
 BOOL AUD_SetStartPts(UINT8 u1DecId, UINT32 u4Pts)
 {
     UINT8 u1DecIdTmp;
-    LOG(7, "##### Dec(%d) AUD_SetStartPts = 0x%08x\n", u1DecId, u4Pts);
+    LOG(0, "##### Dec(%d) AUD_SetStartPts = 0x%08x\n", u1DecId, u4Pts);
 #ifndef CC_MT5391_AUD_3_DECODER
     if (u1DecId > AUD_DEC_AUX)
 #else
@@ -8385,6 +8386,7 @@ void GST_StartSTC(UINT8 u1DecId)
     
     if (!GstTimeStampe[u1DecId].fgStart)
     {
+        GstTimeStampe[u1DecId].u4PtsLow = GstTimeStampe[u1DecId].u4StartPts;
         do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
         GstTimeStampe[u1DecId].fgStart = TRUE; 
     }
@@ -8418,21 +8420,45 @@ void GST_SetSTCVal(UINT8 u1DecId, UINT64 u8Stc)
     GstTimeStampe[u1DecId].u4PtsLow = u8Stc & 0xffffffff;;
     GstTimeStampe[u1DecId].u4PtsHigh = (u8Stc>>32) & 0xffffffff;
     GstTimeStampe[u1DecId].u4PtsLowLast = GstTimeStampe[u1DecId].u4PtsLow;
+    GstTimeStampe[u1DecId].u4StartPts = GstTimeStampe[u1DecId].u4PtsLow;
     VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
 
 void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
 {
     INT32 i4Ret;
-
+    struct timeval tv;
+    INT32 i4Diff;
+    UINT32 u4TimeDiff, u4PtsDiff;
+        
     //interrupt context: can't sleep
     i4Ret = x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_NOWAIT);
     if (i4Ret == OSR_OK)
     {
         if (GstTimeStampe[u1DecId].fgStart)
         {
-            GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
-            do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+            do_gettimeofday(&tv);
+            i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
+                (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
+            u4TimeDiff = (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+            if (u4Stc >= GstTimeStampe[u1DecId].u4PtsLow)
+            {
+                u4PtsDiff = u4Stc - GstTimeStampe[u1DecId].u4PtsLow;
+            }
+            else
+            {
+                u4PtsDiff = GstTimeStampe[u1DecId].u4PtsLow - u4Stc;
+            }
+            if (u4PtsDiff >= 10 * u4TimeDiff)
+            {
+                //SKIP abnormal update PTS
+                LOG(2, "Error: update STC error STC(%d), PTS(%d), T_D(%d) \n",u4Stc, GstTimeStampe[u1DecId].u4PtsLow, u4TimeDiff);
+            }
+            else
+            {
+                GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
+                do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+            }
         }
         else
         {
