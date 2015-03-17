@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/17 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -841,7 +841,7 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
 	
 	//-----DSP-----
 	prPoolList[FBM_POOL_TYPE_DSP].u4Inherit = FBM_POOL_ROOT;
-	prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
+	//prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].eMode = FBM_POOL_ARRANGE_AFTER;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].ePool1 = u4AheadType;
 #if defined(CC_SUPPORT_5_SEC_PTS_PCR_OFFSET)
