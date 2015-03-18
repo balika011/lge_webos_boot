@@ -765,7 +765,8 @@ void vDrvSetPedestalMatrix(UINT8 bTransIndex)
             
             i4Temp = pPedestalMatrix[12]&0x7FF;
             i4Temp = i4Temp&0x400 ? (i4Temp-0x800) : i4Temp;
-            i4Temp = i4Temp - 76;   // (940-64)x7.5%+64=129.7, 129.7x100/92.5-64=75.7
+			//LG's spec, change -76 to -78
+            i4Temp = i4Temp - 78;   // (940-64)x7.5%+64=129.7, 129.7x100/92.5-64=75.7
             i4Temp = i4Temp>0x3FF ? 0x3FF: i4Temp;
             i4Temp = i4Temp<-0x400 ? -0x400: i4Temp;
             i4Temp = i4Temp&0x7FF;
