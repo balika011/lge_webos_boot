@@ -2071,7 +2071,7 @@ static const AUD_A2_FAC_T _arA2Factory =
     34,                                // higher threshold of FM carrier mute
     32,                                // lower threshold of FM carrier mute
     //****** prescale  ******************************//
-    20,                                //A2 prescale
+    10,                                //A2 prescale
     //****** FM saturation mute mode  ***************//
     FALSE,                             // enable/disable of saturation mute mode
     //****** non-EU mode  ***************************//
