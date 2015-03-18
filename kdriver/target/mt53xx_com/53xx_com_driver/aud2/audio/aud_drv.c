@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/18 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -778,7 +778,6 @@ typedef struct
 {
     BOOL fgStart;
     HANDLE_T hSema;
-    UINT32 u4StartPts;
     UINT32 u4PtsLow;
     UINT32 u4PtsHigh;
     UINT32 u4PtsLowLast;
@@ -8388,7 +8387,6 @@ void GST_StartSTC(UINT8 u1DecId)
     
     if (!GstTimeStampe[u1DecId].fgStart)
     {
-        GstTimeStampe[u1DecId].u4PtsLow = GstTimeStampe[u1DecId].u4StartPts;
         do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
         GstTimeStampe[u1DecId].fgStart = TRUE; 
     }
@@ -8422,7 +8420,6 @@ void GST_SetSTCVal(UINT8 u1DecId, UINT64 u8Stc)
     GstTimeStampe[u1DecId].u4PtsLow = u8Stc & 0xffffffff;;
     GstTimeStampe[u1DecId].u4PtsHigh = (u8Stc>>32) & 0xffffffff;
     GstTimeStampe[u1DecId].u4PtsLowLast = GstTimeStampe[u1DecId].u4PtsLow;
-    GstTimeStampe[u1DecId].u4StartPts = GstTimeStampe[u1DecId].u4PtsLow;
     VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
 
