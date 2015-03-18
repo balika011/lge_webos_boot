@@ -1108,7 +1108,7 @@ void vDrvVideoMuteVsyncLatch(UINT32 fgOnOff)
 void vDrvVideoMuteOnOff(UINT32 u4VdpId, UINT32 fgOnOff)
 {
     LOG(3, "vDrvVideoMuteOnOff: VdpId=%d, OnOff=%d\n", u4VdpId, fgOnOff);
-    //VIDEO_MUTE_VS_LATCH_OFF(fgOnOff);
+    VIDEO_MUTE_VS_LATCH_OFF(SV_OFF);
 
     if (u4VdpId == SV_VP_MAIN)
     {
