@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/03/19 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2527,6 +2527,7 @@ void vDrvCalPanelTiming(UINT8 u1DCLKType, UINT32 u4FrameRate)
         bDrvUpdateInternalFrameRate();
         vDrvSetSSMDRAsInputHsync();
         #endif
+		return;
     }
 
     u4PanelRatio = u4DrvCalPanelRatio();
