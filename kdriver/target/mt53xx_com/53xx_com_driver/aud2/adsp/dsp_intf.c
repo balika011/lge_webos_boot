@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/18 $
+ * $Date: 2015/03/19 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -326,8 +326,6 @@ AUD_TYPE_T      _aeAudTypePre[AUD_DSP_NUM][AUD_DEC_MAX];
 TV_AUD_SYS_T    _eAudTvSystem = SV_MTS;
 static TV_AUD_SYS_T _eDetTvSrcMode = SV_PAL_DK;
 static BOOL _fgEuroCanalPlusMode = FALSE;
-
-BOOL _fgAudSysInit = FALSE;
 
 static UINT32 gu4Energy45M = 0;
 static UINT32 gu4Energy55M = 0;
@@ -3910,11 +3908,7 @@ void vDspFlowControlNotify(UINT8 u1DspId, UINT32 u4DspRIntData)
     case D2RC_FLOW_CONTROL_FLUSH_DONE:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_STOP);
         vResetIecConfig();
-      if(_fgAudSysInit == FALSE)
-      {
         _aeAudType[u1DspId][AUD_DEC_MAIN] = AUD_TYPE_UNKNOWN;     //for lg nicam-bg detect alway 
-        _fgAudSysInit = TRUE;
-      }
         break;
     case D2RC_FLOW_CONTROL_PAUSE_OK:
         AUD_UopCommandDone(u1DspId, AUD_DEC_MAIN, DSP_PAUSE);
@@ -6516,8 +6510,11 @@ void vDspDemodDetModeNotify(UINT32 u4IntGroup , UINT32 u4IntVector)
     AUD_DEC_INFO_T rAudDecInfo;
     UINT32         u4Tmp = 0;
     AudDecNfyFct   pfAudDecNfy = NULL;
+  #ifdef CC_AUD_DDI
+    UINT8          u1DecId = AUD_DEC_MAIN;
+  #else  
     UINT8          u1DecId = AUD_DEC_AUX;
-
+  #endif
     // Get notify function
     VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE);
 
@@ -6587,7 +6584,11 @@ void vDspDemodDetModeNotify(UINT32 u4IntGroup , UINT32 u4IntVector)
             rAudDecInfo.e_aud_type = AUD_TYPE_MONO;
             break;
         }
+    #ifdef CC_AUD_DDI
+        DSP_ClearSoundMode(AUD_DEC_MAIN);
+    #else  
         DSP_ClearSoundMode(AUD_DEC_AUX);
+    #endif
         break;
     case INT_DSP_MTS_DETECTED_MODE:
         rAudDecInfo.e_aud_fmt = AUD_FMT_MTS;
@@ -6670,7 +6671,11 @@ void vDspDemodDetModeNotify(UINT32 u4IntGroup , UINT32 u4IntVector)
             rAudDecInfo.e_aud_type = AUD_TYPE_MONO;
             break;
         }
+    #ifdef CC_AUD_DDI
+        DSP_ClearSoundMode(AUD_DEC_MAIN);
+    #else   
         DSP_ClearSoundMode(AUD_DEC_AUX);
+    #endif
         break;
     default:
         rAudDecInfo.e_aud_type = AUD_TYPE_UNKNOWN;
