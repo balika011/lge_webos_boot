@@ -74,8 +74,8 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
   * $RCSfile: panel_table_cust.c,v $
-  * $Revision: #3 $
-  * $Date: 2015/03/16 $
+  * $Revision: #4 $
+  * $Date: 2015/03/19 $
   * $Author: p4admin $
   * Description:
   *
@@ -1343,8 +1343,8 @@ static PANEL_ATTRIBUTE_T _arPanelAttribute[] =
     1080,           // u2PanelHeight
 
     2 * 77000000,   // u4PixelClkMax
-    148351648,      // u4PixelClk60Hz
-    123750000,      // u4PixelClk50Hz
+    148500000,      // u4PixelClk60Hz
+    148500000,      // u4PixelClk50Hz
     2 * 70000000,   // u4PixelClkMin
 
     2560,           // u2HTotalMax
@@ -1354,7 +1354,7 @@ static PANEL_ATTRIBUTE_T _arPanelAttribute[] =
 
     1201,           // u2VTotalMax
     1125,           // u2VTotal60Hz
-    1125,           // u2VTotal50Hz
+    1350,           // u2VTotal50Hz
     1091,           // u2VTotalMin
     63,             // u1VClkMax
     47,             // u1VClkMin
