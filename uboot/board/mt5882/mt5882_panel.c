@@ -1695,8 +1695,8 @@ void Splash_DrawImage(unsigned int x, unsigned int y, unsigned int u4Width,
         u4PanelHeight = PANEL_GetPanelHeight();
 
         Printf("Panel %d x %d \n", (int)u4PanelWidth, (int)u4PanelHeight);
-        memset((void *)u4FBBuffer, 0 , 1920*1080*4);
-	memset((void *)u4HeaderBuffer, 0 , 32);
+		memset((void *)u4FBBuffer, 0x21, 1920*1080*4);
+		memset((void *)u4HeaderBuffer, 0 , 32);
 	
         ret = OSD_RGN_LIST_Create(&u4RegionList);
         if (ret != OSD_RET_OK) return 1;
@@ -1720,16 +1720,8 @@ void Splash_DrawImage(unsigned int x, unsigned int y, unsigned int u4Width,
 		else
 		{
 #if 1
-			if(panelRes == 1)//FHD
-			{
-				ret = OSD_RGN_Create(&u4Region, 1920, 450, (void *)u4FBBuffer,
-                                u4ColorMode, u4FBPitch, 0, 290, 1920, 450);
-			}
-			else
-			{
-				ret = OSD_RGN_Create(&u4Region, 1920, 450, (void *)u4FBBuffer,
-              	                u4ColorMode, u4FBPitch, 0, 206, 1366, 320);
-			}				
+			ret = OSD_RGN_Create(&u4Region, 1920, 1080, (void *)u4FBBuffer,
+                                u4ColorMode, u4FBPitch, 0, 0, 1920, 1080);
 #else		
 			ret = OSD_RGN_Create(&u4Region, UBOOT_LOGO_WIDTH, UBOOT_LOGO_HEIGHT, (void *)u4FBBuffer,
                                 u4ColorMode, u4FBPitch, 0, 0, UBOOT_LOGO_WIDTH, UBOOT_LOGO_HEIGHT);
@@ -1756,7 +1748,7 @@ void Splash_DrawImage(unsigned int x, unsigned int y, unsigned int u4Width,
 
 	_OSD_PLA_SetHeaderAddr(OSD_PLANE_2, u4HeaderBuffer);
 
-	u4FBBuffer += u4FBPitch*y + x*4;
+	u4FBBuffer += u4FBPitch*(290+y) + x*4;
 	
 	//printf("test debug Splash_DrawImage 44444444444444444 u4FBBuffer =0x%x	x= %d, y=%d\n",u4FBBuffer, x, y);
 	OSD_GET_PITCH_SIZE(u4ColorMode, u4Width, u4BmpPitch);
