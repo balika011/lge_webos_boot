@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/18 $
+ * $Date: 2015/03/19 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6194,7 +6194,7 @@ static void _AudDrvThread(void* pvArg)
            if(_guAudDspTrigAtvFmtchg)
             {
                 _guAudDspTrigAtvFmtchg = 0;
-                _LoadAdspCode(AUD_DSP0, AUD_DEC_AUX, _eAtvFmtChgDecFmt);
+                _LoadAdspCode(AUD_DSP0, u1DecId, _eAtvFmtChgDecFmt);
                 LOG(5, " ATV FMT CHG PLAY\n");
             }
             else
