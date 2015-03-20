@@ -76,8 +76,6 @@
 //
 //      x_rand.h
 //
-//      ISO and POSIX 1003.1 standard random number generation functions
-//
 //===========================================================================
 
 #ifndef X_RAND_H
@@ -86,20 +84,6 @@
 // Maximum value returned by rand()
 #define RAND_MAX  2147483647
 
-//=====================================================================
-// Algorithm for random number generation. Default is RAND_KNUTH
-
-typedef enum
-{
-	RAND_SIMPLEST,
-	RAND_SIMPLE,
-	RAND_KNUTH
-} RAND_ALGORITHM;
-
-//=====================================================================
-// Function prototypes
-
-void rand_set_algorithm(RAND_ALGORITHM algo);
 void srand(unsigned int seed);
 int rand_r(unsigned int* seed_p);
 int rand(void);

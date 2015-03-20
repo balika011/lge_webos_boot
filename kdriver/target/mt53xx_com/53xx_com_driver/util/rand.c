@@ -91,7 +91,6 @@ LINT_SAVE_AND_DISABLE
 
 
 static unsigned int s_rand_seed = 0;
-static RAND_ALGORITHM s_algo = RAND_KNUTH;
 
 // FUNCTIONS
 
@@ -103,64 +102,23 @@ int rand(void)
 
 int rand_r(unsigned int *seed)
 {
-	unsigned int s, t;
-	unsigned int uret;
-	int retval = 0;
+/*
+ * Compute x = (7^5 * x) mod (2^31 - 1)
+ * wihout overflowing 31 bits:
+ *      (2^31 - 1) = 127773 * (7^5) + 2836
+ * From "Random number generators: good ones are hard to find",
+ * Park and Miller, Communications of the ACM, vol. 31, no. 10,
+ * October 1988, p. 1195.
+ */
+    long hi, lo, x;
 
-	switch (s_algo)
-	{
-	case RAND_SIMPLEST:
-		// This algorithm sucks in the lower bits
-		*seed = (*seed * 1103515245) + 12345; // permutate seed
-		retval = (int)( *seed & RAND_MAX );
-		break;
+    hi = *seed / 127773;
+    lo = *seed % 127773;
+    x = 16807 * lo - 2836 * hi;
+    if (x <= 0)
+            x += 0x7fffffff;
 
-	case RAND_SIMPLE:
-		// The above algorithm sucks in the lower bits, so we shave them off
-		// and repeat a couple of times to make it up
-
-		s = *seed;
-		s = (s * 1103515245) + 12345; // permutate seed
-		// Only use top 11 bits
-		uret = s & 0xffe00000;
-
-		s = (s * 1103515245) + 12345; // permutate seed
-		// Only use top 14 bits
-		uret += (s & 0xfffc0000) >> 11;
-
-		s = (s * 1103515245) + 12345; // permutate seed
-		// Only use top 7 bits
-		uret += (s & 0xfe000000) >> (11+14);
-
-		retval = (int)(uret & RAND_MAX);
-		*seed = s;
-		break;
-
-	case RAND_KNUTH:
-		// This is the code supplied in Knuth Vol 2 section 3.6 p.185 bottom
-
-#define MM 2147483647    // a Mersenne prime
-#define AA 48271         // this does well in the spectral test
-#define QQ 44488         // (long)(MM/AA)
-#define RR 3399          // MM % AA; it is important that RR<QQ
-
-		s = AA * (*seed % QQ);
-		t = RR * (unsigned int)(*seed / QQ);
-		if (s > t)
-			*seed = s - t;
-		else
-			*seed = MM+ s - t;
-
-		retval = (int)(*seed & RAND_MAX);
-		break;
-
-	default:
-		// No valid algorithm selected
-//		ASSERT(0);
-		break;
-	}
-
-    return retval;
+    return ((*seed = x) % ((unsigned int)RAND_MAX + 1));
 } // rand_r()
 
 
@@ -168,12 +126,6 @@ void srand(unsigned int seed)
 {
     s_rand_seed = seed;
 } // srand()
-
-
-void rand_set_algorithm(RAND_ALGORITHM algo)
-{
-	s_algo = algo;
-}
 
 int random(int mod)
 {
