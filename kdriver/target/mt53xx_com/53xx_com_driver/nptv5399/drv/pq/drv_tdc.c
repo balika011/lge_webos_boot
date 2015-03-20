@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/20 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1012,6 +1012,10 @@ void vDrvTDCSet(void)
 		
 		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENBOUND);
 		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENUNIFORM_SPCLR);
+	}
+	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&(bHwTvdMode()==SV_CS_PAL_N))  
+	{		
+		vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
 	}
     // Re-enable TDC.        
     if (fgTDCEnabled)    

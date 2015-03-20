@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #35 $
+* $Revision: #36 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -8825,7 +8825,7 @@ BOOL bDrvTvd3dCheckModeChgForEnabledCS(void)
 {
     RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
     
-	if(bGetSignalTypeAVD(0x0)==SV_ST_TV)
+	if(_rTvd3dStatus.eSourceType==SV_ST_TV)
     {
         pTvdEnabledCS = &_rTvEnabledCS;
     }
@@ -8873,7 +8873,7 @@ UINT8 vDrvTvd3dSetEnabledColorSystem(UINT32 u4ColSys)
 #if TVD_SET_ENABLED_CS
         RTvdEnabledCS_T *pTvdEnabledCS = &_rAvEnabledCS;
 
-		if(bGetSignalTypeAVD(0x0)==SV_ST_TV)
+		if(_rTvd3dStatus.eSourceType==SV_ST_TV)
         {
             pTvdEnabledCS = &_rTvEnabledCS;
         }

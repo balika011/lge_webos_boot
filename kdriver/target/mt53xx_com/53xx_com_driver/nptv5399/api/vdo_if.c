@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/20 $
  * $RCSfile: vdo_if.c,v $
- * $Revision: #46 $
+ * $Revision: #47 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1607,7 +1607,7 @@ UINT8 bApiVFEAVDConnect(UINT8 bOnOff,UINT8 bMainSrc, UINT8 bSubSrc)
 		_bSFisSV =SV_FALSE;
 	   
 	}
-	LOG(0, "bApiVFEAVDConnect(_fVFEAVDSourceMainNew=%d, _fVFEAVDSourceMainOld=%d,_fVFEAVDSourceSubNew=%d,_fVFEAVDSourceSubOld=%d,_fVFEAVDMainICPin=%d,_fVFEAVDSubICPin=%d\n",
+	LOG(0, "bApiVFEAVDConnect(MainNew=%d, MainOld=%d,SubNew=%d,SubOld=%d,MainICPin=%d,SubICPin=%d\n",
 	 _fVFEAVDSourceMainNew,_fVFEAVDSourceMainOld,_fVFEAVDSourceSubNew,_fVFEAVDSourceSubOld,_fVFEAVDMainICPin,_fVFEAVDSubICPin);
 	
 	//if((fgMainCh)&&!(_fVFEAVDSourceMainNew==SV_VS_MAX))
