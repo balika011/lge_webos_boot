@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/04 $
+ * $Date: 2015/03/20 $
  * $RCSfile: mloop_video.c $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -547,6 +547,7 @@ LOG(1, "***** MAIN_FLG_MODE_CHG*****\n");
 
                     _bMainState = (UINT8)VDO_STATE_IDLE;
                     LOG(1, "Stable, Change to VDO_STATE_IDLE #2 bSigMode = %d\n", bSigMode);
+                    _vDrvVideoSetMute(MUTE_MODULE_B2R_EX, SV_VP_MAIN, 0, FALSE);
 
 #if defined( CC_SUPPORT_4K2K)||defined(CC_SUPPORT_HDMI_4K2K30)
 					vDrv4K2KChk(E_MODE_DONE, bSigMode);

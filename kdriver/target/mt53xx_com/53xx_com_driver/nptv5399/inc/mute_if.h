@@ -118,6 +118,7 @@ typedef enum
     MUTE_MODULE_COLORMODE,
     MUTE_MODULE_GAMEMODE,
     MUTE_MODULE_VDP,
+    MUTE_MODULE_B2R_EX, //for exit network video, AP can not mute immediately
     MUTE_MODULE_MAX
 } MUTE_MODULE_ID;
 

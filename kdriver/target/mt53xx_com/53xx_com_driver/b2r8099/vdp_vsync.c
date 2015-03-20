@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/23 $
+ * $Date: 2015/03/20 $
  * $RCSfile: vdp_vsync.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -103,6 +103,8 @@
 #include "../tve/tve_hal.h"
 #include "tve_if.h"
 #include "x_lint.h"
+#include "source_select.h"
+#include "mute_if.h"
 LINT_EXT_HEADER_BEGIN
 #include "drv_common.h"
 #include "x_os.h"
@@ -296,7 +298,12 @@ static UINT32 _B2R_CmdEnable(UCHAR ucB2rId)
     }
     else
     {
-       LOG(0,"B2R_HAL_Disable(%d)->B2R_VCMD_STOP\n",this->ucB2rId);
+        LOG(0,"B2R_HAL_Disable(%d)->B2R_VCMD_STOP\n",this->ucB2rId);
+
+        if(bGetSignalType(ucVdpId) == SV_ST_MPEG)
+        {
+            _vDrvVideoSetMute(MUTE_MODULE_B2R_EX, ucVdpId, FOREVER_MUTE, FALSE);
+        }
         B2R_HAL_Disable(this->hB2r);
         _B2R_SendCmdMsg(this, B2R_VCMD_STOP, 0);
     }
