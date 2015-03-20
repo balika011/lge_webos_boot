@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/20 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5815,6 +5815,11 @@ static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
      x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
 
      prVdpConf = _B2R_GetDP(this);
+
+     if(prVdpConf == NULL)
+     {
+        return FALSE;
+     }
      
      ucEsId = prVdpConf->ucInputPort[0];
      if(FBM_GetFbgAppMode(this->ptB2rPrm->ucFbgId) == FBM_FBG_APP_MTIMAGE)
@@ -6987,8 +6992,6 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 }
 #endif
 				
-
-
                 _B2R_ChangeFrameBuffer(this);
                 #ifndef CC_SUPPORT_NPTV_SEAMLESS //Lijia NPTV Seamless debug
                 if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_FRAME_COMING)
