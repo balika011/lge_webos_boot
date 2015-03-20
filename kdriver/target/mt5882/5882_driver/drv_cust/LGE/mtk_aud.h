@@ -1961,10 +1961,17 @@ static const AUD_AOUT_PAD_CFG_T _arMtkAoutPadTable =
 static const AUD_INTER_DAC_CFG_T _arMtkInterDacUsage =
 {
 #ifndef CC_AUDIO_EU_PWM_OUTPUT_AUXDEC
+#ifdef CC_AUD_ARM_RENDER
     AUD_CHL_DOWNMIX,    // AL0,AR0: Headphone
-    AUD_CHL_BYPASS,     // AL1,AR1: SCART1-Lineout
+    AUD_CHL_IEC,     // AL1,AR1: SCART1-Lineout
+    AUD_CHL_EXTCH,        // AL2,AR2: SCART2-TV Bypass
+    AUD_CHL_L_R,
+#else
+    AUD_CHL_DOWNMIX,    // AL0,AR0: Headphone
+    AUD_CHL_IEC,     // AL1,AR1: SCART1-Lineout
     AUD_CHL_AUX,        // AL2,AR2: SCART2-TV Bypass
     AUD_CHL_L_R,
+#endif
 #else
     AUD_CHL_L_R,            ///AR0, AL0
     AUD_CHL_L_R,            ///AR2, AL2
