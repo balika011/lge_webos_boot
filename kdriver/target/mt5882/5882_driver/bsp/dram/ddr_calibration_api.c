@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/19 $
+ * $Date: 2015/03/20 $
  * $RCSfile: pi_calibration_api.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -736,7 +736,7 @@ void DramcImpedanceCalApply(void)
     DramcDqmDriving(uctx_ocd_drvp, uctx_ocd_drvn, ucrx_odt_drvp, ucrx_odt_drvn);
     // CLK driving is different from others (based on waveform result), may need offset?!
     DramcClkDriving(uctx_ocd_drvp, uctx_ocd_drvn);
-    DramcCaDriving(0xff, 0xff);
+    DramcCaDriving(uctx_ocd_drvp, uctx_ocd_drvn);
     /*
     u4value = ucDram_Register_Read(mcSET_PHY_REG_ADDR(0x08c));
     mcSET_FIELD(u4value, 0xff, 0x000000ff, 0);
