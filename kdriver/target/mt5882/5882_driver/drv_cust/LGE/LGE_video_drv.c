@@ -963,8 +963,8 @@ void DRVCUST_InputCSCAdj(UINT8 bPath)
 		case SOURCE_TYPE_TIMING_RFTV_PAL_60:		
 		case SOURCE_TYPE_TIMING_RFTV_NTSC_443:
 			//RF PAL other
-			vIO32WriteFldAlign(MATRIX_01, 0x1fe, IN_Y_GAIN);
-			vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x202, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1f9, IN_Y_OFST);
 			vIO32WriteFldAlign(MATRIX_01, 0x22a, IN_C_GAIN);
 			break;
 		case SOURCE_TYPE_TIMING_RFTV_NTSC_358:
@@ -986,10 +986,22 @@ void DRVCUST_InputCSCAdj(UINT8 bPath)
 			vIO32WriteFldAlign(MATRIX_01, 0x209, IN_C_GAIN);
 			break;
 		case SOURCE_TYPE_TIMING_SCART_RGB:			
-			//SCART 
-			vIO32WriteFldAlign(MATRIX_01, 0x1f7, IN_Y_GAIN);
-			vIO32WriteFldAlign(MATRIX_01, 0x1ff, IN_Y_OFST);
+			//SCART RGB
+			vIO32WriteFldAlign(MATRIX_01, 0x1fa, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_OFST);
 			vIO32WriteFldAlign(MATRIX_01, 0x1f5, IN_C_GAIN);
+			break;
+		case SOURCE_TYPE_TIMING_SCART_AV_NTSC_358:	
+		case SOURCE_TYPE_TIMING_SCART_AV_NTSC_443:
+		case SOURCE_TYPE_TIMING_SCART_AV_PAL:
+		case SOURCE_TYPE_TIMING_SCART_AV_PAL_M:
+		case SOURCE_TYPE_TIMING_SCART_AV_PAL_N:
+		case SOURCE_TYPE_TIMING_SCART_AV_PAL_60:
+		case SOURCE_TYPE_TIMING_SCART_AV_SECAM:
+			//SCART CVBS
+			vIO32WriteFldAlign(MATRIX_01, 0x202, IN_Y_GAIN);
+			vIO32WriteFldAlign(MATRIX_01, 0x1fc, IN_Y_OFST);
+			vIO32WriteFldAlign(MATRIX_01, 0x209, IN_C_GAIN);
 			break;
 		default:
 			//bypass 
