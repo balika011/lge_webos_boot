@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/20 $
+ * $Date: 2015/03/21 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -838,18 +838,10 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
     prPoolArrangeInfo[FBM_POOL_TYPE_VBI].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_VBI].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_VBI;		
-
 	
-#if defined(CC_FBM_SUPPORT_PNG)		
-	prPoolList[FBM_POOL_TYPE_PNG].u4Inherit = FBM_POOL_ROOT;
-	prPoolList[FBM_POOL_TYPE_PNG].u4PoolSize = FBM_PNG_POOL_SIZE;
-	prPoolArrangeInfo[FBM_POOL_TYPE_PNG].eMode = FBM_POOL_ARRANGE_AFTER;
-	prPoolArrangeInfo[FBM_POOL_TYPE_PNG].ePool1 = u4AheadType;
-	u4AheadType = FBM_POOL_TYPE_PNG;
-#endif
 	//-----DSP-----
 	prPoolList[FBM_POOL_TYPE_DSP].u4Inherit = FBM_POOL_ROOT;
-	//prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
+	prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].eMode = FBM_POOL_ARRANGE_AFTER;
 	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].ePool1 = u4AheadType;
 #if defined(CC_SUPPORT_5_SEC_PTS_PCR_OFFSET)
@@ -888,6 +880,13 @@ u4AheadType = FBM_POOL_TYPE_TOTAL;
     prPoolArrangeInfo[FBM_POOL_TYPE_SWDMX].eMode = FBM_POOL_ARRANGE_AFTER;
     prPoolArrangeInfo[FBM_POOL_TYPE_SWDMX].ePool1 = u4AheadType;
     u4AheadType = FBM_POOL_TYPE_SWDMX;
+#endif
+#if defined(CC_FBM_SUPPORT_PNG)		
+		    prPoolList[FBM_POOL_TYPE_PNG].u4Inherit = FBM_POOL_ROOT;
+			prPoolList[FBM_POOL_TYPE_PNG].u4PoolSize = FBM_PNG_POOL_SIZE;
+    		prPoolArrangeInfo[FBM_POOL_TYPE_PNG].eMode = FBM_POOL_ARRANGE_AFTER;
+    		prPoolArrangeInfo[FBM_POOL_TYPE_PNG].ePool1 = u4AheadType;
+    		u4AheadType = FBM_POOL_TYPE_PNG;
 #endif
 #if defined(CC_FBM_3D_OSD)||defined(CC_MHP_SUPPORT)
 	prPoolList[FBM_POOL_TYPE_JPG_VDP].u4Inherit = FBM_POOL_ROOT;
