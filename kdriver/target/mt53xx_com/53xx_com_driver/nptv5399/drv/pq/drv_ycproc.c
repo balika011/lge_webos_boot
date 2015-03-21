@@ -1058,8 +1058,10 @@ void vDrvGlobalPQAdj(void)
 		}
 
 		u1VsyncCounter = (u1VsyncCounter > 0) ? (u1VsyncCounter - 1) : 0 ;
-		
-		if((u1VsyncCounter == 0) && ((u1PreBLVL != GET_BLK_LVL(SV_VP_MAIN))))
+
+		//PEUI_IN_CSC_DEBUG, only for LG xml debug!!!
+		if(((u1VsyncCounter == 0) && ((u1PreBLVL != GET_BLK_LVL(SV_VP_MAIN))))
+			|| (IO32ReadFldAlign(PEUI_00, PEUI_IN_CSC_DEBUG)))
 		{	
 			u1PreBLVL = GET_BLK_LVL(SV_VP_MAIN);
 			vDrvDIForce3DModeWithDelay();   // Avoid 3x3 matrix change then DI flicker       

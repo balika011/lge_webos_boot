@@ -184,6 +184,7 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define PEUI_CUST_TIMING            Fld(8, 16, AC_FULLB2) //23:16
     #define PEUI_RESET_MAIN             Fld(1,24,AC_MSKB3)//[24:24]
     #define PEUI_RESET_PIP              Fld(1,25,AC_MSKB3)//[25:25]
+    #define PEUI_IN_CSC_DEBUG			Fld(1,26,AC_MSKB3)//[26:26]
 
     #define vDrvSetPEUIResetFlg(bPath, bOnOff) (vIO32WriteFldAlign(PEUI_00, bOnOff, \
                                                 ((bPath==SV_VP_MAIN)?PEUI_RESET_MAIN:\
