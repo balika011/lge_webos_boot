@@ -654,7 +654,9 @@ static INT32 _PE_SetVdoPqFilmOnOff(UCHAR ucVdpId, const VDO_PQ_FILM_ONOFF_T* prD
 
     if (prData->u1Module == ENUM_DI_FILM)
     {
-        vDrvDISetFilmModeOnOff(ucVdpId, prData->u1FilmType, prData->u1OnOff);
+       // vDrvDISetFilmModeOnOff(ucVdpId, prData->u1FilmType, prData->u1OnOff);
+       //Setting all filmmode on/off together
+		vDrvDIFilmModeOnOff(ucVdpId,prData->u1OnOff);
     }
     else if (prData->u1Module == ENUM_MJC_FILM)
     {

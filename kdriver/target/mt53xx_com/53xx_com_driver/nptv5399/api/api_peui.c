@@ -1281,15 +1281,17 @@ void vUi_SATURATION(UINT8 u1VidPath, UINT8 u1SrcTypTmg)
 }
 
 void vUi_DI_FILM_MODE(UINT8 u1VidPath, UINT8 bOnOff, UINT8 i2Cur)
-{
-    vDrvDIFilmModeOnOff(u1VidPath, bOnOff);
+{	
+	//mark this UI on/off filmmode    
+
+  /*  vDrvDIFilmModeOnOff(u1VidPath, bOnOff);
     
     if (bOnOff)
     {
         //Slow Motion (1) Map to Aggressive ,Big Motion (2) Map to Defensive
         vDrvDISetQualityMode(E_DI_ENGINE_FILM, i2Cur==SV_CN_MOVIE ?
         E_DI_QUALITY_AGGRESSIVE : E_DI_QUALITY_DEFENSIVE);
-    }
+    }*/
 }
 
 void vUi_DI_MA(UINT8 u1VidPath, UINT8 i2Cur)
