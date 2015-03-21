@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/21 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -356,7 +356,7 @@ static void _FbgStatus(UCHAR ucFbgId)
         return;
     }
 
-      LOG(0, "FBG(%d) Type(%d) CM(%d) Ns(%d) D(%d) F(%d) B(%d) Pool(0x%x, 0x%x) \n",
+      LOG(0, "FBG(%d) Type(%d) CM(%d) Ns(%d) D(%d) F(%d) B(%d) Es(%d),Flag(0x%x),Pool(0x%x, 0x%x) \n",
         _arFbg[ucFbgId].ucFbgId,
         _arFbg[ucFbgId].ucFbgType,
         _arFbg[ucFbgId].ucFbgCm,
@@ -364,6 +364,8 @@ static void _FbgStatus(UCHAR ucFbgId)
         _arFbg[ucFbgId].ucFbDecode,
         _arFbg[ucFbgId].ucFbFRef,
         _arFbg[ucFbgId].ucFbBRef,
+        _arFbg[ucFbgId].u1DecoderSrcId,
+        _arFbg[ucFbgId].u4FbgFlag,
         _arFbg[ucFbgId].u4FbMemoryPool,
         _arFbg[ucFbgId].u4FbMemoryPoolSize);
       LOG(0,"Resolution(0x%x,0x%x),Pitch(0x%x),Raster(%d),422Mode(%d)\n",

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/21 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -777,8 +777,19 @@ typedef enum
     SUPER_DATA_DUMP_POINT_RECEIVE_ES,
     SUPER_DATA_DUMP_POINT_EMPTY_BUFFER,
     SUPER_DATA_DUMP_POINT_VCALLBACK,
-   SUPER_DATA_DUMP_POINT_MAX
+    SUPER_DATA_DUMP_POINT_MAX
 }SUPER_DATA_DUMP_POINT_TYPE;
+
+typedef enum
+{
+    VPUSH_GET_PARAM_VDECID_TO_VPUSH_HANDLE,
+    VPUSH_GET_PARAM_VPUSHID_TO_VPUSH_HANDLE,
+    VPUSH_GET_PARAM_VPUSH_ID,
+    VPUSH_GET_PARAM_VDEC_ID,
+    VPUSH_GET_PARAM_SECURE_INPUT,
+    VPUSH_GET_PARAM_SEAMLESS_OUTPUT,
+    VPUSH_GET_PARAM_INVALID
+}VPUSH_GET_PARAM_TYPE;
 
 typedef struct _VDEC_APP_TYPE_T
 {
@@ -1984,7 +1995,8 @@ typedef struct
 	INT32 i4HalDisplayDelay;
 	INT32 i4HalLipsyncMaster;
     UINT32 u4DecErrMbCnt;
-    UINT32 u4EsDataCnt;  // received data cnt;
+    UINT32 u4ReceiveEsDataCnt;  // received data cnt;
+    UINT32 u4SendEsDataCnt;
     BOOL fgLGSeamless;
 } VDEC_ES_INFO_T;
 
@@ -2380,6 +2392,8 @@ EXTERN UINT32 VDEC_HWReadData(UCHAR ucEsId,INT32 u4StartAddr,UINT32 u4EndAddr,UI
 
 EXTERN VOID * _VPUSH_EsId2VPush(UINT8 ucEsId);
 EXTERN BOOL _VPUSH_IsSecurePlaying(UINT8 ucEsId);
+EXTERN BOOL _VPUSH_GetParam(VPUSH_GET_PARAM_TYPE eQueryType,
+    UINT32 u4InParam,UINT32 *pu4OutParam1,UINT32 *pu4OutParam2);
 
 #ifdef VDEC_DEC_REG_QUERY
 #define VDEC_REG_DUMP_DELAY( a )

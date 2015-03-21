@@ -227,7 +227,7 @@ static void _VPUSH_VDEC_Nfy(
                 case VDEC_DEC_DECODE_RES_NOT_SUPPORT:
                     if(prVdec->rInpStrm.fnCb.pfnVdecErrHandler)
                     {
-                        LOG(0, "[VPUSH] call Vdec error(%d) handler,ErrorPes %d\n", u4Data1,prVdecEsInfo->u4EsDataCnt);
+                        LOG(0, "[VPUSH] call Vdec error(%d) handler,ErrorPes %d\n", u4Data1,prVdecEsInfo->u4ReceiveEsDataCnt);
                         prVdec->rInpStrm.fnCb.pfnVdecErrHandler(
                             prVdec->rInpStrm.fnCb.u4VdecErrTag,
                             &u4Data1);
@@ -6694,6 +6694,139 @@ BOOL _VPUSH_IsSecurePlaying(UINT8 ucEsId)
     }
 
     return FALSE;
+}
+
+BOOL _VPUSH_GetParam(VPUSH_GET_PARAM_TYPE eQueryType,
+    UINT32 u4InParam,UINT32 *pu4OutParam1,UINT32 *pu4OutParam2)
+{
+
+    VDEC_T *prVdec = NULL;
+    BOOL fgRetVal = TRUE;
+    switch(eQueryType)
+    {
+        case VPUSH_GET_PARAM_VDECID_TO_VPUSH_HANDLE:
+            {
+                UINT8 ucIndex = 0;
+                UINT8 ucEsId = (UINT8)u4InParam;
+
+                for(ucIndex=0; ucIndex < VDEC_PUSH_MAX_DECODER; ucIndex++)
+                {
+                    if(_prVdecPush->arDec[ucIndex].eCurState != VPUSH_ST_STOP 
+                        && _prVdecPush->arDec[ucIndex].ucVdecId == ucEsId)
+                    {
+                        prVdec = (VDEC_T *)(&_prVdecPush->arDec[ucIndex]);
+                        break;
+                    }
+                }
+
+                if(prVdec && pu4OutParam1)
+                {
+                    *pu4OutParam1 = (UINT32)prVdec;
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+        case VPUSH_GET_PARAM_VPUSHID_TO_VPUSH_HANDLE:
+            {
+                UINT8 ucVpushId = (UINT8)u4InParam;
+                UINT8 ucIndex = 0;
+
+                for(ucIndex = 0; ucIndex < VDEC_PUSH_MAX_DECODER; ucIndex++)
+                {
+                    if(_prVdecPush->arDec[ucIndex].ucVPushId == ucVpushId)
+                    {
+                        prVdec = (VDEC_T *)(&_prVdecPush->arDec[ucIndex]);
+                        break;
+                    }
+                }
+
+                if(prVdec && pu4OutParam1)
+                {
+                   *pu4OutParam1 = (UINT32)prVdec;
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+        case VPUSH_GET_PARAM_VPUSH_ID:
+            {
+                prVdec = (VDEC_T *)u4InParam;
+                if(prVdec && pu4OutParam1)
+                {
+                    *pu4OutParam1 = (UINT32)prVdec->ucVPushId;
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+        case VPUSH_GET_PARAM_VDEC_ID:
+            {
+                prVdec = (VDEC_T *)u4InParam;
+                if(prVdec && pu4OutParam1)
+                {
+                    *pu4OutParam1 = (UINT32)prVdec->ucVdecId;
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+
+        case VPUSH_GET_PARAM_SECURE_INPUT:
+            {
+                prVdec = (VDEC_T *)u4InParam;
+                if(prVdec && pu4OutParam1)
+                {
+                    *pu4OutParam1 = (UINT32)prVdec->fgIsSecureInput;
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+
+        case VPUSH_GET_PARAM_SEAMLESS_OUTPUT:
+            {
+                VDEC_ES_INFO_T *prVdecEsInfo;
+                prVdec = (VDEC_T *)u4InParam;
+                if(prVdec && (prVdec->ucVdecId < VDEC_MAX_ES) && pu4OutParam1)
+                {
+                    prVdecEsInfo = _VDEC_GetEsInfo(prVdec->ucVdecId);
+                    *pu4OutParam1 = (UINT32)prVdecEsInfo->fgSeamlessPlay;
+                    if(pu4OutParam2)
+                    {
+                        *pu4OutParam2 = (UINT32)prVdecEsInfo->eSeamlessMode;
+                    }
+                }
+                else
+                {
+                    fgRetVal = FALSE;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
+    if(fgRetVal == FALSE)
+    {
+        LOG(1,"_VPUSH_GetParam(%d,%d,%d) return false\n",eQueryType,u4InParam,(INT32)pu4OutParam1);
+    }
+    else
+    {
+        LOG(2,"_VPUSH_GetParam(%d,%d,%d) return true \n",eQueryType,u4InParam,*pu4OutParam1);
+    }
+    
+    return fgRetVal;
 }
 
 /*----------------------------------------------------------------------------------------
