@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/21 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3282,7 +3282,7 @@ static BOOL _AvSyncControl(UINT8 u1DspId, UINT8 u1DecId)
     // Only DTV & ATV need AV synchronization
     if (((_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)||(_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_MULTI_MEDIA)) &&
         (AUD_GetAvSynMode(u1DecId) != AV_SYNC_FREE_RUN) &&
-        (!_AudDmxDtvInitPlaybackFifoFull(u1DecId))&&((u1DecId==AUD_DEC_AUX)||(u1DecId==AUD_DEC_THIRD)))
+        (!_AudDmxDtvInitPlaybackFifoFull(u1DecId)))
     {
         fgRet = TRUE;
     }
@@ -11304,7 +11304,8 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
         }
         else
         {
-            *pu2AudDelay = u2VdpDelay + 100;      //offset by 100ms for video unknown delay (30Hz * 3 frame = 100ms)
+            //*pu2AudDelay = u2VdpDelay + 100;      //offset by 100ms for video unknown delay (30Hz * 3 frame = 100ms)
+            *pu2AudDelay = u2VdpDelay; 
             LOG(7, "### Adjust for GStreamer = \t%d\n", *pu2AudDelay);
         }
     }
@@ -11317,7 +11318,7 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
         *pu2AudDelay += i2CustDelayMs;
         LOG(7, "### Adjust by customer table = \t%d\n", *pu2AudDelay);
     }
-#ifdef CC_AUD_DDI
+#if 0//def CC_AUD_DDI   --a2 delay,a5 not need custdelay
     if (eAudDecStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)// LG delay only table delay + AP delay
     {
         if(i2CustDelayMs < 0)
@@ -11327,6 +11328,7 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
         *pu2AudDelay = i2CustDelayMs;
     }
 #endif
+
 #ifdef CC_AUD_SKYPE_ZERO_DELAY
     _fgSkypeMode = FeederGetSkypeSourceFlag();
 
