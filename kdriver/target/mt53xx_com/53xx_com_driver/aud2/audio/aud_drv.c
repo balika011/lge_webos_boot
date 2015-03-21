@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/19 $
+ * $Date: 2015/03/21 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1595,7 +1595,7 @@ static void _AudSetEvent(UINT8 u1DspId, UINT8 u1DecId, UINT32 u4Event)
 extern int _vdec_opencnt;
 BOOL AUD_DrvGetMMAudioOnly(UINT8 u1DecId)
 {
-    if(_arAudDecoder[AUD_DSP0][AUD_DEC_MAIN].eStreamFrom == AUD_STREAM_FROM_GST)
+    if(_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_GST)
     {
         return ((0 == _vdec_opencnt)?TRUE:FALSE);
     }   
