@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/23 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5923,6 +5923,7 @@ typedef enum {
 // IEC
 typedef enum {
     APROC_IOCTRL_IEC_FLAG = 0,
+    APROC_IOCTRL_IEC_MODE,
     APROC_IOCTRL_IEC_COPYPROTECT,
     APROC_IOCTRL_IEC_MUTE,
     APROC_IOCTRL_IEC_CHANNELSTATUS,
@@ -11563,7 +11564,8 @@ extern UINT16 AUD_GetSyncDbgLvl(void);
 
 extern DATA_ENDIAN_T AUD_GetDTSInfo (void);
 extern void AUD_SetDTSInfo (DATA_ENDIAN_T endian);
-
+extern void AUD_SetDTSFrameSize(UINT32 u4Size);
+extern UINT32 AUD_GetDTSFrameSize (void);
 
 #ifdef  CC_AUD_HDMI_PARSER_2_0_SUPPORT
 extern void AUD_DrvGetParserDetect(UINT8 u1DecId, BOOL* pfgDeteced);

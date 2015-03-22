@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/23 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -670,4 +670,17 @@ DATA_ENDIAN_T AUD_GetDTSInfo (void)
 {
     return _gDTSEnInfo;
 }
+
+static UINT32 _gu4DTSFrameSize = 512;
+void AUD_SetDTSFrameSize(UINT32 u4Size)
+{
+    _gu4DTSFrameSize = u4Size;
+    LOG (0, "AUD_SetDTSFrameSize: %d\n", _gu4DTSFrameSize);
+}
+
+UINT32 AUD_GetDTSFrameSize (void)
+{
+    return _gu4DTSFrameSize;
+}
+
 

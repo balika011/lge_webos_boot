@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/16 $
+ * $Date: 2015/03/23 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #38 $
+ * $Revision: #39 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2850,6 +2850,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     CHAR *pAudFmt = "";
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
     UINT32 u4Reg0;
+    UINT32 u4Mode = 0; //bit0: 1: DTS CD, 0: others, bit
 #endif    
 
 #ifdef CC_AUD_AD_FORCE_PCM      
@@ -3071,8 +3072,27 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 eBurstInfo = BURST_INFO_DTS;
                 u2Nsnum = 0x200; // 512 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-                eBurstInfo = BURST_INFO_DTS_512;
-                u4Reg0 = APROC_RAW_DTS_512;
+
+                if (AUD_GetDTSInfo() == DEC_LITTLE_ENDIAN)
+                {
+                    u4Mode = 0x1;             
+                }
+                switch (AUD_GetDTSFrameSize())
+                {
+                case 1024:
+                    eBurstInfo = BURST_INFO_DTS_1024;
+                    u4Reg0 = APROC_RAW_DTS_1024;
+                    break;
+                case 2048:
+                    eBurstInfo = BURST_INFO_DTS_2048;
+                    u4Reg0 = APROC_RAW_DTS_2048;
+                    break;
+                case 512: 
+                default:
+                    eBurstInfo = BURST_INFO_DTS_512;
+                    u4Reg0 = APROC_RAW_DTS_512;                    
+                    break;
+                }
 #endif                    
                 break;
             default: // error case
@@ -3091,6 +3111,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
         LOG(0, "SPDIF Output AUD_DEC%d, Enable(%d) Codec = %s\n", _u1SpdifRawDec, fgEnable, pAudFmt);
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);         
 #endif        
         vWriteShmUINT16(AUD_DSP0, W_IEC_BURST_INFO, eBurstInfo);
@@ -26690,6 +26711,14 @@ static void _vAproc_PostProcIecFlagSetFunction (UINT32 *pu4Value)
     }
 }
 
+//pu4Value[0]: Mode: 1 = DTS CD, 0: others
+static void _vAproc_PostProcIecModeSetFunction (UINT32 *pu4Value)
+{ 
+    UINT32 u4Mode;
+    u4Mode = pu4Value[0];
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_MODE), u4Mode);
+}
+
 // IEC mute set
 // pu4Value[0] = mute control, 0 = unmute, 1 = mute
 static void _vAproc_PostProcIecMuteSetFunction (UINT32 *pu4Value)
@@ -27034,6 +27063,11 @@ static void _vAproc_PostProcIecFlagGetFunction (UINT32 *pu4Value)
     *pu4Value = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_FLAG));
 }
 
+static void _vAproc_PostProcIecModeGetFunction (UINT32 *pu4Value)
+{
+    *pu4Value = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_MODE));
+}
+
 // IEC copy protect (L-bit, C-bit) get
 // pu4Value[0] = L-bit
 // pu4Value[1] = C-bit
@@ -27059,6 +27093,9 @@ static void _vAproc_PostProcIec_Set (UINT32 u4Id, UINT32 *pu4Value, UINT32 u4Num
     {
     case APROC_IOCTRL_IEC_FLAG:
         _vAproc_PostProcIecFlagSetFunction (pu4Value);
+        break;
+    case APROC_IOCTRL_IEC_MODE:
+        _vAproc_PostProcIecModeSetFunction (pu4Value);
         break;
     case APROC_IOCTRL_IEC_COPYPROTECT:
         _vAproc_PostProcIecCopyProtectSetFunction (pu4Value);
@@ -27098,6 +27135,9 @@ static void _vAproc_PostProcIec_Get (UINT32 u4Id, UINT32 *pu4Value, UINT32 u4Num
     {
     case APROC_IOCTRL_IEC_FLAG:
         _vAproc_PostProcIecFlagGetFunction (pu4Value);
+        break;
+    case APROC_IOCTRL_IEC_MODE:
+        _vAproc_PostProcIecModeGetFunction (pu4Value);
         break;
     case APROC_IOCTRL_IEC_COPYPROTECT:
         _vAproc_PostProcIecCopyProtectGetFunction (pu4Value);
