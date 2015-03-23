@@ -2107,7 +2107,7 @@ static const AUD_PAL_FAC_T _arPalFactory =
     32,                                // higher threshold of FM carrier mute
     16,                                // lower threshold of FM carrier mute
     //****** prescale  ******************************//
-    20,                                //PAL prescale
+    10,                                //PAL prescale
     18,                                //AM prescale
     20,                                //NICAM prescale
     //****** FM saturation mute mode  ***************//
