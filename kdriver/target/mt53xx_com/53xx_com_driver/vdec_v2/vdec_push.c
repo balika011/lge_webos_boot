@@ -5951,7 +5951,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     
     LOG(1,"[VPUSH]_VPUSH_AllocVideoDecoder %d\n",i);
 
-    FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
+    //FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
     FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
 #ifdef CC_VDEC_RM_SUPPORT
     LOG(0,"Define Enable CC_VDEC_RM_SUPPORT\n");
@@ -6104,7 +6104,7 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
     prVdec->dwVPSliceSzBufWpBak= 0;
     prVdec->dwFirst4CC = 0 ;
     
-    FBM_ClrFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
+    //FBM_ClrFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
 
 	if(prVdec->ucVdecId<VDEC_PUSH_MAX_DECODER)
 	{

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/17 $
+ * $Date: 2015/03/23 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2130,13 +2130,6 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
         ucFbStatus = FBM_FB_STATUS_EMPTY;
     }
 
-    // If Display NOT ready, don't put FB in DisplayQ (Display Q >> Empty)
-    if ((ucFbStatus == FBM_FB_STATUS_DISPLAYQ) &&
-            ((_prFbg[ucFbgId].u4FbgFlag & FBM_FLAG_DISP_READY) == 0))
-    {
-        ucFbStatus = FBM_FB_STATUS_EMPTY;
-    }
-
     if (ucFbId == _prFbg[ucFbgId].ucFbDecode)
     {
         // check current decode frame buffer status change
@@ -2164,6 +2157,13 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
         }
     }
 
+    // If Display NOT ready, don't put FB in DisplayQ (Display Q >> Empty)
+    if ((ucFbStatus == FBM_FB_STATUS_DISPLAYQ) &&
+            ((_prFbg[ucFbgId].u4FbgFlag & FBM_FLAG_DISP_READY) == 0))
+    {
+        ucFbStatus = FBM_FB_STATUS_EMPTY;
+    }
+    
 #if 1
     //need more test.
     // for new OMX, dropped frame should go back to OMX by display.
@@ -2469,6 +2469,59 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
     
 }
 
+
+BOOL FBM_ForceReleaseFrameBuffer(UCHAR ucFbgId,UCHAR ucFbId)
+{
+    FBM_FBQ_T *prDisplayQ = NULL;
+    if ((VERIFY_FBG(ucFbgId)) || (VERIFY_FB(ucFbgId, ucFbId)))
+    {
+        return 0;
+    }
+    
+    FBM_MUTEX_LOCK(ucFbgId);
+
+    prDisplayQ = &_prFbg[ucFbgId].rDisplayQ;
+    if(_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_DISPLAYQ &&  prDisplayQ->ucCount > 0)
+    {
+        BOOL fgInDispQ = FALSE;
+        UCHAR ucFbCnt= 0,ucFbIndex=0;
+
+        while(ucFbCnt < prDisplayQ->ucCount)
+        {
+            ucFbIndex = (UCHAR)(prDisplayQ->ucReadIdx + ucFbCnt) % FBM_MAX_FB_NS_PER_GROUP;
+            if(ucFbId == prDisplayQ->aucQueue[ucFbIndex])
+            {
+                fgInDispQ = TRUE;
+                break;
+            }
+            ucFbCnt++;
+        }
+
+        if(fgInDispQ)
+        {
+            UCHAR ucToIndex = 0,ucFromIndex = 0;
+            ucFbCnt = 0;
+            while(ucFbIndex + ucFbCnt + 1< prDisplayQ->ucReadIdx + prDisplayQ->ucCount)
+            {
+               ucToIndex =  (ucFbIndex + ucFbCnt) % FBM_MAX_FB_NS_PER_GROUP;
+               ucFromIndex = (ucFbIndex + ucFbCnt + 1) % FBM_MAX_FB_NS_PER_GROUP;
+               prDisplayQ->aucQueue[ucToIndex] = prDisplayQ->aucQueue[ucFromIndex];
+               ucFbCnt++;
+            }
+            prDisplayQ->ucCount--;
+        }
+        
+        _prFbg[ucFbgId].aucFbStatus[ucFbId] = FBM_FB_STATUS_READY;
+    }
+
+    FBM_MUTEX_UNLOCK(ucFbgId);
+    
+    if(FBM_GetFrameBufferStatus(ucFbgId,ucFbId) != FBM_FB_STATUS_LOCK)
+    {
+        FBM_SetFrameBufferStatus(ucFbgId, ucFbId, FBM_FB_STATUS_EMPTY);
+    }
+    return TRUE;
+}
 
 //-------------------------------------------------------------------------
 /** FBM_CheckFrameBufferDispQ

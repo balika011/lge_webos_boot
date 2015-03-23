@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/23 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1775,6 +1775,8 @@ EXTERN VOID FBM_CheckBufferdefine(VOID);
 EXTERN VOID FBM_ReleaseDispQ(UCHAR ucFbgId);
 
 EXTERN void FBM_GetEmptyQCount(UCHAR ucFbgId, UCHAR* pucCount);
+
+EXTERN BOOL FBM_ForceReleaseFrameBuffer(UCHAR ucFbgId,UCHAR ucFbId);
 
 #if 1
 EXTERN UCHAR FBM_GetDbkSmallBFrameBuffer(UCHAR ucFbgId);

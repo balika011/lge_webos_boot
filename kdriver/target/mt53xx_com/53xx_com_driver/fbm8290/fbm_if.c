@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/03/23 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2609,10 +2609,13 @@ UCHAR FBM_CreateGroupExt(UCHAR ucFbgType, UINT32 u4VDecFmt,
     SYSLOG(FBM_PREFIX + 99, u4FbgId, ucFbgType, 0);
 
     // Apply global value
-    if(FBM_ChkFrameBufferGlobalFlagIsr(0xFF, FBM_FLAG_FB_DECODE_ONLY))
+
+    if(prPar->u1AppMode == FBM_FBG_APP_OMX_DISP || prPar->u1AppMode == FBM_FBG_APP_OMX)
     {
         _arFbg[u4FbgId].u4FbgFlag |= FBM_FLAG_DISP_READY;
+        // gst need send frame to Application.
     }
+    
     if (prPar && prPar->fgThumbnailMode)
     {
         _arFbg[u4FbgId].u4FbgFlag |= FBM_FLAG_THUMBNAIL_MODE;
