@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/25 $
+ * $Date: 2015/03/23 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1384,6 +1384,16 @@ static UINT32 pm_save_pmx_regs[2];
 
 BOOL pb_osd_enable[OSD_PLANE_MAX_NUM] = {FALSE};
 
+#if defined(CC_LG_SNAP_SHOT)
+#include <linux/timer.h>
+static DEFINE_TIMER(defered_resume_timer, NULL, 0, (unsigned long)NULL);
+static void OSD_pm_resume_core();
+static void OSD_defered_pm_resume_handler(unsigned long data)
+{
+	OSD_pm_resume_core();
+}
+#endif
+
 void OSD_pm_suspend(void)
 {
     BOOL u4Plane1Enable, u4Plane2Enable, u4Plane3Enable;
@@ -1501,11 +1511,9 @@ void OSD_pm_suspend(void)
     {
         x_sema_unlock(_hOsdWaitVsyncSema2);
     }
-
 }
 
-
-void OSD_pm_resume(void)
+static void OSD_pm_resume_core(void)
 {
     bVyncCouter = 3;  // resume for OSDIsPlaying()
 
@@ -1606,6 +1614,23 @@ void OSD_pm_resume(void)
     _OsdGetMirrorFlipSetting();
     _OSD_RGN_AllFlipMirrorMode();
  #endif
+}
+
+void OSD_pm_resume(void)
+{
+#if defined(CC_LG_SNAP_SHOT)
+	extern int is_snapshot_making;
+	if (!is_snapshot_making)
+	{
+		defered_resume_timer.expires = get_jiffies_64() + 3*HZ;
+		defered_resume_timer.function = OSD_defered_pm_resume_handler;
+		add_timer(&defered_resume_timer);
+	}
+	else
+		OSD_pm_resume_core();
+#else
+	OSD_pm_resume_core();
+#endif
 }
 
 #endif /*CC_SUPPORT_STR*/
