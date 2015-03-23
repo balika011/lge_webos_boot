@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/03/23 $
  * $RCSfile: vdec_if.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_if.h
@@ -750,6 +750,15 @@ typedef struct {
     UINT64 u8Pts; //extension for 64bit PTS.
 } VDEC_PTS_INFO_T;
 
+typedef struct {
+    UINT32 u4SarWidth;
+    UINT32 u4SarHeight;
+    UINT32 u4DarWidth;
+    UINT32 u4DarHeight;
+    UINT32 u4ParWidth;
+    UINT32 u4ParHeight;
+} VDEC_SAR_PAR_DAR_INFO_T;
+
 /**
  *  VDEC position information
  */
@@ -894,6 +903,8 @@ EXTERN INT32 VDEC_SetVdecNotSupportNfy(UCHAR ucEsId, const PFN_VDEC_NOT_SUPPORT_
 *@param .
  */
 EXTERN BOOL VDEC_QueryInfo(UCHAR ucEsId, VDEC_HDR_INFO_T* prHdrInfo);
+
+EXTERN BOOL VDEC_GetSarParDarInfo(UCHAR ucEsId, VDEC_SAR_PAR_DAR_INFO_T *prSARDarParInfo);
 
 EXTERN BOOL VDEC_QueryChromaInfo(UCHAR ucEsId, VDEC_CHROMA_SIMPLE_INFO_T* prChromaSimpleInfo);
 
