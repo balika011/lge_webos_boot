@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/23 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #39 $
+ * $Revision: #40 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2851,6 +2851,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
     UINT32 u4Reg0;
     UINT32 u4Mode = 0; //bit0: 1: DTS CD, 0: others, bit
+    APROC_IEC_CHANNELSTATUS_T  eInfo; 
 #endif    
 
 #ifdef CC_AUD_AD_FORCE_PCM      
@@ -3072,7 +3073,6 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 eBurstInfo = BURST_INFO_DTS;
                 u2Nsnum = 0x200; // 512 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-
                 if (AUD_GetDTSInfo() == DEC_LITTLE_ENDIAN)
                 {
                     u4Mode = 0x1;             
@@ -3112,7 +3112,50 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);         
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);
+
+        _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10);
+        eInfo.u4CategoryCode = u1CategoryCode;
+        eInfo.u4CopyRight = u1Copyright;
+        switch(u1WordLength)  
+        {
+        case IEC_WORDLENGTH_24BITS:
+            eInfo.u4WordLength = SPDIF_WORDLENGTH_MAX24_24BITS;
+            break;
+        case IEC_WORDLENGTH_20BITS:
+            eInfo.u4WordLength = SPDIF_WORDLENGTH_MAX24_20BITS;
+            break;
+        case IEC_WORDLENGTH_16BITS:
+            eInfo.u4WordLength = SPDIF_WORDLENGTH_MAX20_16BITS;
+            break;
+        default:
+            eInfo.u4WordLength = SPDIF_WORDLENGTH_MAX20_NOT_INDICATE;
+            break;
+        }
+        if (eIecFlag == AUD_IEC_CFG_RAW)
+        {  
+            eInfo.u4DigitalInfo = 1; //raw
+            eInfo.u4PcmRawInfo = IEC_CFG0_PCM_RAW_ISRAW >> IEC_CFG0_PCM_RAW_BIT;
+            switch (AUD_GetSampleFreq(_u1SpdifRawDec))
+            {
+            case FS_32K:
+                eInfo.u4SampleRate = IEC_CFG1_SAMPLERATE_32K;
+                break;
+            case FS_44K:
+                eInfo.u4SampleRate = IEC_CFG1_SAMPLERATE_44K;
+                break;
+            default:
+                eInfo.u4SampleRate = IEC_CFG1_SAMPLERATE_48K;
+                break;
+            }
+        }
+        else
+        {
+            eInfo.u4DigitalInfo = 0; //pcm
+            eInfo.u4PcmRawInfo = IEC_CFG0_PCM_RAW_ISPCM >> IEC_CFG0_PCM_RAW_BIT;
+            eInfo.u4SampleRate = IEC_CFG1_SAMPLERATE_48K;
+        }
+    	_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10);
 #endif        
         vWriteShmUINT16(AUD_DSP0, W_IEC_BURST_INFO, eBurstInfo);
         vWriteShmUINT16(AUD_DSP0, W_IEC_NSNUM, u2Nsnum);
@@ -12765,13 +12808,13 @@ void _AUD_ArmSetSpdifChannelStatus (SPDIF_REG_TYPE_T type)
 	AUD_DEC_STREAM_FROM_T eStreamFrom = _aeStreamSrc[AUD_DEC_MAIN]; // Now, it is only for main decoder.
 	APROC_IEC_CHANNELSTATUS_T  eInfo;
 
-    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10); 
 
 	eInfo.u4CategoryCode= _aSpdifInfo.u1Category[type][eStreamFrom];
 	eInfo.u4WordLength = _aSpdifInfo.u1WordLength[type][eStreamFrom];
 	eInfo.u4CopyRight = _aSpdifInfo.u1Copyright[type][eStreamFrom];
 
-	_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+	_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10); 
 
 }
 #endif

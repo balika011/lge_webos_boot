@@ -5678,17 +5678,17 @@ static INT32 _AprocIecCs (INT32 i4Argc, const CHAR ** szArgv)
     eInfo.u4ChannelNum1 = (UINT32)StrToInt(szArgv[9]);
     eInfo.u4ClockAccuracy = (UINT32)StrToInt(szArgv[10]);
 
-    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+    _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10); 
 
     return 1;
 
 lbUsage:
-    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 9); 
+    _vAUD_Aproc_Get (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_CHANNELSTATUS, (UINT32 *) &eInfo, 10); 
 
-    Printf("Current: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", 
-        eInfo.u4CategoryCode, eInfo.u4WordLength, eInfo.u4SampleRate, eInfo.u4AdditionalInfo, eInfo.u4CopyRight,
+    Printf("Current: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", 
+        eInfo.u4CategoryCode,eInfo.u4PcmRawInfo, eInfo.u4WordLength, eInfo.u4SampleRate, eInfo.u4AdditionalInfo, eInfo.u4CopyRight,
         eInfo.u4DigitalInfo, eInfo.u4SourceNum, eInfo.u4ChannelNum0, eInfo.u4ChannelNum1, eInfo.u4ClockAccuracy);
-    Printf("Usage: cs [categorycode] [wordlen] [samplerate] [addition] [copyright] [digital] [sourcenum] [chnum0] [chnum1] [clock]\n");
+    Printf("Usage: cs [categorycode] [pcmraw] [wordlen] [samplerate] [addition] [copyright] [digital] [sourcenum] [chnum0] [chnum1] [clock]\n");
     return -1;
 }
 

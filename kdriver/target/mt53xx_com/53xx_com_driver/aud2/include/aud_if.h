@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/23 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6084,6 +6084,7 @@ typedef enum {
 */
 typedef struct {
     UINT32 u4CategoryCode; // category code
+    UINT32 u4PcmRawInfo; // PCM/Raw Info
     UINT32 u4WordLength; // word length
     UINT32 u4SampleRate; // sample rate
     UINT32 u4AdditionalInfo; // additional information
