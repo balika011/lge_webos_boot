@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/20 $
+ * $Date: 2015/03/23 $
  * $RCSfile: panel_table.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1191,9 +1191,9 @@ void SelectPanel(UINT32 u4Index)
     bit4 = GPIO_Input(HW_OPT_Bit4);
 	GPIO_Enable(HW_OPT_Bit5, &bit5); /* Change to input mode first. */
     bit5 = GPIO_Input(HW_OPT_Bit5);
-	if((bit2==0) && (bit3==0) && (bit4==0)&& (bit5==0))
+	if(((bit2==0)||(bit2==1)) && (bit3==0) && (bit4==0)&& (bit5==0))
 		u4Index = PANEL_LG_37_WU1;
-	else if((bit2==0) && (bit3==1) && (bit4==1)&& (bit5==1))
+	else if(((bit2==0) && (bit3==1) && (bit4==1)&& (bit5==1))||((bit2==1) && (bit3==0) && (bit4==0)&& (bit5==1)))
 		u4Index = PANEL_LCD_HD_60HZ;
 	else
 		u4Index = PANEL_LCD_HD_60HZ;
