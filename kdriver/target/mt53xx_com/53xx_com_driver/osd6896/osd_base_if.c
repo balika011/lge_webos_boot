@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/23 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1387,7 +1387,7 @@ BOOL pb_osd_enable[OSD_PLANE_MAX_NUM] = {FALSE};
 #if defined(CC_LG_SNAP_SHOT)
 #include <linux/timer.h>
 static DEFINE_TIMER(defered_resume_timer, NULL, 0, (unsigned long)NULL);
-static void OSD_pm_resume_core();
+static void OSD_pm_resume_core(void);
 static void OSD_defered_pm_resume_handler(unsigned long data)
 {
 	OSD_pm_resume_core();
