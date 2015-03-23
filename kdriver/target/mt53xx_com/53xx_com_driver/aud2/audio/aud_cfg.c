@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/24 $
+ * $Date: 2015/03/23 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4209,6 +4209,8 @@ UINT32 AUD_GetLineinWP(void)
 */
 void AudAoutGainCtrl(UINT8 u1DecId, UINT8 CHID, UINT16 Gain, UINT8 u1Step)
 {
+    return ; // at present,do not need use this function
+    
 #ifndef __MODEL_slt__ // SLT bypass Aout HW Gain 
     if (u1DecId > AUD_DEC_AUX)
     {

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/03/23 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4039,7 +4039,7 @@ static void _ChangeDecFmtOnPlayState(UINT8 u1DecId)
     AUD_WaitUopCommandDone(AUD_DSP0, u1DecId);
 }
 
-static void _AudHdmiMute(BOOL fgMute)
+static void _AudHdmiMute(UINT8 u1DecId,BOOL fgMute)
 {
     if(_arAudDecoder[AUD_DSP0][AUD_DEC_MAIN].eStreamFrom == AUD_STREAM_FROM_HDMI)   //  This mute also mute mixsound out for IC MT5368/96/89,
     {                                                                     //  please add condition &&_rAudMixSndStream[0].fgEnable == 0 if you don`t want mixsound be muted when HDMI mute,
@@ -4066,7 +4066,11 @@ static void _AudHdmiMute(BOOL fgMute)
     if (fgMute != _fgHdmiMute)
     {
         // Mute channel volume
-        AUD_DspHdmiChangeFormatMuteEnable(AUD_DEC_MAIN, fgMute);
+        //AUD_DspHdmiChangeFormatMuteEnable(AUD_DEC_MAIN, fgMute); 
+
+        //use input mute
+         _AUD_UserSetDecInputMute(u1DecId, fgMute);
+
         // Mute master volume
         //AUD_HdmiModeMute(AUD_DEC_MAIN, fgMute);
         // Mute amplifier
@@ -4291,7 +4295,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
 
             // Set mute counter
             _u1HDMIMuteCnt = AIN_CHANGE_TYPE_THRESHOLD + HDMI_AUD_UNSTABLE_LVL_2;
-            _AudHdmiMute(TRUE);
+            _AudHdmiMute(u1DecId,TRUE);
 
             // Change decoder
             if(_arAudDecoder[AUD_DSP0][u1DecId].eDecFormat != eDecFmt)
@@ -4318,7 +4322,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
             LOG(6, "################## HDMI unstable -- HDMI Mute! #################\n");
         } 
         _u1HDMIMuteCnt = (UINT8)(AIN_CHANGE_TYPE_THRESHOLD + u1HdmiUnstableMute);
-        _AudHdmiMute(TRUE);
+        _AudHdmiMute(u1DecId,TRUE);
         eSrcState = AUD_SOURCE_UNSTABLE;
         LOG(7, "HDMI mute count = %d\n", _u1HDMIMuteCnt);
     }
@@ -4345,7 +4349,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
                 if (_u1HDMIMuteCnt == 0)
                 {
                     _u1HDMIMuteCnt = AIN_CHANGE_TYPE_THRESHOLD;
-                    _AudHdmiMute(TRUE);
+                    _AudHdmiMute(u1DecId,TRUE);
                     LOG(5, "XXXX Sampling Rate Change XXXX \n");
                 }
 #ifdef CC_HDMI_PCM_MULT_CHANNEL
@@ -4367,7 +4371,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
             if (_u1HDMIMuteCnt == 0)
             {
                 _u1HDMIMuteCnt = AIN_CHANGE_TYPE_THRESHOLD;
-                _AudHdmiMute(TRUE);
+                _AudHdmiMute(u1DecId,TRUE);
                 LOG(5, "XXXX PCM Detect Raw Mute XXXX \n");
             }
             AUD_PCM_Detect_Raw_Mute(FALSE);
@@ -4403,7 +4407,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
                 u1ChkHdmicount = 0;
             }
             LOG(3, "@@@@@@@@@@@@@@@@@@@@ HDMI UnMute due to counter is 0! @@@@@@@@@@@@@@@@@@@@ \n" );
-            _AudHdmiMute(FALSE);
+            _AudHdmiMute(u1DecId,FALSE);
         }
     }
 
@@ -5438,7 +5442,7 @@ static void _AudWaitStopProcess(UINT8 u1DspId, UINT8 u1DecId)
     }
     if (_arAudDecoder[u1DspId][u1DecId].eStreamFrom == AUD_STREAM_FROM_HDMI)
     {
-        _AudHdmiMute(FALSE);
+        _AudHdmiMute(u1DecId,FALSE);
         _u1HDMIMuteCnt = 0; // Reset mute counter
     }
 
