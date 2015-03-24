@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/24 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11272,7 +11272,9 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
     AUD_DEC_STREAM_FROM_T eAudDecStreamFrom;
     AUD_FMT_T eAudDecFormat;
     INT16 i2CustDelayMs = 0;
-
+#ifdef CC_AUD_DDI     
+    INT16 i2Auddelay = 0;
+#endif
     UNUSED(eAudDecFormat);
     UNUSED(eAudDecStreamFrom);
     UNUSED(i2CustDelayMs);
@@ -11336,16 +11338,18 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
 #ifdef CC_AUD_DDI 
     if (eAudDecStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)
     {
-       *pu2AudDelay = u2VdpDelay - 25;
+       i2Auddelay = u2VdpDelay - 25;
        if(eAudDecFormat == AUD_FMT_AC3)
        {         
-         *pu2AudDelay = u2VdpDelay - 30;
+         i2Auddelay = u2VdpDelay - 30;
        }
        if(eAudDecFormat == AUD_FMT_MPEG)
        {
-         *pu2AudDelay = u2VdpDelay - 35;
+         i2Auddelay = u2VdpDelay - 35;
        }
-       if(*pu2AudDelay<0)  *pu2AudDelay = 0;
+       if(i2Auddelay<0)  i2Auddelay = 0;
+       
+       *pu2AudDelay = i2Auddelay;
     }
 #endif
 
