@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/24 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #40 $
+ * $Revision: #41 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3164,7 +3164,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     if ((_aeIecMode != eIecFlag) || (_afgIecEnable != fgEnable) || (_aeIecRawSrc != eRawSource))
     {
         /* set IEC clock */
-        if ((eIecFlag==AUD_IEC_CFG_RAW) && (u1fgMute==FALSE))
+        if ((eIecFlag==AUD_IEC_CFG_RAW))
         {
             AUD_WRITE32(REG_IEC_DIV, IEC_AUDCK_SEL | IEC_CLK_INDEPENDENT_SEL | IEC_LRCK_CYCLE | IEC_UPDATE_SEL_2T); // Sync from [DTV00094645] (IEC_UPDATE_SEL fine tune)
         }
