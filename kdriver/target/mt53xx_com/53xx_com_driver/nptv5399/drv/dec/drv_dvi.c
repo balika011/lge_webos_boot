@@ -159,7 +159,7 @@ AUD_HDMI_CHL_STATUS aud_ch_info;
 
 
 #define DE_STABLE_COUNT 30
-#define VRES_STB_COUNTS 15
+#define VRES_STB_COUNTS 20
 #define HRES_STB_COUNTS VRES_STB_COUNTS
 
 #define WA_3D_FA 1

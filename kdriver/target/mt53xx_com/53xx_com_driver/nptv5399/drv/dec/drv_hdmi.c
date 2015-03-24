@@ -256,8 +256,6 @@ extern UINT8   _bIntMuteCnt ;
 
 static BOOL _fgHdmiAudInit = FALSE;
 static BOOL _fgAudMute = FALSE;
-static UINT8 _u1mutecount = 0;
-static UINT8 u1HWmute = 0;
 #ifdef CC_HDMI_CONFIG_BOARD
 static E_HDMI_BOARD_TYPE eBoardType = ATSC_INT_EDID;
 #endif
@@ -6675,8 +6673,6 @@ void vHDMIMainLoop(void)
                     if(_arHdmiRx[eHdmiPort]._bSCDTdelay++)
                     {
                         
-                        u1HWmute = 1;
-						_u1mutecount = 0;
                         vHdmiMute(eHdmiPort);
                         vHDMIMuteAudio();
                         bHdmiPhyReset(eHdmiPort,HDMI_RST_ALL);
@@ -6729,13 +6725,7 @@ void vHDMIMainLoop(void)
 					}
 					else 
 					{
-					        _u1mutecount ++;
-					        if(((_u1mutecount > 45)&&(u1HWmute == 1))||(u1HWmute == 0))
-					        {
-					            _u1mutecount = 0;
-								u1HWmute = 0;
-					            vHDMIVideoOutOn();	
-					        }
+					    vHDMIVideoOutOn();	
 					}
 
                     if((u1IO32Read1B(ACPRX0_0 + u4ActiveHdmiRegBase) == 0x4) && (u1IO32Read1B(ACPRX0_1 + u4ActiveHdmiRegBase) > 1))
