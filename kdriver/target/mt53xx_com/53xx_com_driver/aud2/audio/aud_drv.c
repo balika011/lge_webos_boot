@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/24 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11330,6 +11330,22 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
             i2CustDelayMs = 0;
         }
         *pu2AudDelay = i2CustDelayMs;
+    }
+#endif
+
+#ifdef CC_AUD_DDI 
+    if (eAudDecStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER)
+    {
+       *pu2AudDelay = u2VdpDelay - 25;
+       if(eAudDecFormat == AUD_FMT_AC3)
+       {         
+         *pu2AudDelay = u2VdpDelay - 30;
+       }
+       if(eAudDecFormat == AUD_FMT_MPEG)
+       {
+         *pu2AudDelay = u2VdpDelay - 35;
+       }
+       if(*pu2AudDelay<0)  *pu2AudDelay = 0;
     }
 #endif
 
