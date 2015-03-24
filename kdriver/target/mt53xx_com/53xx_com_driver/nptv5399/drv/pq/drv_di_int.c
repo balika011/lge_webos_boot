@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/24 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,6 +791,12 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
         //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x10, FR_MO_FILTER_L);
         //vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x30, FR_MO_FILTER_H);
         vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_01, 0x04, EG_RATE_22); 
+		if((VDP_GetPlayMode(bPath) != FBM_FBG_DTV_MODE)
+			&&(bDrvVideoGetTiming(VDP_1) == MODE_1080i))
+		{	
+			// only for MM 1080i use loose threshold for 22 film detect
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_01, 0x02, EG_RATE_22);
+		}
     }
     else
     {
