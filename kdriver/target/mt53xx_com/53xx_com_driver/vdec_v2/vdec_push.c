@@ -149,7 +149,7 @@ extern UINT32 u4SecureBufferAlloc(size_t size);
 extern BOOL bSecureBufferFree(UINT32 u4Handle);
 #endif
 extern VOID FBM_FlushLockToEmptyQ(UCHAR ucFbgId);
-
+static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag);
 #if 0
 //-----------------------------------------------------------------------------
 /** Enter buffer critical section
@@ -673,7 +673,7 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
     #ifdef CC_VDEC_FMT_DETECT
     rPesInfo.u4DmxFrameType = prPes->u4FrameType;
     #endif
-
+    
     prVdecdInfo = _VDEC_GetInfo();
     if(prVdecdInfo->pfnDumpData)
     {
@@ -682,7 +682,7 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
     }
     
    // rPesInfo.fgMoveComplete = prPes->fgMoveComplete;
-    //LOG(3, "%s: u4FrameAddr%x MoveComplete:%d\n", __FUNCTION__,prPes->u4FrameAddr, prPes->fgMoveComplete);
+   //LOG(3, "%s: u4FrameAddr%x MoveComplete:%d\n", __FUNCTION__,prPes->u4FrameAddr, prPes->fgMoveComplete);
 #if 0
     if (rPesInfo.fgMoveComplete)
     {
@@ -3684,13 +3684,13 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
             prBytesInfo->u4BytesAddr=VIRTUAL(prBytesInfo->u4BytesAddr);
         }
 	}
-
-    prVdec->fgPacketAppend = prBytesInfo->fgAppend;
-    prVdec->u4PacketSize = prBytesInfo->u4BytesSize;
+    
     if(prBytesInfo->fgAppend)
     {
         LOG(3,"[VPUSH] Got a append data at 0x%llx\n",prBytesInfo->u8BytesPTS);
     }
+    
+    prVdec->u4PacketSize = prBytesInfo->u4BytesSize;
     
     if(prVdec->rDecryptInfo.fgDecryptPlayback)
     {
@@ -3704,7 +3704,7 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     {
         x_memset(&rDmxMMData, 0, sizeof(DMX_MM_DATA_T));
     }
-
+    
 #ifdef CC_SUPPORT_TV_STAGEFRIGHT
 /*
 Fixme Use the prVdec->fgNonFirst at the condition. 
@@ -3754,6 +3754,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
             if (!prVdec->fgNonFirst)
             {
                 prVdec->fgNonFirst = TRUE;
+                LOG(2,"Vpush H264 insert start code >>>>>>>>>>>>>\n");
                 return _VPUSH_Move264FirstData(prVdec, prBytesInfo);
             }
             else
@@ -3761,7 +3762,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
                 return _VPUSH_Move264Data(prVdec, prBytesInfo);
             }
         }
-		else if(prVdec->fgIsSecureInput==FALSE)
+		else if(prVdec->fgIsSecureInput==FALSE && prVdec->fgPacketAppend==FALSE)
 		{
 			if(!(((ptr[0] == 0x00) && (ptr[1] == 0x00) && (ptr[2] == 0x01)) ||
 				   ((ptr[0] == 0x00) && (ptr[1] == 0x00) && (ptr[2] == 0x00) && (ptr[3] == 0x01))))
@@ -3799,7 +3800,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
                 return _VPUSH_Move265Data(prVdec, prBytesInfo);
             }
         }
-        else if(prVdec->fgIsSecureInput==FALSE)
+        else if(prVdec->fgIsSecureInput==FALSE && prVdec->fgPacketAppend==FALSE)
         {
             if(!(((ptr[0] == 0x00) && (ptr[1] == 0x00) && (ptr[2] == 0x01)) ||
                    ((ptr[0] == 0x00) && (ptr[1] == 0x00) && (ptr[2] == 0x00) && (ptr[3] == 0x01))))
@@ -4080,12 +4081,14 @@ The Decode should register the funciton pointer, and implement the fucntion to P
         return FALSE;
     }
 
+    prVdec->fgPacketAppend = prBytesInfo->fgAppend;
     rDmxMMData.u1Idx = prVdec->u1DmxPid;
     rDmxMMData.u4BufStart = prVdec->u4FifoStart;
     rDmxMMData.u4BufEnd = prVdec->u4FifoEnd;
     rDmxMMData.u4StartAddr = prBytesInfo->u4BytesAddr;
     rDmxMMData.u4FrameSize = prBytesInfo->u4BytesSize;
     rDmxMMData.fgEOS = prBytesInfo->fgEos;
+    
     //rDmxMMData.fgMoveComplete = TRUE;
     #ifdef VDEC_PUSH_PTS_64_BITS
     rDmxMMData.u4Pts = (UINT32)(prBytesInfo->u8BytesPTS & (UINT64)0xFFFFFFFF);
@@ -4250,6 +4253,13 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 {
                     VERIFY(x_sema_unlock(prVdec->hStopSema) == OSR_OK);
                 }
+                
+                if (prVdec->hDataTimer && prVdec->fgDataTimerStart == TRUE)
+                {
+                    VERIFY(x_timer_stop(prVdec->hDataTimer) == OSR_OK);
+                    prVdec->fgDataTimerStart = FALSE;
+                }
+
                 prVdec->u8TotalPushSize = 0;
                 prVdec->fgNonFirst = FALSE;
                 prVdec->fgInputBufReady = FALSE;
@@ -4326,6 +4336,13 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 {
                     prVdec->ePreviousState = prVdec->eCurState;
                     prVdec->eCurState = VPUSH_ST_PLAY;
+
+                    if(prVdec->hDataTimer && prVdec->fgDataTimerStart == FALSE)
+                    {
+                       VERIFY(x_timer_start(prVdec->hDataTimer, VPUSH_DATA_TIMER_THRSD,
+                       X_TIMER_FLAG_REPEAT, _VPUSH_CheckData,(void*)prVdec) == OSR_OK);
+                       prVdec->fgDataTimerStart = TRUE;
+                    }
                 }
                 break;
             case VPUSH_CMD_PLAY_SYNC:
@@ -4336,6 +4353,7 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                     prVdec->eCurState = VPUSH_ST_PLAY;
                     VDEC_Play(prVdec->ucVdecId, prVdec->eFmt);
                 }
+
                 break;
             case VPUSH_CMD_PAUSE:
                 if (prVdec->eCurState == VPUSH_ST_PLAY)
@@ -5996,20 +6014,13 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
             if (prVdec->fgDataTimerStart)
             {
                 VERIFY(x_timer_stop(prVdec->hDataTimer) == OSR_OK);
-                prVdec->fgDataTimerStart = FALSE;
             }
-
             VERIFY(x_timer_delete(prVdec->hDataTimer) == OSR_OK);
             prVdec->hDataTimer = NULL_HANDLE;
         }
-
+        
+        prVdec->fgDataTimerStart = FALSE;
         VERIFY(x_timer_create(&prVdec->hDataTimer) == OSR_OK);
-        VERIFY(x_timer_start(prVdec->hDataTimer,
-            VPUSH_DATA_TIMER_THRSD,
-            X_TIMER_FLAG_REPEAT,
-            _VPUSH_CheckData,
-            (void*)prVdec) == OSR_OK);
-        prVdec->fgDataTimerStart = TRUE;
     }
 
     if(!_VPUSH_AllocFeeder(prVdec))
