@@ -5845,7 +5845,6 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
     }
 }
 
-#if defined(CC_DTV_SUPPORT_LG)
 static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
 {
     VDEC_T *prVdec;
@@ -5862,7 +5861,7 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
 
 	if(prVdec->ucVdecId>=VDEC_PUSH_MAX_DECODER)
 	{
-        LOG(1,"_VPUSH_CheckData vdec id not seted \n");
+        LOG(2,"_VPUSH_CheckData vdec id not seted \n");
 		return;
 	}
 	
@@ -5897,8 +5896,8 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
             {
                 prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb(prVdec->rInpStrm.fnCb.u4VdecUnderrunTag);
             }
-            LOG(1, "[OMX%d]Underrun  thrd = %d ap = %d!!!\n", prVdec->ucVPushId, u2Thrd, prVdecEsInfo->eMMSrcType);
-
+            LOG(2, "[Vpush(%d) Vdec(%d)]Data Underrun thrd = %d ap = %d!!!\n", prVdec->ucVPushId,prVdec->ucVdecId,
+                u2Thrd, prVdecEsInfo->eMMSrcType);
         }
     }
 
@@ -5906,7 +5905,6 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
 
     UNUSED(pt_tm_handle);
 }
-#endif
 
 UINT32 _VPUSH_GetDecoderCnt(void)
 {
@@ -5989,7 +5987,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->fgGstPlay=TRUE;
 
 	x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
-#if defined(CC_DTV_SUPPORT_LG)
+
     if (!VPUSH_IS_PIC(eFmt))
     {
         if (NULL_HANDLE != prVdec->hDataTimer)
@@ -6013,7 +6011,6 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
             (void*)prVdec) == OSR_OK);
         prVdec->fgDataTimerStart = TRUE;
     }
-#endif
 
     if(!_VPUSH_AllocFeeder(prVdec))
     {
@@ -6070,7 +6067,6 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
         return ;
     }
     
-#if defined(CC_DTV_SUPPORT_LG)
     if (prVdec->hDataTimer)
     {
         if (prVdec->fgDataTimerStart)
@@ -6082,7 +6078,6 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
         VERIFY(x_timer_delete(prVdec->hDataTimer) == OSR_OK);
         prVdec->hDataTimer = NULL_HANDLE;
     }
-#endif
 
     if(!_VPUSH_ReleaseFeeder(prVdec))
     {
@@ -6187,6 +6182,7 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
             prPicNfyInfo->ucFbgId,prPicNfyInfo->ucFbId,prPicNfyInfo->fgEos) == FALSE)
         {
             LOG(2,"_VPUSH_DecodeDone notify(%d,%d) fail\n",prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId);
+            //FBM_ForceReleaseFrameBuffer(prPicNfyInfo->ucFbgId,prPicNfyInfo->ucFbId);
             //FBM_SetFrameBufferStatus(prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId, FBM_FB_STATUS_LOCK);
            // FBM_SetFrameBufferStatus(prPicNfyInfo->ucFbgId, prPicNfyInfo->ucFbId,FBM_FB_STATUS_EMPTY);
         }

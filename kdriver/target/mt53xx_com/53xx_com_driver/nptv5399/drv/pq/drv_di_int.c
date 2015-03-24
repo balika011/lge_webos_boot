@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/03/24 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -600,29 +600,17 @@ static void _vDrvDISetIFQuality(UINT8 bPath)
 {
     switch (bDrvVideoGetTiming(bPath))
     {
-		case MODE_1080i_48:
-		case MODE_1080i_50: 			
-		case MODE_1080i:			
-			vDrvLoadRegTbl(MDDI_FUSION_PARAM[2]);
-			
+        case MODE_1080i_48:
+        case MODE_1080i_50:
+        case MODE_1080i:
+            vDrvLoadRegTbl(MDDI_FUSION_PARAM[2]);
+
             if (bPath == VDP_1)
             {
-                // Enable DTV tearing detection in DTV 1080i 
+                // Enable DTV tearing detection in DTV 1080i
                 DiPQMode.bDTVTear = DI_DTV_TEAR_EN ? 
-                    ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE) && (bGetSignalType(VDP_1) == SV_ST_MPEG)) : SV_OFF;	
-				//For DTV 1080i 60hz DTV Tearing issue 
-				if((bDrvVideoGetTiming(bPath)== MODE_1080i)
-					&&(VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE) && (bGetSignalType(VDP_1) == SV_ST_MPEG))
-				{
-					vIO32WriteFldAlign(MCVP_FUSION_26, 0x0, IF_TEARING_RATIO_MIN);
-					vIO32WriteFldAlign(MCVP_FUSION_26, 0x4, IF_TEARING_Y_HOR_DIFF_TH);				
-				}
-				else
-				{
-					vIO32WriteFldAlign(MCVP_FUSION_26, 0x1, IF_TEARING_RATIO_MIN);
-					vIO32WriteFldAlign(MCVP_FUSION_26, 0x2, IF_TEARING_Y_HOR_DIFF_TH);	
-				}
-            }			
+                    ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE) && (bGetSignalType(VDP_1) == SV_ST_MPEG)) : SV_OFF;
+            }
             break;
         default:            
             if ((bGetSignalType(VDP_1) == SV_ST_TV) 
