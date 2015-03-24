@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/20 $
+ * $Date: 2015/03/24 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5887,7 +5887,9 @@ BOOL _B2R_SendB2RAysncRenderFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
     rMsg.u4DispMode = VDP_B2R_CHG_FRAME_DISPQ;
     rMsg.ucFbgId= prMsg->ucFbgId;
     rMsg.ucFbId = prMsg->ucFbId;
-	rMsg.u4FrameNum= prMsg->u4FrameNum;
+	rMsg.u4FrameNum = prMsg->u4FrameNum;
+	rMsg.u4Flag = prMsg->u4Flag;
+	
     ucB2rId=_FBM_Fbg2B2r(prMsg->ucFbgId);
     if(ucB2rId >= B2R_NS)
     {
@@ -5902,43 +5904,42 @@ BOOL _B2R_SendB2RAysncRenderFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
         return FALSE;
     }
         
-    x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
-    LOG(5, "B2R(%d) rMsg.u4DispMode(%d) rMsg.ucFbgId =%d,rMsg.ucFbId=%d,flag=%d,u2MsgQNum=%d\n",
-            ucB2rId, rMsg.u4DispMode, rMsg.ucFbgId, rMsg.ucFbId,(rMsg.u4Flag & VDP_B2R_CHG_FRAME_MSG_SYNC),u2MsgQNum);    
+    x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2MsgQNum);
+    LOG(5, "B2R(%d) rMsg.u4DispMode(%d) rMsg.ucFbgId(%d) rMsg.ucFbId(%d) flag(%d) u2MsgQNum(%d) FrmNum(%d)\n",
+            ucB2rId, rMsg.u4DispMode, rMsg.ucFbgId, rMsg.ucFbId,
+            rMsg.u4Flag, u2MsgQNum, rMsg.u4FrameNum);    
 
 	
 	if (rMsg.u4Flag & VDP_B2R_CHG_FRAME_MSG_SYNC)
+	{
+		// Pop out all display message
+		VDP_B2R_CHG_FRAME_MSG_T rPopOutMsg;
+		UCHAR ucFbId = FBM_FB_ID_UNKNOWN;
+
+		if ((rMsg.ucFbgId != FBM_FBG_ID_UNKNOWN))
 		{
-			// Pop out all display message
-			VDP_B2R_CHG_FRAME_MSG_T rPopOutMsg;
-			UCHAR ucFbId = FBM_FB_ID_UNKNOWN;
-	
-			if ((rMsg.ucFbgId != FBM_FBG_ID_UNKNOWN))
+			// (_B2R_ReceiveChgFrameMsg(ucB2rId, &rPopOutMsg, X_MSGQ_OPTION_NOWAIT) == OSR_OK)
+			do
 			{
-				// (_B2R_ReceiveChgFrameMsg(ucB2rId, &rPopOutMsg, X_MSGQ_OPTION_NOWAIT) == OSR_OK)
-				do
+				x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+				if (u2MsgQNum <= rMsg.u4FrameNum)
 				{
-						
-					if(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum))
-					{
-						if(u2MsgQNum <= rMsg.u4FrameNum)
-						{
-							break;
-						}
-					}
-					_B2R_ReceiveChgFrameMsg(ucB2rId, &rPopOutMsg, X_MSGQ_OPTION_NOWAIT);
-					ucFbId = FBM_GetFrameBufferFromDispQ(rMsg.ucFbgId);
-					
+					break;
+				}
 				
-	
-					if (ucFbId != FBM_FB_ID_UNKNOWN)
-					{
-						_B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, ucFbId, FBM_FB_STATUS_LOCK);
-						_B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, ucFbId, FBM_FB_STATUS_EMPTY);
-					}
-				}while(u2MsgQNum > rMsg.u4FrameNum);
-			}
+				_B2R_ReceiveChgFrameMsg(ucB2rId, &rPopOutMsg, X_MSGQ_OPTION_NOWAIT);
+				ucFbId = FBM_GetFrameBufferFromDispQ(rMsg.ucFbgId);
+				
+				if (ucFbId != FBM_FB_ID_UNKNOWN)
+				{
+					_B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, ucFbId, FBM_FB_STATUS_LOCK);
+					_B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, ucFbId, FBM_FB_STATUS_EMPTY);
+					LOG(2, "%s:%d Skip Fb(%d) for low delay\n", __FUNCTION__, __LINE__, ucFbId);
+				}
+			}while(u2MsgQNum > rMsg.u4FrameNum);
 		}
+	}
+	
     if(FBM_CheckFrameBufferStatus(rMsg.ucFbgId, rMsg.ucFbId, FBM_FB_STATUS_EMPTY))
     {   
         LOG(1,"_B2R_SendB2RRenderFrameMsg, FbgId=%d,FbId=%d is empty \n",rMsg.ucFbgId,rMsg.ucFbId);
