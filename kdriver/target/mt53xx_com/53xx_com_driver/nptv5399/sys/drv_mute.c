@@ -108,7 +108,9 @@
 #include "x_time_msrt.h"
 #include "u_time_msrt_name.h"
 #endif
-
+#ifdef CC_SUPPORT_VDO_TIME_STAMPS
+#include "vdo_misc.h"
+#endif
 //---------------------------------------------------------------------------
 // Constant definitions
 //---------------------------------------------------------------------------
@@ -615,6 +617,10 @@ VOID _vDrvVideoSetMute(MUTE_MODULE_ID eModule, UINT32 u4Path, UINT32 u4UnMuteDel
 
     if((u4Invalid == 0) && (u4UnMuteDelay > 0))
     {
+        #ifdef CC_SUPPORT_VDO_TIME_STAMPS
+        if(eModule==MUTE_MODULE_API_FORCE && u4UnMuteDelay==FOREVER_MUTE)
+        vVdoSetTimeStamps("chg input/chanenl start");
+        #endif
         #ifdef SYS_DTV_FRZ_CHG_SUPPORT
         UCHAR ucFreeze;
         VDP_GetFreeze(SV_VP_MAIN, &ucFreeze);
@@ -858,12 +864,18 @@ VOID vDrvVideoHandleUnMute(VOID)
         u4MuteOnOFF = (u4CheckDelay == 0) ? SV_OFF : SV_ON;
 
         if(_au4LastMuteState[u4Path] != u4MuteOnOFF)
-        {        
+        {
             VIDEO_MUTE_NOTIFY_MSG rNotifyMsg;
             #if CC_BOOT_MUTE_LOG
             MUTE_IsLog(2, "Mute State Changed :Path(%d), Latest module(%d), Mute State(%d) --> (%d)\n", u4Path, _au4ValidIndex[u4Path] , _au4LastMuteState[u4Path], u4MuteOnOFF);
             #else
             LOG(2, "Mute State Changed :Path(%d), Latest module(%d), Mute State(%d) --> (%d)\n", u4Path, _au4ValidIndex[u4Path] , _au4LastMuteState[u4Path], u4MuteOnOFF);
+            #endif
+            
+            #ifdef CC_SUPPORT_VDO_TIME_STAMPS
+            vVdoSetTimeStamps("Chg input/channel finish");
+            vVdoGetTimeStamps();
+            vVdoResetTimeStamps();
             #endif
             
             DRVCUST_SendEvent(E_CUST_PLANE_MUTE_CHANGE, (UINT8)u4Path);

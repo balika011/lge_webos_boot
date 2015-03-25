@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #6 $
+ * $Revision: #7 $
 *************************************************************************/
 
 #ifndef _VDO_MISC_H_
@@ -279,6 +279,8 @@ BOOL fgIsVideoDone(UINT8 bPath);
 
 #ifdef CC_SUPPORT_VDO_TIME_STAMPS
 void vVdoSetTimeStamps(CHAR* String);
+void vVdoGetTimeStamps(void);
+void vVdoResetTimeStamps(void);
 #endif
 
 #endif
