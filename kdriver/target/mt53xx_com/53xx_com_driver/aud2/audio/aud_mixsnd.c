@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/25 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1931,11 +1931,11 @@ void AUD_PauseMixSndClip(UINT8 u1StreamID)
     if (_hAudFeedMixSndThread)
     {
         _rAudMixSndStream[u1StreamID].fgPause = 1;
-        LOG(5, "[AUD_PauseMixSndClip] trigger %d\n",u1StreamID);
+        LOG(0, "[AUD_PauseMixSndClip] trigger %d\n",u1StreamID);
     }
     else
     {
-        LOG(5, "[AUD_PauseMixSndClip] _hAudFeedMixSndThread not available\n");
+        LOG(0, "[AUD_PauseMixSndClip] _hAudFeedMixSndThread not available\n");
     }
 }
 
@@ -1953,11 +1953,11 @@ void AUD_ResumeMixSndClip(UINT8 u1StreamID)
     if (_hAudFeedMixSndThread)
     {
         _rAudMixSndStream[u1StreamID].fgPause = 0;
-        LOG(5, "[AUD_ResumeMixSndClip] trigger %d\n",u1StreamID);
+        LOG(0, "[AUD_ResumeMixSndClip] trigger %d\n",u1StreamID);
     }
     else
     {
-        LOG(5, "[AUD_ResumeMixSndClip] _hAudFeedMixSndThread not available\n");
+        LOG(0, "[AUD_ResumeMixSndClip] _hAudFeedMixSndThread not available\n");
     }
 }
 
