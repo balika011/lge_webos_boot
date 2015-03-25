@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/25 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -280,6 +280,7 @@ typedef struct
     UINT8 fgPause;
     UINT8 fgRepeat;
     UINT8 fgClip;
+    UINT8 fgSpeed2x;
 
     UINT8 u1ClipReadIndx;
     UINT8 u1ClipWriteIndx;
@@ -1203,6 +1204,8 @@ void vMixSndMIPSReset(void)
 }
 #endif
 
+BOOL fgSpeed2x = TRUE;
+
 static void _AudFeedMixSndThread(const void* pvArg)
 {
     int i;
@@ -1425,7 +1428,29 @@ static void _AudFeedMixSndThread(const void* pvArg)
                 BOOL fgTransfer = FALSE;
 
                 _rAudMixSndStream[i].u4TransferSZ = (_rAudMixSndStream[i].u4Residual > MIXSND_TRANSFER_SZ) ? MIXSND_TRANSFER_SZ : _rAudMixSndStream[i].u4Residual;
+                if(_rAudMixSndStream[i].fgSpeed2x == 1)
+                    {
+                        if(fgSpeed2x == TRUE)
+                            {
+                                fgSpeed2x = FALSE;
+                                _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP =
+                                 (_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP + _rAudMixSndStream[i].u4TransferSZ < _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4EA) ?
+                                (_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP + _rAudMixSndStream[i].u4TransferSZ) :
+                                (_rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP + _rAudMixSndStream[i].u4TransferSZ - _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4SZ);
 
+                                //   _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4TotalRenderSize += _rAudMixSndStream[i].u4TransferSZ;
+                               //    _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4TotalRenderSize2 += _rAudMixSndStream[i].u4TransferSZ2;
+
+                            _rAudMixSndStream[i].u4Residual -= _rAudMixSndStream[i].u4TransferSZ;
+                            LOG(1,"[LGE]speed2x drop update RingFifo RP:  _rAudMixSndRingFifo[%d].u4RP=%x \n", i, _rAudMixSndRingFifo[i-ALSA_MIXSND_STREAM_ID].u4RP);	
+                                break;
+                            }
+                        else
+                            {
+                                fgSpeed2x = TRUE;
+                            }
+                    }
+                
                 if ((_rAudMixSndStream[i].u1Endian) && (_rAudMixSndStream[i].u1BitDepth == 16))
                 {
                     u1Endian_convert = 1;
@@ -1960,6 +1985,31 @@ void AUD_ResumeMixSndClip(UINT8 u1StreamID)
         LOG(0, "[AUD_ResumeMixSndClip] _hAudFeedMixSndThread not available\n");
     }
 }
+
+//-----------------------------------------------------------------------------
+/** AUD_SetMixSndSpeed2x
+ *
+ *  @param u1StreamID           MixSound Stream ID (0~MAX_AUD_MIXSOUND_STREAM_NUM)
+ *  @retval void
+ */
+//-----------------------------------------------------------------------------
+void AUD_SetMixSndSpeed2x(UINT8 u1StreamID,UINT8 u1Speed)
+
+{
+    u1StreamID += ALSA_MIXSND_STREAM_ID;
+
+    if (_hAudFeedMixSndThread)
+    {
+        _rAudMixSndStream[u1StreamID].fgSpeed2x = u1Speed;
+        LOG(0, "[AUD_SetMixSndSpeed2x] trigger %d\n",u1StreamID);
+    }
+    else
+    {
+        LOG(0, "[AUD_SetMixSndSpeed2x] _hAudFeedMixSndThread not available\n");
+    }
+}
+
+
 
 //-----------------------------------------------------------------------------
 /** AUD_RepeatMixSndClip
