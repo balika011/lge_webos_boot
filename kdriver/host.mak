@@ -74,7 +74,7 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: customer.mak,v $
-# $Revision: #2 $
+# $Revision: #3 $
 # $Date: 2015/03/25 $
 # $Author: p4admin $
 # $MD5HEX: 61118bc277d8ac078b83c14a0d509c1a $
@@ -224,12 +224,14 @@ export NFSBVERITY      = $(IMAGE_ROOT_PATH)/verity
 endif
 
 #add for generating kernel.pak
+ifneq "$(L_ENV)" "true"
 export MK_EPAK      = 	$(LGE_A5LR_TOOL_PATH)/mkepk
 export SIGN_DIR			=		$(LGE_A5LR_TOOL_PATH)/sign_dir
 export SIGN_TOOL_DIR =	$(SIGN_DIR)/tool
 export SIGN_TOOL		= 	$(SIGN_TOOL_DIR)/sign_tool
 export SIGGEN_KEY1	= 	$(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key  
 export SIGGEN_KEY2	= 	$(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key
+endif
 
 export COMPILE_DATE		= $(shell date +%D)
 export MTK_MKIMAGE := $(MKIMAGE)
