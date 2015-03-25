@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  * $Date  $
  * $RCSfile: feature.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -192,7 +192,7 @@ Define IC-related specific feature
 
 //TVE part
 #if (defined(CC_MT5881)||defined(CC_MT5399)||defined(CC_MT5882))
-#define CC_TVE_SUPPORT_VDAC_SOFTWARE_CAL 1
+#define CC_TVE_SUPPORT_VDAC_SOFTWARE_CAL 0
 #endif
 
 #ifndef SUPPORT_CEC
@@ -223,8 +223,6 @@ Define IC-related specific feature
 #ifndef CC_BOOT_MUTE_LOG
 #define CC_BOOT_MUTE_LOG (1)
 #endif
-
-
 
 #define CC_PSCAN_DISPMODE_DI_SCPIP_DO_HCLIP 1
 #if CC_PSCAN_DISPMODE_DI_SCPIP_DO_HCLIP

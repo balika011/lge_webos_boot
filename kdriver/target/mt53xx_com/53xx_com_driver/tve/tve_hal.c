@@ -4307,7 +4307,7 @@ void TVE_HalLoadDftTrimVal(void)
     #if (defined(CC_MT5890))
     _bIrimDftVal = 0x7; //Oryx default value is b1000=300R£¬need to check b13-b10=01111?
     #else
-    _bIrimDftVal = 0x20;
+    _bIrimDftVal = 0x25;
     #endif
 }
 
@@ -4343,7 +4343,7 @@ void TVE_HalVdacCalInit(void)
 	{
 		//load EEPROM value
 		TVE_HalSetCurrent(DAC_1, DAC_FULL_CURRENT);
-		TVE_HalLoadSoftCalVal();  //load trim value
+		TVE_HalLoadDftTrimVal();
 		Printf("[TVE]Load Vdac software calibration value from eeprom,_bIrimDftVal=0x%x\n",_bIrimDftVal);
 		return;
 	}
@@ -4360,7 +4360,7 @@ void TVE_HalLoadDftTrimVal(void)
     #if (defined(CC_MT5890))
     _bIrimDftVal = 0x7; //Oryx default value is b1000=300R
     #else
-    _bIrimDftVal = 0x20;
+    _bIrimDftVal = 0x25;
     #endif
 }
 
