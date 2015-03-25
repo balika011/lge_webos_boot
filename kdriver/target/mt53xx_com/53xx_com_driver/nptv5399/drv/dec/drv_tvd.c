@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #36 $
+* $Revision: #37 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -9068,7 +9068,7 @@ void vTvd3dReset(void)
     vTvd3dResetOff();
     _svDrvTvdRstVpresState();
     x_crit_end(csState);
-    vUtDelay10ms(10); //  remove dealy 100ms by zuyu for reduce boot time 2013.11.15
+    //vUtDelay10ms(10); //  remove dealy 100ms by zuyu for reduce boot time 2013.11.15
 }
 
 
