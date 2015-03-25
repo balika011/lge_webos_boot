@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/24 $
+ * $Date: 2015/03/25 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6295,7 +6295,7 @@ static void _AudDrvThread(void* pvArg)
             AUD_WaitUOPLockSema(u1DspId, u1DecId);
             #endif
 
-            _arAudDecoder[u1DspId][u1DecId].fgMMAoutEnable = FALSE;
+//            _arAudDecoder[u1DspId][u1DecId].fgMMAoutEnable = FALSE; //do not change the flag here
             _AudSendDspFlowControlCmd(u1DspId, u1DecId, DSP_PAUSE);
             AUD_WaitUopCommandDone(u1DspId, u1DecId);
             LOG(3, "DSP(%d)Aud decoder %d Pause\n", u1DspId, u1DecId);

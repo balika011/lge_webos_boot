@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/25 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -197,14 +197,20 @@ BOOL AUD_IsFifoEmpty(UINT8 u1DspId, UINT8 u1DecId)
     UINT32 u4DataThreshold = FIFO_EMPTY_THRESHOLD;
     UINT32 u4RetryThres = AUD_GetEmptyRetryThres();	
     BOOL   fgRet;
-//    AUD_DRV_STATE_T eDrvState;
+    AUD_DRV_STATE_T eDrvState;
     AUD_DEC_STREAM_FROM_T eAudDecStreamFrom;
     AUD_FMT_T eAudDecFormat;
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
 
-//    eDrvState = AUD_DRVGetAudioState(u1DspId, u1DecId);
+    eDrvState = AUD_DRVGetAudioState(u1DspId, u1DecId);
+    if(eDrvState != AUD_ON_PLAY )
+     {
+            fgRet = FALSE;
+            return fgRet;
+     }
+
 
     AUD_GetRWPtr(u1DspId, u1DecId, &u4Rp, &u4Wp, &u4DataSize);
     u4FrmCnt = u4ReadD2RInfo_AputBank(u1DspId, u1DecId);
