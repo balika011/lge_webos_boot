@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/25 $
  * $RCSfile: mpv_if.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_if.h
@@ -359,7 +359,8 @@ typedef struct
     UCHAR ucTopFldFirst; 
     UCHAR ucDataLen;        
     UCHAR ucEsId;
-    BOOL fgProgressiveFrm;    
+    BOOL fgProgressiveFrm;
+	BOOL fgMultiMediaUserData;
 }MPV_USERDATA_CB_T;
 
 
