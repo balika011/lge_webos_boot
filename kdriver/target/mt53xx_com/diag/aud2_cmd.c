@@ -18861,7 +18861,7 @@ static INT32 _AudCmdOmxSetDbgMsk(INT32 i4Argc, const CHAR ** szArgv)
         Printf("  (0080h) [LOG] Enable adec_ddi.c log (with MTK_ENVIRONMENT=1)\n");
         Printf("  (0100h) [LOG] mtkaudiosink: render log\n");
         Printf("  (0200h) [CTL] Disable Error Cnt Monitor Notify\n");
-        Printf("  (0400h) Reserved\n");
+        Printf("  (0400h) [LOG] Render Output PTS\n");
         Printf("  (0800h) [CTL] Disable AOMX_REAL_PTS mechanism\n");
         Printf("  (1000h) [LOG] Detail PTS gen log\n");
         Printf("  (2000h) [LOG] Effective Input PTS log\n");

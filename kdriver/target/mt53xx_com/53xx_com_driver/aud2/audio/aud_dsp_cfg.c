@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/24 $
+ * $Date: 2015/03/25 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #41 $
+ * $Revision: #42 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3082,13 +3082,16 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 case 1024:
                     eBurstInfo = BURST_INFO_DTS_1024;
                     u4Reg0 = APROC_RAW_DTS_1024;
+                    u2Nsnum = 0x400;
                     break;
                 case 2048:
                     eBurstInfo = BURST_INFO_DTS_2048;
                     u4Reg0 = APROC_RAW_DTS_2048;
                     break;
+                    u2Nsnum = 0x800; 
                 case 512: 
                 default:
+                    u2Nsnum = 0x200; 
                     eBurstInfo = BURST_INFO_DTS_512;
                     u4Reg0 = APROC_RAW_DTS_512;                    
                     break;

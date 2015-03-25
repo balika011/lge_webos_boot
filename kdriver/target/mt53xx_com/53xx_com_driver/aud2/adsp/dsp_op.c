@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/25 $
  * $RCSfile: dsp_op.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3056,7 +3056,6 @@ void vSetIecConfig(UINT8 u1DecId, UINT32 u4FreqIdx)
     }
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
     //vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_FLAG), u4IecFlag); // fix me!!!, need routine
-    LOG(0, "%s: %d\n", __FUNCTION__, u4IecChannelCfg0);
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG0), u4IecChannelCfg0);
     vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG1), u4IecChannelCfg1);
     //vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_CHCFG2), 0x0);
