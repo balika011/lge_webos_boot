@@ -74,9 +74,9 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: customer.mak,v $
-# $Revision: #1 $
-# $Date: 2015/01/09 $
-# $Author: dtvbm11 $
+# $Revision: #2 $
+# $Date: 2015/03/25 $
+# $Author: p4admin $
 # $MD5HEX: 61118bc277d8ac078b83c14a0d509c1a $
 #
 # Description:
@@ -92,7 +92,9 @@
 ifndef IMAGE_ROOT_PATH
 IMAGE_ROOT_PATH := $(word 1, $(subst /vm_linux/,/vm_linux /, $(shell bash -c pwd -P)))/project_x/tools/image-tools
 endif
-
+ifndef LGE_A5LR_TOOL_PATH
+LGE_A5LR_TOOL_PATH := $(word 1, $(subst /vm_linux/,/vm_linux /, $(shell bash -c pwd -P)))/project_x/tools/a5lr_tools
+endif
 ifeq "$(DEBUG_MAKE)" "true"
 include $(word 1, $(subst /vm_linux/,/vm_linux /, $(shell bash -c pwd -P)))/dtv_linux/mak/gmsl-1.0.12/gmsl
 include $(word 1, $(subst /vm_linux/,/vm_linux /, $(shell bash -c pwd -P)))/dtv_linux/mak/gmd-1.0.2/gmd
@@ -222,7 +224,13 @@ export NFSBVERITY      = $(IMAGE_ROOT_PATH)/verity
 endif
 
 #add for generating kernel.pak
-export MK_EPAK      = $(IMAGE_ROOT_PATH)/mkepk
+export MK_EPAK      = 	$(LGE_A5LR_TOOL_PATH)/mkepk
+export SIGN_DIR			=		$(LGE_A5LR_TOOL_PATH)/sign_dir
+export SIGN_TOOL_DIR =	$(SIGN_DIR)/tool
+export SIGN_TOOL		= 	$(SIGN_TOOL_DIR)/sign_tool
+export SIGGEN_KEY1	= 	$(SIGN_TOOL_DIR)/customer_pub_mtka5lr_key  
+export SIGGEN_KEY2	= 	$(SIGN_TOOL_DIR)/customer_priv_mtka5lr_key
+
 export COMPILE_DATE		= $(shell date +%D)
 export MTK_MKIMAGE := $(MKIMAGE)
 export LG_KERNEL_MKIMAGE := $(IMAGE_ROOT_PATH)/lgmkimage
