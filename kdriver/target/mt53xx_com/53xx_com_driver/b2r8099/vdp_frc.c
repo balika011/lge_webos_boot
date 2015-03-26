@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/24 $
+ * $Date: 2015/03/26 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6997,7 +6997,6 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 #ifndef CC_SUPPORT_NPTV_SEAMLESS //Lijia NPTV Seamless debug
                 if (prFrcPrm->ucSeamlessVDPMode == VDP_SMLS_FRAME_COMING)
                 {
-                   sdf
                     BOOL fgSet = TRUE;
                     B2R_HAL_Set(this->hB2r, B2R_HAL_PITCH, &(prVdpConf->u4SrcLineSize));
                     B2R_HAL_Set(this->hB2r, B2R_HAL_SET_RESOLUTION, &fgSet);
@@ -7022,22 +7021,19 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 }
 #endif
 				if(prFrcPrm->ucReady)
-				  {
+				{
 					   STC_CLOCK rStcClk;
 					   UCHAR ucAvSyncMode;
 					   UCHAR ucStcSrc;
 					   FBM_SEQ_HDR_T *prFbmSeqHdr;
 					   prFbmSeqHdr = FBM_GetFrameBufferSeqHdr(prFrcPrm->ucFbgId);
 					   if(prFbmSeqHdr && prFbmSeqHdr->u41stPicInfoCbPts)
-					  {
-			
+					   {
 							  FBM_GetSyncStc(prFrcPrm->ucFbgId, &ucAvSyncMode, &ucStcSrc);
 							  STC_GetSrc(ucStcSrc, &rStcClk);
-							//  LOG(2,"u41stPicInfoCbPts=%x,rStcClk.u4Base=%x,->u4AVSyncNGCnt=%d,prFrcPrm->ucFbId=%d\n",prFbmSeqHdr->u41stPicInfoCbPts ,rStcClk.u4Base,prFbmSeqHdr->u4AVSyncNGCnt ,prFrcPrm->ucFbId);
+							  //  LOG(2,"u41stPicInfoCbPts=%x,rStcClk.u4Base=%x,->u4AVSyncNGCnt=%d,prFrcPrm->ucFbId=%d\n",prFbmSeqHdr->u41stPicInfoCbPts ,rStcClk.u4Base,prFbmSeqHdr->u4AVSyncNGCnt ,prFrcPrm->ucFbId);
 							  if(prFbmSeqHdr->u41stPicInfoCbPts > rStcClk.u4Base)
 							  {
-								  
-								  
 								  if( (prFbmSeqHdr->u4AVSyncNGCnt > prFrcPrm->ucInFrameRate))
 								  {
 									   FBM_FrameDisplayStart(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
@@ -7056,7 +7052,7 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
 								  prFbmSeqHdr->u4AVSyncNGCnt = 0xffffffff;
 							  }
 					  }
-					  else
+					  else if(prFbmSeqHdr && prFrcPrm)
 					  {
 						  // LOG(2,"Error handle u41stPicInfoCbPts=%x,rStcClk.u4Base=%x,->u4AVSyncNGCnt=%d,prFrcPrm->ucInFrameRate=%d\n",prFbmSeqHdr->u41stPicInfoCbPts ,rStcClk.u4Base,prFbmSeqHdr->u4AVSyncNGCnt ,prFrcPrm->ucInFrameRate);
 						   if( (prFbmSeqHdr->u4AVSyncNGCnt > prFrcPrm->ucInFrameRate))
