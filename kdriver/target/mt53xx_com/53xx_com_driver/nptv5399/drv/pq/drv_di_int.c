@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/24 $
+ * $Date: 2015/03/26 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -536,8 +536,10 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
                 break;
         }
         
-        if (bGetSignalType(VDP_1) == SV_ST_MPEG)
+        if ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE)
+			&&(bGetSignalType(VDP_1) == SV_ST_MPEG))
         {
+        	// only disable multicadence detect in DTV
             DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
         }
     }    
