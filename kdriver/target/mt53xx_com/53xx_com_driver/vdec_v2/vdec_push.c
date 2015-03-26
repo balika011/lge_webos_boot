@@ -95,8 +95,8 @@ typedef struct __CODEC_ENTRY_T
           } while (0)
 
 #define VPUSH_MSG_UNDERRUN_THRD (1)
-
-#define VPUSH_DATA_TIMER_THRSD (500) // 0.5 sec
+#define VPUSH_UNDERFLOW_CNT_THRD 5
+#define VPUSH_DATA_TIMER_THRSD (100) // 0.1 sec
 
 #define ADDRESS_DEC_ALIGN(addr,align) (addr&(~(align-1)))
 #define ADDRESS_INC_ALIGN(addr,align) ((addr+align-1)&(~(align-1)))
@@ -4328,6 +4328,7 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 }
 
                 prVdec->u8TotalPushSize = 0;
+                prVdec->ucUnderFlowCnt = 0;
                 //prVdec->fgNonFirst = FALSE;
                 break;
             case VPUSH_CMD_PLAY:
@@ -4620,6 +4621,7 @@ BOOL _VPUSH_PrsSeqHdr(VOID* prdec,
     VERIFY(x_sema_delete(prVdec->hIoQSema) == OSR_OK);
     VERIFY(x_sema_create(&prVdec->hIoQSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_LOCK) == OSR_OK);
     prVdec->u8TotalPushSize = 0;
+    prVdec->ucUnderFlowCnt = 0;
     prVdec->fgNonFirst = FALSE;
     prVdec->fgInputBufReady = FALSE;
     prVdec->fgFirstVideoChunk = TRUE;
@@ -4851,7 +4853,6 @@ BOOL _VPUSH_SetInfo(VOID* prdec, VDEC_SET_INTO_T *prVdecSetInfo)
         {
             prVdecEsInfo->fgLGSeamless = FALSE;
             prVdecEsInfo->eSeamlessMode = SEAMLESS_NONE;
-            prVdecEsInfo->fgLGSeamless = FALSE;
         }
     }
     
@@ -5521,8 +5522,18 @@ VOID _VPUSH_SetPicSz(VOID* prdec, UINT32 u4Width, UINT32 u4Height,UINT32 u4Frame
     }
 
     rVDecSeqData.e_frame_rate = prVdec->eFrameRate;
-    
+
+    if(prVdec->eFmt == VDEC_FMT_MJPEG && prVdec->ucVdecId < VDEC_MAX_ES)
+    {
+        VDEC_SEQUENCE_DATA_T rSeqInfo;
+        x_memset(&rSeqInfo,0,sizeof(rSeqInfo));
+        rSeqInfo.u2_width = (UINT16)prVdec->u4Width;
+        rSeqInfo.u2_height = (UINT16)prVdec->u4Height;
+        VDEC_SetMMParam(prVdec->ucVdecId, VDEC_MM_SEQ_INFO, (UINT32)&rSeqInfo, 0, 0);
+    }
+
     VDEC_SetMMParam(prVdec->ucVdecId, VDEC_MM_FRAME_RATE, (UINT32)rVDecSeqData.e_frame_rate, 0, 0);
+
 }
 
 
@@ -5898,24 +5909,31 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
     {
         // From LG's request, do not check underrun after EOS is got
     }
-    else if (VPUSH_ST_PLAY == prVdec->eCurState
-        && prVdec->u8TotalPushSizeBak == prVdec->u8TotalPushSize)
+    else if (VPUSH_ST_PLAY == prVdec->eCurState && prVdec->u8TotalPushSize > 0 && prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_NETWORK_RTC)
     {
         UINT16 u2QueueSize, u2MaxQueueSize;
 		UINT16 u2Thrd;
-
 		VDEC_GetQueueInfo(prVdec->ucVdecId, &u2QueueSize, &u2MaxQueueSize);
-
+        _VPUSH_GetMsgCountInQ((void *)prVdec);
 		u2Thrd = (VDEC_3D_MVC == prVdecEsInfo->e3DType)? 16 : VPUSH_MSG_UNDERRUN_THRD;
+        
+        if(prVdec->u2MstCount == 0 && u2QueueSize < u2Thrd )
+        {
+            prVdec->ucUnderFlowCnt ++;
+        }
+        else
+        {
+            prVdec->ucUnderFlowCnt = 0;
+        }
 
-        if (u2QueueSize < u2Thrd)
+        if(prVdec->ucUnderFlowCnt > VPUSH_UNDERFLOW_CNT_THRD)
         {
             if (prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb)
             {
                 prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb(prVdec->rInpStrm.fnCb.u4VdecUnderrunTag);
             }
-            LOG(2, "[Vpush(%d) Vdec(%d)]Data Underrun thrd = %d ap = %d!!!\n", prVdec->ucVPushId,prVdec->ucVdecId,
-                u2Thrd, prVdecEsInfo->eMMSrcType);
+            prVdec->ucUnderFlowCnt = 0;
+            LOG(2, "[Vpush(%d) Vdec(%d)]Data Underrun ap = %d!!!\n", prVdec->ucVPushId,prVdec->ucVdecId,prVdecEsInfo->eMMSrcType);
         }
     }
 
@@ -5986,6 +6004,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->eFmt = eFmt;
     prVdec->fgFirstVideoChunk = TRUE;
     prVdec->u8TotalPushSize = 0;
+    prVdec->ucUnderFlowCnt = 0;
     prVdec->fgInsertStartcode = FALSE;
     prVdec->fgGotEos = FALSE;
     prVdec->fgDecoderCalPts = FALSE;
@@ -6328,7 +6347,7 @@ BOOL _VPUSH_ResetDecSize(VOID* prdec)
 
     prVdec = (VDEC_T*)prdec;
     prVdec->u8TotalPushSize = 0;
-
+    prVdec->ucUnderFlowCnt = 0;
     return TRUE;
 }
 

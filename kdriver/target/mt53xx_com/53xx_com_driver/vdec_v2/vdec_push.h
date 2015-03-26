@@ -33,9 +33,9 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/28 $
+ * $Date: 2015/03/26 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -213,11 +213,16 @@ typedef struct {
     BOOL fgFifoFull;
     BOOL fgLowLatencyMode;
 	BOOL fgGstPlay;
+    BOOL fgInputBufReady;   //JPEG only
+    BOOL fgPacketAppend;
     UINT8 u1DmxId;
     UINT8 u1DmxPid;
     UINT8 ucVPushId;
     UINT8 ucVdecId;
     UINT8 ucChannelId;
+    UINT8 ucPesIndex;
+    UINT8 ucUnderFlowCnt;
+    ENUM_VDEC_FRAME_RATE_T eFrameRate;
     UINT16 u2MstCount;
     UINT32 u1StartCodeLenMinus1;
     UINT32 u4CurStopId;
@@ -240,7 +245,6 @@ typedef struct {
     UINT32 u4SecureInputStartAddr;
     UINT32 u4SecureInputEndAddr;
     UINT64 u8PrePts;
-    ENUM_VDEC_FRAME_RATE_T eFrameRate;
     UINT64 u8TotalPushSize;
     UINT64 u8TotalPushSizeBak;
     UINT64 u8LastUndecodeSize;
@@ -266,11 +270,10 @@ typedef struct {
     VDEC_INPUT_STREAM_T rInpStrm;
     VDEC_BUF_INFO_T arBufInfo[VDEC_BUF_COUNT];
     VDEC_DECRYPT_INFO_T rDecryptInfo;
-    BOOL fgInputBufReady;   //JPEG only
+
     UINT32 u4NaluSizeRemain;    //nalu data remain size
     UINT32 u4NaluSizePending;   //nalu data size value, start code position at push data boundary
     UINT8 u1StartCodeLenMinus1Remain; //nalu data size remain byte
-    BOOL fgPacketAppend;
     UINT32 u4PacketSize;
      //VPUSH_RV_SLICE_BUF
     UINT32 *pu4VPSliceSzBuf ;
@@ -284,7 +287,6 @@ typedef struct {
     UINT32 u4VFifoAddr;
     UINT32 u4VFifoSize;
     VDEC_PES_INFO_T arPesInfo[10];
-    UINT8 ucPesIndex;
     VDEC_BYTES_INTO_T* pCurrentInputFrame;
     UINT32 u4BufCnt;
     INT32 ErrorID;

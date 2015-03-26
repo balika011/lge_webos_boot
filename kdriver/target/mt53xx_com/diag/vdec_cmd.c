@@ -1503,11 +1503,12 @@ static INT32 _VdecCmdForceSrc(INT32 i4Argc, const CHAR ** szArgv)
     u4SrcType = (i4Argc > 2) ? StrToInt(szArgv[2]) : 0;
     
     VDEC_SetMMParam(ucEsId, VDEC_MM_SRC_TYPE, u4SrcType, 0, 0xCF00);
-    LOG(0, "vdec.fs esid(%d) srcType(%d) [Resizer:1FB(%d) 2FB(%d), NPTV:1FB(%d) 2FB(%d)].\n", ucEsId, u4SrcType & 0x00FF, 
+    LOG(0, "vdec.fs esid(%d) srcType(%d) [Resizer:1FB(%d) 2FB(%d), NPTV:1FB(%d) 2FB(%d)], NoSeamless(%d).\n", ucEsId, u4SrcType & 0x00FF, 
         SWDMX_SRC_TYPE_NETWORK_LIVE_STREAMING,
         SWDMX_SRC_TYPE_NETWORK_NETFLIX, 
         SWDMX_SRC_TYPE_NETWORK_HLS,
-        SWDMX_SRC_TYPE_YOUTUBE
+        SWDMX_SRC_TYPE_YOUTUBE,
+        SWDMX_SRC_TYPE_HIGH_SPEED_STORAGE
         );
     #endif
 
@@ -11116,7 +11117,7 @@ static void _VdecSuperDumpLoop(void* pvArg)
                {
                    set_fs(prDumpInfor->oldfs);
                    LOG(0, "Start dump %d error1!\n",ucInstIdx);
-                   return ;
+                   break ;
                }
                
                prDumpInfor->eStatus = DATA_DUMP_STATUS_RUNING;
@@ -11265,8 +11266,6 @@ static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv)
     }
     else if(ucType == DATA_DUMP_CMD_WRITE)
     {
-        INT32 u4Addr, u4Size;
-
         if(prDumpInfor->eStatus != DATA_DUMP_STATUS_RUNING)
         {
             LOG(0,"DataDump(%d) is stoped\n",uCIndex);
@@ -11279,7 +11278,14 @@ static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv)
         prDumpInfor->u4StartAddr = 0;
         prDumpInfor->u4EndAddr = 0;
         
-        LOG(0,"Start to write: (0x%x,0x%x) Len=%d\n",u4Addr,VIRTUAL(u4Addr),u4Size);
+        LOG(0,"Start to write: (0x%x,0x%x) Len=%d\n",prDumpInfor->u4DataReadPtr,
+            VIRTUAL(prDumpInfor->u4DataReadPtr),prDumpInfor->u4DataSize);
+
+        if(prDumpInfor->u4DataSize == 0)
+        {
+            LOG(0,"Write data size %d not right \n",prDumpInfor->u4DataSize);
+            return 0;
+        }
         
         u4Cmd = DATA_DUMP_CMD_WRITE;
         i4Ret = x_msg_q_send(prDumpInfor->hMsgQ,(void*)&u4Cmd, 4, 255);
@@ -11288,8 +11294,8 @@ static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv)
         {
            LOG(0,"_VdecSuperDataDump send write command error\n");
         }
-        x_sema_lock(prDumpInfor->hWaitSemaphore,X_SEMA_OPTION_WAIT); 
-
+        x_sema_lock(prDumpInfor->hWaitSemaphore,X_SEMA_OPTION_WAIT);
+        LOG(0,"Writed Data %d, Total %d\n",prDumpInfor->u4WritedSize,prDumpInfor->u4SavedDataSize);
     }
     else if(ucType == DATA_DUMP_CMD_STOP)
     {
@@ -11430,20 +11436,22 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
     {
         if(i4Argc >= 3)
         {
+            #if 0
             CRIT_STATE_T rState;
             HANDLE_T  h_th_hdl = (HANDLE_T)NULL;
-            //x_thread_get_handle((CHAR *)szArgv[2],&h_th_hdl);
+            x_thread_get_handle((CHAR *)szArgv[2],&h_th_hdl);
             if(h_th_hdl)
             {
                 Printf("Thred %s Callstack\n",szArgv[2]);
                 rState = x_crit_start();
-                //dump_stack_ext((struct task_struct *)h_th_hdl);
+                dump_stack_ext((struct task_struct *)h_th_hdl);
                 x_crit_end(rState);
             }
             else
             {
                 Printf("Can't find thread %s\n",szArgv[2]);
             }
+            #endif
         }
     }
     else if(ucType == 3)

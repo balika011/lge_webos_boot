@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/03/26 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -777,6 +777,7 @@ typedef enum
     SUPER_DATA_DUMP_POINT_RECEIVE_ES,
     SUPER_DATA_DUMP_POINT_EMPTY_BUFFER,
     SUPER_DATA_DUMP_POINT_VCALLBACK,
+    SUPER_DATA_DUMP_POINT_TEMP_WRITE,
     SUPER_DATA_DUMP_POINT_MAX
 }SUPER_DATA_DUMP_POINT_TYPE;
 
