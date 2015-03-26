@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/17 $
+ * $Date: 2015/03/26 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1469,6 +1469,7 @@ INT32 AUD_DSPCmdPlay(UINT8 u1DspId, UINT8 u1DecId)
     if (!bSkipDSPCmd)
     {
 		vAprocDec_Open (AudDecId2MixerId(u1DecId));
+        x_thread_delay(30);
         _AudAprocInputMute(u1DecId, FALSE);
     }
     LOG(5, "(Dual) CMD: set Play: Dec(%d), skip=%d\n", u1DecId, bSkipDSPCmd);
@@ -1667,6 +1668,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
     {
         _afgDecPause[u1DspId][u1DecId] = FALSE;
         VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_RESUME));
+        _AudAprocInputMute(u1DecId, FALSE); 
     }
     else
     {
@@ -1702,6 +1704,8 @@ INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
     if (AUD_IsDecoderPlay(u1DspId, u1DecId))
     {
         _afgDecPause[u1DspId][u1DecId] = TRUE;
+        _AudAprocInputMute(u1DecId, TRUE);
+        x_thread_delay(40);
     }
     VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_PAUSE));
 
