@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/25 $
+ * $Date: 2015/03/26 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -382,9 +382,13 @@ void AUD_HdmiModeMute(UINT8 u1DecId, BOOL fgMute)
 {
     AUD_DspHdmiModeMuteEnable(u1DecId, fgMute);
 }
+
+extern void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute);
 void AUD_HdmiDrvModeMute(UINT8 u1DecId, BOOL fgMute)
 {
-    AUD_DspHdmiChangeFormatMuteEnable(u1DecId, fgMute);
+    //AUD_DspHdmiChangeFormatMuteEnable(u1DecId, fgMute);
+   //use input mute here
+    _AUD_UserSetDecInputMute(u1DecId, fgMute);
 }
 
 #ifdef CC_ENABLE_AOMX
