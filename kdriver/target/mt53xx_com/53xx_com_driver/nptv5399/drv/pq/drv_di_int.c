@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/26 $
+ * $Date: 2015/03/27 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -536,12 +536,12 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
                 break;
         }
         
-        if ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE)
+        /*if ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE)
 			&&(bGetSignalType(VDP_1) == SV_ST_MPEG))
         {
-        	// only disable multicadence detect in DTV
+        	// enable multicadence detection in DTV for LG's require
             DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
-        }
+        }*/
     }    
 }
 
