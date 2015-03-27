@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/09 $
+ * $Date: 2015/03/27 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -173,7 +173,7 @@ CODE const HDTVTimingPrmSet _arHDTVPrm[]=
     {0, 5, 30, 36, 0x7, 0xa, 0}, //default
     {MODE_525I_OVERSAMPLE, 0x06,0xa0,0xb4,0x06,0x0f,0/*0x1c*/}, // 525i oversample
     {MODE_625I_OVERSAMPLE, 0x06,0xc0,0xd4,0x05,0x12,0/*0x1c*/}, // 625i oversample
-    {MODE_480P_OVERSAMPLE, 0x05,0x38,0x4c,0x07,0x12,0x0f/*0x10*/}, // 480p oversample
+    {MODE_480P_OVERSAMPLE, 0x05,0x38,0x4c,0x07,0x12,0x1c/*0x10*/}, // 480p oversample
     {MODE_576P_OVERSAMPLE, 0x05,0x40,0x54,0x05,0x12,0x0f/*0x1c*/}, // 576p oversample  0xf
     {MODE_720p_50, 0x28,0xb0,0xc4,0x07,0x0a,0x1E/*0x04*/}, //720p50
     {MODE_720p_60, 0x28,0xb0,0xc4,0x07,0x0a,0x16/*0x08*/}, //72060   10
