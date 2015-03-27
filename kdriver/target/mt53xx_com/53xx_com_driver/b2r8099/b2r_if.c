@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/13 $
+ * $Date: 2015/03/27 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #28 $
+ * $Revision: #29 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -531,6 +531,10 @@ void _VDP_StatusNotify(UCHAR ucVdpId, UINT32 u4Status)
     VERIFY_B2R_ID_RET_VOID(ucB2rId);
    
     this = _B2R_GetObj(ucB2rId);
+	if(!this)
+	{
+	   return;
+	}
     B2R_MUTEX_LOCK(ucB2rId);
 
 #ifdef __MODEL_slt__
@@ -1429,6 +1433,10 @@ static BOOL _Vdp_PipeConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcTyp
 static VOID _Vdp_PipeDisConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrcType)
 {   
     UCHAR ucPlayMode = FBM_FBG_DTV_MODE;
+	if(!prAdaptor)
+	{
+	   return;
+	}
     LOG(1,"[Pipe]_Vdp_PipDisConnect(VdpId=%d,EsId=%d,FbgId=%d,B2rId=%d SrcType=%d)\n",\
                 prAdaptor->ucVdpId,prAdaptor->ucEsId,prAdaptor->ucFbgId,prAdaptor->ucB2rId,eSrcType);
     B2R_MUTEX_UNLOCK(prAdaptor->ucB2rId);
@@ -1467,6 +1475,10 @@ VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
     if(ucVdecId < VDEC_MAX_ES)
     {
         prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
+		if(!prVdecEsInfo)
+		{
+		   return;
+		}
         if(prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE)
         {
             fgSeamless = FALSE;
@@ -1558,7 +1570,7 @@ VOID VDP_PipeModeChangeDone(UCHAR ucVdpId,UCHAR ucB2rId)
           if(ucVdecId < VDEC_MAX_ES)
           {
               prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
-              if(prConnAdaptor->ucFbgId != FBM_FBG_ID_UNKNOWN)
+              if(prConnAdaptor->ucFbgId != FBM_FBG_ID_UNKNOWN&&(prVdecEsInfo!=NULL))
               {
                   FBM_GetPlayMode(prConnAdaptor->ucFbgId,&ucPlayMode);
                   if(ucPlayMode == FBM_FBG_MM_MODE && prVdecEsInfo->eSeamlessMode == SEAMLESS_NONE)
@@ -2367,7 +2379,7 @@ UINT32 VDP_GetLockFrameBufferAddr(UCHAR ucVdpId, VDP_CAPTURE_INTO_T* prCapInfo)
     prFbmSeqHdr = FBM_GetFrameBufferSeqHdr(ucFbgId);
     prFbmPicHdr = FBM_GetFrameBufferPicHdr(ucFbgId, ucFbId);
 
-    if (prFbmSeqHdr == NULL)
+    if ((prFbmSeqHdr == NULL)||(prFbmPicHdr==NULL))
     {
         return VDP_SET_ERROR;
     }
@@ -2447,7 +2459,7 @@ UINT32 VDP_GetDisplayFrameBufferAddr(UCHAR ucVdpId, VDP_CAPTURE_INTO_T* prCapInf
     prFbmSeqHdr = FBM_GetFrameBufferSeqHdr(ucFbgId);
     prFbmPicHdr = FBM_GetFrameBufferPicHdr(ucFbgId, ucFbId);
 
-    if (prFbmSeqHdr == NULL)
+    if( (prFbmSeqHdr == NULL)||(prFbmPicHdr == NULL))
     {
         return VDP_SET_ERROR;
     }
