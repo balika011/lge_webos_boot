@@ -96,7 +96,7 @@
  *
  * $Modtime: 04/05/17 6:55p $
  *
- * $Revision: #4 $
+ * $Revision: #5 $
 ****************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -631,7 +631,7 @@ void vVdoOutISR(void)
     vScpipOnVdoOutputVSync();
     OSTG_OnOutputVSync();
 #ifndef CC_UP8032_ATV
-    PMX_OnOutputVSync();
+   //PMX_OnOutputVSync();
 #endif
     vOutVSyncISR();
 

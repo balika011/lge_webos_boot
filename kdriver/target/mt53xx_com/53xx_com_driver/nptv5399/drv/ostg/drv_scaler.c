@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/14 $
+ * $Date: 2015/03/27 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -165,6 +165,7 @@ LINT_EXT_HEADER_BEGIN
 #endif
 
 #include "hw_di.h"
+#include "pmx_drvif.h"
 LINT_EXT_HEADER_END
 
 //-----------------------------------------------------------------------------
@@ -3424,6 +3425,9 @@ static void _vDrvScpipISR(UINT16 u2Vector)
         UINT8 u1Mchg = 0;
 
         LOG(6, "DEBUG R old %d new %d, W old %d new %d\n", rptr, u4ScpipGetDramRStatus(SV_VP_MAIN), wptr, u4ScpipGetDramWStatus(SV_VP_MAIN));
+        #ifndef CC_UP8032_ATV
+        PMX_OnOutputVSync();
+        #endif
         wptr = u4ScpipGetDramWStatus(SV_VP_MAIN);
         if (rptr != u4ScpipGetDramRStatus(SV_VP_MAIN))
         {
