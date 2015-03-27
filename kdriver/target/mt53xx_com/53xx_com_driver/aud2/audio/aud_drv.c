@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/25 $
+ * $Date: 2015/03/27 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3924,7 +3924,7 @@ static void _AudSendDspFlowControlCmd(UINT8 u1DspId, UINT8 u1DecId, UINT32 u4Cmd
     else if (u4Cmd == DSP_RESUME)
     {
 #ifdef CC_AUD_ARM_SUPPORT
-        if ( (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_FREE_RUN) || (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_AUDIO_MASTER))
+        if (_arAudDecoder[u1DspId][u1DecId].eSynMode == AV_SYNC_FREE_RUN)
         {
             AUD_Aproc_Chg_AVSyncCtrl(u1DecId, APROC_AVSYNC_CTRL_WORK);
             vAprocReg_Write(APROC_ASM_ADDR(APROC_ASM_ID_AVSYNC_0,(APROC_REG_AVSYNC_CMD_SRC0+u1DecId)), AVSYNC_CMD_WAIT_OFF);
