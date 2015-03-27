@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/25 $
+ * $Date: 2015/03/27 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2191,8 +2191,12 @@ void AUD_SetDSPDecSetting(UINT32 u4DspDecType)
 }
 #endif
 
+extern BOOL _AUD_DspIECConfig(AUD_IEC_T eIecCfg, BOOL fgEnable);
+extern UINT8 _u1SpdifRawDec;
+
 void AUD_PlayMixSndRingFifo(UINT8 u1StreamId, UINT32 u4SampleRate, UINT8 u1StereoOnOff, UINT8 u1BitDepth, UINT32 u4BufferSize)
 {
+    AUD_DRV_STATE_T eDrvState;
   #ifdef ALSA_PCMDEC_PATH
     if (u1StreamId == ALSA_DSPDEC_ID) //< -------- Stream ID from offload
     {
@@ -2217,6 +2221,13 @@ void AUD_PlayMixSndRingFifo(UINT8 u1StreamId, UINT32 u4SampleRate, UINT8 u1Stere
     }
 
   #endif
+  
+      eDrvState = AUD_DRVGetAudioState(AUD_DSP0, _u1SpdifRawDec); //when playback mixsnd and decoder is NOT_PLAY ,spdif output pcm auto
+      if(eDrvState != AUD_ON_PLAY )
+      {
+            LOG(1,"[LGE]#####_AUD_DspIECConfig _u1SpdifRawDec=%d\n",_u1SpdifRawDec);
+            _AUD_DspIECConfig(AUD_IEC_CFG_PCM, TRUE);      
+      }
 
     AUD_StopMixSndRingFifo(u1StreamId);
     if (_hAudFeedMixSndThread)
