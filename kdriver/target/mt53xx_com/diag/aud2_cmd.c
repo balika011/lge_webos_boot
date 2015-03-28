@@ -18851,30 +18851,31 @@ static INT32 _AudCmdOmxSetDbgMsk(INT32 i4Argc, const CHAR ** szArgv)
     {
         Printf("omx.dm [Debug Mask]\n");
         Printf("  current setting: %08x\n", u4AOmxDbgMsk);
-        Printf("  (0001h) Reserved\n");
-        Printf("  (0002h) [CTL] 1: Render ALSA path    0: Render MTAL path\n");
-        Printf("  (0004h) [LOG] Queue empty buffer\n");
-        Printf("  (0008h) Reserved\n");
-        Printf("  (0010h) [LOG] PTS output log\n");
-        Printf("  (0020h) [LOG] DecodeSize log\n");
-        Printf("  (0040h) [LOG] Queue fill buffer log\n");
-        Printf("  (0080h) [LOG] Enable adec_ddi.c log (with MTK_ENVIRONMENT=1)\n");
-        Printf("  (0100h) [LOG] mtkaudiosink: render log\n");
-        Printf("  (0200h) [CTL] Disable Error Cnt Monitor Notify\n");
-        Printf("  (0400h) [LOG] Render Output PTS\n");
-        Printf("  (0800h) [CTL] Disable AOMX_REAL_PTS mechanism\n");
-        Printf("  (1000h) [LOG] Detail PTS gen log\n");
-        Printf("  (2000h) [LOG] Effective Input PTS log\n");
-        Printf("  (4000h) [CTL] mtkaudiosink: Disable AVSync early mechanism\n");
-        Printf("  (8000h) [LOG] AOMX underrun log\n");
-        Printf(" (10000h) [CTL] MTAL Render use decoder path\n");
-        Printf(" (20000h) [LOG] VOMX Input PTS log\n");
-        Printf(" (40000h) [LOG] VOMX Output PTS log\n");
-        Printf(" (80000h) [LOG] Reserved\n");
-        Printf("(100000h) [CTL] mtkaudiosink: Disable fgEnableCurPts\n");
-        Printf("(200000h) [CTL] mtkaudiosink: Disable fgEnableSkipRedundantPts\n");
-        Printf("(400000h) [CTL] mtkaudiosink: Disable fgEnableAlignFirstPts\n");
-        Printf("(800000h) [LOG] mtkvideosink: render log\n");
+        Printf("    (0001h) Reserved\n");
+        Printf("    (0002h) [CTL] 1: Render ALSA path    0: Render MTAL path\n");
+        Printf("    (0004h) [LOG] Queue empty buffer\n");
+        Printf("    (0008h) Reserved\n");
+        Printf("    (0010h) [LOG] PTS output log\n");
+        Printf("    (0020h) [LOG] DecodeSize log\n");
+        Printf("    (0040h) [LOG] Queue fill buffer log\n");
+        Printf("    (0080h) [LOG] Enable adec_ddi.c log (with MTK_ENVIRONMENT=1)\n");
+        Printf("    (0100h) [LOG] mtkaudiosink: render log\n");
+        Printf("    (0200h) [CTL] Disable Error Cnt Monitor Notify\n");
+        Printf("    (0400h) [LOG] Render Output PTS\n");
+        Printf("    (0800h) [CTL] Disable AOMX_REAL_PTS mechanism\n");
+        Printf("    (1000h) [LOG] Detail PTS gen log\n");
+        Printf("    (2000h) [LOG] Effective Input PTS log\n");
+        Printf("    (4000h) [CTL] mtkaudiosink: Disable AVSync early mechanism\n");
+        Printf("    (8000h) [LOG] AOMX underrun log\n");
+        Printf("   (10000h) [CTL] MTAL Render use decoder path\n");
+        Printf("   (20000h) [LOG] VOMX Input PTS log\n");
+        Printf("   (40000h) [LOG] VOMX Output PTS log\n");
+        Printf("   (80000h) [LOG] Reserved\n");
+        Printf("  (100000h) [CTL] mtkaudiosink: Disable fgEnableCurPts\n");
+        Printf("  (200000h) [CTL] mtkaudiosink: Disable fgEnableSkipRedundantPts\n");
+        Printf("  (400000h) [CTL] mtkaudiosink: Disable fgEnableAlignFirstPts\n");
+        Printf("  (800000h) [LOG] mtkvideosink: render log\n");
+        Printf(" (1000000h) [CTL] Disable AFIFO input control\n");
     }
     else
     {
