@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/28 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3405,7 +3405,14 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
 		if(FBM_ChkSeamlessMode(ucFbgId, SEAMLESS_BY_NPTV))
 		{
 
-		   ucCnt=ucCnt-2;
+		   if(ucCnt > FBM_NPTV_SEAMLESS_KEEP_CNT)
+           {
+               ucCnt -= FBM_NPTV_SEAMLESS_KEEP_CNT;
+           }
+           else
+           {
+               ucCnt = 0;
+           }
 		
 		}
     }

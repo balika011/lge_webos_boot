@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/28 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -644,6 +644,7 @@ typedef struct
 
 #define FBM_LOCK_FB_NS                                (2)
 
+#define FBM_NPTV_SEAMLESS_KEEP_CNT  (2)
 
 // H.264 Reference Information
 #define FBM_FBG_H264_MVC_FHD_REFERNCE_NS            (8)     // Reference Frame Number for 1920x1088

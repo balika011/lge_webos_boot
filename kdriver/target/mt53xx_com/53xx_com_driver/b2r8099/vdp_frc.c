@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/03/28 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6069,7 +6069,7 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
 {
     //UINT16 u2MsgQIdx;
     //SIZE_T zMsgSize;
-    UINT16 u2Cnt;
+    UINT16 u2Cnt,u2DropCnt=0;
     VDP_B2R_CHG_FRAME_MSG_T rMsg;
     B2R_VAR_T* prB2rVar; 
     B2R_OBJECT_T* this;
@@ -6094,16 +6094,34 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
     {
         VERIFY(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2Cnt) == OSR_OK);
         LOG(1,"_B2R_FlushB2RChgFrameMsg (%d) cnt=%d\n",ucB2rId,u2Cnt);
-        while (_B2R_ReceiveChgFrameMsg(ucB2rId, &rMsg, X_MSGQ_OPTION_NOWAIT) == OSR_OK)
+        if(FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV))
         {
-            if (rMsg.u4DispMode == VDP_B2R_CHG_FRAME_DIRECT)
+            if(u2Cnt >= FBM_NPTV_SEAMLESS_KEEP_CNT) 
             {
-                _B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, rMsg.ucFbId, FBM_FB_STATUS_EMPTY);
+                u2DropCnt = u2Cnt - FBM_NPTV_SEAMLESS_KEEP_CNT;
+            }
+            else
+            {
+                u2DropCnt = 0;
             }
         }
+      
+        LOG(1,"_B2R_FlushB2RChgFrameMsg  u2DropCnt=%d,fbg seamless=%d,rMsg.ucFbgId=%d\n",u2DropCnt,FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV),_B2R_GetFbg(ucB2rId));
+        while(u2DropCnt > 0)
+        {
+           if(_B2R_ReceiveChgFrameMsg(ucB2rId, &rMsg, X_MSGQ_OPTION_NOWAIT) != OSR_OK)
+           {
+               break;
+           }
+           
+           if (rMsg.u4DispMode == VDP_B2R_CHG_FRAME_DIRECT)
+           {
+               _B2R_SetFrameBufferStatus(this, rMsg.ucFbgId, rMsg.ucFbId, FBM_FB_STATUS_EMPTY);
+           }
+           u2DropCnt --;
+        }
+        
         VERIFY(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2Cnt) == OSR_OK);
-        ASSERT(u2Cnt== 0);
-
         prB2rVar->fgPendingChgFrmMsg = FALSE;
         x_memset(&( prB2rVar->rPendingChgFrmMsg), 0, sizeof(VDP_B2R_CHG_FRAME_MSG_T));
     }
