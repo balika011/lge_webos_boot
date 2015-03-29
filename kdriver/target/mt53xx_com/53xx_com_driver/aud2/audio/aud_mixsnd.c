@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/03/29 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2009,6 +2009,28 @@ void AUD_SetMixSndSpeed2x(UINT8 u1StreamID,UINT8 u1Speed)
     }
 }
 
+//-----------------------------------------------------------------------------
+/** AUD_FlushMixSndClip
+ *
+ *  @param u1StreamID           MixSound Stream ID (0~MAX_AUD_MIXSOUND_STREAM_NUM)
+ *  @retval void
+ */
+//-----------------------------------------------------------------------------
+void AUD_FlushMixSndClip(UINT8 u1StreamID)
+{
+    //u1StreamID += ALSA_MIXSND_STREAM_ID;
+
+    if (_hAudFeedMixSndThread)
+    {
+        _rAudMixSndRingFifo[u1StreamID].u4WP = _rAudMixSndRingFifo[u1StreamID].u4SA;
+        _rAudMixSndRingFifo[u1StreamID].u4RP = _rAudMixSndRingFifo[u1StreamID].u4WP;
+        LOG(0, "[AUD_FlushMixSndClip] trigger %d\n",u1StreamID);
+    }
+    else
+    {
+        LOG(0, "[AUD_FlushMixSndClip] _hAudFeedMixSndThread not available\n");
+    }
+}
 
 
 //-----------------------------------------------------------------------------

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/29 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11352,6 +11352,16 @@ extern void AUD_PauseMixSndClip(UINT8 u1StreamID);
  */
 //-----------------------------------------------------------------------------
 extern void AUD_ResumeMixSndClip(UINT8 u1StreamID);
+
+//-----------------------------------------------------------------------------
+/** AUD_FlushMixSndClip
+ *
+ *  @param u1StreamID           MixSound Stream ID (0~MAX_AUD_MIXSOUND_STREAM_NUM)
+ *  @retval void
+ */
+//-----------------------------------------------------------------------------
+extern void AUD_FlushMixSndClip(UINT8 u1StreamID);
+
 
 //-----------------------------------------------------------------------------
 /** AUD_RepeatMixSndClip
