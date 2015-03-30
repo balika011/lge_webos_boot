@@ -274,7 +274,7 @@ UINT32 _bQueryMode;
 UINT32 _bCurQueryMode;
 static UINT8 _bHandleAudio = 1;
 HAL_TIME_T rNoAviTime;
-
+static UINT8 PreDviTiming = 0;
 ////////////////////////////////////////////////////////////////////////////////
 extern UINT8 _bHDMIScanInfo;
 extern UINT8 _bHDMIAspectRatio;
@@ -3803,6 +3803,7 @@ void vDviChkModeChange(void)
             break;
 
         case DVI_CHK_MODECHG:
+			PreDviTiming = _bDviTiming;
             if(((_bQueryMode!=_bCurQueryMode)||(bLOrRFlag!=_bUseLorRFlag)) && (!_fgForce2D))
             {
                 _bQueryMode=_bCurQueryMode;
@@ -4108,7 +4109,99 @@ void vDviChkModeChange(void)
                     }
 
                     // check if timing
-				if ((_bVStableCnt > VRES_STB_COUNTS && _bHStableCnt > HRES_STB_COUNTS ) || \
+                LOG(1,"the input height is %d and refresh rate is %d and interlace is %d and DVI timing is %d\n",wHDMIResoHeight(),bHDMIRefreshRate(),fgHDMIinterlaced(),PreDviTiming);
+                if((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080i))
+                {                    
+					if((_bVStableCnt > 70 && _bHStableCnt > 70 ) || \
+										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 70))
+					{
+					    LOG(1,"from 1080i60 change to 1080p24 stable\n");
+						if(_bWidthStableCnt>=10)
+						   {
+							   _bWidthStableFlg = 1;
+							   _bWidthStableCnt = 0;
+						   }
+						   else
+						   {
+							   _bWidthStableFlg = 0;
+							   _bWidthStableCnt = 0;
+						   }
+						
+						   if(_bHeightStableCnt>=10)
+						   {
+							   _bHeightStableFlg = 1;
+							   _bHeightStableCnt = 0;
+						   }
+						   else
+						   {
+							   _bHeightStableFlg = 0;
+							   _bHeightStableCnt = 0;
+						   }
+						
+						   _wDviHtotal = wDVIGetHtotal();
+						   _wDviVTotal = wDVIGetVtotal();
+						   _wDviWidth =  bDVIGetWidth() ;
+						   _wDviHeight =  bDVIGetHeight();
+						   _wHDMIPixelClk=dwDviPIXClock();
+						   _wDviHclk = wDviIHSClock();
+						   _bDviVclk = bDviIVSClock();
+						
+						   //LOG(3,"++ pre search V:%d H:%d clk: %d, timing %d\n", _wDviVTotal, _wDviHtotal, _wHDMIPixelClk,bDviStdTimingSearch(1));
+						   if(bDviStdTimingSearch(1) == MODE_NOSUPPORT)
+						   {
+						   if (bDviStdTimingSearch(0) == MODE_NOSUPPORT)
+						   {
+							   if (_bHStableCnt > 30 && _bVStableCnt > 30)
+							   {
+									_bHVStableFlag = 1;
+							   }
+						   }
+						   else
+						   {
+								_bHVStableFlag = 1;
+						   }
+						   }
+						   else
+						   {
+							   if(_bHdmiMD)
+							   {
+								   if(_bAVIStableCnt > 10)
+								   {
+									   _bHVStableFlag = 1;
+								   }
+								   else
+								   {
+									   HAL_GetTime(&rCurTime);
+						
+									   if((rCurTime.u4Seconds - rNoAviTime.u4Seconds) > _wDVI_WAIT_NOSIGNAL_COUNT)
+									   {
+										   LOG(6,"\n NoAVI timeout to setmodedone %d s\n",(rCurTime.u4Seconds - rNoAviTime.u4Seconds));
+										   _bAVIFlag=1;
+										   _bHVStableFlag=1;
+									   }
+									   else
+									   {
+										   LOG(6,"\n _bAVIStableCnt %d has not arrive 10 \n",_bAVIStableCnt);
+										   _bHVStableFlag = 0;
+									   }
+								   }
+							   }
+							   else
+							   {
+								   _bHVStableFlag=1;
+							   }
+						   }
+
+					}
+                    else
+                    {
+                        _bHVStableFlag = 0;
+                    }
+
+				}
+				else
+				{
+					if ((_bVStableCnt > VRES_STB_COUNTS && _bHStableCnt > HRES_STB_COUNTS ) || \
 					(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 15))
                     {
 
@@ -4192,7 +4285,7 @@ void vDviChkModeChange(void)
                     {
                         _bHVStableFlag = 0;
                     }
-
+					}
 
 
                     if((_bDviMdChgCnt++ > _wDVI_WAIT_STABLE_COUNT) || (_bHVStableFlag == 1))
