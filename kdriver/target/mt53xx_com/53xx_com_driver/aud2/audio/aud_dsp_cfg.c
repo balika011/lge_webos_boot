@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/25 $
+ * $Date: 2015/03/30 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #42 $
+ * $Revision: #43 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2853,6 +2853,9 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
     UINT32 u4Mode = 0; //bit0: 1: DTS CD, 0: others, bit
     APROC_IEC_CHANNELSTATUS_T  eInfo; 
 #endif    
+    UINT32 u4Factor;
+    UINT32 u4FrameSample;
+    UINT32 u4RawDelayFrame;
 
 #ifdef CC_AUD_AD_FORCE_PCM      
     /* Check if AD enable and MIX to L/R ,force to PCM format*/
@@ -3164,6 +3167,55 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
         vWriteShmUINT16(AUD_DSP0, W_IEC_NSNUM, u2Nsnum);
     }
 
+#ifdef CC_AUD_DDI
+				switch (AUD_GetSampleFreq(_u1SpdifRawDec))
+				{
+				case FS_192K:
+					u4Factor = 192;
+					break;
+				case FS_96K:
+					u4Factor = 96;
+					break;
+				case FS_48K:
+					u4Factor = 48;
+					break;
+				case FS_44K:
+					u4Factor = 44;
+					break;
+				case FS_32K:
+					u4Factor = 32;
+					break;
+				default:
+					u4Factor = 48; 
+					break;
+				}
+				
+				switch (u2ReadShmUINT16(AUD_DSP0, W_IEC_BURST_INFO))
+				{
+				case BURST_INFO_AC3:
+				case BURST_INFO_DTS:
+				case BURST_INFO_AAC:
+					if ((u4FrameSample = u2ReadShmUINT16(AUD_DSP0, W_IEC_NSNUM)) != 0)
+					{
+						//u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 34 + u4FrameSample/2)/u4FrameSample;
+						u4RawDelayFrame = ((u4AprocReg_Read (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM))*u4DelayConstant) * 5 * u4Factor / 17 + u4FrameSample)/(2*u4FrameSample);
+						if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) &&
+							(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
+							(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+						{
+							u4RawDelayFrame = u4RawDelayFrame*2;
+						}
+	                    if((u4AprocReg_Read (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM)) != 0)&&
+							(u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWDELAY)) == 0))
+	                    	{
+						_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
+	                    	}
+					}
+				    break;
+				default:
+					break;
+				}
+#endif
     if ((_aeIecMode != eIecFlag) || (_afgIecEnable != fgEnable) || (_aeIecRawSrc != eRawSource))
     {
         /* set IEC clock */
@@ -7945,7 +7997,17 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
         // 64/48 = 1.3 ms
         // 5cm/34000cm = 0.14 ms
         // 1.3/0.14 = 9
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);
+        if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) && 
+			(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
+			(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+        {
+			vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2Delay/u4DelayConstant) + 14));
+            LOG(5, "### Adjust for HDMI PCM 14 bank for DTS\n");
+        }
+		else
+		{
+			vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);		
+		}
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
         vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2Delay/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);
@@ -8139,6 +8201,12 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 {
                     //u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 34 + u4FrameSample/2)/u4FrameSample;
                     u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 17 + u4FrameSample)/(2*u4FrameSample);
+					if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) &&
+						(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
+						(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+					{
+					    u4RawDelayFrame = u4RawDelayFrame*2;
+					}
                     _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
                 }
                 break;
@@ -8302,7 +8370,17 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
         if (u4AprocReg_Read (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP)) != u2DelayLRMix/u4DelayConstant)
         {
             x_thread_delay(30);
-            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);
+			if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) && 
+				(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
+				(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+			{
+                vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2DelayLRMix/u4DelayConstant)+14));
+			}
+			else
+			{
+				vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);
+
+			}
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
         }
 #else
@@ -8372,6 +8450,12 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
                 {
                     //u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 34 + u4FrameSample/2)/u4FrameSample;
                     u4RawDelayFrame = (u2DelayBypassMix * 5 * u4Factor / 17 + u4FrameSample)/(2*u4FrameSample);
+					if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) &&
+						(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
+						(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+					{
+					    u4RawDelayFrame = u4RawDelayFrame*2;
+					}
                     _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
                 }
                 break;
