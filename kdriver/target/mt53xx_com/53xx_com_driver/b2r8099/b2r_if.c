@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/03/30 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #29 $
+ * $Revision: #30 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2411,7 +2411,6 @@ UINT32 VDP_GetLockFrameBufferAddr(UCHAR ucVdpId, VDP_CAPTURE_INTO_T* prCapInfo)
 
 UINT32 VDP_GetDisplayFrameBufferAddr(UCHAR ucVdpId, VDP_CAPTURE_INTO_T* prCapInfo)
 {
-    UINT32 u4FbNum;
     UINT32 u4Idx;
     UCHAR ucEsId;
     UCHAR ucFbgId;
@@ -2436,11 +2435,10 @@ UINT32 VDP_GetDisplayFrameBufferAddr(UCHAR ucVdpId, VDP_CAPTURE_INTO_T* prCapInf
     }
     ucFbgId = FBM_GetFbgByEs(ucEsId);
     ucFbId = 0xFF;
-    u4FbNum = (UINT32)FBM_GetFrameBufferNs(ucFbgId);
-    for(u4Idx = 0; u4Idx < u4FbNum; u4Idx++)
+    
+    for(u4Idx = 0; u4Idx < FBM_MAX_FB_NS_PER_GROUP; u4Idx++)
     {
-        if(FBM_GetFrameBufferStatus(ucFbgId, u4Idx)
-            == FBM_FB_STATUS_DISPLAYQ)  //already freeze at mpv_mw.c
+        if(FBM_GetFrameBufferStatus(ucFbgId, u4Idx) == FBM_FB_STATUS_DISPLAYQ)  //already freeze at mpv_mw.c
         {
             ucFbId = (UCHAR)u4Idx;
             break;

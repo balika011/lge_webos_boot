@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/02 $
+ * $Date: 2015/03/30 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -107,16 +107,6 @@
 //---------------------------------------------------------------------------
 // Constant definitions
 //---------------------------------------------------------------------------
-
-// Maximum frame buffer number per frame buffer group
-#ifdef DEBUG_MAX_FB
-#define FBM_MAX_FB_NS_PER_GROUP		64//32
-#else
-//for H264
-//#define FBM_MAX_FB_NS_PER_GROUP     10
-//#define FBM_MAX_FB_NS_PER_GROUP     18
-#define FBM_MAX_FB_NS_PER_GROUP     44//22
-#endif
 
 // Reference buffer number per frame buffer group
 #define FBM_REF_FB_NS_PER_GROUP		2
@@ -163,6 +153,68 @@ typedef enum
     FBM_RESOLUTION_CHANGE_MODE_NS,
 } FBM_RESOLUTION_CHANGE_MODE_T;
 
+typedef enum
+{
+    FBM_MEMUNIT_USETYPE_START =0,
+    FBM_MEMUNIT_USETYPE_Y     = 1<<0,
+    FBM_MEMUNIT_USETYPE_C     = 1<<1,
+    FBM_MEMUNIT_USETYPE_EXT   = 1<<2,
+    //FBM_MEMUNIT_USETYPE_EXTY  = 1<<2,
+    //FBM_MEMUNIT_USETYPE_EXTC  = 1<<3,
+    FBM_MEMUNIT_USETYPE_MV    = 1<<3,
+    FBM_MEMUNIT_USETYPE_CABAC = 1<<4,
+    FBM_MEMUNIT_USETYPE_RPR   = 1<<5,    
+    FBM_MEMUNIT_USETYPE_WORK  = 1<<6,
+    FBM_MEMUNIT_USETYPE_MAX = 6,
+    FBM_MEMUNIT_USETYPE_UNUSED_FOR_WORK = 1<<7,
+    
+}FBM_MEMUNIT_FLAG;
+
+#define FBM_MEMUNIT_SEPARATE_EXTERNDATA
+#define FBM_MEMUNIT_DEFAULT_EXTERNDATA_FBCNT (11)
+#define FBM_MEMUNIT_FRAME_MAX_WIDTH  (1920)  // make sure  1/2 is 64 align base.  
+#define FBM_MEMUNIT_FRAME_MAX_HEIGHT (1088)  
+
+#define FMB_MEMUNIT_MIN_WORKBUF_SIZE (0x200000)
+#define FBM_MEMUNIT_MAX_WORKBUF_SIZE (0xffffffff)
+
+#define FBM_MEMUNIT_LIST_MAX (FBM_MEMUNIT_USETYPE_MAX +2)
+#define FBM_MEMUNIT_USETYPE_YC (FBM_MEMUNIT_USETYPE_Y | FBM_MEMUNIT_USETYPE_C)
+#define FBM_MEMUNIT_USETYPE_ALLEXTEN \
+    (FBM_MEMUNIT_USETYPE_EXT | FBM_MEMUNIT_USETYPE_MV | FBM_MEMUNIT_USETYPE_CABAC | FBM_MEMUNIT_USETYPE_RPR | FBM_MEMUNIT_USETYPE_WORK)
+#define FBM_MEMUNIT_USETYPE_ALL (FBM_MEMUNIT_USETYPE_YC | FBM_MEMUNIT_USETYPE_ALLEXTEN)
+
+typedef enum
+{
+    MEMUNIT_SEARCH_TYPE_OR,
+    MEMUNIT_SEARCH_TYPE_AND,
+    MEMUNIT_SEARCH_TYPE_EQ,
+    MEMUNIT_SEARCH_TYPE_NOR
+}FBM_MEMUNIT_SEARCH_TYPE;
+
+typedef enum
+{
+    FB_ROTATION_UNUSE,
+    FB_ROTATION_WAIT_USE,
+    FB_ROTATION_USE,
+    FB_ROTATION_WAIT_UNUSE
+}FBM_FB_ROTATION_STATUS;
+
+typedef enum
+{
+    FBM_REMAP_OK,
+    FBM_REMAP_RETRY,
+    FBM_REMAP_FAIL
+}FBM_REMAP_RET;
+
+
+typedef struct
+{
+    UINT32 u4StartAddr;
+    UINT32 u4EndAddr;
+    UINT32 u4UsedAddr;
+    UINT32 u4Flag;
+}FBM_MEMUNIT;
 
 /** Brief of FBM_FBG_T
  *  Frame Buffer Group
@@ -220,6 +272,7 @@ typedef struct
     UCHAR aucPlayBackNs[FBM_MAX_FB_NS_PER_GROUP];
     UCHAR aucChangeFieldNs[FBM_MAX_FB_NS_PER_GROUP];
     UCHAR aucChgFldPlayBackNs[FBM_MAX_FB_NS_PER_GROUP];
+    UCHAR aucFbRotationStatus[FBM_MAX_FB_NS_PER_GROUP]; 
     BOOL   afgRefList[FBM_MAX_FB_NS_PER_GROUP];    //for H264 to maintain reference list
     BOOL   afgIsOwner[FBM_MAX_FB_NS_PER_GROUP]; // Is fb owned by FBM or by others, like OMX
     BOOL   afgWaitDisplay[FBM_MAX_FB_NS_PER_GROUP]; // Is fb owned by FBM or by others, like OMX
@@ -227,6 +280,7 @@ typedef struct
     BOOL   fgSendEOS;
     BOOL   fgPtsSync;
     BOOL  fgDoSeqChanging;
+    BOOL  fgAdjustWorkBuf;
     UINT8 u1DecoderSrcId;
     UINT8 u1FbgAppMode;
     BOOL  fgEnableH264V5Support;
@@ -242,7 +296,8 @@ typedef struct
     UINT32 u4ResidualFb;                    // Indicate whether residual FB is used
     UINT32 u4ResidualFree;                  // Indicate whether residual FB is pending to free
     UINT32 u4WorkBufSize;                   // The size for working buffer
-
+    UINT32 u4Workbuffer;
+    
     UINT32 u4FbMemoryPool;                  //Y Addr
     UINT32 u4FbMemoryPoolC;                 //C Addr support two dram channel.
     UINT32 u4FbMemoryPoolSize;
@@ -295,8 +350,10 @@ typedef struct
 	BOOL fg10Bit;
 	BOOL fgUFO;
     UINT32 au4AddrY[FBM_MAX_FB_NS_PER_GROUP];
+    UINT32 au4SizeY[FBM_MAX_FB_NS_PER_GROUP];
     UINT32 au4AddrY_Ext[FBM_MAX_FB_NS_PER_GROUP];
     UINT32 au4AddrC[FBM_MAX_FB_NS_PER_GROUP];
+    UINT32 au4SizeC[FBM_MAX_FB_NS_PER_GROUP];
     UINT32 au4AddrC_Ext[FBM_MAX_FB_NS_PER_GROUP];
     UINT32 au4AddrMv[FBM_MAX_FB_NS_PER_GROUP-1];
 	UINT32 au4AddrCabac[FBM_MAX_CABAC_BUF_NS_PER_GROUP];
@@ -317,6 +374,11 @@ typedef struct
     UINT32 u4ExtraYBuffer;
     UINT32 u4ExtraCBuffer;
     UINT32 u4RPRSeamlessBuffer;
+    
+    UINT32 u4YSize;
+    UINT32 u4CSize;
+    UINT32 u4FbCnt;
+
     FBM_SEQ_HDR_T rSeqHdr;
     FBM_PIC_HDR_T* prPicHdr;
     FBM_FBQ_T rEmptyQ;
@@ -354,9 +416,8 @@ extern VOID _FBM_2FBsConflictList(UCHAR ucFbgId);
 extern void _FBM_PutFrameBufferToEmptyResizeQ(UCHAR ucFbgId, UCHAR ucFbId);
 extern void _FBM_PutFrameBufferToEmptyResize2Q(UCHAR ucFbgId, UCHAR ucFbId);
 extern UCHAR FBM_GetLatestEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay);
-
 extern BOOL _FBM_2FBsChkDynamicDone(UCHAR ucFbgId);
-
+extern UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height);
 //---------------------------------------------------------------------------
 // Public functions
 //---------------------------------------------------------------------------

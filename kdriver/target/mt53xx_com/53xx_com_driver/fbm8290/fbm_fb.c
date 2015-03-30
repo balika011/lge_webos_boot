@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/03/30 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -129,7 +129,6 @@
 
 #define FBM_PTS_FRM_RATE_TORRENCE 90
 
-
 //---------------------------------------------------------------------------
 // Type definitions
 //---------------------------------------------------------------------------
@@ -147,14 +146,15 @@
 #define VERIFY_FB(gid, id)                              \
     (!(((_prFbg[gid].ucFbNsBase <= id) && (id < _prFbg[gid].ucFbNs))   ||  \
        ((_prFbg[gid].ucFbNsOldBase <= id) && (id < _prFbg[gid].ucFbNsOld)))   || \
-    (id >= FBM_MAX_FB_NS_PER_GROUP))
+    (id >= FBM_MAX_FB_NS_PER_GROUP) || \
+    (_prFbg[gid].aucFbRotationStatus[id] == FB_ROTATION_UNUSE) || (_prFbg[gid].aucFbRotationStatus[id] == FB_ROTATION_WAIT_USE))
 
 #define VERIFY_RESIZE_FB(gid, id)                       \
     ((id >= _prFbg[gid].ucSeamlessFbNs) ||              \
     (id >= FBM_MAX_FB_NS_PER_GROUP))
 
 #define VERIFY_FB_NS(gid)                               \
-    (_prFbg[gid].ucFbNs - _prFbg[gid].ucFbNsBase > FBM_MAX_FB_NS_PER_GROUP/2)
+    (_prFbg[gid].ucFbNs - _prFbg[gid].ucFbNsBase > FBM_MAX_FB_NS_PER_GROUP)
 
 #define IS_REFERENCE_FB(gid, id)                        \
     ((id == _prFbg[gid].ucFbFRef) || (id == _prFbg[gid].ucFbBRef))
@@ -162,8 +162,10 @@
 #define NOT_REFERENCE_FB(gid, id)                        \
     ((id != _prFbg[gid].ucFbFRef) && (id != _prFbg[gid].ucFbBRef))
 
+#define Fb_Using(gid,id) (_prFbg[gid].aucFbRotationStatus[id] == FB_ROTATION_USE || _prFbg[gid].aucFbRotationStatus[id] == FB_ROTATION_WAIT_UNUSE)
+
 #define IS_NEW_FBS(gid, id)  ((_prFbg[gid].ucFbNsBase <= id) && (id < _prFbg[gid].ucFbNs))
-#define IS_OLD_FBS(gid, id)  ((_prFbg[gid].ucFbNsOldBase <= id) && (id < _prFbg[gid].ucFbNsOld))
+#define IS_OLD_FBS(gid, id)  (FALSE)  //( (_prFbg[gid].ucFbNsOldBase <= id) && (id < _prFbg[gid].ucFbNsOld))
 
 #ifdef CC_VDP_FULL_ISR
 
@@ -206,6 +208,8 @@ static UCHAR _FbmGetRefFrameBufferFromEmptyQ(UCHAR ucFbgId);
 static UCHAR _FbmGetBFrameBufferFromEmptyQ(UCHAR ucFbgId);
 
 static void _FbmResetPicHdrFields(UCHAR ucFbgId, UCHAR ucFbId);
+
+static UCHAR _FbmSyncWaitUseFb(UCHAR ucFbgId);
 
 #ifdef FBM_FB_LOG
 static void _FbmFbLog(UCHAR u1FbgIdx,UCHAR u1FbIdx, UCHAR ucFbStatus, const CHAR* sFunc, const UINT32 u4Line);
@@ -332,6 +336,8 @@ static void _FbmPutFrameBufferToDispQ(UCHAR ucFbgId, UCHAR ucFbId)
     ucNextWriteIdx = (_prFbg[ucFbgId].rDisplayQ.ucReadIdx + _prFbg[ucFbgId].rDisplayQ.ucCount) % FBM_MAX_FB_NS_PER_GROUP;
     _prFbg[ucFbgId].rDisplayQ.aucQueue[ucNextWriteIdx] = ucFbId;
     _prFbg[ucFbgId].rDisplayQ.ucCount++;
+    LOG(4,"DispInQ fb(%d,%d) Cnt(%d,%d)\n",ucFbgId,ucFbId,_prFbg[ucFbgId].rDisplayQ.ucCount);
+    
 }
 
 
@@ -674,6 +680,9 @@ static UCHAR _FbmGetEmptyFrameBufferFromEmptyQ(UCHAR ucFbgId)
             _prFbg[ucFbgId].rEmptyQ.ucReadIdx = 0;
         }
         _prFbg[ucFbgId].rEmptyQ.ucCount--;
+        
+        LOG(4,"EmpytDeQ fb(%d,%d) Cnt(%d,%d)\n",ucFbgId,ucFbId,
+          _prFbg[ucFbgId].rEmptyQ.ucCount,_prFbg[ucFbgId].hEmptyQSemaphore.i4Count);
         
         if (ucFbId == FBM_FB_ID_UNKNOWN)
         {
@@ -1382,61 +1391,75 @@ void _FBM_PutFrameBufferToEmptyQ(UCHAR ucFbgId, UCHAR ucFbId)
     }
     
     _prFbg[ucFbgId].aucFbStatus[ucFbId] = FBM_FB_STATUS_EMPTY;
-
-    ucNextWriteIdx = (_prFbg[ucFbgId].rEmptyQ.ucReadIdx + _prFbg[ucFbgId].rEmptyQ.ucCount) % FBM_MAX_FB_NS_PER_GROUP;
-    _prFbg[ucFbgId].rEmptyQ.aucQueue[ucNextWriteIdx] = ucFbId;
-    _prFbg[ucFbgId].rEmptyQ.ucCount++;
     
-    VERIFY(_FBM_csema_unlock(&_prFbg[ucFbgId].hEmptyQSemaphore) == OSR_OK);
+    if(_prFbg[ucFbgId].aucFbRotationStatus[ucFbId] == FB_ROTATION_USE 
+        || _prFbg[ucFbgId].aucFbRotationStatus[ucFbId] == FB_ROTATION_WAIT_USE)
+    {
+        ucNextWriteIdx = (_prFbg[ucFbgId].rEmptyQ.ucReadIdx + _prFbg[ucFbgId].rEmptyQ.ucCount) % FBM_MAX_FB_NS_PER_GROUP;
+        _prFbg[ucFbgId].rEmptyQ.aucQueue[ucNextWriteIdx] = ucFbId;
+        _prFbg[ucFbgId].rEmptyQ.ucCount++;
+        // add by liuqu,20121127, for seq chg flow, a new fb may be put inot emptyq!
+#ifdef NEW_SEQ_CHG_NOTIFY
+            if ((ucFbId !=FBM_FB_ID_UNKNOWN) &&
+                    ((_prFbg[ucFbgId].ucSeqChg == 1) && (u4FirstFBStored == 0))) // new condition!
+            {
+                UINT8 u1ReadIdx  = rSeqChgEmptyQ.ucReadIdx;
+                UINT8 i =0;
+                UINT8 ucGetFbId = 0xff;
+        
+                for (i=0; i<rSeqChgEmptyQ.ucCount; i++)
+                {
+                    if (rSeqChgEmptyQ.ucReadIdx >= FBM_MAX_FB_NS_PER_GROUP)
+                    {
+                        LOG(0,"ucReadIdx %d\n",rSeqChgEmptyQ.ucReadIdx);
+                        
+                        ASSERT_FBM(rSeqChgEmptyQ.ucReadIdx < FBM_MAX_FB_NS_PER_GROUP);
+                    }
+        
+                    ucGetFbId = rSeqChgEmptyQ.aucQueue[u1ReadIdx];
+        
+                    if (ucGetFbId == ucFbId )
+                        break ; // the FbId is already in the rSeqChgEmptyQ!
+        
+                    if (++(u1ReadIdx) >= FBM_MAX_FB_NS_PER_GROUP)
+                    {
+                        u1ReadIdx = 0;
+                    }
+                }
+        
+                if (i == rSeqChgEmptyQ.ucCount)  // the ucFbId is not in the rSeqChgEmptyQ,add into it!
+                {     
+                    u1ReadIdx  = rSeqChgEmptyQ.ucReadIdx;
+                    for (i = 0; i< rSeqChgEmptyQ.ucCount;i++)
+                    {
+                        if (++(u1ReadIdx) >= FBM_MAX_FB_NS_PER_GROUP)
+                        {
+                            u1ReadIdx = 0;
+                        }
+                    }
+        
+                     rSeqChgEmptyQ.ucCount++;  // add 1 more !
+                    rSeqChgEmptyQ.aucQueue[u1ReadIdx] = ucFbId ;
+                   LOG(5,"[LEO]Tag 13, rSeqChgEmptyQ changed!FB %d is added!\n",ucFbId);
+                }      
+            }
+#endif
+           LOG(4,"EmpytInQ fb(%d,%d) Cnt(%d,%d)\n",ucFbgId,ucFbId,
+           _prFbg[ucFbgId].rEmptyQ.ucCount,_prFbg[ucFbgId].hEmptyQSemaphore.i4Count+1);
+
+           VERIFY(_FBM_csema_unlock(&_prFbg[ucFbgId].hEmptyQSemaphore) == OSR_OK);
+
+    }
     
     x_crit_end(_rEmptyQState);
-
-  // add by liuqu,20121127, for seq chg flow, a new fb may be put inot emptyq!
-#ifdef NEW_SEQ_CHG_NOTIFY
-    if ((ucFbId !=FBM_FB_ID_UNKNOWN) &&
-            ((_prFbg[ucFbgId].ucSeqChg == 1) && (u4FirstFBStored == 0))) // new condition!
+    
+    if(_prFbg[ucFbgId].aucFbRotationStatus[ucFbId] == FB_ROTATION_WAIT_UNUSE)
     {
-        UINT8 u1ReadIdx  = rSeqChgEmptyQ.ucReadIdx;
-        UINT8 i =0;
-        UINT8 ucGetFbId = 0xff;
-
-        for (i=0; i<rSeqChgEmptyQ.ucCount; i++)
-        {
-            if (rSeqChgEmptyQ.ucReadIdx >= FBM_MAX_FB_NS_PER_GROUP)
-            {
-                LOG(0,"ucReadIdx %d\n",rSeqChgEmptyQ.ucReadIdx);
-                
-                ASSERT_FBM(rSeqChgEmptyQ.ucReadIdx < FBM_MAX_FB_NS_PER_GROUP);
-            }
-
-            ucGetFbId = rSeqChgEmptyQ.aucQueue[u1ReadIdx];
-
-            if (ucGetFbId == ucFbId )
-                break ; // the FbId is already in the rSeqChgEmptyQ!
-
-            if (++(u1ReadIdx) >= FBM_MAX_FB_NS_PER_GROUP)
-            {
-                u1ReadIdx = 0;
-            }
-        }
-
-        if (i == rSeqChgEmptyQ.ucCount)  // the ucFbId is not in the rSeqChgEmptyQ,add into it!
-        {     
-            u1ReadIdx  = rSeqChgEmptyQ.ucReadIdx;
-            for (i = 0; i< rSeqChgEmptyQ.ucCount;i++)
-            {
-                if (++(u1ReadIdx) >= FBM_MAX_FB_NS_PER_GROUP)
-                {
-                    u1ReadIdx = 0;
-                }
-            }
-
-             rSeqChgEmptyQ.ucCount++;  // add 1 more !
-            rSeqChgEmptyQ.aucQueue[u1ReadIdx] = ucFbId ;
-           LOG(5,"[LEO]Tag 13, rSeqChgEmptyQ changed!FB %d is added!\n",ucFbId);
-        }      
+        LOG(2,"_FBM_PutFrameBufferToEmptyQ Fb(%d,%d) change to unused \n",ucFbgId,ucFbId);
+        _prFbg[ucFbgId].aucFbRotationStatus[ucFbId] = FB_ROTATION_UNUSE;
+        _FbmSyncWaitUseFb(ucFbgId);
     }
-#endif
+
 }
 
 
@@ -1603,8 +1626,17 @@ static UINT32 FBM_GetEmptyDelayTime(UCHAR ucFbgId, UINT32 *pu4Delay)
     {
         *pu4Delay = 0xfffff;
     }
+    else if(_prFbg[ucFbgId].ucPlayMode == FBM_FBG_DTV_MODE)
+    {
+        if(*pu4Delay < 50) *pu4Delay = 50;
+    }
 
-    if (FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_AUTO_RENDER))
+    if(FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_GETEMPTY_NOWAIT))
+    {
+        *pu4Delay = 1;
+    }
+    
+    if(FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_AUTO_RENDER))
     {
         switch (_prFbg[ucFbgId].rSeqHdr.ucFrmRatCod)
         {
@@ -1984,9 +2016,7 @@ UCHAR FBM_GetFrameBufferNs(UCHAR ucFbgId)
     }
 
     FBM_MUTEX_LOCK(ucFbgId);
-
-    ucFbNs = (_prFbg[ucFbgId].ucFbNs - _prFbg[ucFbgId].ucFbNsBase);
-
+    ucFbNs = _prFbg[ucFbgId].u4FbCnt;
     FBM_MUTEX_UNLOCK(ucFbgId);
 
     return ucFbNs;
@@ -2258,9 +2288,10 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
                 if (IS_REFERENCE_FB(ucFbgId, ucFbId))
                 {   // release reference frame buffer
                 }
-                else
+                else if(_prFbg[ucFbgId].aucFbRotationStatus[ucFbId] == FB_ROTATION_USE ||
+                    _prFbg[ucFbgId].aucFbRotationStatus[ucFbId] == FB_ROTATION_WAIT_USE)
                 {   // release B frame buffer
-
+                
                     // release semaphore (B & Empty)
                     VERIFY(_FBM_csema_unlock(&_prFbg[ucFbgId].hEmptyBQSemaphore) == OSR_OK);
                 }
@@ -2439,7 +2470,7 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
         }
     }
 
-    if (ucFbStatus == FBM_FB_STATUS_DISPLAYQ)
+    if (ucFbStatus == FBM_FB_STATUS_DISPLAYQ )
     {
         if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND],
                                      _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND]))
@@ -2456,9 +2487,9 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
             ((FBM_FB_READY_IND_FUNC_EX)_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND])(
                 _prFbmCbFunc->aau4CbFuncTag[ucFbgId][FBM_CB_FUNC_FB_READY_EX_IND],
                 &rPicNfyInfo);
-                
         }
-		  if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB],
+        
+		if (FBM_CHECK_CB_FUNC_VERIFY(_prFbmCbFunc->aau4CbFunc[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB],
                                      _prFbmCbFunc->aau4CbFuncCRC[ucFbgId][FBM_CB_FUNC_FB_FRAME_TYPEINFOR_CB]))
         {
 
@@ -2687,7 +2718,8 @@ UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId)
         {
             LOG(0,"ucFbgId(%d) ucFbId(%d) FbStatus(%d)\n",ucFbgId,ucFbId, _prFbg[ucFbgId].aucFbStatus[ucFbId]);
         }
-
+        
+        LOG(4,"DispDeQ fb(%d,%d) Cnt(%d)\n",ucFbgId,ucFbId,_prFbg[ucFbgId].rDisplayQ.ucCount);
         ASSERT_FBM(_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_DISPLAYQ);
     }
 
@@ -3403,7 +3435,7 @@ void FBM_GetWorkingBuffer(UCHAR ucFbgId, UINT32 *pu4Addr, UINT32 *pu4Size)
         return;
     }
 
-    *pu4Addr = _prFbg[ucFbgId].au4AddrMv[0];
+    *pu4Addr = _prFbg[ucFbgId].u4Workbuffer;
     *pu4Size = _prFbg[ucFbgId].u4WorkBufSize;
 
 }
@@ -3517,7 +3549,7 @@ UCHAR FBM_GetReadyFrameBuffer(UCHAR ucFbgId)
         {
             for (u4FbIdx = _prFbg[ucFbgId].ucFbNsBase; u4FbIdx < _prFbg[ucFbgId].ucFbNs; u4FbIdx++)
             {
-                if (_prFbg[ucFbgId].ucFbDecode != (UCHAR)(u4FbIdx))
+                if (_prFbg[ucFbgId].ucFbDecode != (UCHAR)(u4FbIdx) && Fb_Using(ucFbgId,u4FbIdx))
                 {
                     ucFbId = (UCHAR)u4FbIdx;
                     u4FbIdx = FBM_MAX_FB_NS_PER_GROUP;
@@ -3597,7 +3629,10 @@ void FBM_PrintFBStatus(UCHAR ucFbgId)
     for (u4FbIdx = _prFbg[ucFbgId].ucFbNsBase;
             ((u4FbIdx < _prFbg[ucFbgId].ucFbNs)&& (u4FbIdx < FBM_MAX_FB_NS_PER_GROUP)); u4FbIdx++)
     {
-        szDebug1[u4FbIdx] = '0' +  _prFbg[ucFbgId].aucFbStatus[u4FbIdx];
+        if(Fb_Using(ucFbgId,u4FbIdx))
+        {
+            szDebug1[u4FbIdx] = '0' +  _prFbg[ucFbgId].aucFbStatus[u4FbIdx];
+        }
     }
     szDebug1[u4FbIdx] = 0;
 
@@ -4178,7 +4213,7 @@ UCHAR FBM_GetEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay)
             FBM_MUTEX_UNLOCK(ucFbgId);
             return FBM_FB_ID_UNKNOWN;
         }
-
+        
 #ifdef NEW_SEQ_CHG_NOTIFY
         if (_prFbg[ucFbgId].ucRecordNextFbId)
         {
@@ -4628,6 +4663,7 @@ void FBM_UpdateReferenceList(UCHAR ucFbgId, UCHAR ucFbId, BOOL fgReference)
     {
         return;
     }
+    
     if (fgReference && (_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_EMPTY))
     {
         //Empty status only can be set reference(0), or
@@ -5467,6 +5503,7 @@ BOOL FBM_InsertFB(UCHAR ucFbgId, UINT32 u4Addr)
         {
             ucRefCount++;
         }
+        
         if (_prFbg[ucFbgId].ucFbBRef != FBM_FB_ID_UNKNOWN)
         {
             ucRefCount++;
@@ -6514,7 +6551,7 @@ VOID FBM_FlushLockToEmptyQ(UCHAR ucFbgId)
        FBM_MUTEX_LOCK(ucFbgId);
        for (ucFbId=_prFbg[ucFbgId].ucFbNsBase; ucFbId<_prFbg[ucFbgId].ucFbNs; ucFbId++)
        {
-            if ((_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_LOCK) &&
+            if (Fb_Using(ucFbgId,ucFbId) && (_prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_LOCK) &&
                 ((_prFbg[ucFbgId].u4DispTag[ucFbId] != INVALID_DISPTAG) || (_prFbg[ucFbgId].u4DispTag[ucFbId] == OMX_PENDING_DISPTAG)))
             {
             	LOG(1,"omx flush lock, fbg:%d, fbid:%d, tag:0x%x\n", ucFbgId, ucFbId, _prFbg[ucFbgId].u4DispTag[ucFbId]);
@@ -6576,7 +6613,7 @@ void FBM_FlushLockFrameBuffer(UCHAR ucFbgId)
     {
         // DispTag == invalid disptag B2r flush or,waiting vdec omx flush
       
-        if ((_prFbg[ucFbgId].aucFbStatus[u4FbIdx] == FBM_FB_STATUS_LOCK) &&
+        if (Fb_Using(ucFbgId,u4FbIdx)&&(_prFbg[ucFbgId].aucFbStatus[u4FbIdx] == FBM_FB_STATUS_LOCK) &&
             ((_prFbg[ucFbgId].u1FbgAppMode != FBM_FBG_APP_OMX_DISP) ||
             ((_prFbg[ucFbgId].u1FbgAppMode == FBM_FBG_APP_OMX_DISP) && (_prFbg[ucFbgId].u4DispTag[u4FbIdx] == INVALID_DISPTAG))))
         {
@@ -6638,3 +6675,1520 @@ BOOL FBM_GetPtsSync(UCHAR ucFbgId)
 
     return _prFbg[ucFbgId].fgPtsSync;
 }
+
+UCHAR FBM_GetFbRotationStatus(UCHAR ucFbgId,UCHAR ucFbId)
+{
+    UCHAR ucStatus;
+    if(VERIFY_FBG(ucFbgId) || VERIFY_FB(ucFbgId, ucFbId))
+     {
+         return FB_ROTATION_UNUSE;
+     }
+    
+     if (VERIFY_FB_NS(ucFbgId))
+     {
+         return FB_ROTATION_UNUSE;
+     }
+     
+     FBM_MUTEX_LOCK(ucFbgId);
+     ucStatus = _prFbg[ucFbgId].aucFbRotationStatus[ucFbId];
+     FBM_MUTEX_UNLOCK(ucFbgId);
+     return ucStatus;
+}
+
+
+inline static UINT32 _FbmGetMVParam(FBM_FBG_T *pFbg, UINT32 *pu4Size, UINT32 *pu4Cnt)
+{
+    UINT32 u4MvSize = 0,u4MvCnt =0;
+    if(pFbg->u4VDecFmt == FBM_VDEC_H264)
+    {
+        if (pFbg->ucFbgType == FBM_FBG_TYPE_1080HD_RR)
+        {
+            u4MvSize = pFbg->u4YSize >> 1;
+        }
+        else
+        {
+            u4MvSize = pFbg->u4YSize >> 2;
+        }
+        u4MvCnt = pFbg->u4FbCnt > 4 ? (pFbg->u4FbCnt -4) : pFbg->u4FbCnt;
+    }
+    else if(pFbg->u4VDecFmt == FBM_VDEC_H265)
+    {
+        u4MvSize = pFbg->u4YSize >> 4;
+        
+        u4MvCnt = pFbg->u4FbCnt > 4 ? (pFbg->u4FbCnt -4) : pFbg->u4FbCnt;
+    }
+    else if(pFbg->u4VDecFmt == FBM_VDEC_VP9)
+    {
+        u4MvSize = FBM_WORK_BUF_VP9_4K2K_SIZE;
+        u4MvCnt = 2;
+    }
+
+    if(pu4Size) *pu4Size = u4MvSize;
+    if(pu4Cnt)  *pu4Cnt  = u4MvCnt;
+    
+    return u4MvSize;
+}
+
+inline static UINT32 _FbmGetCabacParam(FBM_FBG_T *pFbg,UINT32 *pu4Size, UINT32 *pu4Cnt)
+{
+    UINT32 u4CabacSize = 0,u4CabacCnt = 0;
+    if(pFbg->u4VDecFmt == FBM_VDEC_H264 || pFbg->u4VDecFmt == FBM_VDEC_H265)
+    {
+        u4CabacSize = FBM_FBG_TYPE_CABAC_SIZE;
+        u4CabacCnt = FBM_MAX_CABAC_BUF_NS_PER_GROUP;
+    }
+    else if(pFbg->u4VDecFmt == FBM_VDEC_VP9)
+    {
+        u4CabacSize = FBM_FBG_TYPE_CABAC_SIZE * 2;
+        u4CabacCnt = FBM_MAX_CABAC_BUF_NS_PER_GROUP;
+    }
+    
+    if(pu4Size) *pu4Size = u4CabacSize;
+    if(pu4Cnt)  *pu4Cnt  = u4CabacCnt;
+
+    return u4CabacSize;
+}
+
+static void _FbmCalculateYCSize(FBM_FBG_T *pFbg,UINT32 u4Width, UINT32 u4Height)
+{
+    UINT32 u4YSize,u4CSize;
+    UINT32 u4MaxYSize,u4MaxCSize,uMax4Pitch,u4MaxWidth, u4MaxHeight;
+
+    u4MaxWidth = FBM_MEMUNIT_FRAME_MAX_WIDTH;
+    u4MaxHeight = FBM_MEMUNIT_FRAME_MAX_HEIGHT;
+    u4MaxYSize = u4MaxWidth * u4MaxHeight;    
+    u4MaxCSize = u4MaxYSize >> 1;
+
+    u4YSize = FBM_ALIGN_MASK(u4Width, FBM_B2R_H_PITCH) * FBM_ALIGN_MASK(u4Height, FBM_B2R_H_PITCH);
+    u4CSize = u4YSize >> 1;
+    
+    if(pFbg->fg10Bit)
+    {
+        u4MaxYSize = (u4MaxYSize *5) >> 2;
+        u4MaxCSize = (u4MaxCSize *5) >> 2;
+        u4YSize = (u4YSize * 5) >> 2;
+        u4CSize = (u4CSize * 5) >> 2;
+        
+    }
+
+    if (pFbg->ucFbgCm == FBM_CM_422)
+    {
+        u4CSize *= 2;    // 420 to 422
+        u4MaxCSize *= 2; 
+    }
+    else if(pFbg->ucFbgCm == FBM_CM_444)
+    {
+        u4CSize *= 4;    // 420 to 444
+        u4MaxCSize *= 4;
+    }
+
+    uMax4Pitch = FBM_FMG_Y_ALIGMENT + 1 + FBM_FMG_Y_ALIGMENT;
+    u4MaxYSize =  FBM_ALIGN_MASK(u4MaxYSize,uMax4Pitch);
+    u4MaxCSize =  FBM_ALIGN_MASK(u4MaxCSize,uMax4Pitch);
+
+    if(u4YSize> (u4MaxYSize>>1)) // level 1
+    {
+        pFbg->u4YSize = u4MaxYSize;
+        pFbg->u4CSize = u4MaxCSize;
+        pFbg->u4FbWidth = FBM_ALIGN_MASK(u4MaxWidth, FBM_B2R_H_PITCH);
+        pFbg->u4FbHeight = FBM_ALIGN_MASK(u4MaxHeight, FBM_B2R_H_PITCH);
+    }
+    else  //levle 2
+    {
+        pFbg->u4YSize = (u4MaxYSize>>1);
+        pFbg->u4CSize = (u4MaxCSize>>1);
+    }
+    
+    pFbg->u4FbWidth = FBM_ALIGN_MASK(u4Width, FBM_B2R_H_PITCH);
+    pFbg->u4FbHeight = FBM_ALIGN_MASK(u4Height, FBM_B2R_H_PITCH);
+    
+    LOG(2,"_FbmCalculateYCSize(Width:%d, Height:%d, FbWidht:%d, FbHeight:%d, CM:%d, 10bit:%d, YSize:%d, CSize:%d)\n",
+        u4Width,u4Height,pFbg->u4FbWidth,pFbg->u4FbHeight,pFbg->ucFbgCm,pFbg->fg10Bit,pFbg->u4YSize,pFbg->u4CSize);
+    return;
+}
+
+
+static UINT32 u4DeFaultWorkFlag = 0;
+static FBM_FBG_T *pDefaultFbg = NULL;
+static FBM_MEMUNIT arDefaultMemPoolList[FBM_MEMUNIT_LIST_MAX];
+static UINT32 _FbmMemUnitExtenBufFlag(FBM_FBG_T *pFbg)
+{
+    UINT32 u4Flag;
+
+     u4Flag = FBM_MEMUNIT_USETYPE_WORK;
+     if(pFbg->u4VDecFmt == FBM_VDEC_H265 || pFbg->u4VDecFmt == FBM_VDEC_H264 || pFbg->u4VDecFmt ==FBM_VDEC_VP9)
+     {
+        u4Flag |= FBM_MEMUNIT_USETYPE_MV;
+        u4Flag |= FBM_MEMUNIT_USETYPE_CABAC;
+     }
+     
+     if(pFbg->u4VDecFmt == FBM_VDEC_RV && pFbg->fgRPRMode)
+     {
+        u4Flag |= FBM_MEMUNIT_USETYPE_RPR;
+     }
+    
+     if(pFbg->fgUFO || (pFbg->u4FbgFlag & FBM_FLAG_THUMBNAIL_MODE))
+     {
+        u4Flag |= FBM_MEMUNIT_USETYPE_EXT ;
+     }
+     
+     if(u4DeFaultWorkFlag != 0)
+     {
+        u4Flag = u4DeFaultWorkFlag;
+     }
+     return u4Flag;
+}
+
+static UINT32 _FbmMemUnitMemParam(FBM_FBG_T *pFbg, 
+    UINT32 *pu4Size, UINT32*pu4Count, UINT32 u4Flag,BOOL fgTotal)
+{
+    UINT32 u4MemSize = 0, u4TempSize=0, u4MemCnt=0;
+    UINT32 u4WorkFlag = _FbmMemUnitExtenBufFlag(pFbg);
+    
+    if(u4Flag & FBM_MEMUNIT_USETYPE_WORK)
+    {
+        if(pFbg->u4VDecFmt == FBM_VDEC_H264 ||
+            pFbg->u4VDecFmt == FBM_VDEC_H265)
+        {
+            u4MemSize += FBM_FMG_Y_ALIGMENT + 1;
+        }
+        else
+        {
+            u4MemSize += FMB_MEMUNIT_MIN_WORKBUF_SIZE;
+        }
+        u4MemCnt += 1;
+    }
+
+    if(u4Flag & FBM_MEMUNIT_USETYPE_Y)
+    {
+        if(fgTotal)
+        {
+            u4MemSize += pFbg->u4YSize * pFbg->u4FbCnt;
+        }
+        else
+        {
+            u4MemSize += pFbg->u4YSize;
+        }
+        
+        u4MemCnt += pFbg->u4FbCnt;
+    }
+    
+    if(u4Flag & FBM_MEMUNIT_USETYPE_C)
+    {
+        if(fgTotal)
+        {
+            u4MemSize += pFbg->u4CSize * pFbg->u4FbCnt;
+        }
+        else
+        {
+            u4MemSize += pFbg->u4CSize;
+        }
+        u4MemCnt += pFbg->u4FbCnt;
+    }
+    
+    if((u4Flag & FBM_MEMUNIT_USETYPE_EXT) && (u4WorkFlag & FBM_MEMUNIT_USETYPE_EXT))
+    {
+        u4TempSize = FBM_ALIGN_MASK((pFbg->u4YSize>>8),FBM_FMG_Y_ALIGMENT) + FBM_ALIGN_MASK((pFbg->u4CSize>>8),FBM_FMG_Y_ALIGMENT);
+        if(fgTotal)
+        {
+            u4MemSize += pFbg->u4FbCnt * u4TempSize;
+        }
+        else
+        {
+            u4MemSize += u4TempSize;
+        }
+        u4MemCnt += pFbg->u4FbCnt;
+    }
+    
+    if((u4Flag & FBM_MEMUNIT_USETYPE_MV) && (u4WorkFlag & FBM_MEMUNIT_USETYPE_MV)) 
+    {
+        UINT32 u4MvCnt = 0;
+        _FbmGetMVParam(pFbg,&u4TempSize,&u4MvCnt);
+        u4TempSize =  FBM_ALIGN_MASK(u4TempSize,FBM_FMG_Y_ALIGMENT);
+        if(fgTotal)
+        {
+            u4MemSize += u4MvCnt*u4TempSize;
+        }
+        else
+        {
+            u4MemSize += u4TempSize;
+        }
+        
+        u4MemCnt += u4MvCnt;
+    }
+    
+    if((u4Flag & FBM_MEMUNIT_USETYPE_CABAC) && (u4WorkFlag & FBM_MEMUNIT_USETYPE_CABAC))
+    {
+        UINT32 u4CabacCnt = 0;
+        _FbmGetCabacParam(pFbg,&u4TempSize,&u4CabacCnt);
+        u4TempSize =  FBM_ALIGN_MASK(u4TempSize,FBM_FMG_Y_ALIGMENT);
+        if(fgTotal)
+        {
+            u4MemSize += u4CabacCnt * u4TempSize;
+        }
+        else
+        {
+            u4MemSize += u4TempSize;
+        }
+        u4MemCnt += u4CabacCnt;
+    }
+
+    if((u4Flag & FBM_MEMUNIT_USETYPE_RPR) && (u4WorkFlag & FBM_MEMUNIT_USETYPE_RPR))
+    {
+        u4TempSize = FBM_ALIGN_MASK(FBM_FBG_TYPE_PAL_Y_SIZE,FBM_FMG_Y_ALIGMENT) + FBM_ALIGN_MASK(FBM_FBG_TYPE_PAL_C_SIZE,FBM_FMG_Y_ALIGMENT);
+        u4MemSize += u4TempSize * 3;
+        u4MemCnt += 1;
+        //u4MemSize += ((FBM_FBG_TYPE_PAL_Y_SIZE+FBM_FBG_TYPE_PAL_C_SIZE)<<1);
+    }
+
+    if(pu4Size) *pu4Size = u4MemSize;
+    if(pu4Count) *pu4Count = u4MemCnt;
+    
+    return u4MemSize;
+
+}
+
+
+static BOOL _FBMMemUnitMatch(UINT32 u4UnitFlag,UINT32 u4MatchFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    BOOL fgMatch =FALSE;
+    if(eSearchType == MEMUNIT_SEARCH_TYPE_OR)
+    {
+        fgMatch =  (u4UnitFlag & u4MatchFlag) != 0;
+    }
+    else if(eSearchType == MEMUNIT_SEARCH_TYPE_AND)
+    {
+        fgMatch =  (u4UnitFlag & u4MatchFlag) == u4MatchFlag;
+    }
+    else if(eSearchType == MEMUNIT_SEARCH_TYPE_EQ)
+    {
+        fgMatch = u4UnitFlag == u4MatchFlag;
+    }
+    else if(eSearchType == MEMUNIT_SEARCH_TYPE_NOR)
+    {
+        fgMatch = (u4UnitFlag&u4MatchFlag) == 0;
+    }
+
+    return fgMatch;
+    
+}
+
+static VOID _FbmMemUnitPrint(FBM_MEMUNIT *prUnitList,UCHAR *pzPrex)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    UINT8 UnitIndex = 0,uIdx;
+    UCHAR *ucUnitTypeStr[FBM_MEMUNIT_USETYPE_MAX -FBM_MEMUNIT_USETYPE_START +1] =
+        {
+            "Y","C","Ext","MV","CABAC","RPR","WORK"
+        };
+
+    Printf("%s:\n",pzPrex);
+    while(pRetUnit->u4StartAddr != 0)
+    {  
+       Printf("MemUnit[%d] Start:0x%x, User:0x%x, End:0x%x, Usage:0x%x/0x%x, UsedFor:",\
+        UnitIndex,pRetUnit->u4StartAddr,pRetUnit->u4UsedAddr,pRetUnit->u4EndAddr,\
+        pRetUnit->u4UsedAddr - pRetUnit->u4StartAddr,pRetUnit->u4EndAddr - pRetUnit->u4StartAddr);
+       for(uIdx = FBM_MEMUNIT_USETYPE_START; uIdx <= FBM_MEMUNIT_USETYPE_MAX; uIdx++)
+       {
+          if(pRetUnit->u4Flag&(1<<uIdx))
+          {
+              Printf("[%s]",ucUnitTypeStr[uIdx-FBM_MEMUNIT_USETYPE_START]);
+          }
+       }
+       Printf("\n");
+       pRetUnit++;
+       UnitIndex++;
+    }
+}
+
+static FBM_MEMUNIT * _FBMMemUnitSearch(FBM_MEMUNIT *prUnitList,UINT32 u4SearcFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = NULL;
+    UINT8 UnitIndex = 0;
+    while(prUnitList[UnitIndex].u4StartAddr != 0)
+    {
+        if(_FBMMemUnitMatch(prUnitList[UnitIndex].u4Flag,u4SearcFlag,eSearchType))
+        {
+            pRetUnit =&prUnitList[UnitIndex];
+            break;
+        }
+        UnitIndex++;
+    }
+    
+    return pRetUnit;
+}
+
+static FBM_MEMUNIT * _FBMMemUnitMemSearch(FBM_MEMUNIT *prUnitList,UINT32 u4ReqMemSize,UINT32 u4SearcFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+           if(pRetUnit->u4EndAddr - pRetUnit->u4UsedAddr >= u4ReqMemSize)
+           {
+               break;
+           }
+           else
+           {
+               pRetUnit++;
+               continue;
+           }
+        }
+    }while(pRetUnit);
+    
+    return pRetUnit;
+}
+
+static UINT32 _FBMMemUnitFreeSize(FBM_MEMUNIT *prUnitList,UINT32 u4SearcFlag, FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    UINT32 u4FreeSize = 0;
+    
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+            u4FreeSize += pRetUnit->u4EndAddr - pRetUnit->u4UsedAddr;
+            pRetUnit++;
+        }
+    }while(pRetUnit);
+
+    return u4FreeSize;
+}
+
+//un used mem unit function
+#if 0
+static FBM_MEMUNIT * _FBMMemUnitMemMatch(FBM_MEMUNIT *prUnitList,UINT32 u4MatchSize,UINT32 u4SearcFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    UINT32 u4Diff= (UINT32)-1,u4UnUsedSize=0;
+    FBM_MEMUNIT *pMatchUnit =NULL;
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+           u4UnUsedSize = pRetUnit->u4EndAddr - pRetUnit->u4UsedAddr;
+           if(u4UnUsedSize >= u4MatchSize && (u4UnUsedSize-u4MatchSize)<u4Diff)
+           {
+               pMatchUnit = pRetUnit;
+               u4Diff = u4UnUsedSize-u4MatchSize;
+           }
+           pRetUnit++;
+        }
+    }while(pRetUnit);
+    
+    return pMatchUnit;
+}
+
+static BOOL _FBMMemUnitOverlap(FBM_MEMUNIT *prUnitList, UINT32 u4FlagA, UINT32 u4FlagB,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    BOOL  fgOverlap = FALSE;
+
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4FlagA,eSearchType);
+        if(pRetUnit)
+        {
+            if(_FBMMemUnitMatch(pRetUnit->u4Flag,u4FlagB,eSearchType))
+            {
+                fgOverlap = TRUE;
+                break;
+            }
+            else
+            {
+                pRetUnit ++;
+            }
+        }
+        
+    }while(pRetUnit);
+
+    return fgOverlap;
+}
+
+static void _FBMMemUnitReset(FBM_MEMUNIT *prUnitList,UINT32 u4SearcFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+            pRetUnit->u4UsedAddr = pRetUnit->u4StartAddr;
+            pRetUnit++;
+            continue;
+        }
+    }while(pRetUnit);
+
+    return;
+}
+#endif
+
+static VOID _FBMMemUnitAppend(FBM_MEMUNIT *prUnitList,FBM_MEMUNIT *pAppendUnit, BOOL fgTotal)
+{
+    
+    while(prUnitList->u4StartAddr != 0) prUnitList++;
+
+    if(fgTotal == FALSE)
+    {
+       *prUnitList = *pAppendUnit;
+    }
+    else
+    {
+       while(pAppendUnit->u4StartAddr != 0)
+       {
+           *prUnitList++ = *pAppendUnit++;
+       }
+    }
+    return;
+}
+
+static UINT32 _FBMMemUnitCount(FBM_MEMUNIT *prUnitList,UINT32 u4SearcFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prUnitList;
+    UINT32 u4UnitCnt =  0;
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+            u4UnitCnt ++;
+            pRetUnit ++;
+            continue;
+        }
+    }while(pRetUnit);
+
+    return u4UnitCnt;
+}
+
+static UINT32 _FBMMemUnitMemOccupy(FBM_MEMUNIT *prFromList,FBM_MEMUNIT *prToList, UINT32 u4OccupySize,
+    UINT32 u4SearcFlag, FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+{
+    FBM_MEMUNIT *pRetUnit = prFromList;
+    UINT32 u4CopyCnt = 0, u4OccupedSize = 0, u4UnitDataSize=0 , u4OccupeUnitSize=0;
+    do
+    {
+        pRetUnit = _FBMMemUnitSearch(pRetUnit,u4SearcFlag,eSearchType);
+        if(pRetUnit)
+        {
+            u4UnitDataSize = pRetUnit->u4EndAddr - pRetUnit->u4UsedAddr;
+            u4OccupeUnitSize =  u4UnitDataSize > u4OccupySize ? u4OccupySize : u4UnitDataSize;
+            if(u4OccupeUnitSize > 0)
+            {
+                prToList[u4CopyCnt].u4StartAddr = pRetUnit->u4UsedAddr;
+                prToList[u4CopyCnt].u4EndAddr = pRetUnit->u4UsedAddr + u4OccupeUnitSize;
+                prToList[u4CopyCnt].u4UsedAddr = pRetUnit->u4UsedAddr;
+                prToList[u4CopyCnt].u4Flag = u4SearcFlag;
+                pRetUnit->u4UsedAddr += u4OccupeUnitSize;
+                u4OccupedSize += u4OccupeUnitSize;
+                u4OccupySize -= u4OccupeUnitSize;
+                u4CopyCnt ++;
+            }
+            pRetUnit ++;
+        }
+    }while(u4OccupySize > 0 && pRetUnit);
+    return u4OccupedSize;
+}
+
+static BOOL _FbmMemUnitCreateUnitList(FBM_FBG_T *pFbg, FBM_MEMUNIT *prMemPoolList, FBM_MEMUNIT *prMemUnitList)
+{
+   UINT32 u4Idx,u4ReqSize,u4HaveSize,u4UnitCnt;
+   FBM_MEMUNIT *pUnitList = prMemUnitList;
+   for(u4Idx = FBM_MEMUNIT_USETYPE_START; u4Idx <= FBM_MEMUNIT_USETYPE_MAX; u4Idx++)
+   {
+       u4ReqSize = _FbmMemUnitMemParam(pFbg, NULL, NULL, (1 << u4Idx),TRUE);
+
+       if(((1 << u4Idx) == FBM_MEMUNIT_USETYPE_WORK) && pFbg->fgAdjustWorkBuf == TRUE)
+       {
+           u4ReqSize = FBM_MEMUNIT_MAX_WORKBUF_SIZE;
+       }
+       
+       if(u4ReqSize >0)
+       {
+           if(_FBMMemUnitFreeSize(prMemPoolList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_EQ) > 0) // default use special mem firstly
+           {
+               u4HaveSize = _FBMMemUnitMemOccupy(prMemPoolList,pUnitList,u4ReqSize,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_EQ);
+               u4UnitCnt = _FBMMemUnitCount(pUnitList, 0, MEMUNIT_SEARCH_TYPE_AND);
+               pUnitList += u4UnitCnt;
+               u4ReqSize -= u4HaveSize;
+           }
+       }
+       
+       if(u4ReqSize > 0)
+       {
+           if(_FBMMemUnitFreeSize(prMemPoolList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR) > 0)//  use common mem secondly
+           {
+               u4HaveSize = _FBMMemUnitMemOccupy(prMemPoolList,pUnitList,u4ReqSize,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
+               u4UnitCnt = _FBMMemUnitCount(pUnitList, 0, MEMUNIT_SEARCH_TYPE_AND);
+               pUnitList += u4UnitCnt;
+               u4ReqSize -= u4HaveSize;
+           }
+       }
+       
+       if(u4ReqSize > 0)  // both special  and common memory not enough.
+       {
+           if(((1 << u4Idx) != FBM_MEMUNIT_USETYPE_WORK) || pFbg->fgAdjustWorkBuf == FALSE)
+           {
+               u4ReqSize =  _FbmMemUnitMemParam(pFbg, NULL, NULL, (1 << u4Idx), TRUE);
+               u4HaveSize = _FBMMemUnitFreeSize(prMemPoolList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
+               u4HaveSize += _FBMMemUnitFreeSize(prMemUnitList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
+               LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) 0x%x Memory alloc fail(0x%x/0x%x)\n",
+               pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize,(1 << u4Idx),u4HaveSize,u4ReqSize);
+               return FALSE;
+           }
+           else 
+           {
+               u4ReqSize =  _FbmMemUnitMemParam(pFbg, NULL, NULL, (1 << u4Idx), TRUE);
+               u4HaveSize = _FBMMemUnitFreeSize(prMemUnitList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
+               if(u4ReqSize > u4HaveSize)
+               {
+                   LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) workbuf maybe not enough (0x%x/0x%x)\n",
+                                 pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize, u4HaveSize,u4ReqSize);
+               }
+           }
+       }
+   }
+
+   return TRUE;
+}
+
+static UINT32 _FBMMemUnitFbMaxCnt(FBM_FBG_T *pFbg)
+{
+    UINT32 u4FbMaxCnt= 0;
+
+    switch (pFbg->u4VDecFmt)
+    {  
+        case FBM_VDEC_MPEG2:
+        {
+            u4FbMaxCnt = 6;      
+            if(pFbg->u1FbgAppMode == FBM_FBG_APP_MHP)
+            {
+                u4FbMaxCnt = 2;
+            }
+        }
+        break;
+        
+        case FBM_VDEC_H264:
+        case FBM_VDEC_H265:
+        {
+            if (pFbg->u1FbgAppMode == FBM_FBG_APP_SKYPE)
+            {
+                u4FbMaxCnt = 7;
+            }
+        }
+        break;
+        case FBM_VDEC_JPEG:
+        {
+            u4FbMaxCnt = 4; 
+        }
+        break;
+        case FBM_VDEC_VC1:
+        {
+            u4FbMaxCnt = 5;
+        }
+        break;
+        case FBM_VDEC_RV:
+        {
+            u4FbMaxCnt = 6;
+        }
+        break;
+        case FBM_VDEC_VP6:
+        {
+            u4FbMaxCnt = 5;
+        }
+        break;
+        case FBM_VDEC_VP8:
+        {
+            u4FbMaxCnt = 6;
+        }
+        break;
+        case FBM_VDEC_MPEG4:
+        {
+            u4FbMaxCnt = 6;
+        }
+        break;
+        case FBM_VDEC_VP9:
+        {
+            u4FbMaxCnt = 11;
+        }
+        break;
+        case FBM_VDEC_AVS:
+        {
+            u4FbMaxCnt = 5;
+        }
+        break;		
+        default:
+        {
+            u4FbMaxCnt = 0;
+        }
+        break;
+    }
+    return u4FbMaxCnt;
+}
+
+static UINT32 _FBMMemUnitCalculateFbCount(FBM_FBG_T *pFbg,FBM_MEMUNIT *prMemPoolList)
+{
+    UINT32 u4YCnt,u4CCnt,u4FbCnt=0,u4MvCnt=0;
+    UINT32 u4YMemSize,u4CMemSize,u4OverlapSize,u4TotalSize;
+    UINT32 u4NeedSize,u4ExtBufFlag;
+
+    u4ExtBufFlag = _FbmMemUnitExtenBufFlag(pFbg);
+    u4TotalSize = _FBMMemUnitFreeSize(prMemPoolList, 0, MEMUNIT_SEARCH_TYPE_AND);
+    u4YMemSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_Y,MEMUNIT_SEARCH_TYPE_EQ);
+    u4CMemSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_C,MEMUNIT_SEARCH_TYPE_EQ);
+    u4OverlapSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_YC,MEMUNIT_SEARCH_TYPE_OR);
+
+    u4YCnt = u4YMemSize/pFbg->u4YSize;
+    u4CCnt = u4CMemSize/pFbg->u4CSize;
+    u4FbCnt = u4YCnt > u4CCnt ? u4CCnt : u4YCnt;
+    u4FbCnt += u4OverlapSize/(pFbg->u4YSize + pFbg->u4CSize);
+    pFbg->u4FbCnt = u4FbCnt;
+    pFbg->fgAdjustWorkBuf = FALSE;
+    u4NeedSize = _FbmMemUnitMemParam(pFbg, &u4NeedSize, NULL, FBM_MEMUNIT_USETYPE_ALL, TRUE);
+    LOG(1,"CalculateFbCount Fbg=%d, TotalMemory=0x%x,NeedMemory=0x%x, FbCnt=%d Before Adjust\n",\
+        pFbg->ucFbgId, u4TotalSize, u4NeedSize, pFbg->u4FbCnt);
+
+#if 0
+    while(u4NeedSize > u4TotalSize && pFbg->u4FbCnt > 0)
+    {
+        pFbg->u4FbCnt--;
+        u4NeedSize = _FbmMemUnitMemParam(pFbg, &u4NeedSize, NULL, FBM_MEMUNIT_USETYPE_ALL, TRUE);
+    }
+#else
+    {
+        FBM_MEMUNIT *pPoolList, *pUnitList;
+        pPoolList = (FBM_MEMUNIT *) x_mem_alloc_virtual(sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
+        pUnitList = (FBM_MEMUNIT *) x_mem_alloc_virtual(sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
+        if(pPoolList == NULL || pUnitList == NULL)
+        {
+            pFbg->u4FbCnt = 0;
+            LOG(0,"_FBMMemUnitCalculateFbCount(fbg:%d) alloc FBM_MEMUNIT memory fail\n", pFbg->ucFbgId);
+            return 0;
+        }
+        
+        while(pFbg->u4FbCnt > 0)
+        {
+            x_memset(pPoolList,0,sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
+            x_memset(pUnitList,0,sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
+            _FBMMemUnitAppend(pPoolList,prMemPoolList,TRUE);
+            if(_FbmMemUnitCreateUnitList(pFbg,pPoolList,pUnitList)) // only check memory enought or not
+            {
+               break;
+            }
+            else
+            {
+                pFbg->u4FbCnt --;
+            }
+        }
+        
+        x_mem_free(pPoolList);
+        x_mem_free(pUnitList);
+    }
+#endif
+
+    LOG(1,"CalculateFbCount Fbg=%d, TotalMemory=0x%x,NeedMemory=%d, FbCnt=%d After Adjust\n",\
+        pFbg->ucFbgId, u4TotalSize, u4NeedSize, pFbg->u4FbCnt);
+
+    u4FbCnt = _FBMMemUnitFbMaxCnt(pFbg);
+
+    if(u4FbCnt != 0)
+    {
+        if(pFbg->u4FbCnt > u4FbCnt)
+        {
+            LOG(1,"CalculateFbCount Fbg=%d, FbCnt %d change to %d for codec %d\n",
+                pFbg->ucFbgId, pFbg->u4FbCnt, u4FbCnt, pFbg->u4VDecFmt);
+        }
+        else if(pFbg->u4FbCnt < u4FbCnt)
+        {
+           LOG(0,"CalculateFbCount Fbg=%d,EsId=%d,Codec=%d,Width=%d,Height=%d,Fb(%d<%d) Fail !!!!!\n",
+            pFbg->ucFbgId,pFbg->u1DecoderSrcId,pFbg->u4VDecFmt,pFbg->u4FbWidth, pFbg->u4FbHeight,pFbg->u4FbCnt,u4FbCnt);
+           pFbg->u4FbCnt = 0;
+        }
+    }
+    
+    if(pFbg->u4FbCnt > (FBM_MAX_FB_NS_PER_GROUP/2)-1)
+    {
+        pFbg->u4FbCnt = (FBM_MAX_FB_NS_PER_GROUP/2)-1;
+        LOG(1,"CalculateFbCount Fbg=%d, FbCnt Cnage to %d by group limit\n", pFbg->ucFbgId, pFbg->u4FbCnt);
+    }
+
+    _FbmMemUnitMemParam(pFbg, NULL, &u4MvCnt, FBM_MEMUNIT_USETYPE_MV, FALSE);
+    pFbg->ucMvBufNs = u4MvCnt;
+    LOG(1,"CalculateFbCount Fbg %d, MvCnt=%d\n", pFbg->ucFbgId,pFbg->ucMvBufNs);
+    return pFbg->u4FbCnt;
+}
+
+static UINT32 _FBMMemUnitAllocMemory(FBM_MEMUNIT *prMemUnitList, UINT32 u4AllocSize,
+    UINT32 *pu4BaseAddr, UINT32 u4AllocCnt, UINT32 u4MemAlignment, UINT32 u4Flag)
+{
+    FBM_MEMUNIT *pMemUnit = prMemUnitList;
+    UINT32 u4Addr, u4SearchFlag = MEMUNIT_SEARCH_TYPE_EQ; // default use special memory.
+    UINT32 u4Index = 0;
+
+    while(u4Index < u4AllocCnt)
+    {
+        pMemUnit = _FBMMemUnitMemSearch(pMemUnit,u4AllocSize,u4Flag,u4SearchFlag);
+        if(pMemUnit)
+        {
+            u4Addr = FBM_ALIGN_MASK(pMemUnit->u4UsedAddr,u4MemAlignment);
+            if(u4Addr + u4AllocSize > pMemUnit->u4EndAddr)
+            {
+                LOG(0,"_FBMMemUnitAllocMemory(%d/%d,0x%x) 0x%x out range (0x%x--0x%x) try next unit\n",
+                    u4Index,u4AllocCnt,u4Flag,u4Addr + u4AllocSize,pMemUnit->u4StartAddr,pMemUnit->u4EndAddr);
+                pMemUnit ++; // try next
+            }
+            else
+            {
+                pu4BaseAddr[u4Index] = u4Addr;
+                pMemUnit->u4UsedAddr = u4Addr + u4AllocSize;
+                u4Index ++;
+            }
+        }
+        else
+        {
+            if(u4SearchFlag == MEMUNIT_SEARCH_TYPE_EQ)
+            {
+                u4SearchFlag = MEMUNIT_SEARCH_TYPE_OR; // if special memory not enough, use common memory.
+                pMemUnit = prMemUnitList;
+            }
+            else  // common memory also enough, return
+            {
+                if(u4Index == 0)
+                {
+                    LOG(1,"_FBMAllocFromMemUnit No Memory Unit for 0x%x,Size\n",u4Flag);
+                }
+                else
+                {
+                    LOG(1,"_FBMAllocFromMemUnit(%d,0x%x) no enough\n",u4Index,u4Flag);
+                }
+                break;
+            }
+        }
+    }
+    
+    return u4Index;
+}
+
+static BOOL _FbmMemUnitAssignFbgMemory(FBM_FBG_T *pFbg,FBM_MEMUNIT *prMemUnitList,
+    UINT8 ucBaseIdx, UINT32 u4AssignCnt,UINT32 u4AssignFlag)
+{
+    UINT32 u4AllocCnt=0,u4MemSize =0,u4MemCnt= 0,u4FbIdx=0;
+    
+    // Assign Y memory;    
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_Y)
+    {
+        u4MemSize = pFbg->u4YSize;
+        if(u4AssignCnt > pFbg->u4FbCnt || (ucBaseIdx + u4AssignCnt) > FBM_MAX_FB_NS_PER_GROUP)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc Y Count (%d,%d,%d) Error\n",pFbg->ucFbgId,ucBaseIdx,u4AssignCnt,pFbg->u4FbCnt);
+            return FALSE;
+        }
+        else if(u4AssignCnt != 0)
+        {
+            u4MemCnt = u4AssignCnt;
+        }
+        else  // u4AssignCnt is 0
+        {
+            u4MemCnt = pFbg->u4FbCnt;
+        }
+        
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList,u4MemSize,pFbg->au4AddrY + ucBaseIdx,
+            u4MemCnt,FBM_FMG_Y_ALIGMENT,FBM_MEMUNIT_USETYPE_Y);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc Y error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+
+        for(u4FbIdx = ucBaseIdx; u4FbIdx < ucBaseIdx + u4MemCnt; u4FbIdx++)
+        {
+            pFbg->au4SizeY[u4FbIdx] = u4MemSize;
+        }
+    }
+    
+    // Assign C memory;
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_C)
+    {
+        u4MemSize = pFbg->u4CSize;
+        
+        if(u4AssignCnt > pFbg->u4FbCnt || (ucBaseIdx + u4AssignCnt) > FBM_MAX_FB_NS_PER_GROUP)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc C Count (%d,%d,%d) Error\n",pFbg->ucFbgId,ucBaseIdx,u4AssignCnt,pFbg->u4FbCnt);
+            return FALSE;
+        }
+        else if(u4AssignCnt != 0)
+        {
+            u4MemCnt = u4AssignCnt;
+        }
+        else  // u4AssignCnt is 0
+        {
+            u4MemCnt = pFbg->u4FbCnt;
+        }
+
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList,u4MemSize,pFbg->au4AddrC + ucBaseIdx,
+            u4MemCnt,FBM_FMG_Y_ALIGMENT,FBM_MEMUNIT_USETYPE_C);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc Cbcr error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+
+        for(u4FbIdx = ucBaseIdx; u4FbIdx < ucBaseIdx + u4MemCnt; u4FbIdx++)
+        {
+            pFbg->au4SizeC[u4FbIdx] = u4MemSize;
+        }
+        
+    }
+    
+    // Assign Ext memory;
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_EXT)
+    {
+        u4MemSize = pFbg->u4YSize>>8;
+        
+        if(u4AssignCnt > pFbg->u4FbCnt || (ucBaseIdx + u4AssignCnt) > FBM_MAX_FB_NS_PER_GROUP)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc Y Count (%d,%d,%d) Error\n",pFbg->ucFbgId,ucBaseIdx,u4AssignCnt,pFbg->u4FbCnt);
+            return FALSE;
+        }
+        else if(u4AssignCnt != 0)
+        {
+            u4MemCnt = u4AssignCnt;
+        }
+        else  // u4AssignCnt is 0
+        {
+            u4MemCnt = pFbg->u4FbCnt;
+        }
+
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, pFbg->au4AddrY_Ext + ucBaseIdx,
+            u4MemCnt,FBM_FMG_Y_ALIGMENT,FBM_MEMUNIT_USETYPE_EXT);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc ExtY error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+        
+        u4MemSize = pFbg->u4CSize>>8;
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, pFbg->au4AddrC_Ext + ucBaseIdx,
+            u4MemCnt,FBM_FMG_Y_ALIGMENT,FBM_MEMUNIT_USETYPE_EXT);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc ExtC error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+    }
+
+    // Assign MV memory;
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_MV)
+    {
+
+        _FbmMemUnitMemParam(pFbg,&u4MemSize,&u4MemCnt,FBM_MEMUNIT_USETYPE_MV,FALSE);
+        if(u4AssignCnt != 0 && u4AssignCnt<u4MemCnt)
+        {
+            u4MemCnt = u4AssignCnt;
+        }
+        
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, pFbg->au4AddrMv, u4MemCnt,FBM_B2R_H_PITCH, FBM_MEMUNIT_USETYPE_MV);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc MV error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+    }
+
+    // Assign MV memory;
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_CABAC)
+    {        
+        _FbmMemUnitMemParam(pFbg,&u4MemSize,&u4MemCnt,FBM_MEMUNIT_USETYPE_CABAC,FALSE);
+        if(u4AssignCnt != 0 && u4AssignCnt<u4MemCnt)
+        {
+            u4MemCnt = u4AssignCnt;
+        }
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, pFbg->au4AddrCabac,u4MemCnt, FBM_B2R_H_PITCH, FBM_MEMUNIT_USETYPE_CABAC);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc cabac error (%d/%d)\n",pFbg->ucFbgId,u4AllocCnt,u4MemCnt);
+            return FALSE;
+        }
+    }
+
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_RPR)
+    {
+        u4MemCnt = 1;
+        
+        u4MemSize = FBM_FBG_TYPE_PAL_Y_SIZE;
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, &pFbg->u4ExtraYBuffer, u4MemCnt, FBM_B2R_H_PITCH, FBM_MEMUNIT_USETYPE_RPR);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc RPR_Y error \n",pFbg->ucFbgId);
+            return FALSE;
+        }
+
+        u4MemSize = FBM_FBG_TYPE_PAL_C_SIZE;
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, &pFbg->u4ExtraCBuffer, u4MemCnt, FBM_B2R_H_PITCH, FBM_MEMUNIT_USETYPE_RPR);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc RPR_C error\n",pFbg->ucFbgId);
+            return FALSE;
+        }
+
+        u4MemSize = ((FBM_FBG_TYPE_PAL_Y_SIZE+FBM_FBG_TYPE_PAL_C_SIZE)<<1);
+        u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, &pFbg->u4RPRSeamlessBuffer, u4MemCnt, FBM_B2R_H_PITCH, FBM_MEMUNIT_USETYPE_RPR);
+        if(u4AllocCnt != u4MemCnt)
+        {
+            LOG(0,"_FbmAssignFbMemory Fbg%d Alloc RPR_Seamless error\n",pFbg->ucFbgId);
+            return FALSE;
+        }
+    }
+
+    if(u4AssignFlag & FBM_MEMUNIT_USETYPE_WORK)
+    {
+         UINT32 u4RemainSize;
+         //u4MemSize = _FbmMemUnitMemParam(pFbg, NULL, NULL, FBM_MEMUNIT_USETYPE_WORK, TRUE);
+         u4RemainSize = _FBMMemUnitFreeSize(prMemUnitList,FBM_MEMUNIT_USETYPE_WORK,MEMUNIT_SEARCH_TYPE_OR);
+         u4MemSize =   u4RemainSize - (FBM_FMG_Y_ALIGMENT+1);
+         u4MemCnt = 1;
+         u4AllocCnt = _FBMMemUnitAllocMemory(prMemUnitList, u4MemSize, &pFbg->u4Workbuffer, u4MemCnt, FBM_FMG_Y_ALIGMENT, FBM_MEMUNIT_USETYPE_WORK);
+         if(u4AllocCnt != u4MemCnt)
+         {
+             LOG(0,"_FbmAssignFbMemory Fbg%d Alloc Workbuffer error\n",pFbg->ucFbgId);
+             return FALSE;
+         }
+         pFbg->u4WorkBufSize = u4MemSize;
+    }
+    
+    return TRUE;
+}
+
+static void _FbmMemUnitSpecialSetting(FBM_FBG_T *pFbg)
+{
+    pFbg->au4MiscTblStartAddr =  pFbg->u4Workbuffer;
+    if(pFbg->au4AddrMv[0] == 0)
+    {
+        pFbg->au4AddrMv[0] = pFbg->u4Workbuffer;
+    }
+    
+    return;
+}
+
+extern VOID FBM_FbMemReset(UCHAR ucFbgId,UCHAR ucFbId);
+static BOOL _FbmFbMemOverlap(UCHAR ucFbgId,UCHAR ucFbIdA, UCHAR ucFbIdB)
+{
+    FBM_FBG_T *pFbg = &_prFbg[ucFbgId];
+    UINT32 u4AddrA,u4AddrB,u4SizeA,u4SizeB;
+    BOOL fgOverlap = FALSE;
+
+    // Y-Y overlap check
+    u4AddrA = pFbg->au4AddrY[ucFbIdA];
+    u4SizeA = pFbg->au4SizeY[ucFbIdA];
+    u4AddrB = pFbg->au4AddrY[ucFbIdB];
+    u4SizeB = pFbg->au4SizeY[ucFbIdB];
+    
+    if(((u4AddrA >= u4AddrB) && (u4AddrA < u4AddrB + u4SizeB))
+        || ((u4AddrB >= u4AddrA) && (u4AddrB < u4AddrA + u4SizeA)))
+    {
+        fgOverlap = TRUE;
+    }
+
+    // C-C overlap check
+    u4AddrA = pFbg->au4AddrC[ucFbIdA];
+    u4SizeA = pFbg->au4SizeC[ucFbIdA];
+    u4AddrB = pFbg->au4AddrC[ucFbIdB];
+    u4SizeB = pFbg->au4SizeC[ucFbIdB];
+    
+    if(((u4AddrA >= u4AddrB) && (u4AddrA < u4AddrB + u4SizeB))
+        || ((u4AddrB >= u4AddrA) && (u4AddrB < u4AddrA + u4SizeA)))
+    {
+        fgOverlap = TRUE;
+    }
+
+    // Y-C overlap check
+    u4AddrA = pFbg->au4AddrY[ucFbIdA];
+    u4SizeA = pFbg->au4SizeY[ucFbIdA];
+    u4AddrB = pFbg->au4AddrC[ucFbIdB];
+    u4SizeB = pFbg->au4SizeC[ucFbIdB];
+
+    if(((u4AddrA >= u4AddrB) && (u4AddrA < u4AddrB + u4SizeB))
+        || ((u4AddrB >= u4AddrA) && (u4AddrB < u4AddrA + u4SizeA)))
+    {
+        fgOverlap = TRUE;
+    }
+
+    // C-Y overlap check
+    u4AddrA = pFbg->au4AddrC[ucFbIdA];
+    u4SizeA = pFbg->au4SizeC[ucFbIdA];
+    u4AddrB = pFbg->au4AddrY[ucFbIdB];
+    u4SizeB = pFbg->au4SizeY[ucFbIdB];
+    
+    if(((u4AddrA >= u4AddrB) && (u4AddrA < u4AddrB + u4SizeB))
+        || ((u4AddrB >= u4AddrA) && (u4AddrB < u4AddrA + u4SizeA)))
+    {
+        fgOverlap = TRUE;
+    }
+
+    return fgOverlap;
+}
+
+static UCHAR _FbmSyncWaitUseFb(UCHAR ucFbgId)
+{
+   FBM_FBG_T *pFbg = &_prFbg[ucFbgId];
+   UCHAR ucSyncCnt = 0, ucWaitSyncCnt=0, ucFbIdx=0,ucWaitFbId=0;
+   BOOL fgOverLap= FALSE;
+   while(ucWaitFbId < FBM_MAX_FB_NS_PER_GROUP)
+   {
+       if(pFbg->aucFbRotationStatus[ucWaitFbId] == FB_ROTATION_WAIT_USE)
+       {
+          fgOverLap = FALSE;
+          ucWaitSyncCnt++;
+
+          for(ucFbIdx = 0; ucFbIdx < FBM_MAX_FB_NS_PER_GROUP; ucFbIdx++)
+          {
+              if(pFbg->aucFbRotationStatus[ucFbIdx] == FB_ROTATION_WAIT_UNUSE)
+              {
+                   if(_FbmFbMemOverlap(ucFbgId,ucWaitFbId,ucFbIdx))
+                   {
+                      fgOverLap = TRUE;
+                      break;
+                   }
+              }
+          }
+
+          if(fgOverLap == FALSE)
+          {
+              if(pFbg->u4VDecFmt == FBM_VDEC_MPEG2 || pFbg->u4VDecFmt == FBM_VDEC_MPEG4
+                   || pFbg->u4VDecFmt == FBM_VDEC_VC1 || pFbg->u4VDecFmt == FBM_VDEC_RV);
+              {
+                   VERIFY(_FBM_csema_unlock(&pFbg->hEmptyBQSemaphore) == OSR_OK);
+              }
+              
+              pFbg->afgRefList[ucWaitFbId] = FALSE;
+              pFbg->afgWaitDisplay[ucWaitFbId] =FALSE;
+              pFbg->aucFbStatus[ucWaitFbId] = FBM_FB_STATUS_EMPTY;
+              pFbg->aucFbRotationStatus[ucWaitFbId] = FB_ROTATION_USE;
+              //FBM_FbMemReset(pFbg->ucFbgId,ucWaitFbId);
+              _FBM_PutFrameBufferToEmptyQ(pFbg->ucFbgId,ucWaitFbId);
+              ucSyncCnt++;
+          }
+          
+       }
+       ucWaitFbId ++;
+   }
+
+   if(ucSyncCnt > 0)
+   {
+       LOG(2,"_FbmSyncWaitUseFb(Fb=%d,Synced=%d,UnSynced=%d, Total=%d)\n",
+        pFbg->ucFbgId,ucSyncCnt,ucWaitSyncCnt - ucSyncCnt, pFbg->u4FbCnt);
+   }
+   
+   return ucSyncCnt;
+}
+
+static UINT32 _FBM_GetDefaultExternDataSize(UCHAR ucFbgId)
+{
+    FBM_FBG_T *pFbg;
+    UINT32 u4YSize, u4CSize, u4FbWidth,u4FbHeight, u4FbCnt, u4MvCnt,ExternSize;
+    pFbg = &_prFbg[ucFbgId];
+
+    u4YSize = pFbg->u4YSize;
+    u4CSize = pFbg->u4CSize;
+    u4FbWidth = pFbg->u4FbWidth;
+    u4FbHeight = pFbg->u4FbHeight;
+    u4FbCnt = pFbg->u4FbCnt;
+
+   u4MvCnt = pFbg->ucMvBufNs;
+
+    pFbg->u4FbCnt = FBM_MEMUNIT_DEFAULT_EXTERNDATA_FBCNT;
+    _FbmCalculateYCSize(pFbg,FBM_MEMUNIT_FRAME_MAX_WIDTH,FBM_MEMUNIT_FRAME_MAX_HEIGHT);
+    ExternSize = _FbmMemUnitMemParam(pFbg, NULL, NULL, _FbmMemUnitExtenBufFlag(pFbg), TRUE);
+    
+    pFbg->u4YSize = u4YSize;
+    pFbg->u4CSize = u4CSize;
+    pFbg->u4FbWidth = u4FbWidth;
+    pFbg->u4FbHeight = u4FbHeight;
+    pFbg->u4FbCnt = u4FbCnt;
+    pFbg->ucMvBufNs= (UCHAR)u4MvCnt;
+    
+    return ExternSize;
+}
+
+VOID _FbmMemUnitAllocMemPool(UCHAR ucFbgId ,FBM_MEMUNIT *prMemPoolList)
+{   
+    FBM_FBG_T *pFbg;
+    UINT32 u4ExtenTotalSize =0;
+    pFbg = &_prFbg[ucFbgId];
+    
+#ifdef FBM_MEMUNIT_SEPARATE_EXTERNDATA
+    u4ExtenTotalSize = _FBM_GetDefaultExternDataSize(ucFbgId);
+    prMemPoolList[0].u4StartAddr = pFbg->u4FbMemoryPool;
+    prMemPoolList[0].u4UsedAddr  = pFbg->u4FbMemoryPool;
+    prMemPoolList[0].u4EndAddr   = pFbg->u4FbMemoryPool + pFbg->u4FbMemoryPoolSize - u4ExtenTotalSize;
+    prMemPoolList[0].u4Flag      = FBM_MEMUNIT_USETYPE_YC;
+
+    prMemPoolList[1].u4StartAddr = prMemPoolList[0].u4EndAddr;
+    prMemPoolList[1].u4UsedAddr  = prMemPoolList[0].u4EndAddr;
+    prMemPoolList[1].u4EndAddr   = pFbg->u4FbMemoryPool + pFbg->u4FbMemoryPoolSize;
+    prMemPoolList[1].u4Flag      = FBM_MEMUNIT_USETYPE_ALLEXTEN;
+#else
+    prMemPoolList[0].u4StartAddr = pFbg->u4FbMemoryPool;
+    prMemPoolList[0].u4UsedAddr  = pFbg->u4FbMemoryPool;
+    prMemPoolList[0].u4EndAddr   = pFbg->u4FbMemoryPool + pFbg->u4FbMemoryPoolSize;
+    prMemPoolList[0].u4Flag      = FBM_MEMUNIT_USETYPE_ALL;
+
+    prMemPoolList[1].u4Flag = 0;
+    prMemPoolList[1].u4StartAddr = 0;
+#endif
+
+    return;
+}
+
+UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
+{
+    FBM_FBG_T *pFbg;
+    UINT32 u4ExternDataSize = 0, u4PoolSize;
+    pFbg = &_prFbg[ucFbgId];
+    u4ExternDataSize = _FBM_GetDefaultExternDataSize(ucFbgId);
+    u4PoolSize = pFbg->u4FbMemoryPoolSize;
+    _FbmCalculateYCSize(pFbg, u4Width, u4Height);
+    
+    LOG(1,"Fbg:%d AllocDefaaultExternData size 0x%x, poolsize =0x%x\n",ucFbgId,u4ExternDataSize,pFbg->u4FbMemoryPoolSize);
+    
+    if(u4PoolSize < u4ExternDataSize)
+    {
+        u4ExternDataSize = 0;
+        LOG(0,"AllocDefaaultExternData no enough data !!!!");
+    }
+    else
+    {
+        u4PoolSize -= u4ExternDataSize;
+    }
+
+    pFbg->u4FbCnt = FBM_MAX_FB_NS_PER_GROUP;//u4PoolSize/(pFbg->u4YSize + pFbg->u4CSize);
+
+    do
+    {
+       if(_FbmMemUnitMemParam(pFbg,NULL, NULL, _FbmMemUnitExtenBufFlag(pFbg),TRUE) > u4ExternDataSize)
+       {
+           pFbg->u4FbCnt --;
+       }
+       else
+       {
+           break;
+       }
+       
+    } while(pFbg->u4FbCnt > 0);
+
+    pFbg->ucMvBufNs  = pFbg->u4FbCnt;
+    pFbg->u4FbCnt = u4PoolSize/(pFbg->u4YSize + pFbg->u4CSize);
+    LOG(1,"AllocDefaaultExternData(Fbg:%d, FbCnt=%d, MvCnt=%d,TotalExtSize=0x%x\n",
+        pFbg->ucFbgId, pFbg->u4FbCnt,pFbg->ucMvBufNs,u4ExternDataSize);
+    
+    return u4ExternDataSize;
+}
+
+BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
+{
+    FBM_FBG_T *pFbg;
+    UINT8  ucIdx = 0,ucFbCnt = 0,ucFbId=0,ucLoopCnt=0;
+    FBM_MEMUNIT arMemPoolList[FBM_MEMUNIT_LIST_MAX];
+    FBM_MEMUNIT arMemUnitList[FBM_MEMUNIT_LIST_MAX];
+    if(VERIFY_FBG(ucFbgId))
+    {
+        return FALSE;
+    }
+    
+    pFbg = &_prFbg[ucFbgId];
+    x_memset(arMemPoolList,0,sizeof(arMemPoolList));
+    x_memset(arMemUnitList,0,sizeof(arMemUnitList));
+    FBM_MUTEX_LOCK(ucFbgId);
+
+    LOG(0,"FBM_FbgRemap(Fbg:%d,Pool(0x%x+0x%x),Fmt:%d,10Bit:%d,Ufo:%d,App:%d) ->(%d x %d) Start\n",
+    pFbg->ucFbgId,pFbg->u4FbMemoryPool,pFbg->u4FbMemoryPoolSize,pFbg->u4VDecFmt,
+    pFbg->fg10Bit,pFbg->fgUFO,pFbg->u1FbgAppMode, u4Width,u4Height);
+    
+    _FbmMemUnitAllocMemPool(pFbg->ucFbgId,arMemPoolList);
+    _FbmMemUnitPrint(arMemPoolList,"MemPool Infor");
+    _FbmCalculateYCSize(pFbg,u4Width,u4Height);
+    _FBMMemUnitCalculateFbCount(pFbg,arMemPoolList);
+    
+    LOG(0,"FBM_FbgRemap(Fbg:%d,Width:%d,Height:%d,FbWidht:%d,FbHeight:%d,YSize:0x%x,CSize:0x%x,FbCnt:%d MvCnt:%d\n",
+        pFbg->ucFbgId, u4Width,u4Height,pFbg->u4FbWidth,pFbg->u4FbHeight,pFbg->u4YSize,
+        pFbg->u4CSize,pFbg->u4FbCnt,pFbg->ucMvBufNs);
+    
+    if(pFbg->u4FbCnt == 0)
+    {
+         LOG(0,"_FBM_FbgRemap(Fbg:%d) Frame buffer calculate fbg cnt error fbg adjust fail\n",pFbg->ucFbgId);
+         FBM_MUTEX_UNLOCK(ucFbgId);
+         return FALSE;
+    }
+    
+    pFbg->fgAdjustWorkBuf = TRUE;
+    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList);
+    
+    _FbmMemUnitPrint(arMemPoolList,"MemPool Infor After Occupy");
+    _FbmMemUnitPrint(arMemUnitList,"MemList Infor");
+    
+    for(ucIdx=0; ucIdx<FBM_MAX_FB_NS_PER_GROUP; ucIdx++)
+    {
+        if(pFbg->aucFbRotationStatus[ucIdx] == FB_ROTATION_USE)
+        {
+            pFbg->aucFbRotationStatus[ucIdx] = FB_ROTATION_WAIT_UNUSE;
+        }
+
+        if(pFbg->aucFbRotationStatus[ucIdx] == FB_ROTATION_WAIT_USE)
+        {
+            pFbg->aucFbRotationStatus[ucIdx] = FB_ROTATION_UNUSE;
+        }
+    }
+
+    pFbg->ucFbNs = FBM_MAX_FB_NS_PER_GROUP;
+    pFbg->ucFbNsBase = 0;
+
+    ucFbCnt = 0;
+    ucLoopCnt =0;
+    FBM_SetFrameBufferFlag(ucFbgId,FBM_FLAG_GETEMPTY_NOWAIT);
+    do
+    {
+        ucFbId = FBM_GetEmptyFrameBuffer(ucFbgId,0);
+        if(ucFbId != FBM_FB_ID_UNKNOWN)
+        {
+            pFbg->aucFbRotationStatus[ucFbId] = FB_ROTATION_UNUSE;
+            pFbg->aucFbStatus[ucFbId] = FBM_FB_STATUS_EMPTY;
+            LOG(2,"_FBM_FbgRemap(fbg:%d) flush empyt fb:%d to UNUSE\n",ucFbgId,ucFbId);
+            ucFbCnt++;
+        }
+        else
+        { 
+            LOG(1,"_FBM_FbgRemap(fbg:%d) flush %d empyt Fbs to UNUSE\n",ucFbgId,ucFbCnt);
+            break;
+        }
+        
+        if(ucLoopCnt >=FBM_MAX_FB_NS_PER_GROUP)
+        {
+            LOG(0,"_FBM_FbgRemap(fbg:%d) flush emptyQ abnormal\n",ucFbgId);
+            break;
+        }
+        ucLoopCnt ++;
+    }while(1);
+    
+    FBM_ClrFrameBufferFlag(ucFbgId,FBM_FLAG_GETEMPTY_NOWAIT);
+
+    ucFbCnt = 0;
+    for(ucIdx=0; ucIdx < FBM_MAX_FB_NS_PER_GROUP ; ucIdx++)
+    {
+        if(pFbg->aucFbRotationStatus[ucIdx] == FB_ROTATION_UNUSE)
+        {
+            if(ucFbCnt < pFbg->u4FbCnt)
+            {
+                if(_FbmMemUnitAssignFbgMemory(pFbg,arMemUnitList,ucIdx,1,FBM_MEMUNIT_USETYPE_YC))
+                {
+                    pFbg->aucFbRotationStatus[ucIdx] = FB_ROTATION_WAIT_USE;
+                }
+                else
+                {
+                    LOG(0,"_FbmMemUnitAssignFbgMemory(fbg:%d,fbCnt:(%d/%d) )YC FAIL \n",pFbg->ucFbgId,ucFbCnt,pFbg->u4FbCnt);
+                    FBM_MUTEX_UNLOCK(ucFbgId);
+                    return FALSE;
+                }
+                ucFbCnt++;
+            }
+            else
+            {
+                 break;
+            }
+        }
+    }
+
+    if(ucFbCnt < pFbg->u4FbCnt && ucIdx == FBM_MAX_FB_NS_PER_GROUP)
+    {
+        LOG(0,"_FBM_FbgRemap(fbg:%d) abnormal,remap fail\n",ucFbgId);
+        FBM_MUTEX_UNLOCK(ucFbgId);
+        return FALSE;
+    }
+
+    if(_FbmMemUnitAssignFbgMemory(pFbg,arMemUnitList,0,0,_FbmMemUnitExtenBufFlag(pFbg)) == FALSE)
+    {
+        LOG(0,"_FbmMemUnitAssignFbgMemory(fbg:%d) Exten Data FAIL \n",pFbg->ucFbgId);
+        FBM_MUTEX_UNLOCK(ucFbgId);
+        return FALSE;
+    }
+    
+    _FbmMemUnitPrint(arMemUnitList,"MemList Infor After Occupy");
+    _FbmMemUnitSpecialSetting(pFbg);
+    ucFbCnt = _FbmSyncWaitUseFb(ucFbgId);
+    FBM_MUTEX_UNLOCK(ucFbgId);
+
+    LOG(0,"_FBM_FbgRemap(Fbg:%d,Use %d Fbs, Total Fb %d) Remap OK!!\n",ucFbgId, ucFbCnt, pFbg->u4FbCnt);
+    return TRUE;
+}
+
+static VOID _FbmMemUnitVerifyStart(UCHAR u4FbgId,UINT32 u4Widht,UINT32 u4Height,UINT32 u4FbCnt)
+{
+    static FBM_FBG_T *pFbg = NULL;
+    FBM_MEMUNIT arMemPoolList[FBM_MEMUNIT_LIST_MAX];
+    FBM_MEMUNIT arMemUnitList[FBM_MEMUNIT_LIST_MAX];
+    UINT8 ucIdx=0;
+    BOOL fgUseDefaultPool = FALSE;
+    if(pDefaultFbg == NULL)
+    {
+        pDefaultFbg = (FBM_FBG_T *)x_mem_alloc_virtual(sizeof(FBM_FBG_T));
+        if(pDefaultFbg == NULL)
+        {
+            Printf("FBG memalloc fail \n");
+            return;
+        }
+    }
+
+    pFbg = pDefaultFbg;
+    x_memcpy(pFbg,&_prFbg[u4FbgId],sizeof(FBM_FBG_T));
+    x_memset(arMemPoolList,0,sizeof(arMemPoolList));
+    x_memset(arMemUnitList,0,sizeof(arMemUnitList));
+
+    Printf("Fbg:%d,Pool(0x%x+0x%x),Fmt:%d,10Bit:%d,Ufo:%d,App:%d\n",
+        pFbg->ucFbgId,pFbg->u4FbMemoryPool,pFbg->u4FbMemoryPoolSize,pFbg->u4VDecFmt,
+        pFbg->fg10Bit,pFbg->fgUFO,pFbg->u1FbgAppMode);
+
+    for(ucIdx=0; ucIdx<FBM_MEMUNIT_LIST_MAX;ucIdx++)
+    {
+        if(arDefaultMemPoolList[ucIdx].u4StartAddr != 0)
+        {
+            _FBMMemUnitAppend(arMemPoolList,arDefaultMemPoolList+ucIdx, FALSE);
+            fgUseDefaultPool = TRUE;
+        }
+    }
+    
+    if(fgUseDefaultPool == FALSE)
+    {
+        _FbmMemUnitAllocMemPool(u4FbgId,arMemPoolList);
+    }
+    _FbmMemUnitPrint(arMemPoolList,"MemPoolInfo Before Occupy");
+
+    _FbmCalculateYCSize(pFbg,u4Widht,u4Height);
+
+    if(u4FbCnt != 0)
+    {
+        pFbg->u4FbCnt = u4FbCnt;
+    }
+    else
+    {
+        _FBMMemUnitCalculateFbCount(pFbg,arMemPoolList);
+        /*
+               pFbg->u4FbCnt = FBM_CalcBufNum(pFbg->ucFbgId,pFbg->ucFbgType, pFbg->u4VDecFmt,
+               u4Widht,u4Height,pFbg->u4FbMemoryPoolSize,pFbg->u4YSize,pFbg->u4CSize,pFbg->u1FbgAppMode,NULL);
+             */
+    }
+    
+    Printf("Width=0x%x,Height=0x%x,YSize=0x%x,CSize=0x%x,FbCnt=%d MvCnt=%d\n",
+        u4Widht,u4Height,pFbg->u4YSize,pFbg->u4CSize,pFbg->u4FbCnt,pFbg->ucMvBufNs);
+
+     if(pFbg->u4FbCnt == 0)
+     {
+         Printf("Frame buffer calculate fbg cnt error fbg adjust fail\n");
+         return ;
+     }
+     
+    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList);
+    _FbmMemUnitPrint(arMemPoolList,"MemPoolInfo After Occupy");
+    _FbmMemUnitPrint(arMemUnitList,"MemunitInfo Before Occupy");
+    _FbmMemUnitAssignFbgMemory(pFbg,arMemUnitList,0,0,_FbmMemUnitExtenBufFlag(pFbg)|(FBM_MEMUNIT_USETYPE_YC));
+    _FbmMemUnitPrint(arMemUnitList,"MemunitInfo After Occupy");
+    Printf("_FbmMemUnitTest done \n");
+}
+
+VOID _FbmMemUnitVerify(UCHAR ucType,UINT32 u4Param1, 
+    UINT32 u4Param2, UINT32 u4Param3, UINT32 u4Param4,UINT32 u4Param5,UINT32 u4Param6)
+{
+    UINT32 u4Flag,u4Idx;
+
+    Printf("_FbmMemUnitVerify(%d,0x%x,%0x%x,0x%x,%0x%x,0x%x,0x%x)\n",ucType,u4Param1,u4Param2,u4Param3,
+        u4Param4, u4Param5, u4Param6);
+    
+    if(ucType == 0)
+    {
+        _FbmMemUnitVerifyStart((UCHAR)u4Param1,u4Param2,u4Param3,u4Param4);
+    }
+    else if(ucType == 1)
+    {
+        u4DeFaultWorkFlag = u4Param1;
+        if(pDefaultFbg)
+        {
+            Printf("Currnet Flag=0x%x\n",_FbmMemUnitExtenBufFlag(pDefaultFbg));
+        }
+    }
+    else if(ucType == 2)
+    {
+        UCHAR ucSetType =(UCHAR )u4Param1;
+        UCHAR uPoolIdx = (UCHAR )u4Param2;
+        if(ucSetType == 0)
+        {
+            x_memset(arDefaultMemPoolList,0,sizeof(arDefaultMemPoolList));
+        }
+        else if(ucSetType == 1)
+        {
+            arDefaultMemPoolList[uPoolIdx].u4StartAddr = u4Param3;
+            arDefaultMemPoolList[uPoolIdx].u4EndAddr = u4Param4;
+            arDefaultMemPoolList[uPoolIdx].u4UsedAddr = u4Param5;
+            arDefaultMemPoolList[uPoolIdx].u4Flag = u4Param6;
+        }
+        else if(ucSetType == 100)
+        {
+            for(u4Idx=0; u4Idx<FBM_MEMUNIT_LIST_MAX;u4Idx++)
+            {
+                Printf("Defaul[%d] Start:0x%x, End:0x%x, Used:0x%x, u4Flag:0x%x\n",u4Idx,
+                 arDefaultMemPoolList[uPoolIdx].u4StartAddr,
+                 arDefaultMemPoolList[uPoolIdx].u4EndAddr,
+                 arDefaultMemPoolList[uPoolIdx].u4UsedAddr,
+                 arDefaultMemPoolList[uPoolIdx].u4Flag);
+            }
+        }
+    }
+    else if(ucType == 100)
+    {
+        if(pDefaultFbg == NULL)
+        {
+            return ;
+        }
+        
+        //_FbgStatus(pDefaultFbg);
+        u4Flag = _FbmMemUnitExtenBufFlag(pDefaultFbg);
+        if(u4Flag & FBM_MEMUNIT_USETYPE_EXT)
+        {
+            for(u4Idx=0;u4Idx < pDefaultFbg->u4FbCnt; u4Idx++)
+            {
+                Printf("Exter[%d]:Y=0x%x, C=0x%x\n",u4Idx, pDefaultFbg->u4ExtraYBuffer,pDefaultFbg->u4ExtraCBuffer);
+            }
+        }
+
+        if(u4Flag & FBM_MEMUNIT_USETYPE_MV)
+        {
+            for(u4Idx=0;u4Idx<pDefaultFbg->ucMvBufNs;u4Idx++)
+            {
+                Printf("MV[%d]=0x%x\n",u4Idx,pDefaultFbg->au4AddrMv[u4Idx]);
+            }
+        }
+
+        if(u4Flag & FBM_MEMUNIT_USETYPE_CABAC)
+        {
+            for(u4Idx=0;u4Idx<FBM_MAX_CABAC_BUF_NS_PER_GROUP;u4Idx++)
+            {
+                Printf("Cabac[%d]=0x%x\n",u4Idx,pDefaultFbg->au4AddrCabac[u4Idx]);
+            }
+        }
+        
+        if(u4Flag & FBM_MEMUNIT_USETYPE_RPR)
+        {
+            Printf("RPR: ExtY=0x%x, ExtC=0x%x,Seamless:0x%x\n",\
+                pDefaultFbg->u4ExtraYBuffer,pDefaultFbg->u4ExtraCBuffer,pDefaultFbg->u4RPRSeamlessBuffer);
+        }
+
+        if(u4Flag & FBM_MEMUNIT_USETYPE_WORK)
+        {
+            Printf("WorkBuffer: 0x%x, Size=0x%x\n",pDefaultFbg->u4Workbuffer,pDefaultFbg->u4WorkBufSize);
+        }
+
+    }
+}
+

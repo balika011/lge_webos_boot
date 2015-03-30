@@ -760,7 +760,7 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
     }
     else
     {
-        LOG(6, "%s(%d): fgEos\n", __FUNCTION__, __LINE__);
+        LOG(2, "%s(%d): fgEos\n", __FUNCTION__, __LINE__);
     }
 
     switch(prVdec->eFmt)
@@ -3629,7 +3629,7 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
         //x_memset(&rDmxMM, 0, sizeof(DMX_MM_T));
         //rDmxMM.fgSearchStartCode = FALSE;
         //fgRet = DMX_MM_Set(prVdec->u1DmxPid, DMX_MM_FLAG_SEARCH_START_CODE, &rDmxMM);
-        LOG(5, "vpush got fgEos\n");
+        LOG(2, "vpush got fgEos\n");
         prVdec->fgGotEos = TRUE;
     }
 	
@@ -5986,7 +5986,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     LOG(1,"[VPUSH]_VPUSH_AllocVideoDecoder %d\n",i);
 
     //FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
-    FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
+    //FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
 #ifdef CC_VDEC_RM_SUPPORT
     LOG(0,"Define Enable CC_VDEC_RM_SUPPORT\n");
 #endif

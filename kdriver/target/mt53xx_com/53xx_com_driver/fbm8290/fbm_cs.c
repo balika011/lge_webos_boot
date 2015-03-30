@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/03/30 $
  * $RCSfile: fbm_cs.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -370,7 +370,7 @@ INT32 _FBM_csema_lock(COUNTING_SEMAPHORE_T* prSemaphore, SEMA_OPTION_T e_options
                     // Get semaphore timeout, put it back
                     prSemaphore->i4Count++;
 
-                    LOG(3, "{CS} Timeout (%d)\n", prSemaphore->i4Count);
+                    LOG(3, "{CS} Timeout (%d) Op=%d,Dleay=%d\n", prSemaphore->i4Count,e_options,u4Time);
 
                     return OSR_TIMEOUT;
                 }
@@ -598,7 +598,7 @@ INT32 _FBM_csema_lock(COUNTING_SEMAPHORE_T* prSemaphore, SEMA_OPTION_T e_options
         {
             if (prSemaphore->i4Count == 0)
             {
-                LOG(3, "{CS} Timeout (%d)\n", prSemaphore->i4Count);
+                LOG(3, "{CS} Timeout (%d) Op=%d,Dleay=%d\n", prSemaphore->i4Count,e_options,u4Time);
 
 #ifdef FBM_CS_LOG
                 _FbmCsLog(8, prSemaphore->i4Count, prSemaphore->hBinary);

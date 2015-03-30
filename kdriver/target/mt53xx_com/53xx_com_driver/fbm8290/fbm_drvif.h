@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/28 $
+ * $Date: 2015/03/30 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #9 $
+ * $Revision: #10 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -404,6 +404,18 @@ typedef enum
 
 #define B2R_MAX_HEIGHT                  (2304)
 #define B2R_MAX_WIDTH                   (4096)
+
+
+// Maximum frame buffer number per frame buffer group
+#ifdef DEBUG_MAX_FB
+#define FBM_MAX_FB_NS_PER_GROUP		64//32
+#else
+//for H264
+//#define FBM_MAX_FB_NS_PER_GROUP     10
+//#define FBM_MAX_FB_NS_PER_GROUP     18
+#define FBM_MAX_FB_NS_PER_GROUP     44 //22
+#endif
+
 
 #ifdef CC_B2R_RM_SUPPORT
 
@@ -884,6 +896,7 @@ typedef struct
 #define FBM_FLAG_SEQ_CHG_SPEEDUP                                     (1 << 24)  // New Sequence header change, early notify start play to video path
 #define FBM_FLAG_THUMBNAIL_MODE                                      (1 << 25)  // New Thumbnail mode without VDP.
 #define FBM_FLAG_AUTO_RENDER                                         (1 << 26)  // FBG without render path, need auto consume dispQ FB.
+#define FBM_FLAG_GETEMPTY_NOWAIT                                     (1 << 27)  // FBG get Empty buffer not wait
 
 //Wfd Ajust STC Flag
 #define FBM_WFD_FRAME_MONITOR                                         (1 << 0)
@@ -1606,6 +1619,8 @@ EXTERN VOID FBM_ReleaseGroup(UCHAR ucFbgId);
 
 EXTERN VOID FBM_ResetGroup(UCHAR ucFbgId);
 
+EXTERN BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height);
+
 EXTERN UINT32 FBM_CalcBufNum(UCHAR ucFbgId, UCHAR ucFbgType, UINT32 u4VDecFmt, UINT32 u4Width, UINT32 u4Height,
     UINT32 u4PoolSize, UINT32 u4YSize, UINT32 u4CSize, UINT8 u1AppMode, UINT32* pu4ExtFbNs);
 
@@ -1893,6 +1908,7 @@ EXTERN BOOL FBM_FreeFixedImgRzBuffer(UINT32 u4AddrY, UINT32 u4AddrC);
 EXTERN void FBM_SetPtsSync(UCHAR ucFbgId,BOOL fgAvsync);
 EXTERN BOOL FBM_GetPtsSync(UCHAR ucFbgId);
 EXTERN BOOL  FBM_FbgValid(UCHAR ucFbgId);
+EXTERN BOOL FBM_FbValid(UCHAR ucFbgId,UCHAR ucFbId);
 EXTERN BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery);
 
 #ifdef CC_B2R_RES_SUPPORT
