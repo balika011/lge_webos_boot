@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/29 $
+ * $Date: 2015/03/30 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -212,6 +212,8 @@ static BOOL _fgForceStopMixSndDma = FALSE;
 static HANDLE_T _hAudFeedMixSndThread = NULL_HANDLE;
 //static HANDLE_T _hAudFeedAlsaMixSndThread = NULL_HANDLE;
 UINT32 u4AudMixSndDbgMsk = 0;
+UINT8 u1SrcStreamId = 0;
+
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
 //parson mixsnd
@@ -2252,6 +2254,12 @@ void AUD_PlayMixSndRingFifo(UINT8 u1StreamId, UINT32 u4SampleRate, UINT8 u1Stere
       }
 
     AUD_StopMixSndRingFifo(u1StreamId);
+    if(u4SampleRate == 8000)
+    {
+        u4AudMixSndDbgMsk = 1;
+        u1SrcStreamId =  u1StreamId ;
+    }
+    
     if (_hAudFeedMixSndThread)
     {
         if (u1StreamId < MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA)
@@ -2522,6 +2530,10 @@ EXPORT_SYMBOL(AUD_InitALSAPlayback_MixSnd);
 
 void AUD_DeInitALSAPlayback_MixSnd(UINT8 u1StreamId)
 {
+        if((u4AudMixSndDbgMsk == 1) && (u1SrcStreamId == u1StreamId))
+        {
+            u4AudMixSndDbgMsk =0;
+        }
 #ifdef ALSA_MIXSND_PATH
     AUD_StopMixSndRingFifo(u1StreamId);
 #else
