@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/03/31 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -316,6 +316,7 @@ typedef struct
 
 AUD_MIXSND_STREAM_TYPE_T _rAudMixSndStream[MAX_AUD_MIXSND_STREAM_NUM];
 AUD_MIXSND_CLIP_TYPE_T _rAudMixSndClip[MAX_AUD_MIXSND_STREAM_NUM][MAX_AUD_MIXSND_CLIP_NUM];
+UINT32 u4PcmFifoBufSize[MAX_AUD_MIXSND_STREAM_NUM_FOR_ALSA] = {0};
 
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
@@ -2403,11 +2404,9 @@ UINT32 AUD_GetMixSndRingFifoRenderSize(UINT8 u1StreamId)
 }
 #endif //CC_AUD_DDI
 
-UINT32 u4PcmFifoBufSize = 0;
-
-void  AUD_SetOmxPcmFifoRenderSize(UINT32 u4BufSize)
+void  AUD_SetOmxPcmFifoRenderSize(UINT8 u1StreamId,UINT32 u4BufSize)
 {
-    u4PcmFifoBufSize  = u4BufSize;
+    u4PcmFifoBufSize[u1StreamId]  = u4BufSize;
 }
 
 UINT32 AUD_GetMixSndRingFifoBufferLevel(UINT8 u1StreamId)
@@ -2419,7 +2418,7 @@ UINT32 AUD_GetMixSndRingFifoBufferLevel(UINT8 u1StreamId)
                 (_rAudMixSndRingFifo[u1StreamId].u4WP - _rAudMixSndRingFifo[u1StreamId].u4RP) :
                 (_rAudMixSndRingFifo[u1StreamId].u4SZ - _rAudMixSndRingFifo[u1StreamId].u4RP + _rAudMixSndRingFifo[u1StreamId].u4WP));
 					
-        return (_rAudMixSndStream[u1StreamId + ALSA_MIXSND_STREAM_ID].u4Residual + u4PcmFifoBufSize);
+        return (_rAudMixSndStream[u1StreamId + ALSA_MIXSND_STREAM_ID].u4Residual + u4PcmFifoBufSize[u1StreamId]);
     }
     else
     {
