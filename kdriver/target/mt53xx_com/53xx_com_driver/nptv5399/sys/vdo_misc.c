@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/05/31 8:25p $
  *
- * $Revision: #13 $
+ * $Revision: #14 $
 *************************************************************************/
 
 #ifdef CC_UP8032_ATV
@@ -829,7 +829,9 @@ void vDrvVideoHwInit(void)
 #endif
     vDrvSCPQInit();
 
+#ifdef CC_MT5399
     MJC_INIT(TRUE);
+#endif
 
 #ifdef __MODEL_slt__
     // front 3x3 error diffusion
