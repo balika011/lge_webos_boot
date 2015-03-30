@@ -1298,13 +1298,20 @@ void BootSplash(void)
 	}
 
 	printf("[%d]:DRAW LOGO \n",readMsTicks());
-
 	printf("open splash_copyimage");
-	Splash_DrawLogoImage(_uncompAddr, systype);
-	printf("[%d]:DRAW LOGO end \n",readMsTicks());
-	msDelay = pnlpwrseq.dataToLampOn * 10;
-	udelay(msDelay * 1000);
 
+	msDelay = pnlpwrseq.dataToLampOn * 10;
+	if(msDelay > 30)
+		msDelay -= 30;
+	else
+		msDelay = 0;
+ 	udelay(msDelay * 1000);
+	
+	printf("[%d]:DRAW LOGO end \n",readMsTicks());
+	Splash_DrawLogoImage(_uncompAddr, systype);
+ 
+	udelay(30 * 1000);
+	
 	printf("[%d]:INV ON \n",readMsTicks());
 	Splash_MICOM_InvOn();
 	__InvertOn = 1;
