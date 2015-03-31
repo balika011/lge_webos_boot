@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/29 $
+ * $Date: 2015/03/31 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -10873,7 +10873,7 @@ extern UINT16 AUD_DspGetSystemSetup(UINT8 u1DspId, UINT8 u1DecId);
  */
 //-----------------------------------------------------------------------------
 extern void AUD_SetLpcmTable(UINT8 u1DecId, AUD_LPCM_SETTING_T rLpcmSetting);
-
+extern UINT32 AUD_GetLPCMSampleNum(UINT8 u1DecId, UINT32 u4Length);
 extern UINT32 AUD_GetLPCMType(void);
 
 //-----------------------------------------------------------------------------

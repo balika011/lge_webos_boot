@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/31 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #45 $
+ * $Revision: #46 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -17258,7 +17258,53 @@ void AUD_SetLpcmTable(UINT8 u1DecId, AUD_LPCM_SETTING_T rLpcmSetting)
         }
     }
 }
+UINT32 AUD_GetLPCMSampleNum(UINT8 u1DecId, UINT32 u4Length)
+{
+    UINT8 u1Channel;
+    UINT8 u1BitDepth;
+    UINT32 u4SampleNum;
+    
+    //decoder 2, decoder 3 ... todo...
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        u1Channel = uReadShmUINT8(AUD_DSP0, B_LPCM_CH_ASSIGNMENT);
+        u1BitDepth = u2ReadShmUINT16(AUD_DSP0, W_LPCM_Q_VALUE) >> 12;
+    }
+    else if (u1DecId == AUD_DEC_AUX)
+    {
+        u1Channel = uReadShmUINT8(AUD_DSP0, B_LPCM_CH_ASSIGNMENT_DEC2);
+        u1BitDepth = u2ReadShmUINT16(AUD_DSP0, W_LPCM_Q_VALUE_DEC2) >> 12;
+    }
+    else if (u1DecId == AUD_DEC_THIRD) //parson MM3
+    {
+        u1Channel = uReadShmUINT8(AUD_DSP0, B_LPCM_CH_ASSIGNMENT_DEC3);
+        u1BitDepth = u2ReadShmUINT16(AUD_DSP0, W_LPCM_Q_VALUE_DEC3) >> 12;
+    }
+    switch (u1BitDepth)// bit depth (0 = 16bit, 1 = 20bit, 2 = 24bit,  3 = 8bit  )
+    {
+        case 0:
+            u4SampleNum = u4Length*8/16/(u1Channel+1);
+            break;
 
+        case 1:
+            u4SampleNum = u4Length*8/20/(u1Channel+1);
+            break;
+
+        case 2:
+            u4SampleNum = u4Length*8/24/(u1Channel+1);
+            break;
+
+        case 3:
+            u4SampleNum = u4Length*8/8/(u1Channel+1);
+            break;
+
+        default:
+            u4SampleNum = u4Length*8/16/(u1Channel+1);
+			break; 
+    }
+    Printf("[LPCM]%s: %d\n",__FUNCTION__,u4SampleNum);
+    return u4SampleNum;
+}
 /*
 0x101 -ALAW
 0x301 -ULAW
