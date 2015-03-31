@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/03/31 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #43 $
+ * $Revision: #44 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3205,8 +3205,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 						{
 							u4RawDelayFrame = u4RawDelayFrame*2;
 						}
-	                    if((u4AprocReg_Read (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM)) != 0)&&
-							(u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWDELAY)) == 0))
+	                    if(u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWDELAY)) != u4RawDelayFrame)
 	                    	{
 						_vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWDELAY, (UINT32 *) &u4RawDelayFrame, 1); 
 	                    	}
@@ -7920,7 +7919,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
     UINT32 u4RawDelayFrame;
 
     AUD_DSP_ID_VALIDATE(u1DspId);
-#ifdef CC_AUD_DDI
+#if 0//def CC_AUD_DDI
     if((_AudGetStrSource(AUD_DEC_MAIN) != AUD_STREAM_FROM_DIGITAL_TUNER) && 
         (_AudGetStrSource(AUD_DEC_MAIN) != AUD_STREAM_FROM_GST))
     {
@@ -8001,17 +8000,17 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
 			(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
 			(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
         {
-			vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2Delay/u4DelayConstant) + 14));
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2DelayLRMix/u4DelayConstant) + 14));  
             LOG(5, "### Adjust for HDMI PCM 14 bank for DTS\n");
         }
 		else
 		{
-			vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);		
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);   
 		}
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2Delay/u4DelayConstant);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_HP), u2DelayLRMix/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);
-        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/u4DelayConstant);
+        vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2DelayLRMix/u4DelayConstant);
         _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
 
         // Work Around for PlayMute, need a Aout Enable to let PlayMute know DSP delay is set and done.
@@ -8119,7 +8118,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 vWriteShmUINT16(u1DspId, u2ShmIndex, u2DelayLRMix);
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+#if 0//defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
             vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);      
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)               
@@ -8166,7 +8165,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 vWriteShmUINT16(u1DspId, u2ShmIndex, u2DelayBypassMix);
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+#if 0//defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
             vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SPDIF_PCM_PATH);
 #ifdef CC_AUD_DDI
@@ -8242,7 +8241,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
                 vWriteShmUINT16(u1DspId, u2ShmIndex, u2DelayDownmixMix);
                 DSP_SendDspTaskCmd(u1DspId, u2UopIndex);
             }
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+#if 0//defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
             vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_3, APROC_REG_DELAY_HP), u2Delay/u4DelayConstant);
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_HP_PATH);      
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)            
@@ -8322,7 +8321,7 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
     if((_AudGetStrSource(AUD_DEC_MAIN) != AUD_STREAM_FROM_DIGITAL_TUNER) && 
         (_AudGetStrSource(AUD_DEC_MAIN) != AUD_STREAM_FROM_GST))
     {
-        u2DrvDelay = 0;
+        //u2DrvDelay = 0;
     }
 #else
     u2ExtraDelay = 0;
@@ -8373,14 +8372,24 @@ void _AUD_DspChannelDelayAP(AUD_CH_T eChIndex, UINT8 uDecIndex)
 			if ((_AudGetStrSource(AUD_DEC_MAIN) == AUD_STREAM_FROM_HDMI) && 
 				(uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
 				(_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
+            {
+            if(u2DelayLRMix > 0x800)
+            {
+                vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);  
+            }
+			else if(u2DelayLRMix > 0x700)
 			{
+				vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2DelayLRMix/u4DelayConstant)+7));  
+			}
+            else
+            {
                 vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), ((u2DelayLRMix/u4DelayConstant)+14));
-			}
-			else
-			{
-				vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);
-
-			}
+            }
+            }
+            else
+            {
+            vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix/u4DelayConstant);       
+            }
             _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
         }
 #else
