@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/31 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #27 $
+ * $Revision: #28 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11460,7 +11460,7 @@ static void _AudPlayMuteThread(void* pvArg)
     INT16 i2SetDelayCount[AUD_DEC_MAX] = {-1,-1,-1}; 
     UINT8 u1GetVideoCBCount[AUD_DEC_MAX] = {0,0,0}; 
     INT16 i2ExtraMuteCnt[AUD_DEC_MAX] = {-1,-1,-1}; 
-    UINT16 u2VdpDelayMs, u2AudDelayMs, u2DelayLRMix;
+    UINT16 u2VdpDelayMs, u2AudDelayMs;
     UINT32 u4VdoMuteFlag[AUD_DEC_MAX] = {0,0,0}; 
     BOOL fgCheckVdoUnmute[AUD_DEC_MAX] = {FALSE,FALSE,FALSE}; 
     INT16 i2UnMuteCount[AUD_DEC_MAX] = {-1,-1,-1}; 
@@ -11692,7 +11692,7 @@ static void _AudPlayMuteThread(void* pvArg)
                     if (fgSetDelayToDsp[u1DecId])
                     {
                         AUD_DspChannelDelay(AUD_DSP0, ((u2AudDelayMs*34)/5), AUD_CH_ALL, u1DecId);
-                        LOG(0, "[PLAY_MUTE](%d)AUD_DspChannelDelay(%d)!!!!!\n", u1DecId, (u2AudDelayMs*34)/5);
+                        LOG(5, "[PLAY_MUTE](%d)AUD_DspChannelDelay(%d)!!!!!\n", u1DecId, (u2AudDelayMs*34)/5);
                         // Command queue
                         _AudPlayMuteMsgProcess(u1DecId, AUD_PM_OP_SET_DELAY, 0);
                     }
@@ -11705,32 +11705,10 @@ static void _AudPlayMuteThread(void* pvArg)
                         {
                             AUD_DspChannelDelay_initial(((u2AudDelayMs*34)/5), AUD_CH_ALL, u1DecId);
                         }
-                        #ifdef CC_AUD_DDI
-                        else if ((uReadShmUINT8(AUD_DSP0, B_IECFLAG) != 0) &&
-                                 (_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_DTS))
-                        {
-                            u2DelayLRMix = u4AprocReg_Read (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SPDIF_PCM));
-                            if(u2DelayLRMix > 54)
-                            {
-                                vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), u2DelayLRMix);  
-                            }
-                			else if(u2DelayLRMix >= 46)
-                			{
-                				vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), (u2DelayLRMix+7));  
-                			}
-                            else
-                            {
-                                vAprocReg_Write (APROC_ASM_ADDR(APROC_ASM_ID_POSTPROC_4, APROC_REG_DELAY_SP), (u2DelayLRMix+14));
-                            }
-                            _vAprocSetRoutine(APROC_ROUTINE_ID_DR_SP_PATH);
-                            LOG(5, "### Adjust for HDMI PCM 14 bank for DTS\n");
-                        }       
-                        #endif
-
 
                         i2UnMuteCount[u1DecId] = 0;
                         fgCheckVdoUnmute[u1DecId] = FALSE;
-                        LOG(0, "[PLAY_MUTE](%d)AUD_DspChannelDelay_initial(%d)\n", u1DecId, (u2AudDelayMs*34)/5);
+                        LOG(5, "[PLAY_MUTE](%d)AUD_DspChannelDelay_initial(%d)\n", u1DecId, (u2AudDelayMs*34)/5);
                     }
 
                     fgEnableSetDelay[u1DecId] = FALSE;
