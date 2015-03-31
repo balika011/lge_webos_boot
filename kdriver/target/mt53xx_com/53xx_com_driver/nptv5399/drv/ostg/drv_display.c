@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/19 $
+ * $Date: 2015/03/31 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2616,21 +2616,9 @@ void vDrvCalPanelTiming(UINT8 u1DCLKType, UINT32 u4FrameRate)
     i4OrigControlWord = IO32ReadFldAlign(DDDS_00, DDDS_00_DDDS_FREQ_CW);
     #endif
 
-    if (fgDDDSEn == SV_ON && _eSyncLockMode != eSYNCLOCK_OFF)
+    if (_fgFRS_ENA == SV_ON)
     {
-        if (fgIsMainTvd3d())
-        {
-            _fgFRS_ENA = SV_ON;    //Delay for VCR mode: Only for TVD
-        }
-        else
-        {
-            vDrvSwitchMTKGoodDclk(SV_ON);
-        }
-    }
-    else
-    {
-        _fgFRS_ENA = SV_OFF;
-        vDrvSwitchMTKGoodDclk(SV_OFF);
+        vDrvSwitchMTKGoodDclk(SV_ON);
     }
 
     #ifndef SUPPORT_PANEL_SCAN_PWM
@@ -3964,7 +3952,26 @@ void vDrvCalPanelFrameRate(UINT16 u2VdoVTotal, UINT32 u4VdoFrameRate)
     }
 
     vDrvCalPanelTiming(u4DCLKType, u4PanelFrameRate);
-    vDrvSetMTKGoodDclk(u2VdoVTotal, u4VdoFrameRate);
+	
+	// ---------DDDS Settings------------
+	if (fgDDDSEn == SV_ON && _eSyncLockMode != eSYNCLOCK_OFF)
+    {
+    	vDrvSetMTKGoodDclk(u2VdoVTotal, u4VdoFrameRate);
+        if (fgIsMainTvd3d())
+        {
+            _fgFRS_ENA = SV_ON;    //Delay for VCR mode: Only for TVD
+        }
+        else
+        {
+            vDrvSwitchMTKGoodDclk(SV_ON);
+        }
+    }
+    else
+    {
+        _fgFRS_ENA = SV_OFF;
+        vDrvSwitchMTKGoodDclk(SV_OFF);
+    }
+    
     vFrameTrackDDDSConfig(0, 0);
 }
 
