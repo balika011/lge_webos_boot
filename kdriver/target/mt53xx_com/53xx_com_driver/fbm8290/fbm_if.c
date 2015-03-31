@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/03/31 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -357,7 +357,7 @@ static void _FbgStatus(FBM_FBG_T *prFbg)
         prFbg->ucFbgId,
         prFbg->ucFbgType,
         prFbg->ucFbgCm,
-        prFbg->ucFbNs,
+        prFbg->u4FbCnt,
         prFbg->ucFbDecode,
         prFbg->ucFbFRef,
         prFbg->ucFbBRef,
@@ -373,7 +373,12 @@ static void _FbgStatus(FBM_FBG_T *prFbg)
         prFbg->rSeqHdr.fg422Mode);
 
     for(ucIdx = 0; ucIdx < FBM_MAX_FB_NS_PER_GROUP; ucIdx++)
-    {
+    {   
+        if(prFbg->aucFbRotationStatus[ucIdx] == FB_ROTATION_UNUSE)
+        {
+            continue;
+        }
+        
         if ( prFbg->u4DispTag[ucIdx] == INVALID_DISPTAG)
         {
             ucDispTag = 'R';
@@ -1728,8 +1733,7 @@ UINT32 FBM_CalcBufNum(UCHAR ucFbgId, UCHAR ucFbgType, UINT32 u4VDecFmt, UINT32 u
             ucMvBufNs = FBM_CalcRefNum(ucFbgType, u4VDecFmt, u4Width, u4Height, u1AppMode) + 1; //one decoder frame
 
             // Calculate Total Frame Number = (Total Size - MV Size) / (Y Size + C Size)
-            u4FbCount = ((u4PoolSize - ((ucMvBufNs * u4YSize) >> 2)) / u4FbSize);
-            
+            u4FbCount = ((u4PoolSize - ((ucMvBufNs * u4YSize) >> 2) - FBM_FBG_TYPE_CABAC_SIZE*FBM_MAX_CABAC_BUF_NS_PER_GROUP) / u4FbSize);
             LOG(1,"ucMvBufNs %d u4FbCount %d u4PoolSize 0x%x u4FbSize 0x%x\n",ucMvBufNs,u4FbCount,u4PoolSize,u4FbSize);
             
 #if defined(CC_H264_LV5_SUPPORT_SHARE_POOL) || defined(CC_H264_LV5_SUPPORT_SINGLE_POOL)
@@ -3677,7 +3681,6 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
         UINT32 u4FbEndPoolCAddr = 0;
         UINT32 u4FbStartWorkAddr =0;
         UINT32 u4FbEndWorkAddr =0;
-        UINT32 u4ExtDataSize = 0;
         UINT32 u4ExtraFbNs = 0;
 
         _arFbg[ucFbgId].fgRPRMode = FALSE;
@@ -3722,13 +3725,31 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
 
         u4PoolSize = _arFbg[ucFbgId].u4FbMemoryPoolSize;
         _arFbg[ucFbgId].ucMvBufNs = 0;
-#ifdef FBM_MEMUNIT_SEPARATE_EXTERNDATA
+#ifdef FBM_MEMUNIT_MEM_SEPARATE
         if(prPar->eSeamlessMode & SEAMLESS_BY_NPTV)
         {
-           u4ExtDataSize = _FBM_FbgAllocDefaaultExternData(ucFbgId,u4HSize,u4VSize);
+           _FBM_FbgSetDefaultDataPartion(ucFbgId,u4HSize,u4VSize);
            u4YSize = _arFbg[ucFbgId].u4YSize;
            u4CSize = _arFbg[ucFbgId].u4CSize;
            u4FbNs  = _arFbg[ucFbgId].u4FbCnt;
+
+           if (u4FbNs >= FBM_MAX_FB_NS_PER_GROUP/2)
+           {
+                u4FbNs = FBM_MAX_FB_NS_PER_GROUP/2 - 1;
+           }
+
+           u4Addr = _arFbg[ucFbgId].u4FbYPool;
+           u4FbStartPoolYAddr = u4Addr;
+           u4FbEndPoolYAddr = u4FbStartPoolYAddr + _arFbg[ucFbgId].u4FbYPoolSize;
+
+           _arFbg[ucFbgId].u4FbMemoryPoolC = _arFbg[ucFbgId].u4FbCPool;
+            u4AddrC = _arFbg[ucFbgId].u4FbMemoryPoolC;
+            u4FbStartPoolCAddr = u4AddrC;
+            u4FbEndPoolCAddr = u4FbStartPoolCAddr + _arFbg[ucFbgId].u4FbCPoolSize;
+
+            u4FbStartWorkAddr = _arFbg[ucFbgId].u4FbExternDataPool;
+            u4FbEndWorkAddr = u4FbStartWorkAddr + _arFbg[ucFbgId].u4FbExternDataPoolSize;
+           
         }
         else
 #endif
@@ -3740,45 +3761,38 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
             _arFbg[ucFbgId].u4YSize = u4YSize;
             _arFbg[ucFbgId].u4CSize = u4CSize;
             u4FbNs -= u4ExtraFbNs; // Remove Extra Fb first, as the extra partion maybe not continuous.
-        }
 
-        if(_fgSetDecoderFb && (_u1DecoderType == _arFbg[ucFbgId].u4VDecFmt))
-        {
-            u4FbNs = _u1NumOfFb;
-            _fgSetDecoderFb = FALSE;
-        }
+            if(_fgSetDecoderFb && (_u1DecoderType == _arFbg[ucFbgId].u4VDecFmt))
+            {
+                u4FbNs = _u1NumOfFb;
+                _fgSetDecoderFb = FALSE;
+            }
+            
+            if (u4FbNs >= FBM_MAX_FB_NS_PER_GROUP/2)
+            {
+                u4FbNs = FBM_MAX_FB_NS_PER_GROUP/2 - 1;
+            }
+            
+            u4Addr = _arFbg[ucFbgId].u4FbMemoryPool;
+            u4FbStartPoolYAddr = u4Addr ;
+            u4FbEndPoolYAddr = u4FbStartPoolYAddr + (FBM_ALIGN_MASK(u4YSize, FBM_GFX_Y_ALIGMENT) * u4FbNs);
+            
+            _arFbg[ucFbgId].u4FbMemoryPoolC = u4FbEndPoolYAddr;
+            u4AddrC = _arFbg[ucFbgId].u4FbMemoryPoolC;
+            u4FbStartPoolCAddr = u4AddrC;
+            u4FbEndPoolCAddr = u4FbStartPoolCAddr + (FBM_ALIGN_MASK(u4CSize, FBM_GFX_Y_ALIGMENT) * u4FbNs);
 
-        if (u4FbNs >= FBM_MAX_FB_NS_PER_GROUP/2)
-        {
-            u4FbNs = FBM_MAX_FB_NS_PER_GROUP/2 - 1;
+            u4FbStartWorkAddr = u4FbEndPoolCAddr;
+            u4FbEndWorkAddr = _arFbg[ucFbgId].u4FbMemoryPool + u4PoolSize;
+            
         }
         
         _arFbg[ucFbgId].ucFbNs = (UCHAR)(u4FbNs) + _arFbg[ucFbgId].ucFbNsBase;
-        
-        u4Addr = _arFbg[ucFbgId].u4FbMemoryPool;
-        u4FbStartPoolYAddr = u4Addr ;
-        
-        u4FbEndPoolYAddr = u4FbStartPoolYAddr + (FBM_ALIGN_MASK(u4YSize, FBM_GFX_Y_ALIGMENT) * u4FbNs);
-
-        _arFbg[ucFbgId].u4FbMemoryPoolC = u4FbEndPoolYAddr;
-        u4AddrC = u4FbEndPoolYAddr;
-        u4FbStartPoolCAddr = u4AddrC;
-        u4FbEndPoolCAddr = u4FbStartPoolCAddr + (FBM_ALIGN_MASK(u4CSize, FBM_GFX_Y_ALIGMENT) * u4FbNs);
-        
-        if(u4ExtDataSize > 0)
-        {
-            u4FbStartWorkAddr = _arFbg[ucFbgId].u4FbMemoryPool + _arFbg[ucFbgId].u4FbMemoryPoolSize - u4ExtDataSize;
-            u4FbEndWorkAddr = _arFbg[ucFbgId].u4FbMemoryPool + _arFbg[ucFbgId].u4FbMemoryPoolSize;
-        }
-        else
-        {
-            u4FbStartWorkAddr = u4FbEndPoolCAddr;
-            u4FbEndWorkAddr = _arFbg[ucFbgId].u4FbMemoryPool + u4PoolSize;
-        }
-
         _arFbg[ucFbgId].u4Workbuffer = u4FbStartWorkAddr;
+        
         LOG(1,"FBG(%d),FbNs=%d,Yaddr(0x%x--0x%x),Caddr(0x%x--0x%x) Working(0x%x--0x%x,Size=0x%x)\n",ucFbgId,u4FbNs,u4FbStartPoolYAddr,\
             u4FbEndPoolYAddr,u4FbStartPoolCAddr,u4FbEndPoolCAddr,u4FbStartWorkAddr,u4FbEndWorkAddr,u4FbEndWorkAddr-u4FbStartWorkAddr);
+
         
         if(_arFbg[ucFbgId].u4VDecFmt == FBM_VDEC_JPEG && ucFbgCm == FBM_CM_422 && prPar->u1AppMode != FBM_FBG_APP_MTIMAGE)
         {

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/03/31 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -170,7 +170,7 @@ typedef enum
     
 }FBM_MEMUNIT_FLAG;
 
-#define FBM_MEMUNIT_SEPARATE_EXTERNDATA
+#define FBM_MEMUNIT_MEM_SEPARATE
 #define FBM_MEMUNIT_DEFAULT_EXTERNDATA_FBCNT (11)
 #define FBM_MEMUNIT_FRAME_MAX_WIDTH  (1920)  // make sure  1/2 is 64 align base.  
 #define FBM_MEMUNIT_FRAME_MAX_HEIGHT (1088)  
@@ -308,7 +308,8 @@ typedef struct
     UINT32 u4FbResizeMemoryPoolSize;
     UINT32 u4FbResizeMemoryPool2;
     UINT32 u4FbResizeMemoryPool2Size;
-	/* 4K Seamless use*/
+
+    /* 4K Seamless use*/
 	BOOL fg4k2KPoolAlocate; 
 	FBM_RESOLUTION_CHANGE_MODE_T eResolutionChangeMode; 
 	UINT32 u4FbActiveFHDPool;
@@ -374,10 +375,17 @@ typedef struct
     UINT32 u4ExtraYBuffer;
     UINT32 u4ExtraCBuffer;
     UINT32 u4RPRSeamlessBuffer;
-    
+
+    // followin is used for LG seamless, fb memory remap.
     UINT32 u4YSize;
     UINT32 u4CSize;
     UINT32 u4FbCnt;
+    UINT32 u4FbYPool;
+    UINT32 u4FbYPoolSize;
+    UINT32 u4FbCPool;
+    UINT32 u4FbCPoolSize;
+    UINT32 u4FbExternDataPool;
+    UINT32 u4FbExternDataPoolSize;
 
     FBM_SEQ_HDR_T rSeqHdr;
     FBM_PIC_HDR_T* prPicHdr;
@@ -417,7 +425,7 @@ extern void _FBM_PutFrameBufferToEmptyResizeQ(UCHAR ucFbgId, UCHAR ucFbId);
 extern void _FBM_PutFrameBufferToEmptyResize2Q(UCHAR ucFbgId, UCHAR ucFbId);
 extern UCHAR FBM_GetLatestEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay);
 extern BOOL _FBM_2FBsChkDynamicDone(UCHAR ucFbgId);
-extern UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height);
+extern VOID _FBM_FbgSetDefaultDataPartion(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height);
 //---------------------------------------------------------------------------
 // Public functions
 //---------------------------------------------------------------------------

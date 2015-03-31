@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/03/31 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -196,7 +196,7 @@
 //---------------------------------------------------------------------------
 extern void _EnableNewSeamless(UINT32 u4FbgId);
 extern VOID i4VDOOmxRenderFrame(UINT8 ucType);
-
+extern VOID FBM_FbMemReset(UCHAR ucFbgId,UCHAR ucFbId);
 //---------------------------------------------------------------------------
 // Static function forward declarations
 //---------------------------------------------------------------------------
@@ -7334,19 +7334,20 @@ static UINT32 _FBMMemUnitFbMaxCnt(FBM_FBG_T *pFbg)
 static UINT32 _FBMMemUnitCalculateFbCount(FBM_FBG_T *pFbg,FBM_MEMUNIT *prMemPoolList)
 {
     UINT32 u4YCnt,u4CCnt,u4FbCnt=0,u4MvCnt=0;
-    UINT32 u4YMemSize,u4CMemSize,u4OverlapSize,u4TotalSize;
+    UINT32 u4YMemSize,u4CMemSize,u4TotalYCSize,u4TotalSize;
     UINT32 u4NeedSize,u4ExtBufFlag;
 
     u4ExtBufFlag = _FbmMemUnitExtenBufFlag(pFbg);
     u4TotalSize = _FBMMemUnitFreeSize(prMemPoolList, 0, MEMUNIT_SEARCH_TYPE_AND);
     u4YMemSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_Y,MEMUNIT_SEARCH_TYPE_EQ);
     u4CMemSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_C,MEMUNIT_SEARCH_TYPE_EQ);
-    u4OverlapSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_YC,MEMUNIT_SEARCH_TYPE_OR);
+    u4TotalYCSize = _FBMMemUnitFreeSize(prMemPoolList,FBM_MEMUNIT_USETYPE_YC,MEMUNIT_SEARCH_TYPE_OR);
 
+    u4TotalYCSize -= (u4YMemSize + u4CMemSize);
     u4YCnt = u4YMemSize/pFbg->u4YSize;
     u4CCnt = u4CMemSize/pFbg->u4CSize;
     u4FbCnt = u4YCnt > u4CCnt ? u4CCnt : u4YCnt;
-    u4FbCnt += u4OverlapSize/(pFbg->u4YSize + pFbg->u4CSize);
+    u4FbCnt += u4TotalYCSize/(pFbg->u4YSize + pFbg->u4CSize);
     pFbg->u4FbCnt = u4FbCnt;
     pFbg->fgAdjustWorkBuf = FALSE;
     u4NeedSize = _FbmMemUnitMemParam(pFbg, &u4NeedSize, NULL, FBM_MEMUNIT_USETYPE_ALL, TRUE);
@@ -7675,7 +7676,6 @@ static void _FbmMemUnitSpecialSetting(FBM_FBG_T *pFbg)
     return;
 }
 
-extern VOID FBM_FbMemReset(UCHAR ucFbgId,UCHAR ucFbId);
 static BOOL _FbmFbMemOverlap(UCHAR ucFbgId,UCHAR ucFbIdA, UCHAR ucFbIdB)
 {
     FBM_FBG_T *pFbg = &_prFbg[ucFbgId];
@@ -7818,20 +7818,23 @@ static UINT32 _FBM_GetDefaultExternDataSize(UCHAR ucFbgId)
 VOID _FbmMemUnitAllocMemPool(UCHAR ucFbgId ,FBM_MEMUNIT *prMemPoolList)
 {   
     FBM_FBG_T *pFbg;
-    UINT32 u4ExtenTotalSize =0;
     pFbg = &_prFbg[ucFbgId];
     
-#ifdef FBM_MEMUNIT_SEPARATE_EXTERNDATA
-    u4ExtenTotalSize = _FBM_GetDefaultExternDataSize(ucFbgId);
-    prMemPoolList[0].u4StartAddr = pFbg->u4FbMemoryPool;
-    prMemPoolList[0].u4UsedAddr  = pFbg->u4FbMemoryPool;
-    prMemPoolList[0].u4EndAddr   = pFbg->u4FbMemoryPool + pFbg->u4FbMemoryPoolSize - u4ExtenTotalSize;
-    prMemPoolList[0].u4Flag      = FBM_MEMUNIT_USETYPE_YC;
+#ifdef FBM_MEMUNIT_MEM_SEPARATE
+    prMemPoolList[0].u4StartAddr = pFbg->u4FbYPool;
+    prMemPoolList[0].u4UsedAddr  = pFbg->u4FbYPool;
+    prMemPoolList[0].u4EndAddr   = pFbg->u4FbYPool + pFbg->u4FbYPoolSize;
+    prMemPoolList[0].u4Flag      = FBM_MEMUNIT_USETYPE_Y;
 
-    prMemPoolList[1].u4StartAddr = prMemPoolList[0].u4EndAddr;
-    prMemPoolList[1].u4UsedAddr  = prMemPoolList[0].u4EndAddr;
-    prMemPoolList[1].u4EndAddr   = pFbg->u4FbMemoryPool + pFbg->u4FbMemoryPoolSize;
-    prMemPoolList[1].u4Flag      = FBM_MEMUNIT_USETYPE_ALLEXTEN;
+    prMemPoolList[1].u4StartAddr = pFbg->u4FbCPool;
+    prMemPoolList[1].u4UsedAddr  = pFbg->u4FbCPool;
+    prMemPoolList[1].u4EndAddr   = pFbg->u4FbCPool + pFbg->u4FbCPoolSize;
+    prMemPoolList[1].u4Flag      = FBM_MEMUNIT_USETYPE_C;
+    
+    prMemPoolList[2].u4StartAddr = pFbg->u4FbExternDataPool;
+    prMemPoolList[2].u4UsedAddr  = pFbg->u4FbExternDataPool;
+    prMemPoolList[2].u4EndAddr   = pFbg->u4FbExternDataPool + pFbg->u4FbExternDataPoolSize;
+    prMemPoolList[2].u4Flag      = FBM_MEMUNIT_USETYPE_ALLEXTEN;
 #else
     prMemPoolList[0].u4StartAddr = pFbg->u4FbMemoryPool;
     prMemPoolList[0].u4UsedAddr  = pFbg->u4FbMemoryPool;
@@ -7845,21 +7848,23 @@ VOID _FbmMemUnitAllocMemPool(UCHAR ucFbgId ,FBM_MEMUNIT *prMemPoolList)
     return;
 }
 
-UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
+VOID  _FBM_FbgSetDefaultDataPartion(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
 {
     FBM_FBG_T *pFbg;
-    UINT32 u4ExternDataSize = 0, u4PoolSize;
+    UINT32 u4ExternDataSize = 0,u4PoolSize,u4PoolEnd,u4MvCnt;
     pFbg = &_prFbg[ucFbgId];
     u4ExternDataSize = _FBM_GetDefaultExternDataSize(ucFbgId);
-    u4PoolSize = pFbg->u4FbMemoryPoolSize;
     _FbmCalculateYCSize(pFbg, u4Width, u4Height);
+
+    u4PoolSize = pFbg->u4FbMemoryPoolSize;
+    u4PoolEnd = pFbg->u4FbMemoryPool + u4PoolSize;
     
-    LOG(1,"Fbg:%d AllocDefaaultExternData size 0x%x, poolsize =0x%x\n",ucFbgId,u4ExternDataSize,pFbg->u4FbMemoryPoolSize);
+    LOG(1,"Fbg:%d _FBM_FbgSetDefaultDataPartion size 0x%x, poolsize =0x%x\n",ucFbgId,u4ExternDataSize,pFbg->u4FbMemoryPoolSize);
     
     if(u4PoolSize < u4ExternDataSize)
     {
         u4ExternDataSize = 0;
-        LOG(0,"AllocDefaaultExternData no enough data !!!!");
+        LOG(0,"_FBM_FbgSetDefaultDataPartion no enough data !!!!");
     }
     else
     {
@@ -7867,7 +7872,7 @@ UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4
     }
 
     pFbg->u4FbCnt = FBM_MAX_FB_NS_PER_GROUP;//u4PoolSize/(pFbg->u4YSize + pFbg->u4CSize);
-
+    
     do
     {
        if(_FbmMemUnitMemParam(pFbg,NULL, NULL, _FbmMemUnitExtenBufFlag(pFbg),TRUE) > u4ExternDataSize)
@@ -7881,12 +7886,33 @@ UINT32  _FBM_FbgAllocDefaaultExternData(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4
        
     } while(pFbg->u4FbCnt > 0);
 
-    pFbg->ucMvBufNs  = pFbg->u4FbCnt;
-    pFbg->u4FbCnt = u4PoolSize/(pFbg->u4YSize + pFbg->u4CSize);
-    LOG(1,"AllocDefaaultExternData(Fbg:%d, FbCnt=%d, MvCnt=%d,TotalExtSize=0x%x\n",
-        pFbg->ucFbgId, pFbg->u4FbCnt,pFbg->ucMvBufNs,u4ExternDataSize);
     
-    return u4ExternDataSize;
+    _FbmMemUnitMemParam(pFbg, NULL, &u4MvCnt, FBM_MEMUNIT_USETYPE_MV, FALSE);
+    pFbg->ucMvBufNs  = u4MvCnt;
+    pFbg->u4FbCnt = u4PoolSize/(pFbg->u4YSize + pFbg->u4CSize);
+    
+    pFbg->u4FbYPool = pFbg->u4FbMemoryPool;
+    pFbg->u4FbYPoolSize = pFbg->u4FbCnt * pFbg->u4YSize;
+    pFbg->u4FbCPool = pFbg->u4FbYPool + pFbg->u4FbYPoolSize;
+    pFbg->u4FbCPoolSize = pFbg->u4FbCnt * pFbg->u4CSize;
+    pFbg->u4FbExternDataPool = pFbg->u4FbCPool + pFbg->u4FbCPoolSize;
+
+    if(pFbg->u4FbExternDataPool + u4ExternDataSize > u4PoolEnd)
+    {
+        LOG(0,"_FBM_FbgSetDefaultDataPartion(fbg:%d,FbCnt:%d,YSize:0x%x,YSize:0x%x) (0x%x+0x%x) larger thern (0x%x+0x%x)!!!\n",
+            pFbg->ucFbgId,pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize, pFbg->u4FbExternDataPool,u4ExternDataSize,pFbg->u4FbMemoryPool,pFbg->u4FbMemoryPoolSize);
+    }
+
+    pFbg->u4FbExternDataPoolSize = u4PoolEnd - pFbg->u4FbExternDataPool;
+
+    LOG(1,"_FBM_FbgSetDefaultDataPartion(Fbg:%d, FbCnt:%d, MvCnt:%d,YSize:0x%x,CSize:0x%x)\n",
+        pFbg->ucFbgId, pFbg->u4FbCnt,pFbg->ucMvBufNs,pFbg->u4YSize, pFbg->u4CSize);
+
+    LOG(1,"_FBM_FbgSetDefaultDataPartion(Fbg:%d,TotalPool(0x%x-0x%x),YPool(0x%x-0x%x),CPool(0x%x-0x%x))\n",
+        pFbg->ucFbgId, pFbg->u4FbMemoryPool,u4PoolEnd,pFbg->u4FbYPool,pFbg->u4FbYPool + pFbg->u4FbYPoolSize,pFbg->u4FbCPool,pFbg->u4FbCPool+pFbg->u4FbCPoolSize);  
+    LOG(1,"_FBM_FbgSetDefaultDataPartion((Fbg:%d,ExternPool(0x%x-0x%x,Need:0x%x))\n",
+        pFbg->ucFbgId,pFbg->u4FbExternDataPool,pFbg->u4FbExternDataPool + pFbg->u4FbExternDataPoolSize,u4ExternDataSize);
+    return ;
 }
 
 BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
@@ -7950,6 +7976,7 @@ BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
     ucFbCnt = 0;
     ucLoopCnt =0;
     FBM_SetFrameBufferFlag(ucFbgId,FBM_FLAG_GETEMPTY_NOWAIT);
+    
     do
     {
         ucFbId = FBM_GetEmptyFrameBuffer(ucFbgId,0);

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/28 $
+ * $Date: 2015/03/31 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #25 $
+ * $Revision: #26 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -303,8 +303,6 @@ static void vdpReadyReleaseFB(B2R_OBJECT_T * this);
 #define VDP_LIP_SYNC_NG 1
 
 #define BURST_READ_THRESHOLD 128
-
-#define KEEP_FB_NUM    3
 
 static UCHAR _ucFrcMuteInitiated = 0;
 
@@ -5819,9 +5817,10 @@ static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
 	 {
 	     return FALSE;
 	 }
+
 	 if(prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV)
 	 {
-	     if((u2MsgQNum>=KEEP_FB_NUM)||!this->ptB2rPrm->ucReady)
+	     if((u2MsgQNum>=FBM_NPTV_SEAMLESS_KEEP_CNT)||!this->ptB2rPrm->ucReady)
 	     {
 	         return TRUE;
 	     }
@@ -5830,7 +5829,6 @@ static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
 		     return FALSE;
 		 }
 	 }
-
 
     return TRUE;
 }
@@ -6009,7 +6007,7 @@ BOOL _B2R_SendB2RChgFrameMsg(VDP_B2R_CHG_FRAME_MSG_T* prMsg)
                 
                 if(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum))
                 {
-                    if(u2MsgQNum <= KEEP_FB_NUM)
+                    if(u2MsgQNum <= FBM_NPTV_SEAMLESS_KEEP_CNT)
                     {
                         break;
                     }
@@ -6094,6 +6092,7 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
     {
         VERIFY(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2Cnt) == OSR_OK);
         LOG(1,"_B2R_FlushB2RChgFrameMsg (%d) cnt=%d\n",ucB2rId,u2Cnt);
+
         if(FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV))
         {
             if(u2Cnt >= FBM_NPTV_SEAMLESS_KEEP_CNT) 
@@ -6104,6 +6103,10 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
             {
                 u2DropCnt = 0;
             }
+        }
+        else
+        {
+            u2DropCnt = u2Cnt;
         }
       
         LOG(1,"_B2R_FlushB2RChgFrameMsg  u2DropCnt=%d,fbg seamless=%d,rMsg.ucFbgId=%d\n",u2DropCnt,FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV),_B2R_GetFbg(ucB2rId));
