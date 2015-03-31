@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/03/31 $
  * $RCSfile: drv_hdtv.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2055,8 +2055,9 @@ void vHdtvChkModeChange(void)
     	bCurrentSignal = bASHDTVActiveChk();
 #ifdef CC_YPBPR_ADAPTIVE_SLICER_REDUCE_TIME
     	//bHWConnect=GPIO_GetIn(DRVCUST_OptGet(eYDetect_GPIO));
-    	//bHWConnect=GPIO_GetIn(209);
-    	if((bCurrentSignal & 0x3) == 3)
+    	bHWConnect=GPIO_GetIn(229);
+    	if(bHWConnect)
+
     	{
     		if(bHdtvOpt05_AdaptiveSlicer==0)
     		{
