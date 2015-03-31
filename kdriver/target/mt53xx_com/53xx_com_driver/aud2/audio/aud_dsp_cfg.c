@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/03/31 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #44 $
+ * $Revision: #45 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7914,9 +7914,7 @@ void _AUD_DspChannelDelay(UINT8 u1DspId, UINT16 u2Delay, AUD_CH_T eChIndex, UINT
     UINT16 u2DelayLRMix=0,u2DelayBypassMix=0,u2DelayDownmixMix=0;
     INT16  u2ExtraDelay=0;
     VDEC_HDR_INFO_T rHdrInfo;
-    UINT32 u4Factor;
-    UINT32 u4FrameSample;
-    UINT32 u4RawDelayFrame;
+
 
     AUD_DSP_ID_VALIDATE(u1DspId);
 #if 0//def CC_AUD_DDI
