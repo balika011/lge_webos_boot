@@ -619,7 +619,7 @@ VOID _vDrvVideoSetMute(MUTE_MODULE_ID eModule, UINT32 u4Path, UINT32 u4UnMuteDel
     {
         #ifdef CC_SUPPORT_VDO_TIME_STAMPS
         if(eModule==MUTE_MODULE_API_FORCE && u4UnMuteDelay==FOREVER_MUTE)
-        vVdoSetTimeStamps("chg input/chanenl start");
+        vVdoSetTimeStamps("chg input/channel start");
         #endif
         #ifdef SYS_DTV_FRZ_CHG_SUPPORT
         UCHAR ucFreeze;
@@ -874,8 +874,8 @@ VOID vDrvVideoHandleUnMute(VOID)
             
             #ifdef CC_SUPPORT_VDO_TIME_STAMPS
             vVdoSetTimeStamps("Chg input/channel finish");
-            vVdoGetTimeStamps();
-            vVdoResetTimeStamps();
+            //vVdoGetTimeStamps();
+            //vVdoResetTimeStamps();
             #endif
             
             DRVCUST_SendEvent(E_CUST_PLANE_MUTE_CHANGE, (UINT8)u4Path);
