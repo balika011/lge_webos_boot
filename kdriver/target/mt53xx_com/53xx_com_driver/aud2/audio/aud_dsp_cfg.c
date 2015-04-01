@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/01 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #47 $
+ * $Revision: #48 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -12705,7 +12705,7 @@ BOOL _AUD_GetDspIECConfig(void)
 //-----------------------------------------------------------------------------
 BOOL _AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
-    LOG(0, "Output Mute SPDIF     , MuteEnable(%d)\n", !fgEnable);
+    LOG(0, "Output Mute SPDIF     , MuteEnable(%d), Light(%d)\n", !fgEnable, fgLight);
     VERIFY(x_sema_lock(_ahSpdifCtlSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     if(fgEnable)
     {

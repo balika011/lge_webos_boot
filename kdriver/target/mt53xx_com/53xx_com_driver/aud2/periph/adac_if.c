@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/25 $
+ * $Date: 2015/04/01 $
  * $RCSfile: adac_if.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1329,12 +1329,14 @@ void ADAC_SpeakerState_Reinit(void)
 //-----------------------------------------------------------------------------
 void ADAC_ArcEnable(BOOL fgEnable)
 {
+    LOG(0, "HDMI_ARC Enable = AP(%d), DRV(%d), SPDIF(%d) \n", fgEnable, _fgArcEnableFlag, fgSPDIFEnable);
     if (_fgArcEnableFlag != fgEnable)
     {
         _fgArcEnableFlag = fgEnable;
 
         if (! fgSPDIFEnable)
         {
+            LOG(0, "HDMI_ARC Enable(%d) returned\n", fgEnable); 
             return;
         }
 
