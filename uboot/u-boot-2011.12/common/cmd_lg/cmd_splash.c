@@ -1209,12 +1209,24 @@ void BootSplash(void)
 	_gTimePwrOn = readMsTicks();
 
 #if 1
-	printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
-	printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
-	printf("open splash_copyimage");
+	{
+		int res, i, max_try = 5;
+		printf("_loadAddr = 0x%x, _uncompAddr = 0x%x \n",_loadAddr,_uncompAddr);
+		printf("[%d]:COPY LOGO IMAGE \n",readMsTicks());
 
-	Splash_copyimage(_loadAddr, _uncompAddr);
-	printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
+		for (i = 0; i < max_try; ++i)
+		{
+			res = Splash_copyimage(_loadAddr, _uncompAddr);
+			if (res == 0)
+				break;
+			else
+				printf("failed to copy a splash image..%d let's try again.\n", i);
+		}
+		if (res != 0)
+			printf("finally failed to copy a splash image!!!\n");
+
+		printf("[%d]:COPY LOGO IMAGE end\n",readMsTicks());
+	}
 #endif
 
 	// 50inch AUO module T8 spec
