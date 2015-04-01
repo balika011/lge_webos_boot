@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/04/01 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -2125,8 +2125,8 @@ static void _vDrvDIFavorCS(void)
         u4sawtooth_mc = 8;
         u4blendratio  = 1;
     }
-	//h.264 576i rectangle flash 
-	if(IS_MPEG(VDP_1)&& (VDP_GetPlayMode(VDP_1) == FBM_FBG_DTV_MODE)&& (u4TimingType== MODE_625I))
+	//h.264 576i rectangle flash   // mark for LG, DTV wrong enter this patch.
+	/*if(IS_MPEG(VDP_1)&& (VDP_GetPlayMode(VDP_1) == FBM_FBG_DTV_MODE)&& (u4TimingType== MODE_625I))
 	{
 		 MDDI_WRITE_FLD(VDP_1,MCVP_FUSION_0D, 0x20,IF_RA_CLIP_FLICKER_TH);
 		//LOG(1," %d %d %d %d %d\n",(DiSta.CsSta.u1GmvValid),DiSta.CsSta.u1GmvX,DiSta.CsSta.u4MultibusrtCnt,DiSta.CsSta.u2NonZeroCnt,DiSta.IfSta.u4SawInv);
@@ -2142,7 +2142,7 @@ static void _vDrvDIFavorCS(void)
 			u4Cost = MIN(1, u4Cost);
 			u4SmoothStill =MIN(0, u4SmoothStill);
 		}
-	}
+	}*/
 
     //CZP more 3D
     if (IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_IF_00, CZP_3D_EN)
