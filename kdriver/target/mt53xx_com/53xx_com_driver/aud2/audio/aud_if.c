@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/26 $
+ * $Date: 2015/04/01 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -306,6 +306,8 @@ static BOOL _u1GstENCFlag = 0;
 #ifdef  LINUX_TURNKEY_SOLUTION
 static UINT32 ClipBufferSize = 0x110000;
 #endif
+static UINT8 u1SpkCfg[AUD_DEC_MAX] = {0}; //driver status variable
+static UINT8 u1DmxDecId = AUD_DEC_MAIN;
 BOOL _gfgVdoPictureOffStatus = FALSE;
 
 //#ifdef CC_DUAL_AUD_DEC_SUPPORT
@@ -1053,6 +1055,16 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
         }
     }
     
+	if ((eStreamFrom == AUD_STREAM_FROM_HDMI) && (eDecFmt == AUD_FMT_DTS))
+	{
+	    u1SpkCfg[u1DecId] = AUD_DspGetSpeakerOutputConfig(u1DecId);
+        AUD_DspSpeakerOutputConfig(u1DecId, 2);//DTS fixed as Lo/Ro    
+        u1DmxDecId = u1DecId;
+	}
+	else if((eStreamFrom != AUD_STREAM_FROM_GST) && (u1DmxDecId == u1DecId))
+	{
+	    AUD_DspSpeakerOutputConfig(u1DecId, u1SpkCfg[u1DecId]);
+	}
     if (!AUD_IsDecoderRealPlay(u1DspId, u1DecId))
     {
         // Try lock to make sure the semaphore was locked
