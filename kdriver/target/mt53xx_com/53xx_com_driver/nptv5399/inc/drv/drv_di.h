@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/01 $
  * $RCSfile: drv_di.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 /** @file drv_di.h
@@ -774,7 +774,7 @@ void vDrvDIInOutStatusDump(UINT8 bPath);
 UINT32 u4DrvDIGetClkRate(UINT8 u1VdpId);
 void vDrvDIStopCtrlFw(UINT8 u1VdpId,UINT8 fgOnOff);
 void vDrvDIInOutSelect(UINT8 u1VdpId,UINT8 fgInOut, UINT8 fgPath);
-void vDrvDISetDumpRegion(UINT32 u4StartX, UINT32 u4StartY, UINT32 u4Width, UINT32 u4Height);
+void vDrvDISetDumpRegion(UINT8 u1VdpId,UINT32 u4StartX, UINT32 u4StartY, UINT32 u4Width, UINT32 u4Height);
 void vDrvDISetMuteCtrl(UINT8 u1VdpId);
 
 BOOL bDrvDIIsSetResDone(UINT8 u1VdpId, SET_RES_STATUS_TYPE_E eStatusType);

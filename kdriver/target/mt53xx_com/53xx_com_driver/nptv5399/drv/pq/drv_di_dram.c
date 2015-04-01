@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/10 $
+ * $Date: 2015/04/01 $
  * $RCSfile: drv_di.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -104,6 +104,7 @@
 #include "srm_drvif.h"
 
 #include "x_assert.h"
+//#include "drv_predown.h"
 
 #ifndef min
 #define min(a,b) (a < b ? a : b)
@@ -597,7 +598,15 @@ void vDrvDIDumpSetSize(UINT8 bPath)
     {
         u4ImgHeight = u4ImgHeight/2;
     }
-
+    if(_arMDDiPrm[bPath].u2SigWidth==0||_arMDDiPrm[bPath].u2SigHeight==0)
+    {
+        LOG(0,"vDrvDIDumpSetSize->input resolution = 0\n");
+        return;
+    }
+    //if((u4PDSGetHPDSFactor(bPath) != 0x8000)||(u4PDSGetVPDSFactor(bPath) != 0x8000))
+    u4StartW=u4ImgWidth*u4StartW/_arMDDiPrm[bPath].u2SigWidth;
+    u4StartH=u4ImgHeight*u4StartH/_arMDDiPrm[bPath].u2SigHeight;
+    
     // not define request width height, use full size
     u4ReqWidth = (u4ReqWidth == 0) ? u4ImgWidth : u4ReqWidth;
     u4ReqHeight = (u4ReqHeight == 0) ? u4ImgHeight : u4ReqHeight;        
@@ -814,8 +823,20 @@ void vDrvDIDumpEnd(UINT8 bPath)
     vDrvDIFreezeOnOff(bPath, SV_OFF);
 }
 
-void vDrvDISetDumpRegion(UINT32 u4StartX, UINT32 u4StartY, UINT32 u4Width, UINT32 u4Height)
+void vDrvDISetDumpRegion(UINT8 u1VdpId,UINT32 u4StartX, UINT32 u4StartY, UINT32 u4Width, UINT32 u4Height)
 {
+    UINT32 u4ImgWidth = MDDI_READ_FLD(u1VdpId, MCVP_KC_0A, HDEW);
+    UINT32 u4ImgHeight = MDDI_READ_FLD(u1VdpId, MCVP_KC_0A, VDEW); 
+
+    if(_arMDDiPrm[u1VdpId].u2SigWidth==0||_arMDDiPrm[u1VdpId].u2SigHeight==0)
+    {
+        LOG(0,"vDrvDISetDumpRegion->input resolution = 0\n");
+        return;
+    }
+    // if((u4PDSGetHPDSFactor(bPath) != 0x8000)||(u4PDSGetVPDSFactor(bPath) != 0x8000))
+    u4StartX=u4ImgWidth*u4StartX/_arMDDiPrm[u1VdpId].u2SigWidth;
+    u4StartY=u4ImgHeight*u4StartY/_arMDDiPrm[u1VdpId].u2SigHeight;
+    
     vIO32WriteFldAlign(SWRW_07, u4Width, DUMP_REQ_WIDTH);
     vIO32WriteFldAlign(SWRW_07, u4Height, DUMP_REQ_HEIGHT);  
     vIO32WriteFldAlign(SWRW_06, u4StartX, DUMP_CTRL_START_X);
