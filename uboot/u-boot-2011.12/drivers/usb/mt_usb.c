@@ -1,4 +1,23 @@
 /*
+* Copyright (c) MediaTek Inc.
+*
+* This program is distributed under a dual license of GPL v2.0 and
+* MediaTek proprietary license. You may at your option receive a license
+* to this program under either the terms of the GNU General Public
+* License (GPL) or MediaTek proprietary license, explained in the note
+* below.
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+*
+/*
  * Copyright (c) 2012 MediaTek Inc.
  *
  * Redistribution and use in source and binary forms, with or without

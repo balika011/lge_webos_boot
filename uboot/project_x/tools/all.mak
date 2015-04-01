@@ -1,3 +1,22 @@
+#
+# Copyright (c) MediaTek Inc.
+#
+# This program is distributed under a dual license of GPL v2.0 and
+# MediaTek proprietary license. You may at your option receive a license
+# to this program under either the terms of the GNU General Public
+# License (GPL) or MediaTek proprietary license, explained in the note
+# below.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+#
 ###############################################################################
 # Copyright Statement:                                                        #
 #                                                                             #
@@ -74,9 +93,9 @@
 ###############################################################################
 ###########################################################################
 # $RCSfile: all.mak,v $
-# $Revision: #1 $
-# $Date: 2015/01/09 $
-# $Author: dtvbm11 $
+# $Revision: #2 $
+# $Date: 2015/04/01 $
+# $Author: p4admin $
 # $CCRevision: /main/DTV_X/DTV_X_HQ_int/2 $
 # $SWAuthor: Iolo Tsai $
 # $MD5HEX: e28ed720dfe9ee1aaf20a243fb0e434d $
