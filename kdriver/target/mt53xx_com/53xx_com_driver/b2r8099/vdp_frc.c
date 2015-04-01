@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/01 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #26 $
+ * $Revision: #27 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -976,7 +976,11 @@ static VOID _B2R_SeamlessJob(B2R_OBJECT_T* this)
             #endif
             {
                 B2R_HAL_ADDR_T tFrmAddr;
-                  
+                if(FBM_ChkSeamlessMode(prFrcPrm->ucFbgId,SEAMLESS_BY_NPTV))
+                {
+                    B2R_HAL_Set(this->hB2r,B2R_HAL_PITCH,&prFbmPicHdr->u4PicWidthPitch);
+                }
+                
                 tFrmAddr.u4Y0 = u4AddrY;
                 tFrmAddr.u4C0 = u4AddrC;
                 #ifdef CC_3D_MM_DS_SUPPORT
@@ -2619,7 +2623,7 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
         return FALSE;
     }
 
-	 if(prFrcPrm->fgSeqChg)
+	if(prFrcPrm->fgSeqChg)
     {
         prVdpConf->u4SrcLineSize = prSeqHdr->u2LineSize;
         FBM_ClrFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_SEQ_CHG);
@@ -3092,7 +3096,6 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
 	UCHAR ucPreLookFbId;
 	FBM_SEQ_HDR_T* prSeqHdr;
 	UINT32 u4PitchWidth;
-	UINT16 u2MsgQNum;
     *pfgGstPlayBack = TRUE;
     
     do
@@ -3101,6 +3104,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
         {
             break;
         }
+        
         ucB2rId = this->ucB2rId;
         if(ucB2rId >= B2R_NS)
         {
@@ -3114,8 +3118,9 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
 		     LOG(0, "prVdpConf = NULL [%s-%d]\n", __FUNCTION__, __LINE__);;
 		     break;
 		 }
-		ucEsId = prVdpConf->ucInputPort[0];
-		prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
+         
+		 ucEsId = prVdpConf->ucInputPort[0];
+		 prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
 		 if(!prVdecEsInfo)
 		 {
 		     break;
@@ -3125,6 +3130,7 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
         prB2rVar = this->ptB2rVar;
         zMsgSize = sizeof(VDP_B2R_CHG_FRAME_MSG_T);
         x_memset(&rMsg, 0, zMsgSize);
+        
         if(!prB2rVar||!prFrcPrm)
 		 {
 		     LOG(0, "prB2rVar||!prFrcPrm = NULL [%s-%d]\n", __FUNCTION__, __LINE__);;
@@ -3149,54 +3155,62 @@ void _B2R_GetFrameBufferForOMX(B2R_OBJECT_T* this, BOOL* pfgGstPlayBack)
                 x_memcpy(&rMsg, &(prB2rVar->rPendingChgFrmMsg), zMsgSize);
                 prB2rVar->fgPendingChgFrmMsg = FALSE;
             }
-
+           
 		   if((prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV))
 	       {
+	           #if 0
+               UINT16 u2MsgQNum;
 	           ucPreLookFbId = FBM_PreLookBFromDispQ(prFrcPrm->ucFbgId,uVsyncNum);
-	     	   prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId );
-	           prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
-			   x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
-			  
-			   if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
-			   {
-				 if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
-				 {
-				     if(prFrcPrm->fgSeqChg == FALSE)
+               if(ucPreLookFbId != FBM_FB_ID_UNKNOWN)
+               {
+                   prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                   prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
+                   x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId],&u2MsgQNum);
+                   
+                   if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
+                   {
+                     if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
                      {
-                         LOG(1,"PreCheck:WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d,TagNs=%d,rMsg->ucFbId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId,(prFrcPrm->u4InStcPeriod /prFrcPrm->u4OutStcPeriod ),rMsg.ucFbId);
-                         LOG(1,"org(W=%d,H=%d), Current(W=%d,H=%d),u2MsgQNum=%d\n",prCurFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,u2MsgQNum);
-                         vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
-                         prFrcPrm->fgSeqChg=TRUE;
-                     }
-				}
-				else
-				{
-					 prFrcPrm->fgSeqChg=FALSE;
-				}
+                         if(prFrcPrm->fgSeqChg == FALSE)
+                         {
+                             LOG(1,"PreCheck:WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d,TagNs=%d,rMsg->ucFbId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId,(prFrcPrm->u4InStcPeriod /prFrcPrm->u4OutStcPeriod ),rMsg.ucFbId);
+                             LOG(1,"org(W=%d,H=%d), Current(W=%d,H=%d),u2MsgQNum=%d\n",prCurFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,u2MsgQNum);
+                             vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
+                             prFrcPrm->fgSeqChg=TRUE;
+                         }
+                    }
+                    else
+                    {
+                         prFrcPrm->fgSeqChg=FALSE;
+                    }
+                 }
 		      }
-
-				 ucPreLookFbId = FBM_PreLookBFromDispQ(prFrcPrm->ucFbgId,0);
-			     prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
-			     prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-				 
-				 if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
-				 {
-					 if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
-					 {
-					      BOOL fgSet = TRUE;
-						  prSeqHdr = FBM_GetFrameBufferSeqHdr(prFrcPrm->ucFbgId);
-						  if(prSeqHdr)
-						  {
-                          LOG(1,"CurrentCheck: WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId);
-                          u4PitchWidth=prSeqHdr->u2LineSize;
-						  LOG(1,"Next pitch=%d,current Pitch=%d,FB=%d,u2LineSize=%d\n",prNextFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicWidth,ucPreLookFbId,prSeqHdr->u2LineSize);
-						  B2R_HAL_Set(this->hB2r, B2R_HAL_PITCH, &u4PitchWidth);
-                          B2R_HAL_Set(this->hB2r, B2R_HAL_SET_RESOLUTION,&fgSet);
-                          FBM_DoSeqChanging(prFrcPrm->ucFbgId,FALSE, FALSE);
-                          vVRMB2RTrigger( _B2R_GetVdpId(ucB2rId));
-						  }
-					  }
-				 }
+              #endif
+              
+		      ucPreLookFbId = FBM_PreLookBFromDispQ(prFrcPrm->ucFbgId,0);
+              if(ucPreLookFbId != FBM_FB_ID_UNKNOWN)
+              {
+                  prNextFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, ucPreLookFbId);
+                  prCurFbmPicHdr= FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                  if((prNextFbmPicHdr!=NULL)&&(prCurFbmPicHdr!=NULL))
+                  {
+                      if((prNextFbmPicHdr->u4PicWidth!=prCurFbmPicHdr->u4PicWidth)||(prNextFbmPicHdr->u4PicHeight!=prCurFbmPicHdr->u4PicHeight))
+                      {
+                           BOOL fgSet = TRUE;
+                           prSeqHdr = FBM_GetFrameBufferSeqHdr(prFrcPrm->ucFbgId);
+                           if(prSeqHdr)
+                           {
+                               LOG(1,"CurrentCheck: WH(%d,%d,Fbid=%d),Next WH(%d,%d,ucPreLookFbId=%d),ucFbgId=%d\n",prCurFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicHeight,prFrcPrm->ucFbId,prNextFbmPicHdr->u4PicWidth,prNextFbmPicHdr->u4PicHeight,ucPreLookFbId,prFrcPrm->ucFbgId);
+                               u4PitchWidth=prSeqHdr->u2LineSize;
+                               LOG(1,"Next pitch=%d,current Pitch=%d,FB=%d,u2LineSize=%d\n",prNextFbmPicHdr->u4PicWidth,prCurFbmPicHdr->u4PicWidth,ucPreLookFbId,prSeqHdr->u2LineSize);
+                               B2R_HAL_Set(this->hB2r, B2R_HAL_PITCH, &u4PitchWidth);
+                               B2R_HAL_Set(this->hB2r, B2R_HAL_SET_RESOLUTION,&fgSet);
+                               FBM_DoSeqChanging(prFrcPrm->ucFbgId,FALSE, FALSE);
+                               vVRMB2RTrigger( _B2R_GetVdpId(ucB2rId));
+                           }
+                       }
+                  }
+               }
 	     	}
            
             if ( (ucB2rId < B2R_NS) && (prB2rVar->eSpeed != STC_SPEED_TYPE_FORWARD_1X))
@@ -4594,24 +4608,24 @@ static void _B2R_GetNextDisp(B2R_OBJECT_T* this)
                 _B2R_GetFrameBuffer(this);
             }
         }
-      
+
 #ifdef CC_B2R_SUPPORT_GAME_MODE
         else if((eGameMode[ucB2rId]==B2R_GAME_MODE_LOW_DELAY)||(eGameMode[ucB2rId]==B2R_GAME_MODE_HIGHT_QUALITY))
         {
              LOG(3,"prFrcPrm->ucReady=%d,Display Q=%d\n",prFrcPrm->ucReady,FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId));
              if(FBM_CheckFrameBufferDispQ(prFrcPrm->ucFbgId) > 2)
              {
-               FBM_PIC_HDR_T* prPicHdr = NULL;
-               _B2R_GameModeGetFrameBuffer(this,2);//drop frame if display Q >2 frame
-               prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-               LOG(2, "[OMX Game mode H Q>2] fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
+                 FBM_PIC_HDR_T* prPicHdr = NULL;
+                 _B2R_GameModeGetFrameBuffer(this,2);//drop frame if display Q >2 frame
+                 prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                 LOG(2, "[OMX Game mode H Q>2] fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
              }
              else
              {
-                FBM_PIC_HDR_T* prPicHdr = NULL;
-                prFrcPrm->ucFbId = FBM_GetFrameBufferFromDispQ(prFrcPrm->ucFbgId);
-                prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
-                LOG(2, "[OMX Game mode H] fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
+                 FBM_PIC_HDR_T* prPicHdr = NULL;
+                 prFrcPrm->ucFbId = FBM_GetFrameBufferFromDispQ(prFrcPrm->ucFbgId);
+                 prPicHdr = FBM_GetFrameBufferPicHdr(prFrcPrm->ucFbgId, prFrcPrm->ucFbId);
+                 LOG(2, "[OMX Game mode H] fbid (%d, %d)\n", prFrcPrm->ucFbId, (prPicHdr?prPicHdr->i4TemporalRef:0));
              }
         }
 #endif
@@ -5817,6 +5831,7 @@ static BOOL _NptvSeamlessCheckChgFrameMsg(UCHAR ucB2rId,B2R_OBJECT_T* this)
 	 {
 	     return FALSE;
 	 }
+     //bVRMReadyForB2R
 
 	 if(prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV)
 	 {
@@ -6092,19 +6107,20 @@ BOOL _B2R_FlushB2RChgFrameMsg(UCHAR ucB2rId)
     {
         VERIFY(x_msg_q_num_msgs(_ahChgFrameQueue[ucB2rId], &u2Cnt) == OSR_OK);
         LOG(1,"_B2R_FlushB2RChgFrameMsg (%d) cnt=%d\n",ucB2rId,u2Cnt);
-
-        if(FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV))
-        {
-            if(u2Cnt >= FBM_NPTV_SEAMLESS_KEEP_CNT) 
-            {
-                u2DropCnt = u2Cnt - FBM_NPTV_SEAMLESS_KEEP_CNT;
-            }
-            else
-            {
-                u2DropCnt = 0;
-            }
-        }
-        else
+        /*
+               if(FBM_ChkSeamlessMode(_B2R_GetFbg(ucB2rId),SEAMLESS_BY_NPTV))
+               {
+                    if(u2Cnt >= FBM_NPTV_SEAMLESS_KEEP_CNT) 
+                    {
+                        u2DropCnt = u2Cnt - FBM_NPTV_SEAMLESS_KEEP_CNT;
+                   }
+                   else
+                   {
+                       u2DropCnt = 0;
+                   }
+               }
+               else
+              */
         {
             u2DropCnt = u2Cnt;
         }
@@ -6964,7 +6980,15 @@ UINT32 _B2R_FrcProc(B2R_OBJECT_T * this,  UCHAR ucBottom, UCHAR ucRightView)
                 }
             }
 #endif
-
+            if(prFrcPrm->ucFbgId != FBM_FBG_ID_UNKNOWN)
+            {
+                if(FBM_ChkFrameBufferFlag(prFrcPrm->ucFbgId,FBM_FLAG_WAIT_FLUSH_DISPQ))
+                {
+                    FBM_B2rStartFlushInput(prFrcPrm->ucFbgId);
+                    FBM_ClrFrameBufferFlag(prFrcPrm->ucFbgId, FBM_FLAG_WAIT_FLUSH_DISPQ);
+                }
+            }
+            
             if (FRC_DISP_FINISH(prFrcPrm)&&_NptvSeamlessCheckChgFrameMsg(ucB2rId,this))
             {
                 if (prFrcPrm->u2RestoreNs != 0)

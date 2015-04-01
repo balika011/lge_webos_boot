@@ -94,9 +94,13 @@ typedef struct __CODEC_ENTRY_T
             } \
           } while (0)
 
-#define VPUSH_MSG_UNDERRUN_THRD (1)
-#define VPUSH_UNDERFLOW_CNT_THRD 5
+#define VPUSH_MSG_UNDERRUN_INTIME_THRD (1)
+#define VPUSH_MSG_UNDERRUN_PREDICT (10)
+#define VPUSH_UNDERFLOW_EVENT_INTERVAL 5
 #define VPUSH_DATA_TIMER_THRSD (100) // 0.1 sec
+#define VPUSH_ESDATA_TOTAL_DELTA_TIME (1000)  // 1s 
+#define VPUSH_VFIFO_UNDERFLOW_SIZE (1024*1024)
+#define VPUSH_PREDATA_CNT (VPUSH_ESDATA_TOTAL_DELTA_TIME/VPUSH_DATA_TIMER_THRSD)
 
 #define ADDRESS_DEC_ALIGN(addr,align) (addr&(~(align-1)))
 #define ADDRESS_INC_ALIGN(addr,align) ((addr+align-1)&(~(align-1)))
@@ -137,6 +141,7 @@ static VDEC_CONTAINER_TYPE_T _arVdecContainerType[] =
 #endif
 
 extern CODEC_ENTRY_T s_codec_map[VDEC_FMT_MAX];
+static INT16 _ari2PreEsCntDelta[VDEC_PUSH_MAX_DECODER][VPUSH_PREDATA_CNT];
 
 //-----------------------------------------------------------------------------
 // Function prototype
@@ -3364,7 +3369,8 @@ UINT32 _u4MpegSeqLen;
 #error "move above variable to VDEC_T for multi-instance support"
 #endif
 
-static void _VPUSH_FlushEsmQ(UCHAR ucEsId)
+
+VOID _VPUSH_FlushEsmQ(UCHAR ucEsId)
 {
     VDEC_ES_INFO_T *prVdecEsInfo;
     VDEC_PES_INFO_T _rPesInfo; 
@@ -4296,20 +4302,41 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 UNUSED(_VPUSH_GetMsgCountInQ(prdec));
                 DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                 //flush first make sure vdec can unlock from get frame.
-                if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL)
+                if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
                 {
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
                 
-                VDEC_ReleaseDispQ(prVdec->ucVdecId);
-                _VPUSH_FlushEsmQ(prVdec->ucVdecId);
-                VDEC_ReleaseDispQ(prVdec->ucVdecId);
-                
+                if(prVdecEsInfo->ucFbgId != FBM_FBG_ID_UNKNOWN)
+                {
+                    FBM_ClrFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY);
+                    if(FBM_EnableB2rFlushInput(prVdecEsInfo->ucFbgId,80) == FALSE)
+                    {
+                        VDEC_ReleaseDispQ(prVdec->ucVdecId);
+                        LOG(1,"VPUSH:FBM_EnableB2rFlushInput(Fbg:%d) FAIL\n",prVdecEsInfo->ucFbgId);
+                    }
+
+                    _VPUSH_FlushEsmQ(prVdec->ucVdecId);
+                    VDEC_ReleaseDispQ(prVdec->ucVdecId);
+
+                    if(FBM_ChkFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY))
+                    {
+                        LOG(0,"VPUSH: Flush Fbg%d FBM_FLAG_DISP_READY has been seted !!!!\n",prVdecEsInfo->ucFbgId);
+                    }
+                    
+                    FBM_SetFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY);
+                }
+                else
+                {
+                    _VPUSH_FlushEsmQ(prVdec->ucVdecId);
+                }
+               
                 //flush again to free frame flushed.
-                if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL)
+                if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
                 {
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
+                
                 LOG(1, "%s(%d): VPUSH_CMD_FLUSH u4DmxAvailSize(%d)\n",\
                     __FUNCTION__, __LINE__,\
                     DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid));
@@ -4329,6 +4356,9 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
 
                 prVdec->u8TotalPushSize = 0;
                 prVdec->ucUnderFlowCnt = 0;
+                prVdec->u4TimerConter  = 0;
+                prVdec->u2LastEsCnt = 0;
+                x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
                 //prVdec->fgNonFirst = FALSE;
                 break;
             case VPUSH_CMD_PLAY:
@@ -4622,6 +4652,8 @@ BOOL _VPUSH_PrsSeqHdr(VOID* prdec,
     VERIFY(x_sema_create(&prVdec->hIoQSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_LOCK) == OSR_OK);
     prVdec->u8TotalPushSize = 0;
     prVdec->ucUnderFlowCnt = 0;
+    prVdec->u4TimerConter  = 0;
+    prVdec->u2LastEsCnt = 0;
     prVdec->fgNonFirst = FALSE;
     prVdec->fgInputBufReady = FALSE;
     prVdec->fgFirstVideoChunk = TRUE;
@@ -5233,6 +5265,7 @@ VOID _VPUSH_DecodeInit(VOID)
         }
         x_memset(_prVdecPush,0x00,sizeof(VDEC_DECODER_T));
     }
+    
     if(!_prVdecPush->fgInited)
     {
         UINT32 i;
@@ -5600,7 +5633,7 @@ BOOL _VPUSH_AllocVFifo(VOID* prdec,
         return FALSE;
     }
     *pu4BufSA = prVdec->arBufInfo[i].u4BufAddr;
-    LOG(1, "_VPUSH_AllocVFifo, u4Size: %d, u4BufSize: %d\n", u4Size, prVdec->arBufInfo[i].u4BufSize);
+    LOG(2, "_VPUSH_AllocVFifo, u4Size: %d, u4BufSize: %d\n", u4Size, prVdec->arBufInfo[i].u4BufSize);
     if(u4Size > prVdec->arBufInfo[i].u4BufSize)
     {
         LOG(0, "[warning] input port buf size %d > feeder buf size: %d\n", u4Size, prVdec->arBufInfo[i].u4BufSize);
@@ -5912,12 +5945,25 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
     else if (VPUSH_ST_PLAY == prVdec->eCurState && prVdec->u8TotalPushSize > 0 && prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_NETWORK_RTC)
     {
         UINT16 u2QueueSize, u2MaxQueueSize;
-		UINT16 u2Thrd;
+        INT32 i4DeltaSum = 0,i4Idx;
+        UINT32 u4DmxAvailSize;
+        BOOL fgInTimeUnderFlow = FALSE, fgPredictUnderFlow = FALSE;
+
 		VDEC_GetQueueInfo(prVdec->ucVdecId, &u2QueueSize, &u2MaxQueueSize);
         _VPUSH_GetMsgCountInQ((void *)prVdec);
-		u2Thrd = (VDEC_3D_MVC == prVdecEsInfo->e3DType)? 16 : VPUSH_MSG_UNDERRUN_THRD;
+
+        prVdec->pPreDelta[prVdec->u4TimerConter%VPUSH_PREDATA_CNT] = u2QueueSize - prVdec->u2LastEsCnt;  
+        prVdec->u4TimerConter++;
+        prVdec->u2LastEsCnt = u2QueueSize;
+
+        for(i4Idx = 0; i4Idx < VPUSH_PREDATA_CNT; i4Idx++)
+        {
+            i4DeltaSum += prVdec->pPreDelta[i4Idx];
+        }
         
-        if(prVdec->u2MstCount == 0 && u2QueueSize < u2Thrd )
+        u4DmxAvailSize= DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);   
+
+        if(prVdec->u2MstCount == 0 && u2QueueSize < VPUSH_MSG_UNDERRUN_INTIME_THRD)
         {
             prVdec->ucUnderFlowCnt ++;
         }
@@ -5926,14 +5972,31 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
             prVdec->ucUnderFlowCnt = 0;
         }
 
-        if(prVdec->ucUnderFlowCnt > VPUSH_UNDERFLOW_CNT_THRD)
+        if(prVdec->ucUnderFlowCnt > VPUSH_UNDERFLOW_EVENT_INTERVAL && u4DmxAvailSize > VPUSH_VFIFO_UNDERFLOW_SIZE)
+        {
+           fgInTimeUnderFlow = TRUE;
+        }
+
+        if((i4DeltaSum < 0) && (u2QueueSize < VPUSH_MSG_UNDERRUN_PREDICT) &&
+             (u4DmxAvailSize > VPUSH_VFIFO_UNDERFLOW_SIZE) && (prVdec->u4TimerConter > VPUSH_UNDERFLOW_EVENT_INTERVAL))
+        {
+           fgPredictUnderFlow = TRUE;
+        }
+
+        // i4DeltaSum < 0 means frame count is decreasing.
+        if(fgInTimeUnderFlow || fgPredictUnderFlow)
         {
             if (prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb)
             {
                 prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb(prVdec->rInpStrm.fnCb.u4VdecUnderrunTag);
             }
+            
             prVdec->ucUnderFlowCnt = 0;
-            LOG(2, "[Vpush(%d) Vdec(%d)]Data Underrun ap = %d!!!\n", prVdec->ucVPushId,prVdec->ucVdecId,prVdecEsInfo->eMMSrcType);
+            prVdec->u4TimerConter  = 0;
+            prVdec->u2LastEsCnt = 0;
+            x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
+            LOG(2, "_VPUSH_CheckData(Vpush:%d,Vdec:%d,App:%d) Reason(%d,%d) UnderRun!!!\n",
+                prVdec->ucVPushId,prVdec->ucVdecId,prVdecEsInfo->eMMSrcType,fgInTimeUnderFlow,fgPredictUnderFlow);
         }
     }
 
@@ -5983,7 +6046,6 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
         return NULL;
     }
     
-    LOG(1,"[VPUSH]_VPUSH_AllocVideoDecoder %d\n",i);
 
     //FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
     //FBM_SetFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_NO_TIMEOUT);
@@ -6005,6 +6067,8 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->fgFirstVideoChunk = TRUE;
     prVdec->u8TotalPushSize = 0;
     prVdec->ucUnderFlowCnt = 0;
+    prVdec->u4TimerConter = 0;
+    prVdec->u2LastEsCnt = 0;
     prVdec->fgInsertStartcode = FALSE;
     prVdec->fgGotEos = FALSE;
     prVdec->fgDecoderCalPts = FALSE;
@@ -6022,8 +6086,10 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->fgIsSecureInput = FALSE;    
     prVdec->fgLowLatencyMode = FALSE;
     prVdec->fgGstPlay=TRUE;
-
+    prVdec->pPreDelta = _ari2PreEsCntDelta[prVdec->ucVPushId];
+    
 	x_memset(&(prVdec->rInpStrm.fnCb), 0, sizeof(VDEC_PUSH_CB_T));
+    x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
 
     if (!VPUSH_IS_PIC(eFmt))
     {
@@ -6066,6 +6132,8 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
             prVdec->hRvMoveSema=NULL_HANDLE;
         }
     }
+
+    LOG(1,"[VPUSH]_VPUSH_AllocVideoDecoder(Id:%d,Fmt:%d)\n",i,eFmt);
 
     return (VOID*)prVdec;
 }
@@ -6173,6 +6241,7 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
 {
     UINT32 i;
     FBM_PIC_NTF_INFO_T *prPicNfyInfo;
+    VDEC_ES_INFO_T *prVdecEsInfo;
     VDEC_T *prVdec = NULL;
 
     if(!pPicNfyInfo)
@@ -6181,8 +6250,9 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
         ASSERT(0);
         return;
     }
-
+    
     prPicNfyInfo = (FBM_PIC_NTF_INFO_T*)pPicNfyInfo;
+    prVdecEsInfo = _VDEC_GetEsInfo(ucVdecId);
 
     for(i=0;i<VDEC_PUSH_MAX_DECODER;i++)
     {
@@ -6192,8 +6262,8 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
             prVdec = &_prVdecPush->arDec[i];
             break;
         }
-        //ASSERT(i == ucVdecId);
     }
+    
     if(!prVdec)
     {
         LOG(0, "%s(%d): fail\n", __FUNCTION__, __LINE__);
@@ -6205,7 +6275,10 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
         LOG(0, "%s(%d): under stop\n", __FUNCTION__, __LINE__);
         return;
     }
-
+    
+    prVdecEsInfo->ucFbgId = prPicNfyInfo->ucFbgId;
+    prVdecEsInfo->ucFbId = prPicNfyInfo->ucFbId;
+    
     if(prVdec->rInpStrm.fnCb.pfnVdecDecodeDone)
     {
         if(prVdec->rInpStrm.fnCb.pfnVdecDecodeDone(prVdec->rInpStrm.fnCb.u4DecodeTag,
@@ -6288,8 +6361,7 @@ BOOL _VPUSH_GetDecSize(VOID* prdec, UINT64 *pu8DecSize, UINT64 *pu8UndecSize)
     }
 
     u4FifoSz = prVdec->u4VFifoSize;
-    u4DmxAvailSize = DMX_MUL_GetEmptySize(
-        prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);
+    u4DmxAvailSize = DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);
 
     if (u4DmxAvailSize > u4FifoSz)
     {
@@ -6299,7 +6371,7 @@ BOOL _VPUSH_GetDecSize(VOID* prdec, UINT64 *pu8DecSize, UINT64 *pu8UndecSize)
     }
     else
     {
-        *pu8UndecSize = (u4DmxAvailSize)? u4FifoSz - u4DmxAvailSize : 0;
+        *pu8UndecSize = (u4DmxAvailSize) ?  u4FifoSz - u4DmxAvailSize : 0;
     }
 
     if ((VPUSH_ST_PLAY == prVdec->eCurState)
@@ -6348,9 +6420,11 @@ BOOL _VPUSH_ResetDecSize(VOID* prdec)
     prVdec = (VDEC_T*)prdec;
     prVdec->u8TotalPushSize = 0;
     prVdec->ucUnderFlowCnt = 0;
+    prVdec->u4TimerConter  = 0;
+    prVdec->u2LastEsCnt = 0;
+    x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
     return TRUE;
 }
-
 
 BOOL _VPUSH_SetAppType(VOID* prdec, char *pcAppType, UINT32 u4AppTypeLen)
 {
@@ -6849,7 +6923,7 @@ BOOL _VPUSH_GetParam(VPUSH_GET_PARAM_TYPE eQueryType,
     }
     else
     {
-        LOG(2,"_VPUSH_GetParam(%d,%d,%d) return true \n",eQueryType,u4InParam,*pu4OutParam1);
+        LOG(4,"_VPUSH_GetParam(%d,%d,%d) return true \n",eQueryType,u4InParam,*pu4OutParam1);
     }
     
     return fgRetVal;

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/04/01 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #30 $
+ * $Revision: #31 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1252,7 +1252,6 @@ typedef enum
 
 static CONNECTION_ADAPTOR rConnAdaptor[CONN_VDP_CNT][CONN_ES_CNT];
 static HANDLE_T _rPipeMutex;
-static PFN_VDEC_CALLSTACK_CB pfnStackInfor =NULL;
 static VOID _Vdp_PipInit(VOID)
 {
     UCHAR ucVdecId,ucVdpId;
@@ -1456,12 +1455,6 @@ static VOID _Vdp_PipeDisConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrc
         }
     }
     return;
-}
-
-VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTACK_CB cb)
-{
-   pfnStackInfor = cb;
-   return;
 }
 
 VOID  VDP_PipeStartSeqChange(UCHAR ucFbgId)
@@ -1670,16 +1663,17 @@ VOID VDP_PipeGetInifor(VOID)
     CONNECTION_ADAPTOR *prConnAdaptor;
     UCHAR ucVdecId,ucVdpId;
 
-    LOG(0,"\n");
+    LOG(2,"\n");
     PIPE_LOCK(_rPipeMutex);
     for(ucVdpId = 0; ucVdpId < CONN_VDP_CNT; ucVdpId++)
     {
         for(ucVdecId = 0; ucVdecId < CONN_ES_CNT; ucVdecId++)
         {
             prConnAdaptor = &rConnAdaptor[ucVdpId][ucVdecId];
-            LOG(0,"Pipe[%d][%d]:C=%d,V=%d,VR=%d,E=%d,ER=%d,F=%d,B=%d,M=%d\n",ucVdpId,ucVdecId,\
-                prConnAdaptor->fgConnected,prConnAdaptor->ucVdpId,prConnAdaptor->fgVdpReady,prConnAdaptor->ucEsId,\
-                prConnAdaptor->fgVdecReady,prConnAdaptor->ucFbgId,prConnAdaptor->ucB2rId,prConnAdaptor->fgModeChanging);
+            LOG(2,"Pipe(Vdp:%d-Vdec:%d) %s,VdpReady:%d,VdecReady:%d,FbgId=%d,B2rId=%d,ModeChangeing=%d\n",\
+                prConnAdaptor->ucVdpId,prConnAdaptor->ucEsId, prConnAdaptor->fgConnected ? "Connected" : "Disconnected",
+                prConnAdaptor->fgVdpReady,prConnAdaptor->fgVdecReady, prConnAdaptor->ucFbgId,\
+                prConnAdaptor->ucB2rId,prConnAdaptor->fgModeChanging);
         }
     }
     
@@ -1699,7 +1693,7 @@ VOID VDP_PipeConnectFromVdp(UCHAR ucVdpId,UCHAR ucEsId)
     }
     
     LOG(1,"[Pipe]VDP_PipeConnectFromVdp(%d,%d)\n",ucVdpId,ucEsId);
-    if(pfnStackInfor) pfnStackInfor(VDEC_DEBUG_CALLSTACK_T_VDEC_PIPE,"VDP_PipeConnectFromVdp",ucEsId);
+
     PIPE_LOCK(_rPipeMutex);
 
     if(ucEsId == DISCONNECT_ES_ID)
@@ -1767,7 +1761,7 @@ void VDP_PipeConnectFromVdec(UCHAR ucEsId,UCHAR ucFbgId)
     }
     
     LOG(1,"[Pipe]VDP_PipeConnectFromVdec(%d,%d)\n",ucEsId,ucFbgId);
-    if(pfnStackInfor) pfnStackInfor(VDEC_DEBUG_CALLSTACK_T_VDEC_PIPE,"VDP_PipeConnectFromVdec",ucEsId);
+
     PIPE_LOCK(_rPipeMutex);
 	if(ucFbgId == FBM_FBG_ID_UNKNOWN) //Disconnect
     {
@@ -2009,6 +2003,26 @@ void LG_PipLineDisconnect(UCHAR ucVdpId)
 	 LOG(0,"LG_PipLineDisconnect end.\n");
  }
 #endif
+
+void VDP_InputChange(UCHAR ucB2rId)
+{
+    B2R_OBJECT_T *this;
+    if(ucB2rId >= B2R_HW_MAX_ID)
+    {
+        LOG(0,"VDP_InputChange(ucB2rId:%d) Fail\n",ucB2rId);
+        return;
+    }
+    
+    this = _B2R_GetObj(ucB2rId);
+    if(this && this->ptB2rPrm)
+    {
+       vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
+       this->ptB2rPrm->fgSeqChg=TRUE;
+    }
+    
+    return;
+}
+
 void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 {
     B2R_OBJECT_T *this;

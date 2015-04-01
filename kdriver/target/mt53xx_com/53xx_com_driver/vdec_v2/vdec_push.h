@@ -33,9 +33,9 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/26 $
+ * $Date: 2015/04/01 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -224,6 +224,10 @@ typedef struct {
     UINT8 ucUnderFlowCnt;
     ENUM_VDEC_FRAME_RATE_T eFrameRate;
     UINT16 u2MstCount;
+    UINT16 u2LastEsCnt;
+    
+    UINT32 u4TimerConter;
+    INT16  *pPreDelta;
     UINT32 u1StartCodeLenMinus1;
     UINT32 u4CurStopId;
     UINT32 u4PreviousStopId;

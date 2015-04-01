@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/30 $
+ * $Date: 2015/04/01 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #10 $
+ * $Revision: #11 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -897,6 +897,7 @@ typedef struct
 #define FBM_FLAG_THUMBNAIL_MODE                                      (1 << 25)  // New Thumbnail mode without VDP.
 #define FBM_FLAG_AUTO_RENDER                                         (1 << 26)  // FBG without render path, need auto consume dispQ FB.
 #define FBM_FLAG_GETEMPTY_NOWAIT                                     (1 << 27)  // FBG get Empty buffer not wait
+#define FBM_FLAG_WAIT_FLUSH_DISPQ                                    (1 << 28)  // FBG Wait b2r flush disp Q.
 
 //Wfd Ajust STC Flag
 #define FBM_WFD_FRAME_MONITOR                                         (1 << 0)
@@ -1910,6 +1911,8 @@ EXTERN BOOL FBM_GetPtsSync(UCHAR ucFbgId);
 EXTERN BOOL  FBM_FbgValid(UCHAR ucFbgId);
 EXTERN BOOL FBM_FbValid(UCHAR ucFbgId,UCHAR ucFbId);
 EXTERN BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery);
+EXTERN void FBM_B2rStartFlushInput(UCHAR ucFbgId);
+EXTERN BOOL FBM_EnableB2rFlushInput(UCHAR ucFbgId,UINT32 u4Delay);
 
 #ifdef CC_B2R_RES_SUPPORT
 EXTERN UINT8 FBM_B2rResIdAccess(UCHAR ucFbgId, 

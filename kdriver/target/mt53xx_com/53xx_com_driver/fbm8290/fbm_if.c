@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/01 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1510,6 +1510,7 @@ void FBM_Init(void)
 
             // create semaphore
             VERIFY(x_sema_create(&_arFbg[u4Idx].hMutex, X_SEMA_TYPE_MUTEX, X_SEMA_STATE_UNLOCK) == OSR_OK);
+            VERIFY(x_sema_create(&_arFbg[u4Idx].hFlushSema, X_SEMA_TYPE_BINARY, X_SEMA_STATE_LOCK) == OSR_OK);
 
 #ifdef CC_VDP_FULL_ISR
             _arFbg[u4Idx].prState = &_rState;
@@ -2813,6 +2814,7 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
     UINT32 u4FbActive4K2KPool;
     UINT32 u4FbActive4K2KPool2;  	
     HANDLE_T hMutex;
+    HANDLE_T hFlushSem;
     UCHAR    ucFbgType;
     BOOL   fg4k2KPoolAlocate;
     UCHAR    ucIdx = 0;
@@ -2892,7 +2894,8 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
 	
     // backup semaphore
     hMutex = _arFbg[ucFbgId].hMutex;
-
+    hFlushSem = _arFbg[ucFbgId].hFlushSema;
+        
     hEmptyQSemaphore = _arFbg[ucFbgId].hEmptyQSemaphore;
     hEmptyBQSemaphore = _arFbg[ucFbgId].hEmptyBQSemaphore;
     hEmptyResizeQSemaphore = _arFbg[ucFbgId].hEmptyResizeQSemaphore;
@@ -2936,7 +2939,8 @@ void FBM_ReleaseGroup(UCHAR ucFbgId)
     _arFbg[ucFbgId].fg4k2KPoolAlocate = FALSE;  
     // restore semaphore
     _arFbg[ucFbgId].hMutex = hMutex;
-
+    _arFbg[ucFbgId].hFlushSema = hFlushSem;
+    
 #ifdef CC_VDP_FULL_ISR
     _arFbg[ucFbgId].prState = &_rState;
 #endif
@@ -3377,6 +3381,54 @@ void FBM_WaitUnlockFrameBuffer(UCHAR ucFbgId, UINT32 u4Timeout)
     FBM_MUTEX_UNLOCK(ucFbgId);
 }
 
+BOOL FBM_EnableB2rFlushInput(UCHAR ucFbgId,UINT32 u4Delay)
+{
+    if (VERIFY_FBG(ucFbgId))
+    {
+        return FALSE;
+    }
+    
+    if(VDP_PipeIsOutputReady(_arFbg[ucFbgId].u1DecoderSrcId))
+    {
+        while(x_sema_lock(_arFbg[ucFbgId].hFlushSema, X_SEMA_OPTION_NOWAIT) == OSR_OK);
+        
+        FBM_SetFrameBufferFlag(ucFbgId,FBM_FLAG_WAIT_FLUSH_DISPQ);
+        if(x_sema_lock_timeout(_arFbg[ucFbgId].hFlushSema,u4Delay)!=OSR_OK)
+        {
+           FBM_ClrFrameBufferFlag(ucFbgId,FBM_FLAG_WAIT_FLUSH_DISPQ);
+           LOG(0,"FBM_ReleaseDispQByB2r(Fbg:%d,Wait:%d) Time Out !!!\n",ucFbgId,u4Delay);
+           return FALSE;
+        }
+        FBM_ClrFrameBufferFlag(ucFbgId,FBM_FLAG_WAIT_FLUSH_DISPQ);
+    }
+    return TRUE;
+}
+
+EXTERN VOID _VPUSH_FlushEsmQ(UCHAR ucEsId);
+VOID FBM_B2rStartFlushInput(UCHAR ucFbgId)
+{
+    if(VERIFY_FBG(ucFbgId))
+    {
+        return;
+    }
+    
+    FBM_SetFrameBufferFlag(ucFbgId, FBM_FLAG_SEEK_MODE);
+    FBM_ReleaseDispQ(ucFbgId);
+    FBM_ClrFrameBufferFlag(ucFbgId, FBM_FLAG_SEEK_MODE);
+    VDP_FlushB2RAysyncRenderFrameMsg(ucFbgId);
+    FBM_ClrFrameBufferFlag(ucFbgId,FBM_FLAG_WAIT_FLUSH_DISPQ);
+    VERIFY(x_sema_unlock(_arFbg[ucFbgId].hFlushSema) == OSR_OK);
+    return;
+}
+
+static PFN_VDEC_CALLSTACK_CB pfnStackInfor =NULL;
+
+VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTACK_CB cb)
+{
+   pfnStackInfor = cb;
+   return;
+}
+
 
 //-------------------------------------------------------------------------
 /** FBM_ReleaseDispQ
@@ -3403,10 +3455,11 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
         return;
     }
 
-	FBM_MUTEX_LOCK(ucFbgId);
+    
+    FBM_MUTEX_LOCK(ucFbgId);
     ucThumbnail = FBM_ChkFrameBufferFlag(ucFbgId, FBM_FLAG_THUMBNAIL_MODE);
-
-    if (!ucThumbnail )
+    if(pfnStackInfor) pfnStackInfor(VDEC_DEBUG_CALLSTACK_T_VDEC_PIPE ,"FBM_ReleaseDispQ",ucFbgId);
+    if (!ucThumbnail)
     {
         UCHAR ucVdpId =  0;
         
@@ -3442,17 +3495,19 @@ void FBM_ReleaseDispQ(UCHAR ucFbgId)
     else
     {
         ucCnt = FBM_CheckFrameBufferDispQ(ucFbgId);
+        /*
 		if(FBM_ChkSeamlessMode(ucFbgId, SEAMLESS_BY_NPTV))
 		{
 		   if(ucCnt > FBM_NPTV_SEAMLESS_KEEP_CNT)
-           {
-               ucCnt -= FBM_NPTV_SEAMLESS_KEEP_CNT;
-           }
-           else
-           {
-               ucCnt = 0;
-           }
+                 {
+                     ucCnt -= FBM_NPTV_SEAMLESS_KEEP_CNT;
+                 }
+                 else
+                 {
+                     ucCnt = 0;
+                 }
 		}
+             */
     }
 
     for (ucIdx = 0; ucIdx < ucCnt; ucIdx++)
@@ -5558,6 +5613,12 @@ BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery)
     if(fgQuery == FALSE)
     {
         _arFbg[ucFbgId].fgDoSeqChanging = fgValue;
+        if(VDP_PipeIsOutputReady(_arFbg[ucFbgId].u1DecoderSrcId) 
+            && (_arFbg[ucFbgId].eSeamlessMode != SEAMLESS_NONE))
+        {
+            VDP_InputChange(_FBM_Fbg2B2r(ucFbgId));
+        }
+        
     }
     
     return _arFbg[ucFbgId].fgDoSeqChanging;

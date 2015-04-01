@@ -11326,11 +11326,11 @@ static INT32 _VdecSuperDataDump(INT32 i4Argc, const CHAR ** szArgv)
 
 
 extern void dump_stack(void );
-//extern void dump_stack_ext(struct task_struct *task);
+extern void dump_stack_ext(struct task_struct *task);
 //extern void show_stack(struct task_struct *tsk, unsigned long *sp);
-//extern void dump_stack_print_info(const char *log_lvl);
+extern void dump_stack_print_info(const char *log_lvl);
 extern void dump_system_info(void);
-//extern INT32 x_thread_get_handle(UCHAR* s_name,HANDLE_T  *h_th_hdl);
+extern INT32 x_thread_get_handle(UCHAR* s_name,HANDLE_T  *h_th_hdl);
 extern VOID VDP_PipeRegPrintStackCb(PFN_VDEC_CALLSTACK_CB cb);
 typedef struct
 {
@@ -11436,7 +11436,6 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
     {
         if(i4Argc >= 3)
         {
-            #if 0
             CRIT_STATE_T rState;
             HANDLE_T  h_th_hdl = (HANDLE_T)NULL;
             x_thread_get_handle((CHAR *)szArgv[2],&h_th_hdl);
@@ -11451,14 +11450,13 @@ static INT32 _VdecCallStackSetting(INT32 i4Argc, const CHAR ** szArgv)
             {
                 Printf("Can't find thread %s\n",szArgv[2]);
             }
-            #endif
         }
     }
     else if(ucType == 3)
     {
         CRIT_STATE_T rState;
         rState = x_crit_start();
-        //dump_stack_print_info(KERN_DEFAULT);
+        dump_stack_print_info(KERN_DEFAULT);
         dump_system_info();
         x_crit_end(rState);
     }
