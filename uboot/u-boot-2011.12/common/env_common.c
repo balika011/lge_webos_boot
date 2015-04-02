@@ -142,12 +142,6 @@ int default_environment_size = 0x2000;
 static unsigned int kmemsize = 0;
 static unsigned int kmem2start = 0;
 static unsigned int kmem2size = 0;
-#if defined(CC_DYNAMIC_FBMSRM_CONF)
-static unsigned int kmem4ksize = 0;
-static unsigned int kmemfhdsize = 0;
-static unsigned int kmem24ksize = 0;
-static unsigned int kmem2fhdsize = 0;
-#endif
 
 
 static uchar env_get_char_init(int index)
@@ -663,23 +657,11 @@ static void set_cust_env(void)
         sprintf(buf, "0x%x", kmemsize);
         setenv("kmemsize", buf);
 		
-#if defined(CC_DYNAMIC_FBMSRM_CONF)
-		sprintf(buf, "0x%x", kmem4ksize);
-		setenv("kmem4ksize", buf);
-		sprintf(buf, "0x%x", kmemfhdsize);
-		setenv("kmemfhdsize", buf);
-#endif
 #if CONFIG_NR_DRAM_BANKS>1
         sprintf(buf, "0x%x", kmem2start);
         setenv("kmem2start", buf);
         sprintf(buf, "0x%x", kmem2size);
         setenv("kmem2size", buf);	
-#if defined(CC_DYNAMIC_FBMSRM_CONF)
-        sprintf(buf, "0x%x", kmem24ksize);
-        setenv("kmem2start", buf);
-        sprintf(buf, "0x%x", kmem2fhdsize);
-        setenv("kmem2size", buf);
-#endif
 #endif
     }
     if (getenv("kmemsize")==NULL)
@@ -738,7 +720,7 @@ void set_default_env(const char *s)
 				// find magic key, the next work is global_kernel_dram_size
 				if (penv[i] == 0x53965368)
 				{
-				#if defined(CC_DYNAMIC_FBMSRM_CONF)
+				#if 0//defined(CC_DYNAMIC_FBMSRM_CONF)
 				    kmemsize = penv[i+1];
 				 	kmem4ksize = penv[i+2];
 				    kmemfhdsize = penv[i+3];

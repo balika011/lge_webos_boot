@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/02 $
  * $RCSfile: fbm_pool.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1775,20 +1775,14 @@ FBM_POOL_T* _FBM_PoolInit(VOID)
     _prFbmCbFunc = FBM_GetCbFuncTbl();
 #endif
 #if defined(CC_DYNAMIC_FBMSRM_CONF)
-//if(0==DRVCUST_InitQuery(eGet2KModelSupport,&bSonyModelType))
-{
-if((FBMDynIs4KMode()))//if(bSonyModelType==0) //
+printf("FBM_MEM_CFG_MT5882_3DTV_768 0x%x\n",FBM_MEM_CFG_MT5882_3DTV_768);
+if(TCMGET_CHANNELA_SIZE()==0x300)//if(bSonyModelType==0) //
 	{
-	SRMFBM_SetConf(FBM_MEM_CFG_MT5890_3DTV_4K);
-	SRMFBM_CHB_SetConf(FBM_MEM_CFG_MT5890_3DTV_4K_CHB);
-	SRMFBM_CHC_SetConf(FBM_MEM_CFG_MT5890_3DTV_4K_CHC);
+	SRMFBM_SetConf(FBM_MEM_CFG_MT5882_3DTV_768);
     }
 else
 {
-    SRMFBM_SetConf(FBM_MEM_CFG_MT5890_3DTV_FHD);
-	SRMFBM_CHB_SetConf(FBM_MEM_CFG_MT5890_3DTV_FHD_CHB);
-	SRMFBM_CHC_SetConf(FBM_MEM_CFG_MT5890_3DTV_FHD_CHC);
-}
+    SRMFBM_SetConf(FBM_MEM_CFG_MT5882_3DTV);
 }
 	u4FbmStartAddr = BSP_GetMemSize()- SRMFBM_GetConf();
 #if defined(CC_FBM_2ND_CHANNEL)
@@ -1842,7 +1836,8 @@ else
                 )
 #endif
 #if defined(CC_MT5882)
-                if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+                if ((SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+					||(SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768))
 #endif
         {
             _arFbpList = _arFbpH264List;
@@ -2037,7 +2032,11 @@ else
         }
         _u4SumOfRoot = u4Size;
 #if defined(CC_MT5882)
+#if defined(CC_DYNAMIC_FBMSRM_CONF)
+       u4ReservedSize = SRMFBM_GetConf();
+#else
        u4ReservedSize = DRVCUST_OptGet(eFbmMemSize);
+#endif
 #else
 #if defined(CC_DYNAMIC_FBMSRM_CONF)
         u4ReservedSize = SRMFBM_GetConf() +SRMFBM_CHB_GetConf() + SRMFBM_CHC_GetConf();

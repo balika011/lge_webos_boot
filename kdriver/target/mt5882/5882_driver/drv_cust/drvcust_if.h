@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/04/02 $
  * $RCSfile: drvcust_if.h,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -409,8 +409,10 @@ C Total size:
 // mt5398 FBM size define----------------------------------------------------------------------
 #if defined(CC_TVP_SUPPORT)
 #define FBM_MEM_CFG_MT5882_3DTV             FBM_ALIGN_MASK(FBM_SIZE_FORMULAR(0x20000+0x1000000),4095)
+#define FBM_MEM_CFG_MT5882_3DTV_768         FBM_ALIGN_MASK(FBM_SIZE_FORMULAR(0x20000+0x1000000 - FBM_MPEG_2_SIZE),4095)
 #else
 #define FBM_MEM_CFG_MT5882_3DTV             FBM_ALIGN_MASK(FBM_SIZE_FORMULAR(0x20000+0x1000000),4095)
+#define FBM_MEM_CFG_MT5882_3DTV_768             FBM_ALIGN_MASK(FBM_SIZE_FORMULAR(0x20000+0x1000000 - FBM_MPEG_2_SIZE),4095)
 #endif
 
 #define FBM_MEM_CFG_MT5890_3DTV             FBM_SIZE_FORMULAR(0)

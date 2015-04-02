@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/25 $
+ * $Date: 2015/04/02 $
  * $RCSfile: srm_rule.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1355,7 +1355,8 @@ VOID SRM_LoadRule(FN_SRN_DB_RULE **papfStableRule, UINT32 *pu4StableRuleNs,
     }
 #endif
 #if defined(CC_MT5882)
-     if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+     if ((SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)||
+	 	(SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768))
     {
         UINT8 idx = 0;
         papfStableRule[idx++] = (FN_SRN_DB_RULE*)_SrmScposRule5882_DDRXx2;

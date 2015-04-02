@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/21 $
+ * $Date: 2015/04/02 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -355,9 +355,9 @@ static FBM_AUTO_INC_ENV_T* _FbmGetEnv(FBM_AUTO_INC_ENV_T *env)
 // Public functions
 //---------------------------------------------------------------------------
 #if defined(CC_DYNAMIC_FBMSRM_CONF)
-static UINT32 _srmfbm_conf_value = FBM_MEM_CFG_MT5890_3DTV;
-static UINT32 _srmfbm_chb_conf_value = FBM_MEM_CFG_MT5890_3DTV_CHB;
-static UINT32 _srmfbm_chc_conf_value = FBM_MEM_CFG_MT5890_3DTV_CHC;
+static UINT32 _srmfbm_conf_value = FBM_MEM_CFG_MT5882_3DTV;
+static UINT32 _srmfbm_chb_conf_value = FBM_MEM_CFG_MT5882_3DTV;
+static UINT32 _srmfbm_chc_conf_value = FBM_MEM_CFG_MT5882_3DTV;
 
 void SRMFBM_SetConf(UINT32 conf)
 {
@@ -1256,6 +1256,419 @@ u4AheadType = FBM_POOL_TYPE_FEEDER4;
 #endif
 
 }
+static VOID _FbmConfigurePool_MT5882_TVP_SCPOS_MAIN_768(POOL_LIST_T* prPoolList, POOL_ARRANGE_INFO_T* prPoolArrangeInfo)
+{
+    FBM_POOL_TYPE_T u4AheadType = FBM_POOL_TYPE_SCPOS_MAIN, u4BehindType, u4VdoBehindType = FBM_POOL_TYPE_NS;
+    UNUSED(u4AheadType);
+    UNUSED(u4BehindType);
+    UNUSED(u4VdoBehindType);
+    // arrange root pool ---------------------------------------------------
+
+   //==================NoSecure FBM===================
+
+u4AheadType = FBM_POOL_TYPE_TOTAL;	
+
+#ifdef ADSP_BIN_SUPPORT
+	prPoolList[FBM_POOL_TYPE_DSP_BIN].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_DSP_BIN].u4PoolSize = FBM_DSP_BIN_POOL_SIZE;
+	prPoolArrangeInfo[FBM_POOL_TYPE_DSP_BIN].eMode = FBM_POOL_ARRANGE_AFTER;
+	prPoolArrangeInfo[FBM_POOL_TYPE_DSP_BIN].ePool1 = u4AheadType;
+	u4AheadType = FBM_POOL_TYPE_DSP_BIN;
+#endif		 
+
+    // vbi
+    prPoolList[FBM_POOL_TYPE_VBI].u4Inherit = FBM_POOL_ROOT;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VBI].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_VBI;		
+	
+	//-----DSP-----
+	prPoolList[FBM_POOL_TYPE_DSP].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_DSP].u4AddrAlign= (0x1000000-1);
+	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].eMode = FBM_POOL_ARRANGE_AFTER;
+	prPoolArrangeInfo[FBM_POOL_TYPE_DSP].ePool1 = u4AheadType;
+#if defined(CC_SUPPORT_5_SEC_PTS_PCR_OFFSET)
+	prPoolList[FBM_POOL_TYPE_DSP].u4PoolSize = FBM_DSP_POOL_SIZE + 0x400000;
+#elif defined(CC_SUPPORT_2_SEC_PTS_PCR_OFFSET)
+	prPoolList[FBM_POOL_TYPE_DSP].u4PoolSize = FBM_DSP_POOL_SIZE + 0x1A0000;
+#else
+	prPoolList[FBM_POOL_TYPE_DSP].u4PoolSize = FBM_DSP_POOL_SIZE;
+#endif 
+	u4AheadType = FBM_POOL_TYPE_DSP;
+
+
+// pq tool
+    prPoolList[FBM_POOL_TYPE_PQ_TOOL].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_PQ_TOOL].u4PoolSize = FBM_PQ_TOOL_POOL_SIZE; // A3 needs 8MB for OD dump
+    
+    prPoolArrangeInfo[FBM_POOL_TYPE_PQ_TOOL].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_PQ_TOOL].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_PQ_TOOL;
+    if (u4VdoBehindType == FBM_POOL_TYPE_NS)
+    {
+        u4VdoBehindType = FBM_POOL_TYPE_PQ_TOOL;
+    }
+
+#if defined(CC_53XX_FACE_DETECTION)
+    prPoolList[FBM_POOL_TYPE_FACEDET].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_FACEDET].u4PoolSize = FBM_FD_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_FACEDET].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_FACEDET].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_FACEDET;
+#endif
+
+#if defined(CC_FBM_SUPPORT_SWDMX)||defined(CC_FBM_SUPPORT_LITE_SWDMX)
+    prPoolList[FBM_POOL_TYPE_SWDMX].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_SWDMX].u4PoolSize = FBM_SWDMX_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_SWDMX].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_SWDMX].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_SWDMX;
+#endif
+#if defined(CC_FBM_SUPPORT_PNG)		
+		    prPoolList[FBM_POOL_TYPE_PNG].u4Inherit = FBM_POOL_ROOT;
+			prPoolList[FBM_POOL_TYPE_PNG].u4PoolSize = FBM_PNG_POOL_SIZE;
+    		prPoolArrangeInfo[FBM_POOL_TYPE_PNG].eMode = FBM_POOL_ARRANGE_AFTER;
+    		prPoolArrangeInfo[FBM_POOL_TYPE_PNG].ePool1 = u4AheadType;
+    		u4AheadType = FBM_POOL_TYPE_PNG;
+#endif
+#if defined(CC_FBM_3D_OSD)||defined(CC_MHP_SUPPORT)
+	prPoolList[FBM_POOL_TYPE_JPG_VDP].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_JPG_VDP].u4PoolSize = FBM_JPEVDP_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_JPG_VDP].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_JPG_VDP].ePool1 = u4AheadType;
+	u4AheadType = FBM_POOL_TYPE_JPG_VDP;
+#endif
+#if defined(CC_SUPPORT_VSS)
+    prPoolList[FBM_POOL_TYPE_VSS].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_VSS].u4PoolSize = FBM_VSS_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VSS].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VSS].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_VSS;
+#endif
+#if defined(CC_FBM_HW_DEMOD)
+    prPoolList[FBM_POOL_TYPE_HW_DEMOD].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_HW_DEMOD].u4PoolSize = FBM_HW_DEMOD_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_HW_DEMOD].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_HW_DEMOD].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_HW_DEMOD;
+#endif
+
+#ifdef CC_SUPPORT_RECORD_AV
+	  prPoolList[FBM_POOL_TYPE_TDC].u4Inherit = FBM_POOL_ROOT;
+	  prPoolList[FBM_POOL_TYPE_TDC].u4PoolSize = FBM_TDCAV_POOL_SIZE;
+	  prPoolArrangeInfo[FBM_POOL_TYPE_TDC].eMode = FBM_POOL_ARRANGE_AFTER;
+	  prPoolArrangeInfo[FBM_POOL_TYPE_TDC].ePool1 = u4AheadType;
+	  u4AheadType = FBM_POOL_TYPE_TDC;
+#endif
+
+#if defined(SUPPORT_DIIVA)
+    prPoolList[FBM_POOL_TYPE_DIVA].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_DIVA].u4PoolSize = FBM_SCPOS_8BIT_SIZE_FLIP(1920, 1080, 4);
+    prPoolList[FBM_POOL_TYPE_DIVA].u4Width = 1920;
+    prPoolList[FBM_POOL_TYPE_DIVA].u4Height = 1080;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DIVA].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DIVA].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_DIVA;
+#endif
+
+#if defined(CC_FBM_SUPPORT_DMXPID)
+    prPoolList[FBM_POOL_TYPE_DMXPID].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_DMXPID].u4PoolSize = FBM_DMX_PID_BUF_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMXPID].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMXPID].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_DMXPID;
+#endif
+
+#if defined(CC_FBM_SUPPORT_BEIC)
+    prPoolList[FBM_POOL_TYPE_BEIC].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_BEIC].u4PoolSize = FBM_BEIC_BUF_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_BEIC].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_BEIC].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_BEIC;
+#endif
+
+#if defined(CC_FBM_SUPPORT_PVR)
+    if(SRMFBM_GetConf() == FBM_MEM_CFG_MT5399_A3)
+    {
+        prPoolList[FBM_POOL_TYPE_PVR].u4Inherit = FBM_POOL_ROOT;
+        //prPoolList[FBM_POOL_TYPE_PVR].u4PoolSize = FBM_PVR_POOL_SIZE;
+        prPoolList[FBM_POOL_TYPE_PVR].u4PoolSize = 0x680000;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR].eMode = FBM_POOL_ARRANGE_AFTER;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR].ePool1 = u4AheadType;
+        u4AheadType = FBM_POOL_TYPE_PVR;
+
+        // PVR2
+        prPoolList[FBM_POOL_TYPE_PVR2].u4Inherit = FBM_POOL_ROOT;
+        prPoolList[FBM_POOL_TYPE_PVR2].u4PoolSize = FBM_PVR2_POOL_SIZE;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR2].eMode = FBM_POOL_ARRANGE_AFTER;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR2].ePool1 = u4AheadType;
+        u4AheadType = FBM_POOL_TYPE_PVR2;
+    }
+    else
+    {
+        prPoolList[FBM_POOL_TYPE_PVR].u4Inherit = FBM_POOL_ROOT;
+        prPoolList[FBM_POOL_TYPE_PVR].u4PoolSize = FBM_PVR_POOL_SIZE;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR].eMode = FBM_POOL_ARRANGE_AFTER;
+        prPoolArrangeInfo[FBM_POOL_TYPE_PVR].ePool1 = u4AheadType;
+        u4AheadType = FBM_POOL_TYPE_PVR;
+    }
+#endif
+
+    #if defined(CC_SUPPORT_DUAL_3D_BROADCASTING)
+    prPoolList[FBM_POOL_TYPE_IMGRZ_3D_KR].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_IMGRZ_3D_KR].u4PoolSize = FBM_IMGRZ_3D_KR_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_IMGRZ_3D_KR].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_IMGRZ_3D_KR].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_IMGRZ_3D_KR;
+    #endif
+
+    if(SRMFBM_GetConf() == FBM_MEM_CFG_MT5399_A3)
+    {
+    	prPoolList[FBM_POOL_TYPE_PNG].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_PNG].u4PoolSize = FBM_PNG_POOL_SIZE;
+    	prPoolArrangeInfo[FBM_POOL_TYPE_PNG].eMode = FBM_POOL_ARRANGE_AFTER;
+    	prPoolArrangeInfo[FBM_POOL_TYPE_PNG].ePool1 = u4AheadType;
+    	u4AheadType = FBM_POOL_TYPE_PNG;
+
+    	prPoolList[FBM_POOL_TYPE_JPEG].u4Inherit = FBM_POOL_ROOT;
+    	prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].eMode = FBM_POOL_ARRANGE_AFTER;
+    	prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].ePool1 = u4AheadType;
+    	u4AheadType = FBM_POOL_TYPE_JPEG;
+    }
+
+#if defined(CC_SUPPORT_VENC)
+    prPoolList[FBM_POOL_TYPE_VENC].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_VENC].u4PoolSize = FBM_VENC_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VENC].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_VENC].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_VENC;
+#endif
+
+#if defined(CC_FBM_SUPPORT_MUXER)
+    prPoolList[FBM_POOL_TYPE_MUXER].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_MUXER].u4PoolSize = FBM_MUXER_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MUXER].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MUXER].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_MUXER;
+#endif
+#if 0
+    //-----PQ_3DC-----
+    prPoolList[FBM_POOL_TYPE_PQ_3DC].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_PQ_3DC].u4PoolSize = FBM_PQ_3DC_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_PQ_3DC].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_PQ_3DC].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_PQ_3DC;
+#endif
+	prPoolList[FBM_POOL_TYPE_FEEDER].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_FEEDER].u4PoolSize = FBM_FEEDER1_SIZE;
+	prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER].eMode = FBM_POOL_ARRANGE_AFTER;
+	prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER].ePool1 = u4AheadType;
+
+	
+	// handle Image Viewer Pool
+#ifdef CC_OSD_USE_FBM
+		// JPEG | OSD1 | OSD2 | OSD3 | OSD4 (Share all except DSP)
+		//
+		prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize = FBM_FEEDER_POOL_SIZE;
+#if 0//defined(CC_FBM_INT_TWO_FBP)
+		prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize = prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize * 2;
+#endif
+		prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER_MMP].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER_MMP].ePool1 = u4AheadType;
+
+		if(prPoolList[FBM_POOL_TYPE_FEEDER].u4PoolSize >= prPoolList[FBM_POOL_TYPE_FEEDER_MMP].u4PoolSize)
+			u4AheadType = FBM_POOL_TYPE_FEEDER;
+		else
+			u4AheadType = FBM_POOL_TYPE_FEEDER_MMP;
+
+		// JPEG (Between Start & OSD1)
+		if(SRMFBM_GetConf() != FBM_MEM_CFG_MT5399_A3)
+		{
+			prPoolList[FBM_POOL_TYPE_JPEG].u4Inherit = FBM_POOL_ROOT;
+			prPoolList[FBM_POOL_TYPE_JPEG].u4PoolSize = FBM_JPEG_POOL_SIZE;
+			prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].eMode = FBM_POOL_ARRANGE_AFTER;
+			prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].ePool1 = u4AheadType;
+			u4AheadType = FBM_POOL_TYPE_JPEG;
+		}
+	
+#ifndef CC_FBM_3D_OSD
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD1].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD1].u4PoolSize = FBM_OSD_POOL_SIZE(1920, 1088, 1, 4); // FHD, 32bpp, x1
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD1].u4Width = 1920;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD1].u4Height = 1088;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD1].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD1].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_JPEG_OSD1;
+
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD2].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD2].u4PoolSize = FBM_OSD_POOL_SIZE(1920, 1088, 1, 4); // FHD, 32bpp, x1
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD2].u4Width = 1920;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD2].u4Height = 1088;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD2].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD2].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_JPEG_OSD2;
+#if !defined(CC_REMOVE_JPEG_OSD34)
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD3].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD3].u4PoolSize = FBM_OSD_POOL_SIZE(1920, 1088, 1, 4); // FHD, 32bpp, x1
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD3].u4Width = 1920;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD3].u4Height = 1088;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD3].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD3].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_JPEG_OSD3;
+
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD4].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD4].u4PoolSize = FBM_OSD_POOL_SIZE(1920, 1088, 1, 4); // FHD, 32bpp, x1
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD4].u4Width = 1920;
+		prPoolList[FBM_POOL_TYPE_JPEG_OSD4].u4Height = 1088;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD4].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG_OSD4].ePool1 = u4AheadType;		
+		u4AheadType = FBM_POOL_TYPE_JPEG_OSD4;
+#endif
+#endif
+	
+#else
+		// JPEG
+		prPoolList[FBM_POOL_TYPE_JPEG].u4Inherit = FBM_POOL_ROOT;
+		prPoolList[FBM_POOL_TYPE_JPEG].u4PoolSize = FBM_JPEG_POOL_SIZE;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].eMode = FBM_POOL_ARRANGE_AFTER;
+		prPoolArrangeInfo[FBM_POOL_TYPE_JPEG].ePool1 = u4AheadType;
+		u4AheadType = FBM_POOL_TYPE_JPEG;
+#endif
+
+#if 0//defined(CC_FBM_TWO_FBP_SHARED_WITH_DFB) || defined(CC_VOMX_TV_COEXIST) 
+	
+	prPoolList[FBM_POOL_TYPE_FEEDER2].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_FEEDER2].u4PoolSize = FBM_FEEDER_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER2].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER2].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_FEEDER2;
+#endif
+
+#if defined(CC_FBM_FOUR_INST_SUPPORT)
+prPoolList[FBM_POOL_TYPE_FEEDER3].u4Inherit = FBM_POOL_ROOT;
+prPoolList[FBM_POOL_TYPE_FEEDER3].u4PoolSize = FBM_FEEDER_POOL_SIZE;
+prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER3].eMode = FBM_POOL_ARRANGE_AFTER;
+prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER3].ePool1 = u4AheadType;
+u4AheadType = FBM_POOL_TYPE_FEEDER3;
+
+prPoolList[FBM_POOL_TYPE_FEEDER4].u4Inherit = FBM_POOL_ROOT;
+prPoolList[FBM_POOL_TYPE_FEEDER4].u4PoolSize = FBM_FEEDER_POOL_SIZE;
+prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER4].eMode = FBM_POOL_ARRANGE_AFTER;
+prPoolArrangeInfo[FBM_POOL_TYPE_FEEDER4].ePool1 = u4AheadType;
+u4AheadType = FBM_POOL_TYPE_FEEDER4;
+#endif
+
+//==================Secure FBM=====================
+
+#if defined(CC_FBM_FOUR_INST_SUPPORT)
+    prPoolList[FBM_POOL_TYPE_DMX3].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_DMX3].u4PoolSize = FBM_DMX_H264_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX3].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX3].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_DMX3;
+
+	prPoolList[FBM_POOL_TYPE_DMX4].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_DMX4].u4PoolSize = FBM_DMX_H264_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX4].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX4].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_DMX4;
+
+	prPoolList[FBM_POOL_TYPE_MPEG3].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_MPEG3].u4Mode = (FBM_POOL_MODE_MPEG_DBK);
+    prPoolList[FBM_POOL_TYPE_MPEG3].u4PoolSize = 0x1780000;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG3].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG3].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_MPEG3;
+
+	prPoolList[FBM_POOL_TYPE_MPEG4].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_MPEG4].u4Mode = (FBM_POOL_MODE_MPEG_DBK);
+    prPoolList[FBM_POOL_TYPE_MPEG4].u4PoolSize = 0x1780000;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG4].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG4].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_MPEG4;
+#endif
+
+	
+#ifndef CC_OSD_USE_FBM
+	// B2R
+	prPoolList[FBM_POOL_TYPE_B2R].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_B2R].u4PoolSize = FBM_B2R_POOL_SIZE(1920, 1088, 2, 2); // FHD, 422, x2
+	prPoolList[FBM_POOL_TYPE_B2R].u4Mode = FBM_POOL_MODE_422_FB | FBM_POOL_MODE_SCPOS_2FB;
+	prPoolArrangeInfo[FBM_POOL_TYPE_B2R].eMode = FBM_POOL_ARRANGE_AFTER;
+	prPoolArrangeInfo[FBM_POOL_TYPE_B2R].ePool1 = u4AheadType;
+	u4AheadType = FBM_POOL_TYPE_B2R;
+#endif
+
+	prPoolList[FBM_POOL_TYPE_DRM].u4Inherit = FBM_POOL_ROOT;
+	prPoolList[FBM_POOL_TYPE_DRM].u4PoolSize = FBM_DRM_BUF_SIZE;
+	prPoolArrangeInfo[FBM_POOL_TYPE_DRM].eMode = FBM_POOL_ARRANGE_AFTER;
+	prPoolArrangeInfo[FBM_POOL_TYPE_DRM].ePool1 = u4AheadType;
+	u4AheadType = FBM_POOL_TYPE_DRM;
+
+
+#if defined(CC_FBM_SECURE_FEEDER)
+    prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4PoolSize = FBM_SECURE_FEEDER_2K_SIZE;
+    prPoolList[FBM_POOL_TYPE_SECURE_FEEDER].u4Inherit = FBM_POOL_ROOT;			 
+    prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].eMode = FBM_POOL_ARRANGE_AFTER; 
+    prPoolArrangeInfo[FBM_POOL_TYPE_SECURE_FEEDER].ePool1 = u4AheadType;			 
+    u4AheadType = FBM_POOL_TYPE_SECURE_FEEDER;
+#endif
+
+//----- DMX-----
+    prPoolList[FBM_POOL_TYPE_DMX].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_DMX].u4PoolSize = FBM_DMX1_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_DMX].ePool1 = u4AheadType;   
+#if defined(CC_TRUSTZONE_SUPPORT)&& defined(CC_SVP_SUPPORT)
+    prPoolList[FBM_POOL_TYPE_DMX].u4PoolSize = 0;
+#endif
+	u4AheadType = FBM_POOL_TYPE_DMX;
+
+    //----- MPEG-----
+    prPoolList[FBM_POOL_TYPE_MPEG].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_MPEG].u4Mode = (FBM_POOL_MODE_MPEG_DBK | FBM_POOL_MODE_SHARE);
+    prPoolList[FBM_POOL_TYPE_MPEG].u4PoolSize = FBM_MPEG_Y_SIZE; 
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_MPEG].ePool1 = u4AheadType;
+	u4AheadType = FBM_POOL_TYPE_MPEG;
+
+
+    //----- SCPOS MAIN-----
+    prPoolList[FBM_POOL_TYPE_SCPOS_MAIN].u4Inherit = FBM_POOL_ROOT;
+#if defined(CC_SUPPORT_SCART_OUT_IN_MMP)
+    // allocate 7MB for sub modules, no consider flip/mirror
+    prPoolList[FBM_POOL_TYPE_SCPOS_MAIN].u4PoolSize = 0x2F00000;
+#endif
+
+    prPoolList[FBM_POOL_TYPE_SCPOS_MAIN].u4PoolSize = FBM_SCPOS_MAIN_SIZE; //main 1080i 422 0xe9c0000*2+sub 0x880000
+
+    prPoolArrangeInfo[FBM_POOL_TYPE_SCPOS_MAIN].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_SCPOS_MAIN].ePool1 = u4AheadType;
+#if defined(CC_IC_VERIFY_FBM_MODE)
+    prPoolList[FBM_POOL_TYPE_SCPOS_MAIN].u4PoolSize = 0x2b00000;
+#endif
+	u4AheadType = FBM_POOL_TYPE_SCPOS_MAIN;
+    
+#if defined(CC_SUPPORT_MONITOR_OUT_TVE)
+    // ----TVE----
+    prPoolList[FBM_POOL_TYPE_TVE].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_TVE].u4PoolSize = FBM_TVE_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_TVE].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_TVE].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_TVE;
+#endif
+
+
+#ifdef CC_SUPPORT_OD    //if (DRVCUST_OptGet(eFlagSupportOD) == TRUE)
+    prPoolList[FBM_POOL_TYPE_OD].u4Inherit = FBM_POOL_ROOT;
+    prPoolList[FBM_POOL_TYPE_OD].u4PoolSize = FBM_OD_POOL_SIZE;
+    prPoolArrangeInfo[FBM_POOL_TYPE_OD].eMode = FBM_POOL_ARRANGE_AFTER;
+    prPoolArrangeInfo[FBM_POOL_TYPE_OD].ePool1 = u4AheadType;
+    u4AheadType = FBM_POOL_TYPE_OD;
+#endif
+
+}
+
 #endif //!defined(CC_TVP_SUPPORT)
 
 #endif//defined(CC_MT5882)
@@ -3898,7 +4311,8 @@ static FBM_POOL_T* _FbmGetPoolInfoAuto_MT5882_1GB(UCHAR ucPoolType, const FBM_PO
         _fbm_u4NptvSubPopAddr = _fbm_u4NptvSubPopAddr +0x200000;
         /* set _fbm_u4NptvSubPipAddr in the following case */
 
-        if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+        if ((SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+			||(SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768))
         {
         #if defined(CC_FBM_SUPPORT_HDMI_4K2K30)
             _fbm_u4NptvSubPipAddr = _fbm_u4NptvBeAddr + 0x1e80000 + 0x2E00000;
@@ -4303,7 +4717,8 @@ FBM_POOL_T* FBM_GetPoolInfoAuto(UCHAR ucPoolType, const FBM_POOL_MODULE_INFO_T* 
     }
 #endif
 #if defined(CC_MT5882)
-    if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+    if ((SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+		||(SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768))
     {
         return _FbmGetPoolInfoAuto_MT5882_1GB(ucPoolType, prInfo);
     }
@@ -4429,6 +4844,10 @@ VOID FBM_PrintPoolInfo(FBM_POOL_T* prPool, POOL_LIST_T* prPoolList)
 			#else
 			LOG(0, "FBM_MEM_CFG_MT5882_3DTV Model\n");
 			#endif
+		}
+		if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768)
+		{
+			LOG(0, "FBM_MEM_CFG_MT5882_3DTV_768 Model\n");
 		}
 #endif
 
@@ -4698,10 +5117,18 @@ VOID FBM_ConfigurePool(POOL_LIST_T* prPoolList, POOL_ARRANGE_INFO_T* prPoolArran
 		}
 #endif
 #if defined(CC_MT5882)
-    if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+    if ((SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)||
+		(SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV_768))
     {
     	#if defined(CC_TVP_SUPPORT)
+		if (SRMFBM_GetConf() == FBM_MEM_CFG_MT5882_3DTV)
+			{
 		_FbmConfigurePool_MT5882_TVP_SCPOS_MAIN( prPoolList,prPoolArrangeInfo);
+			}
+		else
+			{		
+		_FbmConfigurePool_MT5882_TVP_SCPOS_MAIN_768( prPoolList,prPoolArrangeInfo);
+			}
 		#else
 		_FbmConfigurePool_MT5882_SCPOS_MAIN( prPoolList,prPoolArrangeInfo);
 		#endif

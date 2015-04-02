@@ -518,8 +518,24 @@ ulong get_tzfw_base(void)
 void get_kernel_size(ulong src)
 {
 #if 1  // hongjun changed mem get method ,  not from tz.bin 
-
+#if defined(CC_DYNAMIC_FBMSRM_CONF)
+if  (TCMGET_CHANNELA_SIZE() == 0x300)
+{
+       kmemsize = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_MT5882_3DTV_768 - DIRECT_FB_MEM_SIZE - FB_MEM_SIZE - TRUSTZONE_MEM_SIZE ; 
+	   chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_MT5882_3DTV_768 - tzsize;
+	   printf("[uboot debug]  1 FBM dram start addr=0x%x,	size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_MT5882_3DTV_768);
+}
+else
+{
+       kmemsize = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_MT5882_3DTV - DIRECT_FB_MEM_SIZE - FB_MEM_SIZE - TRUSTZONE_MEM_SIZE;
+	   chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_MT5882_3DTV - tzsize;
+	   printf("[uboot debug] FBM dram start addr=0x%x,	size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_MT5882_3DTV);
+}
+#else
 		kmemsize = TCMGET_CHANNELA_SIZE() * 0x100000 - PHYS_SDRAM_1_FBM_DFB_FB_TRUSTZONE_SIZE; 
+        chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_SIZE - tzsize;
+		printf("[uboot debug] FBM dram start addr=0x%x,  size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_SIZE);
+#endif
 		chb_kmemsize = DIRECT_FB_MEM_SIZE + FB_MEM_SIZE;
 		
 		tzsize  = TRUSTZONE_MEM_SIZE;
@@ -530,10 +546,8 @@ void get_kernel_size(ulong src)
 			  chb_kmemsize -= 49 * 0x100000; /* decrease FBDFB size by 49MB */
 		 }
 		 
-		chb_kmemstart = TCMGET_CHANNELA_SIZE() * 0x100000 - FBM_MEM_CFG_SIZE - tzsize;
         tzcorestart = TCMGET_CHANNELA_SIZE() * 0x100000 - tzsize + TRUSTZONE_CODE_BASE;
 		printf("[uboot debug] kernel memory size=0x%x\n", kmemsize);
-		printf("[uboot debug] FBM dram start addr=0x%x,  size=0x%x \n", chb_kmemstart, FBM_MEM_CFG_SIZE);
 		printf("[uboot debug] FB/DFB dram size=0x%x\n", chb_kmemsize);
 		printf("[uboot debug] TZ dram size=0x%x\n", tzsize);
 		printf("[uboot debug] TZ dram core start=0x%x\n", tzcorestart);

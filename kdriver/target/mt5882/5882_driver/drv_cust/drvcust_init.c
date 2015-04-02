@@ -333,7 +333,18 @@ INT32 DRVCUST_InitQuery(QUERY_TYPE_T eQryType, UINT32 *pu4Data)
 
 // Fbm Size needed in loader.
     case eFbmMemSize:
-        *pu4Data = (UINT32)FBM_MEM_CFG_SIZE;
+#if defined(CC_DYNAMIC_FBMSRM_CONF)
+		if(TCMGET_CHANNELA_SIZE()==0x300)
+		{
+		*pu4Data = FBM_MEM_CFG_MT5882_3DTV_768;
+		}
+		else
+		{
+		*pu4Data = FBM_MEM_CFG_MT5882_3DTV;
+		}
+	#else
+		 *pu4Data = (UINT32)FBM_MEM_CFG_SIZE;
+	#endif
         return 0;
 
 //Backlight PWM
