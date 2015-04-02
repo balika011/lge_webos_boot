@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/02 $
  * $RCSfile: adac_if.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1334,11 +1334,13 @@ void ADAC_ArcEnable(BOOL fgEnable)
     {
         _fgArcEnableFlag = fgEnable;
 
+#if 0
         if (! fgSPDIFEnable)
         {
             LOG(0, "HDMI_ARC Enable(%d) returned\n", fgEnable); 
             return;
         }
+#endif        
 
 #if defined(CC_MT5398) || defined(CC_MT5399) || defined(CC_MT5890) || defined(CC_MT5882)
         if (fgEnable)
