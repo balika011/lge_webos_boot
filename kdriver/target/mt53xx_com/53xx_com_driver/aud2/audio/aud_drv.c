@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/02 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #28 $
+ * $Revision: #29 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -774,6 +774,11 @@ static UINT32 u4OldPts = 0;
 static UINT64 u8LastGetPts = 0;
 static UINT16 u2LastGetIdx = 0xFFFF;
 #ifdef CC_AUD_ARM_RENDER
+#define AUD_PTS_ROUND_TIME        (60)  //60 seconds
+#define AUD_PTS_PER_SEC           (90000)
+#define AUD_PTS_MAX               (0xFFFFFFFFU)
+#define AUD_PTS_ROUND_HIGH        (AUD_PTS_MAX - AUD_PTS_PER_SEC * AUD_PTS_ROUND_TIME)
+#define AUD_PTS_ROUND_LOW         (AUD_PTS_PER_SEC * AUD_PTS_ROUND_TIME)
 typedef struct
 {
     BOOL fgStart;
@@ -781,7 +786,7 @@ typedef struct
     UINT32 u4PtsLow;
     UINT32 u4PtsHigh;
     UINT32 u4PtsLowLast;
-    struct timeval nTimeVal;
+    HAL_TIME_T rTime;
 } GST_TIME_STAMPL_T;
 static GST_TIME_STAMPL_T GstTimeStampe[AUD_DEC_MAX] = {{0}};
 #endif
@@ -8384,6 +8389,8 @@ UINT64 GST_GetSTCVal(UINT8 stcId)
     return u8STC;
 }
 #else
+
+//It is called when trigger audio output
 void GST_StartSTC(UINT8 u1DecId)
 {
     LOG(0, "GST_StartSTC(%d)\n", u1DecId);
@@ -8391,7 +8398,7 @@ void GST_StartSTC(UINT8 u1DecId)
     
     if (!GstTimeStampe[u1DecId].fgStart)
     {
-        do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+        HAL_GetTime(&GstTimeStampe[u1DecId].rTime);
         GstTimeStampe[u1DecId].fgStart = TRUE; 
     }
     VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
@@ -8399,8 +8406,8 @@ void GST_StartSTC(UINT8 u1DecId)
 
 void GST_StopSTC(UINT8 u1DecId)
 {
-    struct timeval tv;
-    INT32 i4Diff;
+    HAL_TIME_T rTime;
+    INT64 i8Diff;
 
     LOG(0, "GST_StopSTC(%d)\n", u1DecId);
     VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK);
@@ -8408,10 +8415,10 @@ void GST_StopSTC(UINT8 u1DecId)
     if (GstTimeStampe[u1DecId].fgStart)
     {
         GstTimeStampe[u1DecId].fgStart = FALSE; 
-        do_gettimeofday(&tv);
-        i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
-            (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
-        GstTimeStampe[u1DecId].u4PtsLow += (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+        HAL_GetTime(&rTime);
+        i8Diff = (rTime.u4Seconds - GstTimeStampe[u1DecId].rTime.u4Seconds) * 1000000 + 
+            (rTime.u4Micros - GstTimeStampe[u1DecId].rTime.u4Micros);
+        GstTimeStampe[u1DecId].u4PtsLow += (UINT32)u8Div6432((UINT64)i8Diff * 9,100,NULL);
     }
     VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK); 
 }
@@ -8430,8 +8437,8 @@ void GST_SetSTCVal(UINT8 u1DecId, UINT64 u8Stc)
 void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
 {
     INT32 i4Ret;
-    struct timeval tv;
-    INT32 i4Diff;
+    HAL_TIME_T rTime;
+    INT64 i8Diff;
     UINT32 u4TimeDiff, u4PtsDiff;
         
     //interrupt context: can't sleep
@@ -8440,10 +8447,10 @@ void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
     {
         if (GstTimeStampe[u1DecId].fgStart)
         {
-            do_gettimeofday(&tv);
-            i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
-                (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
-            u4TimeDiff = (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+            HAL_GetTime(&rTime);
+            i8Diff = (rTime.u4Seconds - GstTimeStampe[u1DecId].rTime.u4Seconds) * 1000000 + 
+                (rTime.u4Micros - GstTimeStampe[u1DecId].rTime.u4Micros);
+            u4TimeDiff = (UINT32)u8Div6432((UINT64)i8Diff * 9,100,NULL);
             if (u4Stc >= GstTimeStampe[u1DecId].u4PtsLow)
             {
                 u4PtsDiff = u4Stc - GstTimeStampe[u1DecId].u4PtsLow;
@@ -8452,20 +8459,24 @@ void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
             {
                 u4PtsDiff = GstTimeStampe[u1DecId].u4PtsLow - u4Stc;
             }
-            if (u4PtsDiff >= 10 * u4TimeDiff)
+            //1. skip abnormal one
+            //2. always update pts when wrap arround
+            if ((u4PtsDiff <= 10 * u4TimeDiff) ||
+                 ((GstTimeStampe[u1DecId].u4PtsLow > AUD_PTS_ROUND_HIGH)&&
+                (u4Stc < AUD_PTS_ROUND_LOW)))
             {
-                //SKIP abnormal update PTS
-                LOG(2, "Error: update STC error STC(%d), PTS(%d), T_D(%d) \n",u4Stc, GstTimeStampe[u1DecId].u4PtsLow, u4TimeDiff);
+                GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
+                HAL_GetTime (&GstTimeStampe[u1DecId].rTime);
             }
             else
             {
-                GstTimeStampe[u1DecId].u4PtsLow = u4Stc;
-                do_gettimeofday (&GstTimeStampe[u1DecId].nTimeVal);
+                //SKIP abnormal update PTS
+                LOG(1, "Error: update STC error STC(%u), PTS(%u), T_D(%d) \n",u4Stc, GstTimeStampe[u1DecId].u4PtsLow, u4TimeDiff); 
             }
         }
         else
         {
-            LOG(0, "GST_SetPtsVal(%d), %d\n", u1DecId, u4Stc);
+            LOG(0, "GST_SetPtsVal(%d): %u is skipped due to semaphore lock\n", u1DecId, u4Stc);
         }
         VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK);
     }
@@ -8474,15 +8485,20 @@ void GST_SetPtsVal(UINT8 u1DecId, UINT32 u4Stc)
 UINT32 GST_GetPtsVal(UINT8 u1DecId)
 {
     UINT32 u4PTS;
-    struct timeval tv;
-    INT32 i4Diff;    
+    HAL_TIME_T rTime;
+    INT64 i8Diff;    
 
     if (GstTimeStampe[u1DecId].fgStart)
     {
-        do_gettimeofday(&tv);
-        i4Diff = (tv.tv_sec - GstTimeStampe[u1DecId].nTimeVal.tv_sec) * 1000000 + 
-            (tv.tv_usec - GstTimeStampe[u1DecId].nTimeVal.tv_usec);
-        u4PTS = GstTimeStampe[u1DecId].u4PtsLow + (UINT32)u8Div6432((UINT64)i4Diff * 9,100,NULL);
+        HAL_GetTime(&rTime);
+        i8Diff = (rTime.u4Seconds - GstTimeStampe[u1DecId].rTime.u4Seconds) * 1000000 + 
+            (rTime.u4Micros - GstTimeStampe[u1DecId].rTime.u4Micros);
+        #if 0
+        LOG(2, "GST_GetPtsVal(%d), CT-RT(%u.%6u - %u.%6u), Diff(%lld)", u1DecId,
+            rTime.u4Seconds, rTime.u4Micros, GstTimeStampe[u1DecId].rTime.u4Seconds,
+            GstTimeStampe[u1DecId].rTime.u4Micros, i8Diff);
+        #endif
+        u4PTS = GstTimeStampe[u1DecId].u4PtsLow + (UINT32)u8Div6432((UINT64)i8Diff * 9,100,NULL);
     }
     else
     {
@@ -8499,11 +8515,12 @@ UINT64 GST_GetSTCVal(UINT8 u1DecId)
     VERIFY(x_sema_lock(GstTimeStampe[u1DecId].hSema, X_SEMA_OPTION_WAIT) == OSR_OK); 
     u4STC = GST_GetPtsVal(u1DecId);
     if((u4STC < GstTimeStampe[u1DecId].u4PtsLowLast) && 
-        (GstTimeStampe[u1DecId].u4PtsLowLast > (4289567296U)/*(0xFFFFFFFF - 90000*60)*/) && 
-        (u4STC < (90000*60)))
+        (GstTimeStampe[u1DecId].u4PtsLowLast > AUD_PTS_ROUND_HIGH) && 
+        (u4STC < AUD_PTS_ROUND_LOW))
     {
-        LOG(0, "H round plus one, %d, Curret %d, Last %d \n", u1DecId, u4STC, GstTimeStampe[u1DecId].u4PtsLowLast);
         GstTimeStampe[u1DecId].u4PtsHigh++;
+        LOG(0, "GST_GetSTCVal(%d), High++ (%u), Curret %u, Last %u \n", u1DecId, 
+            GstTimeStampe[u1DecId].u4PtsHigh, u4STC, GstTimeStampe[u1DecId].u4PtsLowLast);
     }
     GstTimeStampe[u1DecId].u4PtsLowLast = u4STC;
     VERIFY(x_sema_unlock(GstTimeStampe[u1DecId].hSema) == OSR_OK);
