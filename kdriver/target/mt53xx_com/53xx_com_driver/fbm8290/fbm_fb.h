@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/02 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -401,7 +401,6 @@ typedef struct
     COUNTING_SEMAPHORE_T hEmptyResize2QSemaphore; 
     HAL_TIME_T arRlResizeFb[FBM_MAX_FB_NS_PER_GROUP];
 
-    HANDLE_T hFlushSema;                   // Vdec wait b2r flush DispQ done.
     HANDLE_T hMutex;                        // Thread safe protection
     CRIT_STATE_T* prState;                  // Thread/Isr safe protection
 } FBM_FBG_T;

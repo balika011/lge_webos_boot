@@ -3369,8 +3369,7 @@ UINT32 _u4MpegSeqLen;
 #error "move above variable to VDEC_T for multi-instance support"
 #endif
 
-
-VOID _VPUSH_FlushEsmQ(UCHAR ucEsId)
+static void _VPUSH_FlushEsmQ(UCHAR ucEsId)
 {
     VDEC_ES_INFO_T *prVdecEsInfo;
     VDEC_PES_INFO_T _rPesInfo; 
@@ -4307,36 +4306,15 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
                 
-                if(prVdecEsInfo->ucFbgId != FBM_FBG_ID_UNKNOWN)
-                {
-                    FBM_ClrFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY);
-                    if(FBM_EnableB2rFlushInput(prVdecEsInfo->ucFbgId,80) == FALSE)
-                    {
-                        VDEC_ReleaseDispQ(prVdec->ucVdecId);
-                        LOG(1,"VPUSH:FBM_EnableB2rFlushInput(Fbg:%d) FAIL\n",prVdecEsInfo->ucFbgId);
-                    }
-
-                    _VPUSH_FlushEsmQ(prVdec->ucVdecId);
-                    VDEC_ReleaseDispQ(prVdec->ucVdecId);
-
-                    if(FBM_ChkFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY))
-                    {
-                        LOG(0,"VPUSH: Flush Fbg%d FBM_FLAG_DISP_READY has been seted !!!!\n",prVdecEsInfo->ucFbgId);
-                    }
-                    
-                    FBM_SetFrameBufferFlag(prVdecEsInfo->ucFbgId, FBM_FLAG_DISP_READY);
-                }
-                else
-                {
-                    _VPUSH_FlushEsmQ(prVdec->ucVdecId);
-                }
-               
+                VDEC_ReleaseDispQ(prVdec->ucVdecId);
+                _VPUSH_FlushEsmQ(prVdec->ucVdecId);
+                VDEC_ReleaseDispQ(prVdec->ucVdecId);
+                
                 //flush again to free frame flushed.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
                 {
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
-                
                 LOG(1, "%s(%d): VPUSH_CMD_FLUSH u4DmxAvailSize(%d)\n",\
                     __FUNCTION__, __LINE__,\
                     DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid));
@@ -5265,7 +5243,6 @@ VOID _VPUSH_DecodeInit(VOID)
         }
         x_memset(_prVdecPush,0x00,sizeof(VDEC_DECODER_T));
     }
-    
     if(!_prVdecPush->fgInited)
     {
         UINT32 i;
@@ -5990,7 +5967,6 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
             {
                 prVdec->rInpStrm.fnCb.pfnVdecUnderrunCb(prVdec->rInpStrm.fnCb.u4VdecUnderrunTag);
             }
-            
             prVdec->ucUnderFlowCnt = 0;
             prVdec->u4TimerConter  = 0;
             prVdec->u2LastEsCnt = 0;
@@ -6262,8 +6238,8 @@ VOID _VPUSH_DecodeDone(UCHAR ucVdecId, VOID *pPicNfyInfo)
             prVdec = &_prVdecPush->arDec[i];
             break;
         }
+        //ASSERT(i == ucVdecId);
     }
-    
     if(!prVdec)
     {
         LOG(0, "%s(%d): fail\n", __FUNCTION__, __LINE__);
@@ -6361,7 +6337,8 @@ BOOL _VPUSH_GetDecSize(VOID* prdec, UINT64 *pu8DecSize, UINT64 *pu8UndecSize)
     }
 
     u4FifoSz = prVdec->u4VFifoSize;
-    u4DmxAvailSize = DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);
+    u4DmxAvailSize = DMX_MUL_GetEmptySize(
+        prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);
 
     if (u4DmxAvailSize > u4FifoSz)
     {
@@ -6371,7 +6348,7 @@ BOOL _VPUSH_GetDecSize(VOID* prdec, UINT64 *pu8DecSize, UINT64 *pu8UndecSize)
     }
     else
     {
-        *pu8UndecSize = (u4DmxAvailSize) ?  u4FifoSz - u4DmxAvailSize : 0;
+        *pu8UndecSize = (u4DmxAvailSize)? u4FifoSz - u4DmxAvailSize : 0;
     }
 
     if ((VPUSH_ST_PLAY == prVdec->eCurState)
@@ -6425,6 +6402,7 @@ BOOL _VPUSH_ResetDecSize(VOID* prdec)
     x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
     return TRUE;
 }
+
 
 BOOL _VPUSH_SetAppType(VOID* prdec, char *pcAppType, UINT32 u4AppTypeLen)
 {

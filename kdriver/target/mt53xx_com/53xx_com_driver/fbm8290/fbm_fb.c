@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/02 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2193,12 +2193,7 @@ void FBM_SetFrameBufferStatus(UCHAR ucFbgId, UCHAR ucFbId, UCHAR ucFbStatus)
     {
         ucFbStatus = FBM_FB_STATUS_EMPTY;
     }
-
-    if(ucFbStatus == FBM_FB_STATUS_DISPLAYQ && _prFbg[ucFbgId].aucFbStatus[ucFbId] == FBM_FB_STATUS_LOCK)
-    {
-       LOG(0,"FBM_SetFrameBufferStatus(Fbg:%d,Fb%d) Status Error ->xxxxxxxxxxxxxxxxx\n",ucFbgId,ucFbId);
-    }
-
+    
 #if 1
     //need more test.
     // for new OMX, dropped frame should go back to OMX by display.
@@ -2639,6 +2634,7 @@ UCHAR FBM_CheckFrameBufferDispQ(UCHAR ucFbgId)
     return ucCount;
 }
 
+
 //-------------------------------------------------------------------------
 /** FBM_GetFrameBufferFromDispQ
  *  Get frame buffer from display queue
@@ -2665,7 +2661,6 @@ UCHAR FBM_GetFrameBufferFromDispQ(UCHAR ucFbgId)
         ucKeepFbNs = _prFbg[ucFbgId].fgSendEOS ? 0 : 3;
     }
     #endif
-    
     if (_prFbg[ucFbgId].rDisplayQ.ucCount > ucKeepFbNs)
     {
         ucFbId = _prFbg[ucFbgId].rDisplayQ.aucQueue[_prFbg[ucFbgId].rDisplayQ.ucReadIdx];
@@ -2798,6 +2793,7 @@ UCHAR FBM_PreLookBFromDispQ(UCHAR ucFbgId, UCHAR ucTheNth)
 
     FBM_MUTEX_LOCK(ucFbgId);
    
+
     if (_prFbg[ucFbgId].rDisplayQ.ucCount > ucTheNth)
     {
         ucFbId = _prFbg[ucFbgId].rDisplayQ.aucQueue[(_prFbg[ucFbgId].rDisplayQ.ucReadIdx + ucTheNth) % FBM_MAX_FB_NS_PER_GROUP];
@@ -4374,7 +4370,7 @@ UCHAR FBM_GetEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay)
     _FbmFbLog(ucFbgId,ucFbId, FBM_FB_STATUS_DECODE, __func__, __LINE__);
     if (_prFbg[ucFbgId].ucFbDecode != FBM_FB_ID_UNKNOWN)
     {
-        LOG(4,"ucFbgId(%d) ucFbDecode(%d)\n",ucFbgId,_prFbg[ucFbgId].ucFbDecode);
+        LOG(0,"ucFbgId(%d) ucFbDecode(%d)\n",ucFbgId,_prFbg[ucFbgId].ucFbDecode);
     }
     ASSERT_FBM(_prFbg[ucFbgId].ucFbDecode == FBM_FB_ID_UNKNOWN);
     if (ucFbId < FBM_MAX_FB_NS_PER_GROUP)
@@ -6980,20 +6976,18 @@ static BOOL _FBMMemUnitMatch(UINT32 u4UnitFlag,UINT32 u4MatchFlag,FBM_MEMUNIT_SE
 static VOID _FbmMemUnitPrint(FBM_MEMUNIT *prUnitList,UCHAR *pzPrex)
 {
     FBM_MEMUNIT *pRetUnit = prUnitList;
-    UINT8 UnitIndex = 0;//,uIdx;
-    /*
+    UINT8 UnitIndex = 0,uIdx;
     UCHAR *ucUnitTypeStr[FBM_MEMUNIT_USETYPE_MAX -FBM_MEMUNIT_USETYPE_START +1] =
         {
             "Y","C","Ext","MV","CABAC","RPR","WORK"
         };
-    */
-    LOG(2,"%s:\n",pzPrex);
+
+    Printf("%s:\n",pzPrex);
     while(pRetUnit->u4StartAddr != 0)
     {  
-       LOG(2,"MemUnit[%d] Start:0x%x, User:0x%x, End:0x%x, Usage:0x%x/0x%x, Flag=0x%x\n",\
+       Printf("MemUnit[%d] Start:0x%x, User:0x%x, End:0x%x, Usage:0x%x/0x%x, UsedFor:",\
         UnitIndex,pRetUnit->u4StartAddr,pRetUnit->u4UsedAddr,pRetUnit->u4EndAddr,\
-        pRetUnit->u4UsedAddr - pRetUnit->u4StartAddr,pRetUnit->u4EndAddr - pRetUnit->u4StartAddr,pRetUnit->u4Flag);
-       #if 0
+        pRetUnit->u4UsedAddr - pRetUnit->u4StartAddr,pRetUnit->u4EndAddr - pRetUnit->u4StartAddr);
        for(uIdx = FBM_MEMUNIT_USETYPE_START; uIdx <= FBM_MEMUNIT_USETYPE_MAX; uIdx++)
        {
           if(pRetUnit->u4Flag&(1<<uIdx))
@@ -7002,7 +6996,6 @@ static VOID _FbmMemUnitPrint(FBM_MEMUNIT *prUnitList,UCHAR *pzPrex)
           }
        }
        Printf("\n");
-       #endif
        pRetUnit++;
        UnitIndex++;
     }
@@ -7202,7 +7195,7 @@ static UINT32 _FBMMemUnitMemOccupy(FBM_MEMUNIT *prFromList,FBM_MEMUNIT *prToList
     return u4OccupedSize;
 }
 
-static BOOL _FbmMemUnitCreateUnitList(FBM_FBG_T *pFbg, FBM_MEMUNIT *prMemPoolList, FBM_MEMUNIT *prMemUnitList, BOOL fgTest)
+static BOOL _FbmMemUnitCreateUnitList(FBM_FBG_T *pFbg, FBM_MEMUNIT *prMemPoolList, FBM_MEMUNIT *prMemUnitList)
 {
    UINT32 u4Idx,u4ReqSize,u4HaveSize,u4UnitCnt;
    FBM_MEMUNIT *pUnitList = prMemUnitList;
@@ -7244,16 +7237,8 @@ static BOOL _FbmMemUnitCreateUnitList(FBM_FBG_T *pFbg, FBM_MEMUNIT *prMemPoolLis
                u4ReqSize =  _FbmMemUnitMemParam(pFbg, NULL, NULL, (1 << u4Idx), TRUE);
                u4HaveSize = _FBMMemUnitFreeSize(prMemPoolList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
                u4HaveSize += _FBMMemUnitFreeSize(prMemUnitList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
-               if(fgTest == FALSE)
-               {
-                   LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) 0x%x Memory alloc fail(0x%x/0x%x)\n",
-                       pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize,(1 << u4Idx),u4HaveSize,u4ReqSize);
-               }
-               else
-               {
-                   LOG(2,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) 0x%x Memory alloc fail(0x%x/0x%x)\n",
-                        pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize,(1 << u4Idx),u4HaveSize,u4ReqSize);
-               }
+               LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) 0x%x Memory alloc fail(0x%x/0x%x)\n",
+               pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize,(1 << u4Idx),u4HaveSize,u4ReqSize);
                return FALSE;
            }
            else 
@@ -7262,16 +7247,8 @@ static BOOL _FbmMemUnitCreateUnitList(FBM_FBG_T *pFbg, FBM_MEMUNIT *prMemPoolLis
                u4HaveSize = _FBMMemUnitFreeSize(prMemUnitList,(1 << u4Idx),MEMUNIT_SEARCH_TYPE_OR);
                if(u4ReqSize > u4HaveSize)
                {
-                   if(fgTest == FALSE)
-                   {
-                       LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) workbuf maybe not enough (0x%x/0x%x)\n",
-                                     pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize, u4HaveSize,u4ReqSize);
-                   }
-                   else
-                   {
-                       LOG(2,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) workbuf maybe not enough (0x%x/0x%x)\n",
-                                      pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize, u4HaveSize,u4ReqSize);
-                   }
+                   LOG(0,"_FbmMemUnitCreateUnitList(Fbg:%d,FbCnt:%d,YSize:0x%x,CSize:0x%x) workbuf maybe not enough (0x%x/0x%x)\n",
+                                 pFbg->ucFbgId, pFbg->u4FbCnt, pFbg->u4YSize, pFbg->u4CSize, u4HaveSize,u4ReqSize);
                }
            }
        }
@@ -7400,7 +7377,7 @@ static UINT32 _FBMMemUnitCalculateFbCount(FBM_FBG_T *pFbg,FBM_MEMUNIT *prMemPool
             x_memset(pPoolList,0,sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
             x_memset(pUnitList,0,sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
             _FBMMemUnitAppend(pPoolList,prMemPoolList,TRUE);
-            if(_FbmMemUnitCreateUnitList(pFbg,pPoolList,pUnitList,TRUE)) // only check memory enought or not
+            if(_FbmMemUnitCreateUnitList(pFbg,pPoolList,pUnitList)) // only check memory enought or not
             {
                break;
             }
@@ -7822,7 +7799,7 @@ static UINT32 _FBM_GetDefaultExternDataSize(UCHAR ucFbgId)
     u4FbHeight = pFbg->u4FbHeight;
     u4FbCnt = pFbg->u4FbCnt;
 
-    u4MvCnt = pFbg->ucMvBufNs;
+   u4MvCnt = pFbg->ucMvBufNs;
 
     pFbg->u4FbCnt = FBM_MEMUNIT_DEFAULT_EXTERNDATA_FBCNT;
     _FbmCalculateYCSize(pFbg,FBM_MEMUNIT_FRAME_MAX_WIDTH,FBM_MEMUNIT_FRAME_MAX_HEIGHT);
@@ -7975,7 +7952,7 @@ BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
     }
     
     pFbg->fgAdjustWorkBuf = TRUE;
-    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList,FALSE);
+    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList);
     
     _FbmMemUnitPrint(arMemPoolList,"MemPool Infor After Occupy");
     _FbmMemUnitPrint(arMemUnitList,"MemList Infor");
@@ -8140,7 +8117,7 @@ static VOID _FbmMemUnitVerifyStart(UCHAR u4FbgId,UINT32 u4Widht,UINT32 u4Height,
          return ;
      }
      
-    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList,FALSE);
+    _FbmMemUnitCreateUnitList(pFbg,arMemPoolList,arMemUnitList);
     _FbmMemUnitPrint(arMemPoolList,"MemPoolInfo After Occupy");
     _FbmMemUnitPrint(arMemUnitList,"MemunitInfo Before Occupy");
     _FbmMemUnitAssignFbgMemory(pFbg,arMemUnitList,0,0,_FbmMemUnitExtenBufFlag(pFbg)|(FBM_MEMUNIT_USETYPE_YC));
