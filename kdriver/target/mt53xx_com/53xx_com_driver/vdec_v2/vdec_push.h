@@ -33,9 +33,9 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/02 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -286,6 +286,12 @@ typedef struct {
     UINT32 dwVPSliceSzBufWp;
     UINT32 dwVPSliceSzBufWpBak; // to record the latest frame last slice sz wp!for divided frames!
     UINT32 dwFirst4CC;
+
+    // For wmv append data error.
+    UINT8 ucFrameType;
+    UINT8 au1PicInfo[DMX_PICINFO_SIZE];  ///< for store pic info
+    UINT32 u4FirstDataAddr;
+
     FBM_POOL_T* prFeederPool;
     FBM_POOL_T* prDmxPool;  
     UINT32 u4VFifoAddr;

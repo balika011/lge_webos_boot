@@ -26,6 +26,7 @@ VDEC_DECODER_T *_prVdecPush = NULL;
 //static BOOL _fgFirstVideoChunk = TRUE;
 #define VDEC_PUSH_VP8_INVALID_PTS (2)
 // #VPUSH_RV_SLICE_BUF#
+#define VDEC_PUSH_INVALID_TIME_STAMP  (0xAABBCCDD)
 
 #if VDEC_PUSH_MAX_DECODER==4
 UINT32 *_pdwVPSliceBuf[VDEC_PUSH_MAX_DECODER]={NULL,NULL,NULL,NULL};
@@ -652,6 +653,29 @@ static BOOL _VPUSH_VideoCallback(const DMX_PES_MSG_T* prPes)
         rPesInfo.ucMpvId = VLD0;
     }
 
+    if (prVdec->eFmt == VDEC_FMT_WMV && prVdec->ePushFmt != VDEC_PUSH_FMT_VC1)
+    {
+        if(prPes->u4Pts == VDEC_PUSH_INVALID_TIME_STAMP && prPes->u4Dts == VDEC_PUSH_INVALID_TIME_STAMP)
+        {
+            if(prVdec->u4FirstDataAddr == 0)
+            {
+                prVdec->u4FirstDataAddr = prPes->u4FrameAddr;
+                prVdec->ucFrameType = (UCHAR)prPes->u4FrameType;
+                x_memcpy((void *)prVdec->au1PicInfo, (void *)prPes->au1PicInfo ,DMX_PICINFO_SIZE);
+            }
+            return TRUE;
+        }
+        
+        if(prVdec->u4FirstDataAddr != 0)
+        {
+             DMX_PES_MSG_T *prCurPes = (DMX_PES_MSG_T *)prPes;
+             prCurPes->u4FrameAddr = prVdec->u4FirstDataAddr;
+             prCurPes->u4FrameType = (UINT32)prVdec->ucFrameType;
+             x_memcpy((void *)prCurPes->au1PicInfo ,(void *)prVdec->au1PicInfo, DMX_PICINFO_SIZE);
+             prVdec->u4FirstDataAddr = 0;
+        }
+        
+    }
     // u4Dts is 33-64 bits of u8PTS.
     #ifdef VDEC_PUSH_PTS_64_BITS
     rPesInfo.u8PTS = (UINT64)prPes->u4Dts;
@@ -4102,7 +4126,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
     rDmxMMData.u4Pts = (UINT32)(prBytesInfo->u8BytesPTS);
     rDmxMMData.u4Dts = (UINT32)(prBytesInfo->u8BytesPTS);
     #endif
-
+    
     // in case of eos message with zero data length.
     if (prBytesInfo->u4BytesSize == 0)
     {
@@ -4114,9 +4138,11 @@ The Decode should register the funciton pointer, and implement the fucntion to P
     if (prVdec->eFmt == VDEC_FMT_WMV && prVdec->ePushFmt != VDEC_PUSH_FMT_VC1)
     {
         // If 'Append' is set, it means this data should be concatenate with previous one, it is not frame head.
-        if (prBytesInfo->fgAppend == FALSE)
+        rDmxMMData.fgFrameHead = TRUE;
+        if(prBytesInfo->fgAppend)
         {
-            rDmxMMData.fgFrameHead = TRUE;
+            rDmxMMData.u4Pts = (UINT32)VDEC_PUSH_INVALID_TIME_STAMP;
+            rDmxMMData.u4Dts = (UINT32)VDEC_PUSH_INVALID_TIME_STAMP;
         }
     }
 
@@ -6048,6 +6074,7 @@ VOID* _VPUSH_AllocVideoDecoder(ENUM_VDEC_FMT_T eFmt, UCHAR ucVdecId)
     prVdec->fgInsertStartcode = FALSE;
     prVdec->fgGotEos = FALSE;
     prVdec->fgDecoderCalPts = FALSE;
+    prVdec->u4FirstDataAddr = 0;
 
       //  #VPUSH_RV_SLICE_BUF#
     prVdec->pu4VPSliceSzBuf = NULL;
