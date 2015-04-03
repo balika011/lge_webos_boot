@@ -4332,9 +4332,11 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
                 
+                FBM_ClrFrameBufferFlag(prVdecEsInfo->ucFbgId,FBM_FLAG_DISP_READY);
                 VDEC_ReleaseDispQ(prVdec->ucVdecId);
                 _VPUSH_FlushEsmQ(prVdec->ucVdecId);
                 VDEC_ReleaseDispQ(prVdec->ucVdecId);
+                FBM_SetFrameBufferFlag(prVdecEsInfo->ucFbgId,FBM_FLAG_DISP_READY);
                 
                 //flush again to free frame flushed.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)

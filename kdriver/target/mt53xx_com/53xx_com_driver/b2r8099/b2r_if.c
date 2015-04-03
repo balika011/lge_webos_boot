@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/03 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #32 $
+ * $Revision: #33 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2010,6 +2010,26 @@ void LG_PipLineDisconnect(UCHAR ucVdpId)
 	 LOG(0,"LG_PipLineDisconnect end.\n");
  }
 #endif
+
+void VDP_InputChange(UCHAR ucB2rId)
+{
+    B2R_OBJECT_T *this;
+    if(ucB2rId >= B2R_HW_MAX_ID)
+    {
+        LOG(0,"VDP_InputChange(ucB2rId:%d) Fail\n",ucB2rId);
+        return;
+    }
+    
+    this = _B2R_GetObj(ucB2rId);
+    if(this && this->ptB2rPrm)
+    {
+       vVRMSetEventFlg(SV_VP_MAIN, VRM_EVENT_BY_B2R);
+       this->ptB2rPrm->fgSeqChg=TRUE;
+    }
+    
+    return;
+}
+
 void VDP_B2rSwitch(UCHAR ucVdpId, UCHAR ucB2rId)
 {
     B2R_OBJECT_T *this;

@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/03 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -5549,6 +5549,11 @@ BOOL  FBM_DoSeqChanging(UCHAR ucFbgId,BOOL fgValue,BOOL fgQuery)
     if(fgQuery == FALSE)
     {
         _arFbg[ucFbgId].fgDoSeqChanging = fgValue;
+        if(fgValue && VDP_PipeIsOutputReady(_arFbg[ucFbgId].u1DecoderSrcId) 
+            && (_arFbg[ucFbgId].eSeamlessMode != SEAMLESS_NONE))
+        {
+            VDP_InputChange(_FBM_Fbg2B2r(ucFbgId));
+        }
     }
     
     return _arFbg[ucFbgId].fgDoSeqChanging;

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/03 $
  * $RCSfile: vdp_if.h,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1060,7 +1060,7 @@ EXTERN VOID _VdpCheckFbgReady(UCHAR ucFbgId, UCHAR ucEsId);
 
 EXTERN VOID VDP_CheckFbgReady(VOID);
 
-
+EXTERN void VDP_InputChange(UCHAR ucB2rId);
 /* whether Update STC when VDP start output or not */
 EXTERN BOOL VDP_SetPendingForStc(UINT8 ucVdpId, BOOL fgPending);
 
