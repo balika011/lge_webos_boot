@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/03 $
  * $RCSfile: fbm_fb.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -171,6 +171,7 @@ typedef enum
 }FBM_MEMUNIT_FLAG;
 
 #define FBM_MEMUNIT_MEM_SEPARATE
+#define FBM_MEMUNIT_FBSIZE_LVL (2)
 #define FBM_MEMUNIT_DEFAULT_EXTERNDATA_FBCNT (11)
 #define FBM_MEMUNIT_FRAME_MAX_WIDTH  (1920)  // make sure  1/2 is 64 align base.  
 #define FBM_MEMUNIT_FRAME_MAX_HEIGHT (1088)  
@@ -425,7 +426,10 @@ extern void _FBM_PutFrameBufferToEmptyResizeQ(UCHAR ucFbgId, UCHAR ucFbId);
 extern void _FBM_PutFrameBufferToEmptyResize2Q(UCHAR ucFbgId, UCHAR ucFbId);
 extern UCHAR FBM_GetLatestEmptyFrameBuffer(UCHAR ucFbgId, UINT32 u4Delay);
 extern BOOL _FBM_2FBsChkDynamicDone(UCHAR ucFbgId);
-extern VOID _FBM_FbgSetDefaultDataPartion(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height);
+extern VOID _FBM_SetDefaultDataPartion(UCHAR ucFbgId);
+extern VOID _FbmMemUnitAllocMemPool(UCHAR ucFbgId ,FBM_MEMUNIT *prMemPoolList);
+extern INT32 _FBMMemUnitCalculateFbCount(UCHAR ucFbgId,FBM_MEMUNIT *prMemPoolList);
+extern void _FbmCalculateYCSize(UCHAR ucFbgId,UINT32 u4Width, UINT32 u4Height);
 //---------------------------------------------------------------------------
 // Public functions
 //---------------------------------------------------------------------------

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/03 $
  * $RCSfile: fbm_if.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3717,15 +3717,17 @@ void FBM_ConfigColorMode(UCHAR ucFbgId, UCHAR ucFbgCm, UINT32 u4HSize,
 #ifdef FBM_MEMUNIT_MEM_SEPARATE
         if(prPar->eSeamlessMode & SEAMLESS_BY_NPTV)
         {
-           _FBM_FbgSetDefaultDataPartion(ucFbgId,u4HSize,u4VSize);
+            FBM_MEMUNIT arMemPoolList[FBM_MEMUNIT_LIST_MAX];
+            x_memset(arMemPoolList,0,sizeof(arMemPoolList));
+            
+           _FBM_SetDefaultDataPartion(ucFbgId);
+           _FbmMemUnitAllocMemPool(ucFbgId,arMemPoolList);
+           _FbmCalculateYCSize(ucFbgId,u4HSize,u4VSize);
+           _FBMMemUnitCalculateFbCount(ucFbgId,arMemPoolList);
+
            u4YSize = _arFbg[ucFbgId].u4YSize;
            u4CSize = _arFbg[ucFbgId].u4CSize;
            u4FbNs  = _arFbg[ucFbgId].u4FbCnt;
-
-           if (u4FbNs >= FBM_MAX_FB_NS_PER_GROUP/2)
-           {
-                u4FbNs = FBM_MAX_FB_NS_PER_GROUP/2 - 1;
-           }
 
            u4Addr = _arFbg[ucFbgId].u4FbYPool;
            u4FbStartPoolYAddr = u4Addr;
