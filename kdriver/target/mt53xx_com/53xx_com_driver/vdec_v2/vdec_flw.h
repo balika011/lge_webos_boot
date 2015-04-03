@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/03 $
  * $RCSfile: vdec_flw.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_flw.h
@@ -99,7 +99,7 @@
 // Constant definitions
 //-----------------------------------------------------------------------------
 #define VDEC_THREAD_NAME                "VDEC"
-#define VDEC_STACK_SIZE                    8172//4096
+#define VDEC_STACK_SIZE                  10240//4096
 #ifdef MPV_SEMI_HOST // for FPGA, lower to cli thread. We could key in command
 #define VDEC_THREAD_PRIORITY            255
 #else

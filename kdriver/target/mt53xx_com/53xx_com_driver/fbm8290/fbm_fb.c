@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/03 $
  * $RCSfile: fbm_fb.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6889,8 +6889,7 @@ static UINT32 _FbmMemUnitMemParam(FBM_FBG_T *pFbg,
 
 }
 
-
-static BOOL _FBMMemUnitMatch(UINT32 u4UnitFlag,UINT32 u4MatchFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
+inline static BOOL _FBMMemUnitMatch(UINT32 u4UnitFlag,UINT32 u4MatchFlag,FBM_MEMUNIT_SEARCH_TYPE eSearchType)
 {
     BOOL fgMatch =FALSE;
     if(eSearchType == MEMUNIT_SEARCH_TYPE_OR)
@@ -7560,13 +7559,16 @@ static BOOL _FbmMemUnitAssignFbgMemory(FBM_FBG_T *pFbg,FBM_MEMUNIT *prMemUnitLis
     return TRUE;
 }
 
-static void _FbmMemUnitSpecialSetting(FBM_FBG_T *pFbg)
+static void _FbmMemUnitSpecialSetting(FBM_FBG_T *pFbg ,UINT32 u4Width, UINT32 u4Heigh)
 {
     pFbg->au4MiscTblStartAddr =  pFbg->u4Workbuffer;
     if(pFbg->au4AddrMv[0] == 0)
     {
         pFbg->au4AddrMv[0] = pFbg->u4Workbuffer;
     }
+
+    pFbg->rSeqHdr.u2HSize = (UINT16) u4Width;
+    pFbg->rSeqHdr.u2VSize = (UINT16) u4Heigh;
     
     return;
 }
@@ -7830,6 +7832,8 @@ INT32 _FBMMemUnitCalculateFbCount(UCHAR ucFbgId,FBM_MEMUNIT *prMemPoolList)
     UINT32 u4YCnt,u4CCnt,u4FbCnt=0,u4MvCnt=0;
     UINT32 u4YMemSize,u4CMemSize,u4TotalYCSize,u4TotalSize;
     UINT32 u4NeedSize,u4ExtBufFlag;
+    FBM_MEMUNIT pPoolList[FBM_MEMUNIT_LIST_MAX];
+    FBM_MEMUNIT pUnitList[FBM_MEMUNIT_LIST_MAX];
 
     pFbg = &_prFbg[ucFbgId];
     u4ExtBufFlag = _FbmMemUnitExtenBufFlag(pFbg);
@@ -7847,7 +7851,7 @@ INT32 _FBMMemUnitCalculateFbCount(UCHAR ucFbgId,FBM_MEMUNIT *prMemPoolList)
     u4NeedSize = _FbmMemUnitMemParam(pFbg, &u4NeedSize, NULL, FBM_MEMUNIT_USETYPE_ALL, TRUE);
     LOG(1,"CalculateFbCount Fbg=%d, TotalMemory=0x%x,NeedMemory=0x%x, FbCnt=%d Before Adjust\n",\
         pFbg->ucFbgId, u4TotalSize, u4NeedSize, pFbg->u4FbCnt);
-
+    
 #if 0
     while(u4NeedSize > u4TotalSize && pFbg->u4FbCnt > 0)
     {
@@ -7856,18 +7860,6 @@ INT32 _FBMMemUnitCalculateFbCount(UCHAR ucFbgId,FBM_MEMUNIT *prMemPoolList)
     }
 #else
     {
-        FBM_MEMUNIT *pPoolList, *pUnitList;
-        pPoolList = (FBM_MEMUNIT *) x_mem_alloc_virtual(sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
-        pUnitList = (FBM_MEMUNIT *) x_mem_alloc_virtual(sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
-        if(pPoolList == NULL || pUnitList == NULL)
-        {
-            pFbg->u4FbCnt = 0;
-            if(pPoolList) x_mem_free(pPoolList);
-            if(pUnitList) x_mem_free(pUnitList);
-            LOG(0,"_FBMMemUnitCalculateFbCount(fbg:%d) alloc FBM_MEMUNIT memory fail\n", pFbg->ucFbgId);
-            return 0;
-        }
-        
         while(pFbg->u4FbCnt > 0)
         {
             x_memset(pPoolList,0,sizeof(FBM_MEMUNIT)*FBM_MEMUNIT_LIST_MAX);
@@ -7882,9 +7874,6 @@ INT32 _FBMMemUnitCalculateFbCount(UCHAR ucFbgId,FBM_MEMUNIT *prMemPoolList)
                 pFbg->u4FbCnt --;
             }
         }
-        
-        x_mem_free(pPoolList);
-        x_mem_free(pUnitList);
     }
 #endif
 
@@ -8050,7 +8039,9 @@ BOOL _FBM_FbgRemap(UCHAR ucFbgId, UINT32 u4Width, UINT32 u4Height)
     }
     
     _FbmMemUnitPrint(arMemUnitList,"MemList Infor After Occupy");
-    _FbmMemUnitSpecialSetting(pFbg);
+    _FbmMemUnitSpecialSetting(pFbg, u4Width, u4Height);
+
+    FBM_DoSeqChanging(ucFbgId,TRUE, FALSE);
     ucFbCnt = _FbmSyncWaitUseFb(ucFbgId);
     FBM_MUTEX_UNLOCK(ucFbgId);
 
