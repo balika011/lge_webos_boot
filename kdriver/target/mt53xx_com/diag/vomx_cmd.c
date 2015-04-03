@@ -97,7 +97,7 @@ LINT_EXT_HEADER_BEGIN
 #include "x_typedef.h"
 #include "x_os.h"
 
-#define DEFINE_IS_LOG   CLI_IsLog
+#define DEFINE_IS_LOG   VOMX_IsLog
 #include "x_debug.h"
 LINT_EXT_HEADER_END
 
@@ -109,12 +109,14 @@ LINT_SUPPRESS_BRACE(818)            // Info 818: Pointer parameter 'szArgv'
 * Function prototype
 ******************************************************************************/
 static INT32 _VomxInitCmd (INT32 i4Argc, const CHAR ** szArgv);
+
 #if defined(LINUX_TURNKEY_SOLUTION) && defined(CC_ENABLE_VOMX)
 extern INT32 _i4VConv_PrintStatus(HANDLE_T h_Handle);
 extern INT32 _i4VConv_Pause (HANDLE_T h_Handle);
 extern INT32 _i4VConv_Resume (HANDLE_T h_Handle);
 extern BOOL i4VDOOmxPrintStatus(UINT32 u4InstId);
 extern BOOL i4VDOOmxSetInfo(UINT32 u4InstId, UINT32 u4Info, UINT32 u4Para1, UINT32 u4Para2, UINT32 u4Para3);
+static INT32 _VomxPrintLevel(INT32 i4Argc, const CHAR ** szArgv);
 
 static INT32 _VomxQueryCmd (INT32 i4Argc, const CHAR ** szArgv);
 static INT32 _VomxSetDelayCmd (INT32 i4Argc, const CHAR ** szArgv);
@@ -145,7 +147,8 @@ static CLI_EXEC_T _arVomxCmdTbl[] =
     {"init",        "i",    _VomxInitCmd, NULL,          "Vomx init", CLI_ADMIN},
 #if defined(LINUX_TURNKEY_SOLUTION) && defined(CC_ENABLE_VOMX)
     {"query",       "q",    _VomxQueryCmd, NULL,          "Vomx query", CLI_ADMIN},
-    {"delay",       "dly",    _VomxSetDelayCmd, NULL,       "Vomx set delay", CLI_ADMIN},
+    {"delay",       "dly",  _VomxSetDelayCmd, NULL,       "Vomx set delay", CLI_ADMIN},
+    {"PrintLevel",  "pl",    _VomxPrintLevel, NULL,       "Vomx Print Log level", CLI_ADMIN},
  	{"vconv",	    "vc",	NULL, _arVomxVConvCmdTbl, "vconv", CLI_ADMIN},
 #endif
 
@@ -168,6 +171,7 @@ CLI_MAIN_COMMAND_ITEM(Vomx)
 };
 LINT_RESTORE
 
+static UINT32 u4VomxLogMask[4]={0,0,0,0};
 
 /******************************************************************************
 * Local Function
@@ -244,6 +248,66 @@ static INT32 _VomxVConvQueryCmd (INT32 i4Argc, const CHAR ** szArgv)
     return 0;
 }
 
+INT32 VomxPrintf(UCHAR ucInstId, UINT32 u4Level, CHAR *format, ...)
+{
+    va_list ap;
+    INT32 nRet = 0;
+    CHAR buffer[256];
+    u4Level = 1<< u4Level;
+    
+    if(u4Level&u4VomxLogMask[ucInstId])
+    {
+        va_start (ap, format);
+        x_vsnprintf (buffer,256, format, ap);
+        Printf(buffer);
+        va_end (ap);
+    }
+    
+    return nRet;
+}
+
+static INT32 _VomxPrintLevel(INT32 i4Argc, const CHAR ** szArgv)
+{
+   UINT32 fgEnable,u4VomxId,u4Level;
+
+   if(i4Argc < 4)
+   {
+      LOG(0,"\nvomx.pl  0/1 idx, lvl\n");
+      LOG(0,"Lvl:0 -->Event\n");
+      LOG(0,"Lvl:1 -->Input\n");
+      LOG(0,"Lvl:2 -->Output\n");
+   }
+
+   fgEnable = (BOOL)StrToInt(szArgv[1]);
+   u4VomxId = (UINT32)StrToInt(szArgv[2]);
+   u4Level  = (UINT32)StrToInt(szArgv[3]);
+   if(u4VomxId >= 4)
+   {
+       LOG(0,"idx must less than 4\n");
+       return 0;
+   }
+   
+   if(u4Level < 0x100)
+   {
+       u4Level = (1 << u4Level);
+   }
+   else
+   {
+       u4Level = u4Level&0xff;
+   }
+
+   if(fgEnable)
+   {
+       u4VomxLogMask[u4VomxId] |= u4Level;
+   }
+   else
+   {
+       u4VomxLogMask[u4VomxId] &= (~u4Level);
+   }
+
+   LOG(0,"VOMX[%d] DebugMask=0x%x\n",u4VomxId,u4VomxLogMask[u4VomxId]);
+   return 0;
+}
 
 static INT32 _VomxQueryCmd (INT32 i4Argc, const CHAR ** szArgv)
 {
