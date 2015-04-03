@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/03 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #48 $
+ * $Revision: #49 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27732,7 +27732,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 
     LOG(0, "Input Mute AUD_DEC%d, MuteEnable(%d)\n", u1DecId, fgMute);
 
-    if (fgMute)
+    if ((fgMute) && (_AudGetStrSource(u1DecId) != AUD_STREAM_FROM_GST))
     {
         i4Vol = 0;
     }
