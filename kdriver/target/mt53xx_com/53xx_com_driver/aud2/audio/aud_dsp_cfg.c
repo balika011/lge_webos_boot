@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/03 $
+ * $Date: 2015/04/04 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #49 $
+ * $Revision: #50 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1349,8 +1349,7 @@ LGSE_FN_PARAM_T _argLgseFnPara[AUDIO_LGSE_FUNC_NUM];
 #endif
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-#define APROC_DELAYBUF_BLOCK_SAMPLE_NUM	256   // samples in one block
-const UINT32 u4DelayConstant = APROC_DELAYBUF_BLOCK_SAMPLE_NUM*34/(48*5);
+const UINT32 u4DelayConstant = APROC_POSTBUF_BLOCK_SIZE*34/(48*5);
 #endif
 
 const AUD_ENUM_TO_NAME_T eChannelOutMap[] = 
