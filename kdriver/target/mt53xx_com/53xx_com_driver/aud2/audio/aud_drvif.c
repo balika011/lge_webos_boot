@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/26 $
+ * $Date: 2015/04/04 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -388,7 +388,7 @@ void AUD_HdmiDrvModeMute(UINT8 u1DecId, BOOL fgMute)
 {
     //AUD_DspHdmiChangeFormatMuteEnable(u1DecId, fgMute);
    //use input mute here
-    _AUD_UserSetDecInputMute(u1DecId, fgMute);
+    //_AUD_UserSetDecInputMute(u1DecId, fgMute); //no need for LG A5LR
 }
 
 #ifdef CC_ENABLE_AOMX
