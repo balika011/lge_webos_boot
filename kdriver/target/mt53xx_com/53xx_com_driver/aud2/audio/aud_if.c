@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/04 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1667,6 +1667,9 @@ INT32 AUD_DSPCmdPlayAsyn(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 {
+    AUD_DEC_STREAM_FROM_T eStreamFrom = AUD_STREAM_FROM_OTHERS;
+    AUD_GetStreamFrom(AUD_DSP0, u1DecId, &eStreamFrom);
+
     LOG(2, "CMD: set Resume: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
@@ -1680,7 +1683,12 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
     {
         _afgDecPause[u1DspId][u1DecId] = FALSE;
         VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_RESUME));
-        _AudAprocInputMute(u1DecId, FALSE); 
+#ifdef CC_ENABLE_AOMX
+        if ((eStreamFrom != AUD_STREAM_FROM_GST) || !AUD_GetMMAudioOnly(u1DecId))
+        {
+            _AudAprocInputMute(u1DecId, FALSE); 
+        }
+#endif        
     }
     else
     {
@@ -1716,8 +1724,10 @@ INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
     if (AUD_IsDecoderPlay(u1DspId, u1DecId))
     {
         _afgDecPause[u1DspId][u1DecId] = TRUE;
+#ifdef CC_ENABLE_AOMX        
         _AudAprocInputMute(u1DecId, TRUE);
         x_thread_delay(40);
+#endif        
     }
     VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_PAUSE));
 

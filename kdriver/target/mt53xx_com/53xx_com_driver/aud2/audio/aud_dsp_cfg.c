@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/04 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #50 $
+ * $Revision: #51 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3113,7 +3113,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
             u2Nsnum = 0x100; // 256 samples
         }
 
-        LOG(0, "SPDIF Output AUD_DEC%d, Enable(%d) Codec = %s\n", _u1SpdifRawDec, fgEnable, pAudFmt);
+        LOG(1, "SPDIF Output AUD_DEC%d, Enable(%d) Codec = %s\n", _u1SpdifRawDec, fgEnable, pAudFmt);
 
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
         _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
@@ -27726,12 +27726,14 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 {  
     UINT32 u4Idx;
     INT32 i4Vol;
-
+    AUD_DEC_STREAM_FROM_T eStreamFrom;
     AUD_DEC_ID_VALIDATE(u1DecId);
 
     LOG(0, "Input Mute AUD_DEC%d, MuteEnable(%d)\n", u1DecId, fgMute);
 
-    if ((fgMute) && (_AudGetStrSource(u1DecId) != AUD_STREAM_FROM_GST))
+    UNUSED(eStreamFrom);
+    eStreamFrom = _AudGetStrSource(u1DecId);
+    if (fgMute && (eStreamFrom != AUD_STREAM_FROM_GST))
     {
         i4Vol = 0;
     }
@@ -27749,6 +27751,14 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
         u4Idx = APROC_IOCTR_TRIM_AMIXER2;
     } 
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
+#ifdef CC_ENABLE_AOMX    
+    if (!fgMute && (eStreamFrom == AUD_STREAM_FROM_GST))
+    {
+        x_thread_delay(20);
+        _AudAprocInputMute(u1DecId, FALSE);
+    }
+#endif
+
     if (_u1SpdifRawDec == u1DecId)
     {   
         if(!fgMute && _fgSpdifConnet[u1DecId]) //unmute raw
