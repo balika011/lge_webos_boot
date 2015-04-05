@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/04 $
+ * $Date: 2015/04/05 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #51 $
+ * $Revision: #52 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -309,18 +309,7 @@ typedef enum
     ADEC_LGSE_MODE_VARIABLESALL = 5 // All VARIABLES will be written simultaneously. Data will be arranged from 0 to 4.
 } ADEC_LGSE_VARIABLE_MODE_T;
 
-#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-typedef enum {
-    APROC_RAW_UNKNOWN = 0,
-    APROC_RAW_PCM,
-    APROC_RAW_AC3,
-    APROC_RAW_AAC,
-    APROC_RAW_DTS_512,
-    APROC_RAW_DTS_1024,
-    APROC_RAW_DTS_2048,
-    APROC_RAW_NUM
-} APROC_IEC_AUDFMT_T;
-#endif
+
 
 //-----------------------------------------------------------------------------
 // Imported variables
@@ -3079,6 +3068,10 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 {
                     u4Mode = 0x1;             
                 }
+				else
+				{
+                    u4Mode = 0x0;   
+				}
                 switch (AUD_GetDTSFrameSize())
                 {
                 case 1024:
@@ -3089,8 +3082,8 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 case 2048:
                     eBurstInfo = BURST_INFO_DTS_2048;
                     u4Reg0 = APROC_RAW_DTS_2048;
-                    break;
                     u2Nsnum = 0x800; 
+                    break;
                 case 512: 
                 default:
                     u2Nsnum = 0x200; 

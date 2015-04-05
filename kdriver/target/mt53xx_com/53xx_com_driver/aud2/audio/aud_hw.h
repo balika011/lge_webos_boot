@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/05 $
  * $RCSfile: aud_hw.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -878,6 +878,7 @@
 
 #ifdef CC_AUD_HDMI_PARSER_2_0_SUPPORT
 #define AUD_READIEC16(offset)          IO_READ16(0,(offset))
+#define AUD_READIEC8(offset)           IO_READ8(0,(offset))
 #endif
 
 #define AUD_SET_BIT(Reg, Bit)          AUD_WRITE32(Reg, AUD_READ32(Reg) | (Bit))

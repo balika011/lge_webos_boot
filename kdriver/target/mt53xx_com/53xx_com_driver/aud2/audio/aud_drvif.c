@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/04 $
+ * $Date: 2015/04/05 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -672,8 +672,22 @@ static DATA_ENDIAN_T _gDTSEnInfo = DEC_BIG_ENDIAN;
 
 void AUD_SetDTSInfo (DATA_ENDIAN_T endian)
 {
-    _gDTSEnInfo = endian;
-    LOG (3, "AUD_SetDTSInfo: %d\n", _gDTSEnInfo);
+    UINT32 u4Mode = 0; //bit0: 1: DTS CD, 0: others, bit
+
+    if(endian != _gDTSEnInfo)
+    {
+        _gDTSEnInfo = endian;
+		if (AUD_GetDTSInfo() == DEC_LITTLE_ENDIAN)
+		{
+			u4Mode = 0x1;			  
+		}
+		else
+		{
+			u4Mode = 0x0;	
+		}
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
+        LOG (2, "AUD_SetDTSInfo: %d\n", _gDTSEnInfo);
+    }
 }
 
 DATA_ENDIAN_T AUD_GetDTSInfo (void)
@@ -682,10 +696,38 @@ DATA_ENDIAN_T AUD_GetDTSInfo (void)
 }
 
 static UINT32 _gu4DTSFrameSize = 512;
+
 void AUD_SetDTSFrameSize(UINT32 u4Size)
 {
-    _gu4DTSFrameSize = u4Size;
-    LOG (0, "AUD_SetDTSFrameSize: %d\n", _gu4DTSFrameSize);
+    UINT32 u4Reg0;
+    SPDIF_BURST_INFO_T eBurstInfo;
+    UINT16 u2Nsnum;
+		
+    if(u4Size != _gu4DTSFrameSize)
+    {
+        _gu4DTSFrameSize = u4Size;
+    	switch (AUD_GetDTSFrameSize())
+    	{
+    	case 1024:
+    		eBurstInfo = BURST_INFO_DTS_1024;
+    		u4Reg0 = APROC_RAW_DTS_1024;
+    		u2Nsnum = 0x400;
+    		break;
+    	case 2048:
+    		eBurstInfo = BURST_INFO_DTS_2048;
+    		u4Reg0 = APROC_RAW_DTS_2048;
+    		u2Nsnum = 0x800; 
+    		break;
+    	case 512: 
+    	default:
+    		u2Nsnum = 0x200; 
+    		eBurstInfo = BURST_INFO_DTS_512;
+    		u4Reg0 = APROC_RAW_DTS_512; 				   
+    		break;
+    	}
+        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);    
+        LOG (2, "AUD_SetDTSFrameSize: %d\n", _gu4DTSFrameSize);
+    }
 }
 
 UINT32 AUD_GetDTSFrameSize (void)

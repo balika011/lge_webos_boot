@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/04 $
+ * $Date: 2015/04/05 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -351,6 +351,18 @@ typedef enum
     BURST_INFO_NUM
 }   SPDIF_BURST_INFO_T;
 
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+typedef enum {
+    APROC_RAW_UNKNOWN = 0,
+    APROC_RAW_PCM,
+    APROC_RAW_AC3,
+    APROC_RAW_AAC,
+    APROC_RAW_DTS_512,
+    APROC_RAW_DTS_1024,
+    APROC_RAW_DTS_2048,
+    APROC_RAW_NUM
+} APROC_IEC_AUDFMT_T;
+#endif
 #define IEC_CFG0_CATEGORYCODE_BIT 0
 #define IEC_CFG0_CATEGORYCODE_MASK (~0xff)
 

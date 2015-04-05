@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/05 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #29 $
+ * $Revision: #30 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2485,6 +2485,15 @@ void AUD_SentReaptNumber(UINT8 u1DecId, UINT32 ReaptNumber)
 }
 
 #ifdef CC_AUD_HDMI_PARSER_2_0_SUPPORT
+void do_BigEnd_to_LittleEnd1(INT16* input_buf, UINT32 u4Size)
+{
+    UINT32 i;
+    
+    for (i=0; i < u4Size; i++)
+    {
+        input_buf[i] = AUD_DrvSwapWord(input_buf[i]);
+    }
+}
 static void _AudHDMIParserThread(void* pvArg)
 {
     UINT8 u1DecId = AUD_DEC_MAIN;
@@ -2665,6 +2674,16 @@ static void _AudHDMIParserThread(void* pvArg)
                    {
                        u4TransferSZ = u4TransferTotalSZ;
                    }
+				   if((u4TransferSZ != 256) && (_arParserInfo[u1DecId]._fgDTSCD == TRUE))
+				   {
+				       LOG(2, "Aud soft transter u4TransferSZ = %d\n",u4TransferSZ);
+				   }
+
+
+				   if(_arParserInfo[u1DecId]._fgDTSCD == TRUE)
+				   {
+				       do_BigEnd_to_LittleEnd1((INT16*)(VIRTUAL(u4StreamAddr)), u4TransferSZ/2);
+				   }
                    //parser max transfer size=15.5M always > raw data frame size
                    if(!_arParserInfo[u1DecId]._fgFmtChg)
                    {
@@ -10952,9 +10971,24 @@ BOOL AUD_DrvCheckIECSyncWord(AUD_HDMI_PARSER_INFO_T * prParserInfo)
 {
     UINT16 u2SyncWord;    //16 bit word to check
     UINT8 i;
+	UINT32 u4SamplePerFrame;
 
     u2SyncWord = AUD_DrvSwapWord(AUD_READIEC16(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr)));
     prParserInfo->u4PaPb = (prParserInfo->u4PaPb<<16)|u2SyncWord;
+	if(prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_14)
+	{
+		u4SamplePerFrame = ((UINT32)(((AUD_READIEC8(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr+3))&0x7)<<4 | 
+			(AUD_READIEC8(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr+4))&0x3F)>>2)+ 1))<<5; 
+		AUD_SetDTSInfo(DEC_LITTLE_ENDIAN);
+		AUD_SetDTSFrameSize(u4SamplePerFrame);
+	}
+	else if(prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_16)
+	{
+		u4SamplePerFrame = ((UINT32)(((AUD_READIEC8(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr+2))&0x1)<<6 | 
+			(AUD_READIEC8(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr+3)))>>2)+ 1))<<5; 
+		AUD_SetDTSInfo(DEC_LITTLE_ENDIAN);
+		AUD_SetDTSFrameSize(u4SamplePerFrame);
+	}
     if((prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_14)||(prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_16))
     {
         prParserInfo->eSpdifInfo.u2format = 0xB; //find DTS header set pc as dts
@@ -10974,6 +11008,7 @@ BOOL AUD_DrvCheckIECSyncWord(AUD_HDMI_PARSER_INFO_T * prParserInfo)
     {
 
         prParserInfo->_fgDTSCD = FALSE; //find papb,so it's not DTS CD,DTS CD don't have papb
+        AUD_SetDTSInfo(DEC_BIG_ENDIAN);//reset to big endian
         prParserInfo->u4PaPb = 0;
         prParserInfo->eHDMIBuffer.u4FifoPtr = AUD_DrvGetCircularAddress(u4GetHDMIParserFIFOStart(),u4GetHDMIParserFIFOEnd(),prParserInfo->eHDMIBuffer.u4FifoPtr+2);
         u2SyncWord = AUD_DrvSwapWord(AUD_READIEC16(VIRTUAL(prParserInfo->eHDMIBuffer.u4FifoPtr)))&0x1f;//pc bits of pc 0~4 data type
