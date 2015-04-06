@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/05 $
+ * $Date: 2015/04/06 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #52 $
+ * $Revision: #53 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -712,6 +712,7 @@ static UINT8 _aau1ChannelVolume[AUD_DEC_NUM][(UINT32)AUD_CH_NUM];
 static UINT32 _aau1ChannelVolumeNew[AUD_DEC_NUM][(UINT32)AUD_CH_NUM];
 static UINT32 _aau1ChannelVolumeMain[AUD_DEC_NUM][(UINT32)AUD_CH_NUM];
 static UINT32 _aau1ChannelVolumeFine[AUD_DEC_NUM][(UINT32)AUD_CH_NUM];
+static INT32 i4VolAmixer2AD = 0x7fffff;
 #endif
 static UINT8 _u1AdFadeVolume;
 static UINT8 _u1AdFadeVolumePrev;
@@ -1660,8 +1661,13 @@ void _VolumeCtrl(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, UINT32 u4Value
             //FIXME: AD volume: input trim
             //_vAUD_Aproc_Set (APROC_CONTROL_TYPE_VOL, APROC_IOCTR_TRIM_INPUT2, &i4Vol, 1); 
             // change to amixer2 trim for AD only, not AD+main
+            #ifdef CC_AUD_DDI
+            i4VolAmixer2AD = _AudDspToAprocVol(u4Value);
+            _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, APROC_IOCTR_TRIM_AMIXER2, &i4VolAmixer2AD, 1);
+            #else
             i4Vol = _AudDspToAprocVol(u4Value);
-            _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, APROC_IOCTR_TRIM_AMIXER2, &i4Vol, 1);             
+            _vAUD_Aproc_Set (APROC_CONTROL_TYPE_TRIM, APROC_IOCTR_TRIM_AMIXER2, &i4Vol, 1);
+            #endif
         }
         else
         {
@@ -27742,6 +27748,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     else if (u1DecId == AUD_DEC_THIRD)
     {
         u4Idx = APROC_IOCTR_TRIM_AMIXER2;
+        i4Vol =  i4VolAmixer2AD;
     } 
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_TRIM, u4Idx, &i4Vol, 1);
 #ifdef CC_ENABLE_AOMX    
