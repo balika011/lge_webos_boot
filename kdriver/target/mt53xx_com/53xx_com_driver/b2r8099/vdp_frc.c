@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/06 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #31 $
+ * $Revision: #32 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2644,7 +2644,10 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     }
 
     u4SrcLineSize = prSeqHdr->u2LineSize;
-
+	
+	ucEsId = prVdpConf->ucInputPort[0];
+    prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
+	
 #ifdef ENABLE_MULTIMEDIA
     LOG(1,"SeamlessPlay(%d),Mode(0x%x)!\n",prSeqHdr->fgSeamlessPlay, prSeqHdr->eSeamlessMode);
     if (prSeqHdr->fgSeamlessPlay) // seamless play
@@ -2672,8 +2675,8 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
 				prSeqHdr->u2HSize,prSeqHdr->u2VSize);
 			if(prSeqHdr->fgCropping)
 			{
-				if( prVdecEsInfo->e3DType == VDEC_3D_SBS_LF ||
-					prVdecEsInfo->e3DType == VDEC_3D_SBS_RF)
+				if(prVdecEsInfo&&(prVdecEsInfo->e3DType == VDEC_3D_SBS_LF ||
+					prVdecEsInfo->e3DType == VDEC_3D_SBS_RF))
 				{
 					if(CheckResVal(u4SeqWidth,prSeqHdr->u2HSize/2))
 					{
@@ -2681,8 +2684,8 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
 						LOG(2,"Sbs enlarge Width %d\n",u4SeqWidth);
 					}
 				}
-				else if(prVdecEsInfo->e3DType == VDEC_3D_TB_LF ||
-					 prVdecEsInfo->e3DType == VDEC_3D_TB_RF)
+				else if(prVdecEsInfo&&(prVdecEsInfo->e3DType == VDEC_3D_TB_LF ||
+					 prVdecEsInfo->e3DType == VDEC_3D_TB_RF))
 				{
 					if(CheckResVal(u4SeqHeight,prSeqHdr->u2VSize/2))
 					{
@@ -2694,8 +2697,6 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
 		}
     }
 
-	ucEsId = prVdpConf->ucInputPort[0];
-    prVdecEsInfo = (ucEsId < VDEC_MAX_ES)? _VDEC_GetEsInfo(ucEsId) : NULL;
 
 	if (prVdecEsInfo && (prVdecEsInfo->eSeamlessMode & SEAMLESS_BY_NPTV))
 	  {
