@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/01 $
+ * $Date: 2015/04/06 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +154,7 @@ UINT8 u1YMotionLevel[VDP_NS] = {0, 0};
 UINT8 u1CMotionLevel[VDP_NS] = {0, 0};
 UINT8 u1IF_MAX_MOTION_C_Value;
 extern UINT8 _fgCornPattern;
+extern UINT8 _bPatchInPattern107;
 
 UINT8 u1sawtooth_still;
 UINT8 u1smooth_still;
@@ -1588,7 +1589,8 @@ static void _vDrvDISetIFQualityISR(void)
 
     if ((bGetSignalTypeNew(VDP_1) == SV_ST_AV) && (bHwTvdMode() == SV_CS_PAL))
     {
-        u1MaxMo_C = MIN(DiPar.IfPar.bMaxMoC, u1MaxMo_C);
+        //u1MaxMo_C = MIN(DiPar.IfPar.bMaxMoC, u1MaxMo_C);
+        u1MaxMo_C = MIN(u1IF_MAX_MOTION_C_Value, u1MaxMo_C);  //porting A2
     }
     
     vIO32WriteFldAlign(MCVP_FUSION_21, u1MaxMo_C, IF_MAX_MOTION_C);        
@@ -1850,7 +1852,12 @@ static void _vDrvDICzpAdaptive(void)
         u4Base3DTemp2 = (u4Base3D > (DiPar.CsPar.bFavorCS>>2)) ? (u4Base3D - (DiPar.CsPar.bFavorCS>>2)) : 0;
         u4Base3D = MIN(u4Base3D, u4Base3DTemp2);
     }
-    
+	
+	if(_bPatchInPattern107) // woriround for favarCS status different at the begning part
+	{
+		u4Base3D = (DiPar.CsPar.bFavorCS < 0x4) ? 0x4 : u4Base3D;
+ 	}
+	
     if ((DiPar.CsPar.bFavorCS >= 0x4) && (bGetSignalTypeNew(VDP_1) == SV_ST_AV))
     {
         if (bHwTvdMode() == SV_CS_NTSC358)
@@ -2173,6 +2180,10 @@ static void _vDrvDIFavorCS(void)
 	if(_fgCornPattern)
 	{
 		u1sawtoothst_update = 0x5;
+	}
+	if(_bPatchInPattern107) // woriround for favarCS status different at the begning part
+	{
+		u4sawtooth_mc = 0x0;
 	}
     if (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_EN))
     {

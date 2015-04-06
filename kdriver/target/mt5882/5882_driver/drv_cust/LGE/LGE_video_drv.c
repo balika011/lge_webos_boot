@@ -845,7 +845,8 @@ void DRVCUST_HUPSCaleCoeff(UINT8 bPath)
         }
         else
 		{   // ATV, AV, SV
-			vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY_CVBS);
+			//vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY_CVBS);
+			vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY3); //porting A2			
 			vDrvSCPQSetSramCoeff(COEFTYP_HOR_C, u4FilterCoeff_HC7);		
             LOG(2, "Scaler Coefficient: u4FilterCoeff_HY3_HC7 576\n");
         }
@@ -866,7 +867,8 @@ void DRVCUST_HUPSCaleCoeff(UINT8 bPath)
         }
         else
         {   // ATV, AV, SV
-			vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY_CVBS);
+			//vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY_CVBS);
+			vDrvSCPQSetSramCoeff(COEFTYP_HOR_Y, u4FilterCoeff_HY3); //porting A2			
 			vDrvSCPQSetSramCoeff(COEFTYP_HOR_C, u4FilterCoeff_HC7);		
             LOG(2, "Scaler Coefficient: u4FilterCoeff_HY3_HC7 480\n");
         }

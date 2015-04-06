@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/20 $
+ * $Date: 2015/04/06 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -479,7 +479,8 @@ REGTBL_T const CODE REGTBL_COMB_PAL_AV[] = {
 	{COMB3D_1A, 0x3220008F, 0xFF7F3FFF},
 	{COMB3D_1B, 0xA02D0E28, 0xFFFFFFFF},
 	{COMB3D_1C, 0x00000054, 0x000000FF},
-	{COMB3D_1D, 0x43174537, 0xF7FFFF7F},
+//	{COMB3D_1D, 0x43174537, 0xF7FFFF7F},
+	{COMB3D_1D, 0x43174525, 0xF7FFFF7F}, // change cube comb sp_var_max setting for PAL E-52 Channel.
 	{COMB3D_1E, 0x0045713C, 0x0FFFFFFF},
 	{COMB3D_1F, 0xC0001A50, 0xFFF03FFF},
 	{COMB3D_20, 0x4414050D, 0x7F7F3F7F},
@@ -1006,17 +1007,30 @@ void vDrvTDCSet(void)
     }
 
     vIO32WriteFldAlign(TDC_FW_00, SV_ON, TDC_CCS_ADAP_EN);
-	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&(bHwTvdMode()==SV_CS_NTSC358))  // for ATV FSC change color bar issue.
-	{		
-		vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
-		
-		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENBOUND);
-		vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENUNIFORM_SPCLR);
+    vIO32WriteFldAlign(COMB2D_00, SV_OFF, Y2D_CSHAP_EN); //turn off detail enhancement.
+    
+	if(_rTvd3dStatus.eSourceType==SV_ST_TV)  
+	{
+		// turn off Cube comb for PAL E-52 Channel vertical color line have some diagonal running line.
+		vIO32WriteFldAlign(COMB3D_1F, SV_OFF, CB_3D_CUBE_FILTER_Y_EN);
+		vIO32WriteFldAlign(COMB3D_1F, SV_OFF, CB_3D_CUBE_FILTER_C_EN);
+
+		switch(bHwTvdMode())
+		{
+			case SV_CS_NTSC358:		// for ATV FSC change color bar issue.
+				vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);				
+				vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENBOUND);
+				vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENUNIFORM_SPCLR);
+				break;
+			case SV_CS_PAL_N:
+				vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
+				break;
+			default:
+				break;			
+				
+		}
 	}
-	if((_rTvd3dStatus.eSourceType==SV_ST_TV)&&(bHwTvdMode()==SV_CS_PAL_N))  
-	{		
-		vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
-	}
+	
     // Re-enable TDC.        
     if (fgTDCEnabled)    
 	{        
@@ -1557,19 +1571,19 @@ static void vTdcCrossColorReduce2(void)
 		Printf("\n***vTdcCrossColorR u4MotionPixelCnt=%x,dwTdc3dLumasum=%x,dwTdc3dMBPixCnt=%x ,dwTdc3dColorEdgeSum=%x\n",
 			u4MotionPixelCnt,dwTdc3dLumasum,dwTdc3dMBPixCnt,dwTdc3dColorEdgeSum);
 		Printf("dwTdc3dColorSum=%x, u2DIHistCnt=%x, u2DIHistCntMax=%x,u2DIHistCntDiff=%x\n",
-			dwTdc3dColorSum,u2DIHistCnt,u2DIHistCnt,u2DIHistCntDiff);
+			dwTdc3dColorSum,u2DIHistCnt,u2DIHistCntMax,u2DIHistCntDiff);
 	}
 	
 	if (bHwTvdMode()==SV_CS_PAL)
     {
         b3DGainC = 4;
-        if((u4MotionPixelCnt<=0xE00)
+        if((u4MotionPixelCnt<=0xA00)&&(u4MotionPixelCnt>=0x100)
            //  &&(u2MjcMvZeroCnt > 0x6500)  need to check.
-           &&(u2DIHistCnt>=1650)&&(u2DIHistCnt<=2250)&&(u2DIHistCntDiff>=80)&&(u2DIHistCntDiff<=500)
-            &&((dwTdc3dLumasum>=0xF400000)&&(dwTdc3dLumasum<=0x10200000))
-            //&&((dwTdc3dMBPixCnt>0x1200)&&(dwTdc3dMBPixCnt<0x1300))
-            &&((dwTdc3dColorEdgeSum>1700000)&&(dwTdc3dColorEdgeSum<5800000))
-            &&((dwTdc3dColorSum>5000000)&&(dwTdc3dColorSum<9200000)))//for hammock
+           &&(u2DIHistCnt>=0x820)&&(u2DIHistCnt<=0x990)/*&&(u2DIHistCntDiff>=0x60)*/&&(u2DIHistCntDiff<=0x180)
+            &&((dwTdc3dLumasum>=0xF900000)&&(dwTdc3dLumasum<=0xFD00000))
+            &&((dwTdc3dMBPixCnt>0x550)&&(dwTdc3dMBPixCnt<0x6C0))
+            &&((dwTdc3dColorEdgeSum>0x200000)&&(dwTdc3dColorEdgeSum<0x350000))
+            &&((dwTdc3dColorSum>0x60000)&&(dwTdc3dColorSum<0x700000)))//for hammock
         {
             //vRegWriteFldAlign (COMB_3D_0E, MIN(0x10, (0x2000-u4MotionPixelCnt)>>7), CB_3D_FW_2D_COST);
             //vRegWriteFldAlign(MCVP_FUSION_21, 0, IF_MAX_MOTION_C);
@@ -1777,10 +1791,15 @@ void vTdcDotCrawlReduce(void)
 		Printf("dwTdc3dMBPixCnt=%x u4MotionPixelCnt=%x dwTdc3dLumaEdgeSum=%x bEdgeSum=%x\n",
 			dwTdc3dMBPixCnt,u4MotionPixelCnt,dwTdc3dLumaEdgeSum,bEdgeSum);
 	}
+	_bPatchInPattern107 = 0;
+	_bK4ChromaThByCans =0;
+	_fgMovingcolorCharacter =0;
+	_fgCornPattern = 0;	
+	_fgMovingCans = 0;
     if ((bHwTvdMode()==SV_CS_NTSC358))
     {
-        _fgCornPattern = 0;
-		_fgMovingCans = 0;
+//        _fgCornPattern = 0;
+//		_fgMovingCans = 0;
         if ((bcs_state>=4)
             && ((dwTdc3dColorEdgeSum >= 2200000)&&(dwTdc3dColorEdgeSum <= 4000000))
             && ((dwTdc3dColorSum >= 11000000)&&(dwTdc3dColorSum <= 18500000))
@@ -1866,9 +1885,12 @@ void vTdcDotCrawlReduce(void)
         UINT32 u4SCEHueHist0 = IO32ReadFldAlign(HUE_HIST_1_0_MAIN, HUE_HIST_0);
         UINT32 u4SCEHueHist2 = IO32ReadFldAlign(HUE_HIST_3_2_MAIN, HUE_HIST_2);
         UINT32 u4SCEHueHist5 = IO32ReadFldAlign(HUE_HIST_5_4_MAIN, HUE_HIST_5);
-        _bPatchInPattern107 = 0;
-        _bK4ChromaThByCans =0;
-        _fgMovingcolorCharacter =0;
+		UINT8 uDI1GMVX = IO32ReadFldAlign(MCVP_CS_28, GMV_MVX);
+		UINT8 uDI1GMVY = IO32ReadFldAlign(MCVP_CS_28, GMV_MVY);
+//        _bPatchInPattern107 = 0;
+//        _bK4ChromaThByCans =0;
+//        _fgMovingcolorCharacter =0;
+//		_fgCornPattern = 0;
         bK4_V_Gain = 3;
         if (IO32ReadFldAlign(PSCAN_FWCS_02, FAVOR_CS_STATE) > 4)
         {
@@ -1880,7 +1902,7 @@ void vTdcDotCrawlReduce(void)
             bK4_V_Gain = 3;
             K2THValue = 6;
         }
-        else if ((u1MajorMvX0>=0)&&(u1MajorMvY0 == 0)
+        else if ((uDI1GMVX>=0x1D)&&(uDI1GMVY == 0)
             &&((dwTdc3dColorEdgeSum >= 0x800000)&&(dwTdc3dColorEdgeSum <= 0x10F0000))
             && ((dwTdc3dColorSum >= 0x3000000)&&(dwTdc3dColorSum <= 0x3600000))
             && ((dwTdc3dMBPixCnt >= 0xA00)&&(dwTdc3dMBPixCnt <= 0x2000))
@@ -1895,7 +1917,7 @@ void vTdcDotCrawlReduce(void)
             K2THValue = 3;
             _fgMovingcolorCharacter = 1;
         }
-        else if ((bcs_state>=4) && (u1MajorMvX0>=1)
+        else if ((bcs_state>=4) && (uDI1GMVX>=0x1D)&&(uDI1GMVY == 0)
             && ((dwTdc3dColorEdgeSum >= 2800000)&&(dwTdc3dColorEdgeSum <= 5950000))
             && ((dwTdc3dColorSum >= 15000000)&&(dwTdc3dColorSum <= 25500000))
             && ((dwTdc3dMBPixCnt >= 500)&&(dwTdc3dMBPixCnt <= 3500))//cans
@@ -1923,10 +1945,11 @@ void vTdcDotCrawlReduce(void)
         {
             K2THValue = 2;
         }
-        else if ((bcs_state>=4) &&(u4MotionPixelCnt<16000)
+        else if (/*(bcs_state>=4) &&*/(u4MotionPixelCnt<0x3E00)  //favor_cs state have some different from A2
             && ((dwTdc3dColorSum >=17000000)&&(dwTdc3dColorSum <= 29000000))
             && ((dwTdc3dColorEdgeSum >= 2100000)&&(dwTdc3dColorEdgeSum <= 4100000))
-            && ((dwTdc3dMBPixCnt >= 2700)&&(dwTdc3dMBPixCnt <= 4800))//107
+            && ((dwTdc3dMBPixCnt >= 2700)&&(dwTdc3dMBPixCnt <= 4800)
+            && ((bEdgeSum >= 0x25)&&(bEdgeSum <= 0x65)))//107
             )
         {
             //K2THValue = (K2THValue>1)?(K2THValue-1):1;
