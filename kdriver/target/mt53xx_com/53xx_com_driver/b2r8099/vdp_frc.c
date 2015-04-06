@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/03 $
+ * $Date: 2015/04/06 $
  * $RCSfile: vdp_frc.c,v $
- * $Revision: #30 $
+ * $Revision: #31 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2656,9 +2656,42 @@ static BOOL _B2R_GetSequenceInfo(B2R_OBJECT_T *this,BOOL fgPreChk)
     else 
 #endif
     {
-        // If cropping info is provided, the correct video size is identified by cropping size
-        u4SeqWidth = (prSeqHdr->fgCropping  ? prSeqHdr->u4CropWidth : (UINT32)prSeqHdr->u2HSize);
-        u4SeqHeight = (prSeqHdr->fgCropping ? prSeqHdr->u4CropHeight : (UINT32)prSeqHdr->u2VSize);
+    	UCHAR ucPlayMode;
+        FBM_GetPlayMode(prFrcPrm->ucFbgId, &ucPlayMode);
+		// If cropping info is provided, the correct video size is identified by cropping size
+		u4SeqWidth = (prSeqHdr->fgCropping	? prSeqHdr->u4CropWidth : (UINT32)prSeqHdr->u2HSize);
+		u4SeqHeight = (prSeqHdr->fgCropping ? prSeqHdr->u4CropHeight : (UINT32)prSeqHdr->u2VSize);
+        if(ucPlayMode != FBM_FBG_DTV_MODE)
+        {
+        }
+		else
+		{
+			// If cropping info is provided, the correct video size is identified by cropping size
+			#define CheckResVal(s,w) ((s)>=((w)-20)&&(s)<=((w)+20))
+			LOG(2,"3D (%d,%d) Crop(%d,%d), Src(%d,%d)\n",prSeqHdr->u1B2R3DType,prVdecEsInfo->e3DType,prSeqHdr->u4CropWidth,prSeqHdr->u4CropHeight,
+				prSeqHdr->u2HSize,prSeqHdr->u2VSize);
+			if(prSeqHdr->fgCropping)
+			{
+				if( prVdecEsInfo->e3DType == VDEC_3D_SBS_LF ||
+					prVdecEsInfo->e3DType == VDEC_3D_SBS_RF)
+				{
+					if(CheckResVal(u4SeqWidth,prSeqHdr->u2HSize/2))
+					{
+						u4SeqWidth *=2;
+						LOG(2,"Sbs enlarge Width %d\n",u4SeqWidth);
+					}
+				}
+				else if(prVdecEsInfo->e3DType == VDEC_3D_TB_LF ||
+					 prVdecEsInfo->e3DType == VDEC_3D_TB_RF)
+				{
+					if(CheckResVal(u4SeqHeight,prSeqHdr->u2VSize/2))
+					{
+						u4SeqHeight *=2;
+						LOG(2,"Tnb enlarge Height %d\n",u4SeqHeight);
+					}
+				}
+			}
+		}
     }
 
 	ucEsId = prVdpConf->ucInputPort[0];

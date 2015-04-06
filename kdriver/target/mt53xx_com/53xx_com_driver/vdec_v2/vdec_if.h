@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/04/06 $
  * $RCSfile: vdec_if.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_if.h
@@ -567,6 +567,14 @@ typedef enum
     VDEC_SEAMLESS_4K2K
 } VDEC_SEAMLESS_MODE;
 
+typedef enum 
+{
+	VDEC_PLATFORM_ATSC = 0,
+	VDEC_PLATFORM_DVB,
+	VDEC_PLATFORM_ISDB,
+	VDEC_PLATFORM_COMMERCIAL,
+	VDEC_PLATFORM_MAX
+}ENUM_VDEC_PALTFORM;
 
 typedef struct {
     UINT32 au4DecTime[5][9]; //[3]P,B,I,SP,SI, [4]maxMs, minMs, totalMs, FrmNum, OverTimeNum, SWTime, DecCycle, MaxDecCycle, MaxDramCycle
@@ -1153,5 +1161,6 @@ EXTERN BOOL VDEC_GetDelayTime(UCHAR ucEsId, VDEC_HDR_INFO_T* prHdrInfo);
 EXTERN void VDEC_VP9LogOption(const CHAR* pTypeStr, const CHAR* pArg1, const CHAR* pArg2);
 
 EXTERN void VDEC_GetHALParam(UCHAR ucEsId, UINT32 u4Type, UINT32 u4Param1, UINT32* u4Param2, UINT32 u4Param3);
+EXTERN BOOL VDEC_SetPlatform(ENUM_VDEC_PALTFORM ePlatForm);
 
 #endif //VDEC_IF_H

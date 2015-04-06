@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/03/26 $
+ * $Date: 2015/04/06 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #14 $
+ * $Revision: #15 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -1999,6 +1999,7 @@ typedef struct
     UINT32 u4ReceiveEsDataCnt;  // received data cnt;
     UINT32 u4SendEsDataCnt;
     BOOL fgLGSeamless;
+	BOOL fgHEVCFldHeightChg;
 } VDEC_ES_INFO_T;
 
 
@@ -2122,6 +2123,7 @@ typedef struct
     BOOL fgFixFHDInterlaceDisplay;  //for Sharp EU, DTV-T2 model special bitstream
     #endif
 	UINT32 u4CompressedDataSzie;
+	ENUM_VDEC_PALTFORM ePlatForm;
 } VDEC_ES_INFO_KEEP_T;
 
 typedef struct
