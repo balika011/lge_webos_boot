@@ -363,12 +363,19 @@ static INT32 i4CmdQueryCallbackQueue(INT32 i4Argc, const CHAR** szArgv)
 	  {
 	    Printf("======CALLBACK00 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB00IdleFctPid[eFctId]);
 		  //Printf("======CALLBACK00 IDLE FCTID = %s\n",_aszCbFctIdStr[eFctId]);
+		  #if 0 //this just for test ,and have better don't modiify frame-larger-than
 		  #ifdef CC_MTAL_MULTIPROCESS_CALLBACK
 		  Printf("======CALLBACK01 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB01IdleFctPid[eFctId]);
 		  //Printf("======CALLBACK01 IDLE FCTID = %s\n",_aszCbFctIdStr[eFctId]);
 		  Printf("======CALLBACK02 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB02IdleFctPid[eFctId]);
 		  //Printf("======CALLBACK02 IDLE FCTID = %s\n",_aszCbFctIdStr[eFctId]);
-		#endif
+		  Printf("======CALLBACK01 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB03IdleFctPid[eFctId]);
+		  Printf("======CALLBACK02 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB04IdleFctPid[eFctId]);
+		  Printf("======CALLBACK01 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB05IdleFctPid[eFctId]);
+		  Printf("======CALLBACK02 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB06IdleFctPid[eFctId]);
+		  Printf("======CALLBACK01 IDLE FCTID(%d) = %d\n",(UINT32)eFctId,rCbIdleIdCount.puCB07IdleFctPid[eFctId]);
+		  #endif
+		  #endif
 	  }
 	}
 	Printf("======CALLBACK Count = %d\n",ui4Count);
