@@ -2580,6 +2580,7 @@ void vDviConnect(UINT8 bchannel, UINT8 fgIsOn)
 #if DVI_DEBUG
         LOG(6, "vDviConnect On\n");
 #endif
+		PreDviTiming = 0;
 
         _bDviExtSrc = SV_DV_HDMI;
 
@@ -4110,12 +4111,12 @@ void vDviChkModeChange(void)
 
                     // check if timing
                 LOG(1,"the input height is %d and refresh rate is %d and interlace is %d and DVI timing is %d\n",wHDMIResoHeight(),bHDMIRefreshRate(),fgHDMIinterlaced(),PreDviTiming);
-                if((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080i))
+                if((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080p_60))
                 {                    
-					if((_bVStableCnt > 70 && _bHStableCnt > 70 ) || \
-										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 70))
+					if((_bVStableCnt > 60 && _bHStableCnt > 60 ) || \
+										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 60))
 					{
-					    LOG(1,"from 1080i60 change to 1080p24 stable\n");
+					    LOG(1,"from 1080p60 change to 1080p24 stable\n");
 						if(_bWidthStableCnt>=10)
 						   {
 							   _bWidthStableFlg = 1;
