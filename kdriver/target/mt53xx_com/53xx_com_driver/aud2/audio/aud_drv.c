@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/05 $
+ * $Date: 2015/04/07 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #30 $
+ * $Revision: #31 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2502,6 +2502,7 @@ static void _AudHDMIParserThread(void* pvArg)
     UINT32 u4StreamAddr = 0;
     UINT32 u4TransferSZ = 0;
     UINT32 u4Pd = 0;
+    UINT32 i;
 
     if (pvArg != NULL)
     {
@@ -2541,6 +2542,7 @@ static void _AudHDMIParserThread(void* pvArg)
                 _arParserInfo[u1DecId].u4PaPb = 0;
                 _arParserInfo[u1DecId].eHDMIParserSta = AUD_HDMI_PARSER_FIND_VALID_FRAME;
                 _arParserInfo[u1DecId].u4NoRawDataSize = 0;
+                _arParserInfo[u1DecId].u4NonZeroDataSize = 0;
                 _arParserInfo[u1DecId].u4NoTransferSize = 0;
                 _arParserInfo[u1DecId].e_aud_det_fmt = _arAudDecoder[AUD_DSP0][u1DecId].eDecFormat;
                 _arParserInfo[u1DecId]._fgFmtChg = FALSE;
@@ -2637,6 +2639,49 @@ static void _AudHDMIParserThread(void* pvArg)
                             LOG(7,"Format change two times.\n");
                         }
                         _arParserInfo[u1DecId]._fgFmtChg = FALSE;
+                    }
+
+                    //mute first 50ms nonzero data for pcm format: avoid garbage data between silence audio
+                    if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecFormat == AUD_FMT_PCM) && 
+                        (_arParserInfo[u1DecId].u4NonZeroDataSize < HDMI_PARSER_PCM_NONZERO_THL))
+                    {
+                        if (_arParserInfo[u1DecId].u4NonZeroDataSize == 0)
+                        {
+                            for (i=0; i<HDMI_PARSER_PCM_TRANSFER_SIZE; i+=2)
+                            {
+                                if ((AUD_READIEC16(VIRTUAL(AUD_DrvGetCircularAddress(u4GetHDMIParserFIFOStart(),
+                                    u4GetHDMIParserFIFOEnd(),_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr+i)))) != 0)
+                                {
+                                    _arParserInfo[u1DecId].u4NonZeroDataSize = HDMI_PARSER_PCM_TRANSFER_SIZE;
+                                    break;
+                                } 
+                            }
+                        }
+                        else
+                        {
+                            _arParserInfo[u1DecId].u4NonZeroDataSize += HDMI_PARSER_PCM_TRANSFER_SIZE;
+                        }
+                        
+                        if (_arParserInfo[u1DecId].u4NonZeroDataSize != 0)
+                        {
+                            if (_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr + HDMI_PARSER_PCM_TRANSFER_SIZE <= u4GetHDMIParserFIFOEnd())
+                            {
+                                x_memset((void *)VIRTUAL(_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr), 0, HDMI_PARSER_PCM_TRANSFER_SIZE);
+                                DSP_FlushInvalidateDCacheFree(_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr, HDMI_PARSER_PCM_TRANSFER_SIZE); 
+                            }
+                            else
+                            {
+                                x_memset((void *)VIRTUAL(_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr), 0, 
+                                    u4GetHDMIParserFIFOEnd()-_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr);
+                                DSP_FlushInvalidateDCacheFree(_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr, 
+                                    u4GetHDMIParserFIFOEnd()-_arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr); 
+                                
+                                x_memset((void *)VIRTUAL(u4GetHDMIParserFIFOStart()), 0, 
+                                    _arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr + HDMI_PARSER_PCM_TRANSFER_SIZE - u4GetHDMIParserFIFOEnd());
+                                DSP_FlushInvalidateDCacheFree(u4GetHDMIParserFIFOStart(), 
+                                    _arParserInfo[u1DecId].eHDMIBuffer.u4FifoPtr + HDMI_PARSER_PCM_TRANSFER_SIZE - u4GetHDMIParserFIFOEnd()); 
+                            } 
+                        } 
                     }
                 }
                 else
@@ -4309,7 +4354,7 @@ void _AudHdmiOnPlayStateHandler(UINT8 u1DecId)
     VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE);
     
     //[DTV00081796] change detection period from 200ms to 80ms to avoid noise for PCM->AC3
-    if (b_ChkHdmiFmt && ((u1ChkHdmicount%4) == 0)) // For hdmi pop noise.
+    if (b_ChkHdmiFmt) // For hdmi pop noise.
     {
         // Check format change     
         if (_IsChangeHdmiSpdifAudFormat(u1DecId, &eDecFmt))

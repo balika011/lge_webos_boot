@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/05 $
+ * $Date: 2015/04/07 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -428,6 +428,7 @@ typedef enum {
 #define IEC_AC3_FRAME_SIZE 0x1800
 #define HDMI_BUFFER_SIZE (0)
 #define HDMI_PARSER_PCM_TRANSFER_SIZE 256
+#define HDMI_PARSER_PCM_NONZERO_THL 0x2400 //48ms@48KHz 2 channel
 #define HDMI_PARSER_NON_DETECT_SIZE 0x8040
 #define HDMI_PARSER_DETECT_PCM_SIZE 0x9080  //0x2840
 #endif
@@ -3597,6 +3598,7 @@ typedef struct
     AUD_HDMI_PARSER_STATE_T eHDMIParserSta;
     UINT32 u4LastTransferPtr;  //It's used for PCM transfer
     UINT32 u4NoRawDataSize;
+    UINT32 u4NonZeroDataSize; 
     UINT32 u4NoTransferSize;
     UINT32 u4TFrameCount;      //Tranfer frame count, for debug   
     BOOL _fgDTSCD;   //_fgDTSCD and _fgDTSSW is for DTS CD,DTS CD don't have papbpcpd,we should reference DTS header
