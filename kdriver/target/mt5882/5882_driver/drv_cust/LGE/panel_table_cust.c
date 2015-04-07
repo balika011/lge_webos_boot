@@ -74,8 +74,8 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
   * $RCSfile: panel_table_cust.c,v $
-  * $Revision: #4 $
-  * $Date: 2015/03/19 $
+  * $Revision: #5 $
+  * $Date: 2015/04/07 $
   * $Author: p4admin $
   * Description:
   *
@@ -1283,10 +1283,10 @@ static PANEL_ATTRIBUTE_T _arPanelAttribute[] =
     0,              // u2DimmingFrequency60Hz
     0,              // u2DimmingFrequency50Hz
 
-    0,              // u1LvdsOnDalay
-    0,             // u1BacklightOnDelay
-    0,             // u1BacklightOffDelay
-    0,              // u1LvdsOffDalay
+    1,              // u1LvdsOnDalay
+    38,             // u1BacklightOnDelay
+    22,             // u1BacklightOffDelay
+    1,              // u1LvdsOffDalay
 
     50,             // u2MaxOverscan
     0,              // u2ControlW2
