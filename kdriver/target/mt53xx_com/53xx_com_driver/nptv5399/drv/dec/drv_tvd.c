@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #37 $
+* $Revision: #38 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -183,7 +183,7 @@
 #define TVD_AntiTrs        1
 #define TVD_PHALT_WA    1
 #define TVD_PHALT_MN_WA2 	0
-#define TVD_MODE_Deglitch 	0
+#define TVD_MODE_Deglitch 	1
 #define TVD_MODESWITCH_PROTECT 0 //new add
 #define TVD_MAX_CLAMP_TABLE	1
 #define TVD_SERRTYPE_ONE	1
@@ -891,7 +891,7 @@ static UINT8 _sbAnaCopyProMvType2 =0, _sbPreAnaCopyProMvType2 =0;
 #define TVD_S_CNT2    1
 
 #define vDrvTvdRstSCnt()      (_sbSCnt = 5)
-#define vDrvTvdIncSCnt()      (_sbSCnt = (_sbSCnt == 20) ?20:(_sbSCnt+1))
+#define vDrvTvdIncSCnt()      (_sbSCnt = (_sbSCnt == 10) ?10:(_sbSCnt+1))
 #define vDrvTvdDecSCnt()      (_sbSCnt = (_sbSCnt == 0x0)?0x0:(_sbSCnt-1))
 #define fgDrvTvdIsSCnt(bCnt)  ((_sbSCnt==(bCnt))? TRUE : FALSE)
 #endif
@@ -3000,7 +3000,7 @@ static void _svDrvTvdRstNSTStatus(BOOL fgIs525, RTvdNSTDStatus *pRTvdNSTDStatus)
  * @retval : VPRES status.
  */
 #if TVD_VPRES_STATE
-/*
+
 
 static UINT8 _sbDrvTvdVpresStateMachine(UINT8 *pVpresState)
 {
@@ -3137,7 +3137,7 @@ static UINT8 _sbDrvTvdVpresStateMachine(UINT8 *pVpresState)
 
     return fgRetVpres;
 }
-*/
+
 #endif
 
 /**
@@ -5009,7 +5009,7 @@ static void _svDrvTvdScartSet(UINT8 bUIScartMode,UINT8 *PbSFisSV,UINT8 *PbTrigSc
 
                 if((fgDrvTvdIsSCnt(TVD_S_CNT) && (*PbSFisSV == SV_FALSE))||(*PbTrigScartAuto==SV_TRUE))
                 {
-					vIO32WriteFldAlign(VSRC_09_0, 1, CVBS_SC_SEL);//enable VGA_R
+					//vIO32WriteFldAlign(VSRC_09_0, 1, CVBS_SC_SEL);//enable VGA_R
                     *PbSFisSV = SV_TRUE;
                     *PbTrigScartAuto = SV_FALSE;
                     vApiVideoSetEvtFlg(VDO_FLG_SCART_SF_CHG);
@@ -5032,7 +5032,7 @@ static void _svDrvTvdScartSet(UINT8 bUIScartMode,UINT8 *PbSFisSV,UINT8 *PbTrigSc
             }
 
 #if TVD_NEW_BST_DET_TH
-            vIO32WriteFldAlign(SVF_03, 0xf+(pTvd3dStatus->bCAGC>>3), SVF_BSTDET_TH);
+            vIO32WriteFldAlign(SVF_03, 0x8+(pTvd3dStatus->bCAGC>>3), SVF_BSTDET_TH);
 #endif
         }
         else
@@ -5211,7 +5211,7 @@ static void _svDrvTvdModeChgDet(BOOL fgIs525,UINT8 bTvdMode,RTvdStatus *pTvd3dSt
         {
             if(pTvd3dStatus->bTvdMode != bTvdMode)
             {
-                LOG(1,"[TVD_DBG_MSG] tvd mode change %d->%d\n",pTvd3dStatus->bTvdMode,bTvdMode);
+                LOG(0,"[TVD_DBG_MSG] tvd mode change %d->%d\n",pTvd3dStatus->bTvdMode,bTvdMode);
                 pTvd3dStatus->bTvdMode = bTvdMode;
 
                 switch(bTvdMode)
@@ -5233,7 +5233,7 @@ static void _svDrvTvdModeChgDet(BOOL fgIs525,UINT8 bTvdMode,RTvdStatus *pTvd3dSt
 
             if((fgHwTvdIsMMode())&&(pTvd3dStatus->fgIs525 != fgIs525))
             {
-                LOG(1,"[TVD_DBG_MSG] tvd 525 mode change %d->%d\n",pTvd3dStatus->fgIs525,fgIs525);
+                LOG(0,"[TVD_DBG_MSG] tvd 525 mode change %d->%d\n",pTvd3dStatus->fgIs525,fgIs525);
                 pTvd3dStatus->fgIs525 = fgIs525;
                 _svDrvTvdModeChg();
             }
@@ -5242,7 +5242,7 @@ static void _svDrvTvdModeChgDet(BOOL fgIs525,UINT8 bTvdMode,RTvdStatus *pTvd3dSt
 
             if(_bTriggerModeDetForEnabledCS==TRUE && _bMModeForEnabledCS==TRUE)
             {
-                LOG(1, "[TVD_DBG_MSG] MMode trigger mode change %d->%d\n",pTvd3dStatus->fgIs525,fgIs525);
+                LOG(0, "[TVD_DBG_MSG] MMode trigger mode change %d->%d\n",pTvd3dStatus->fgIs525,fgIs525);
                 pTvd3dStatus->fgIs525 = fgIs525;
                 _svDrvTvdModeChg();
             }
@@ -7152,21 +7152,19 @@ void vTvd3dVSyncISR(void)
     
 #ifdef CC_SUPPORT_PIPELINE
     //if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
-     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalTypeAVD(SV_VP_MAIN)==SV_ST_TV)))
+     if((DRVCUST_OptGet(eTVDUseVPres4))&&(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART))
 
 #else
     if((DRVCUST_OptGet(eTVDUseVPres4))&&(!(bGetSignalType(SV_VP_MAIN)==SV_ST_TV)))
 #endif
     {
-		//fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
-		//LOG(1, "[TVD_DBG_MSG1] Scart and cvbs use VPRES4.\n");
-		fgPreVPres_0 = fgHwTvdVPres();
-
+		fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
+		LOG(1, "[TVD_DBG_MSG] Only Scart use state machine.\n");
     }
     else
     {
         fgPreVPres_0 = fgHwTvdVPres();
-		LOG(3, "[TVD_DBG_MSG] external demod issue\n");
+		LOG(1, "[TVD_DBG_MSG] ATV and AV do not use the state machine.\n");
     }
 
 #else
@@ -7177,7 +7175,11 @@ void vTvd3dVSyncISR(void)
     fgIs525 = fgHwTvd525();
 
 #if TVD_MODE_Deglitch
-    _sbDrvTvdModeDeglish(&fgVPres , &bTvdMode, &fgIs525);
+	if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+	{
+		_sbDrvTvdModeDeglish(&fgVPres , &bTvdMode, &fgIs525);
+		LOG(3, "[TVD_DBG_MSG] Scart use the mode deglitch.\n");
+	}
 #else
 
     if(!fgHwTvdFHNeg())
@@ -8148,7 +8150,11 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
     vDrvTvdinitVP1Cnt();
     //Init Mode Deglish status.
 #if TVD_MODE_Deglitch
-    _svDrvTvdInitModeDeglish();
+	if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+	{
+		_svDrvTvdInitModeDeglish();
+		LOG(0, "[TVD_DBG_MSG] Scart use the mode deglitch.\n");
+	}
 #endif
 
     //Init _rTvd3dStatus variable
@@ -8472,8 +8478,8 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
 	{
 	  _sbManualVPresForTuning=FALSE;
 	}
-	vIO32WriteFldAlign(DFE_15, 0x90, HALF_BLANK);
-	vIO32WriteFldAlign(DFE_15, 0x35, MAXMIN_LARGE_TH);
+	//vIO32WriteFldAlign(DFE_15, 0x90, HALF_BLANK);
+	//vIO32WriteFldAlign(DFE_15, 0x35, MAXMIN_LARGE_TH);
     // Connect
     if(bOnOff == SV_ON)
     {
@@ -8508,8 +8514,19 @@ void vTvd3dConnect(UINT8 bPath, UINT8 bOnOff)
         else
         {
             _sbTvd_McDone_cnt = bTvdCtrl(TCTL_MCNT, TC_GETVAL, 0);
-	     _sbTvd_McDone_cnt=12;
+	        _sbTvd_McDone_cnt=12;
         }
+		
+		if(VSS_MAJOR(_fVFEAVDSourceMainNew) == VSS_SCART)
+		{
+			_sbTvd_Reduced_McDone_cnt=12;
+			LOG(0,"[TVD_DBG_MSG]Scart _sbTvd_Reduced_McDone_cnt=%d.\n", _sbTvd_Reduced_McDone_cnt);
+		}
+		else
+		{
+		    _sbTvd_Reduced_McDone_cnt=6;
+			LOG(0,"[TVD_DBG_MSG]ATV and AV _sbTvd_Reduced_McDone_cnt=%d.\n", _sbTvd_Reduced_McDone_cnt);
+		}
 
 #if	TVD_AntiTrs
         _sbCAGC1=0;                                             //INIT THE VALUE
