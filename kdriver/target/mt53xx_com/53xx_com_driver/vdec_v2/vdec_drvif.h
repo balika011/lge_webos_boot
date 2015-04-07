@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/04/06 $
+ * $Date: 2015/04/07 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #15 $
+ * $Revision: #16 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -2397,6 +2397,7 @@ EXTERN VOID * _VPUSH_EsId2VPush(UINT8 ucEsId);
 EXTERN BOOL _VPUSH_IsSecurePlaying(UINT8 ucEsId);
 EXTERN BOOL _VPUSH_GetParam(VPUSH_GET_PARAM_TYPE eQueryType,
     UINT32 u4InParam,UINT32 *pu4OutParam1,UINT32 *pu4OutParam2);
+EXTERN BOOL VDEC_ResourceReady(UCHAR ucEsId);
 
 #ifdef VDEC_DEC_REG_QUERY
 #define VDEC_REG_DUMP_DELAY( a )

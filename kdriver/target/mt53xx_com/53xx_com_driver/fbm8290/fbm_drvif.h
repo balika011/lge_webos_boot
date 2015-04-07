@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/07 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #12 $
+ * $Revision: #13 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1781,6 +1781,7 @@ EXTERN FBM_POOL_T* FBM_GetPoolMpeg(VOID);
 
 EXTERN FBM_POOL_T* FBM_Alloc(UCHAR);
 EXTERN UINT32 FBM_Free(FBM_POOL_T* pAllocedPool);
+EXTERN UCHAR FBM_GetBufferPoolCount(FBM_TYPE_T eType);
 EXTERN UCHAR FBM_GetPoolCurrent(UCHAR ucPoolType);
 
 EXTERN VOID FBM_CheckPadding(VOID);

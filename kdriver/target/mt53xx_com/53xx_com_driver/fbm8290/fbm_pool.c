@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/07 $
  * $RCSfile: fbm_pool.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3553,6 +3553,90 @@ UINT32 FBM_Free(FBM_POOL_T* pAllocedPool)
 	
     return 0;
 }
+
+static UCHAR _FBM_CalculateBufferCount(UCHAR *arList, UCHAR ucListLen)
+{
+    UCHAR ucIdxA=0,ucIdxB,ucCount = 0;
+    FBM_POOL_T * prPoolA,*prPoolB;
+    BOOL fgOverlap = FALSE;
+    
+    for (ucIdxA = 0; ucIdxA < ucListLen; ucIdxA++)
+    { 
+        prPoolA = &_arPool[arList[ucIdxA]];
+        if(prPoolA->u4Size == 0 || prPoolA->u4Addr == 0)
+        {  
+           continue;
+        }
+        
+        fgOverlap = FALSE;
+            
+        for(ucIdxB = 0; ucIdxB < ucListLen; ucIdxB ++)
+        {
+            prPoolB = &_arPool[arList[ucIdxB]];
+            if (ucIdxB == ucIdxA) continue;
+
+            if((prPoolA->u4Addr >= prPoolB->u4Addr && prPoolA->u4Addr < prPoolB->u4Addr + prPoolB->u4Size) ||
+               (prPoolB->u4Addr >= prPoolA->u4Addr && prPoolB->u4Addr < prPoolA->u4Addr + prPoolA->u4Size))
+            {
+                fgOverlap = TRUE;
+                break;
+            }
+        }  
+
+        if(fgOverlap == FALSE) ucCount ++;
+    }
+
+    return ucCount;
+}
+
+UCHAR FBM_GetBufferPoolCount(FBM_TYPE_T eType)
+{
+    UCHAR arPoolType[8];
+    UCHAR ucBufferCnt=0, ucTypeCnt=0;
+    switch(eType)
+    {
+        case FBM_TYPE_MPEG:
+            arPoolType[0] = FBM_POOL_TYPE_MPEG;
+            arPoolType[1] = FBM_POOL_TYPE_MPEG2;
+            arPoolType[2] = FBM_POOL_TYPE_MPEG3;
+            arPoolType[3] = FBM_POOL_TYPE_MPEG4;
+            ucTypeCnt = 4;
+        break;
+        
+        case FBM_TYPE_FEEDER:
+            arPoolType[0] = FBM_POOL_TYPE_FEEDER;
+            arPoolType[1] = FBM_POOL_TYPE_FEEDER2;
+            arPoolType[2] = FBM_POOL_TYPE_FEEDER3;
+            arPoolType[3] = FBM_POOL_TYPE_FEEDER4;
+            arPoolType[4] = FBM_POOL_TYPE_FEEDER_MMP;
+            ucTypeCnt = 5;
+        break;
+        
+        case FBM_TYPE_JPEG:
+            arPoolType[0] = FBM_POOL_TYPE_JPEG;
+            ucTypeCnt = 1;
+        break;
+        
+        case FBM_TYPE_DMX:
+            arPoolType[0] = FBM_POOL_TYPE_DMX;
+            arPoolType[1] = FBM_POOL_TYPE_DMX2;
+            arPoolType[2] = FBM_POOL_TYPE_DMX3;
+            arPoolType[3] = FBM_POOL_TYPE_DMX4;
+            ucTypeCnt = 4;
+        break;
+        default:
+            ucTypeCnt = 0;
+    }
+
+    if (ucTypeCnt > 0)
+    {
+        ucBufferCnt = _FBM_CalculateBufferCount(arPoolType,ucTypeCnt);
+    }
+    
+    LOG(1,"FBM_GetBufferPoolCount(Type:%d,Cnt:%d)\n",eType, ucBufferCnt);
+    return ucBufferCnt;
+}
+
 #if defined(CC_MT5399) ||defined(CC_MT5890)||defined(CC_MT5882)
 void FBM_CheckBufferdefine(void)
 {
