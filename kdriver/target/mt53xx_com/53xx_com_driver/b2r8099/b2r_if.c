@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/03 $
+ * $Date: 2015/04/07 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #33 $
+ * $Revision: #34 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3140,8 +3140,16 @@ UCHAR VDP_GetSeamlessInfo(UCHAR ucVdpId, VDP_SEAMLESS_INFO_T* prSeamlessInfo)
 
         if (prSeqHdr->eSeamlessMode & SEAMLESS_BY_NPTV)
         {
-            u4SeqWidth  = prSeqHdr->u2HSize;
-            u4SeqHeight = prSeqHdr->u2VSize;
+            if (prSeqHdr->fgCropping && prSeqHdr->u4CropWidth && prSeqHdr->u4CropHeight)
+            {
+                u4SeqWidth  = prSeqHdr->u4CropWidth;
+                u4SeqHeight = prSeqHdr->u4CropHeight;
+            }
+            else
+            {
+                u4SeqWidth  = prSeqHdr->u2HSize;
+                u4SeqHeight = prSeqHdr->u2VSize;
+            }
         }
         else
         {
