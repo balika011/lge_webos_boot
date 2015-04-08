@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/07 $
+ * $Date: 2015/04/08 $
  * $RCSfile: b2r_if.c,v $
- * $Revision: #37 $
+ * $Revision: #38 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -306,11 +306,11 @@ void _VdpCheckFbgReady(UCHAR ucFbgId, UCHAR ucEsId)
     {
         if (u4DisplayReady)
         {
-            FBM_SetFrameBufferFlag((UCHAR)u4FbgIdx, FBM_FLAG_DISP_READY);
+            //FBM_SetFrameBufferFlag((UCHAR)u4FbgIdx, FBM_FLAG_DISP_READY);
         }
         else
         {
-            FBM_ClrFrameBufferFlag((UCHAR)u4FbgIdx, FBM_FLAG_DISP_READY);
+            //FBM_ClrFrameBufferFlag((UCHAR)u4FbgIdx, FBM_FLAG_DISP_READY);
             FBM_SetFrameBufferFlag((UCHAR)u4FbgIdx, FBM_FLAG_RESET);
         }
     }
@@ -1450,9 +1450,12 @@ static VOID _Vdp_PipeDisConnect(CONNECTION_ADAPTOR *prAdaptor,E_CONNECT_SRC eSrc
     if(FBM_FbgValid(prAdaptor->ucFbgId))
     {
         FBM_GetPlayMode(prAdaptor->ucFbgId,&ucPlayMode);
-        if(eSrcType == E_CONNECT_SRC_VDP && ucPlayMode == FBM_FBG_DTV_MODE ) // MM mode need drop frame when send frame reander
+        if(eSrcType == E_CONNECT_SRC_VDP && 
+			(ucPlayMode == FBM_FBG_DTV_MODE || (FBM_GetFbgAppMode(prAdaptor->ucFbgId) == FBM_FBG_APP_MTIMAGE))) // MM mode need drop frame when send frame reander
         {
             FBM_ClrFrameBufferFlag(prAdaptor->ucFbgId,FBM_FLAG_DISP_READY);
+            FBM_ReleaseDispQ(prAdaptor->ucFbgId);
+			LOG(1, "- release dispQ fbgid=%d.\n", prAdaptor->ucFbgId);
         }
     }
     return;
