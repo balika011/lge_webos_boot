@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/04 $
+ * $Date: 2015/04/08 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -306,8 +306,6 @@ static BOOL _u1GstENCFlag = 0;
 #ifdef  LINUX_TURNKEY_SOLUTION
 static UINT32 ClipBufferSize = 0x110000;
 #endif
-static UINT8 u1SpkCfg[AUD_DEC_MAX] = {0}; //driver status variable
-static UINT8 u1DmxDecId = AUD_DEC_MAIN;
 BOOL _gfgVdoPictureOffStatus = FALSE;
 
 //#ifdef CC_DUAL_AUD_DEC_SUPPORT
@@ -1055,16 +1053,22 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
         }
     }
     
-	if ((eStreamFrom == AUD_STREAM_FROM_HDMI) && (eDecFmt == AUD_FMT_DTS))
+	if (eStreamFrom == AUD_STREAM_FROM_HDMI)
 	{
-	    u1SpkCfg[u1DecId] = AUD_DspGetSpeakerOutputConfig(u1DecId);
-        AUD_DspSpeakerOutputConfig(u1DecId, 2);//DTS fixed as Lo/Ro    
-        u1DmxDecId = u1DecId;
+	    if (eDecFmt == AUD_FMT_DTS)
+        {
+            AUD_DspSpeakerOutputConfig(u1DecId, 2);//DTS fixed as Lo/Ro    
+        }
+        else if (eDecFmt == AUD_FMT_AC3)
+        {
+            AUD_DspSpeakerOutputConfig(u1DecId, 0);//DD/DDP fixed as Lt/Rt    
+        }
+        else
+        {
+            AUD_DspSpeakerOutputConfig(u1DecId, 0);//default as Lt/Rt    
+        }
 	}
-	else if((eStreamFrom != AUD_STREAM_FROM_GST) && (u1DmxDecId == u1DecId))
-	{
-	    AUD_DspSpeakerOutputConfig(u1DecId, u1SpkCfg[u1DecId]);
-	}
+
     if (!AUD_IsDecoderRealPlay(u1DspId, u1DecId))
     {
         // Try lock to make sure the semaphore was locked
