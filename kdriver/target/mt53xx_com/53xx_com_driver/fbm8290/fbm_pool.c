@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/07 $
+ * $Date: 2015/04/08 $
  * $RCSfile: fbm_pool.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3554,6 +3554,7 @@ UINT32 FBM_Free(FBM_POOL_T* pAllocedPool)
     return 0;
 }
 
+#ifdef CC_DYNAMIC_FBMSRM_CONF
 static UCHAR _FBM_CalculateBufferCount(UCHAR *arList, UCHAR ucListLen)
 {
     UCHAR ucIdxA=0,ucIdxB,ucCount = 0;
@@ -3636,6 +3637,7 @@ UCHAR FBM_GetBufferPoolCount(FBM_TYPE_T eType)
     LOG(1,"FBM_GetBufferPoolCount(Type:%d,Cnt:%d)\n",eType, ucBufferCnt);
     return ucBufferCnt;
 }
+#endif
 
 #if defined(CC_MT5399) ||defined(CC_MT5890)||defined(CC_MT5882)
 void FBM_CheckBufferdefine(void)
