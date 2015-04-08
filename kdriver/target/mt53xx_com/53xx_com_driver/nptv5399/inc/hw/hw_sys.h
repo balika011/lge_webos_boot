@@ -93,11 +93,11 @@
  *
  * Last changed:
  * ------------- 
- * $Author: dtvbm11 $ 
+ * $Author: p4admin $ 
  *
  * $Modtime: 04/05/27 1:22p $  
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 ****************************************************************************/
 
 #ifndef _HW_SYS_
@@ -279,6 +279,17 @@
     #define OMUX_MAIN_SEL Fld(4,4,AC_MSKB0)//[7:4]
     #define OMUX_PIP_SEL Fld(4,0,AC_MSKB0)//[3:0]
 #define OMUX_VDOIN_CLK_SEL (IO_VDOIN_BASE+0x08B4)
+    #define FLD_VDOIN_CLK_SEL_24 Fld(1,24,AC_MSKB3)//[24:24]
+    #define FLD_VDOIN_CLK_SEL_23 Fld(1,23,AC_MSKB2)//[23:23]
+    #define FLD_VDOIN_CLK_SEL_22 Fld(1,22,AC_MSKB2)//[22:22]
+    #define FLD_VDOIN_CLK_SEL_21 Fld(1,21,AC_MSKB2)//[21:21]
+    #define FLD_VDOIN_CLK_SEL_20 Fld(1,20,AC_MSKB2)//[20:20]
+    #define FLD_VDOIN_CLK_SEL_19 Fld(1,19,AC_MSKB2)//[19:19]
+    #define FLD_VDOIN_CLK_SEL_18 Fld(1,18,AC_MSKB2)//[18:18]
+    #define FLD_VDOIN_CLK_SEL_17 Fld(1,17,AC_MSKB2)//[17:17]
+    #define FLD_VDOIN_CLK_SEL_16 Fld(1,16,AC_MSKB2)//[16:16]
+    #define FLD_VDOIN_CLK_SEL_15 Fld(1,15,AC_MSKB1)//[15:15]
+    #define FLD_VDOIN_CLK_SEL_14 Fld(1,14,AC_MSKB1)//[14:14]
 	#define FLD_VDOIN_CLK_SEL_13 Fld(1,13,AC_MSKB1)//[13:13]
 	#define FLD_VDOIN_CLK_SEL_12 Fld(1,12,AC_MSKB1)//[12:12]
 	#define FLD_VDOIN_CLK_SEL_11 Fld(1,11,AC_MSKB1)//[11:11]

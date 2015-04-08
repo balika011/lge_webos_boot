@@ -75,7 +75,7 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/01/18 $
+ * $Date: 2015/04/08 $
  * $RCSfile: drv_scart.c,v $
  * $Revision:
  *
@@ -126,7 +126,7 @@ UINT8 _bSCART1Status;
 UINT8 _bSCART2Status;
 UINT8 _bScartPin8ASR_save[2];
 
-UINT8 _bUIScartMode;
+UINT8 _bUIScartMode=SV_SCART_AUTO;
 UINT8 _bTrigScartAuto;
 UINT8 _bSFisSV;                 //Gene Chang For the SCART Auto to remove the S first function 2006.05.12
 UINT8 _bOldSFisSV;     //avoid unnecessary AV/SV transit
@@ -291,7 +291,6 @@ void vScartEvtchk(void)
     static UINT8 bScartMixCnt = 0;
     UINT8 bPrevScartAutoMode;
     bScartEvtchk_ticks++;
-
     /* simulate 8202's  UI  20ms loop, assume display Vsync in 60Hz */
     if(bScartEvtchk_ticks >= EVENT_CHECK_COUNT)
     {

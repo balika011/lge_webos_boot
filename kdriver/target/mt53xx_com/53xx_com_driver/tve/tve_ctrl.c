@@ -750,11 +750,13 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
                 if(bUseChD==TRUE)
                 {   
                     vIO32WriteFldAlign(REG_CVBS_CFG0, 1, RG_BOTTOM_EN);
-					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_11);
-					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_13);
 					Bypass_HalSrcBypass(u1Dac_id,TVE_SIF_MIXER);
-					//IO_WRITE32(0xf0020000,0x28b4, 0x42878);
-					IO_WRITE32(0xf0020000,0x28b4, 0x56858);
+					//IO_WRITE32(0xf0020000,0x28b4, 0x56858);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_AD_CVBSADC_CK_SEL); //bit 7
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_14); //bit 14
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_16);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x1, FLD_VDOIN_CLK_SEL_18);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_19);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
 					
                 }
@@ -762,12 +764,15 @@ void vApiTVESetScartOutCtrl(UINT8 u1Dac_id, UINT8 *u1SrcType, void* pv_extra_arg
                 {
                     
                     vIO32WriteFldAlign(REG_CVBS_CFG0, 0, RG_BOTTOM_EN);
-					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_11);
-					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_13);
                     Bypass_HalSrcBypass(u1Dac_id,TVE_VDOIN_MIXER);
                     abBypPath[u1Dac_id] = TVE_BYP_EXT_PATH;
-					//IO_WRITE32(0xf0020000,0x28b4, 0x78);
-					IO_WRITE32(0xf0020000,0x28b4, 0x58);
+					//IO_WRITE32(0xf0020000,0x28b4, 0x58);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_14);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_15);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_16);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_17);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_18);
+					vIO32WriteFldAlign(OMUX_VDOIN_CLK_SEL, 0x0, FLD_VDOIN_CLK_SEL_19);
                 }
             }
             #endif
