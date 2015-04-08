@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #38 $
+* $Revision: #39 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -891,7 +891,7 @@ static UINT8 _sbAnaCopyProMvType2 =0, _sbPreAnaCopyProMvType2 =0;
 #define TVD_S_CNT2    1
 
 #define vDrvTvdRstSCnt()      (_sbSCnt = 5)
-#define vDrvTvdIncSCnt()      (_sbSCnt = (_sbSCnt == 10) ?10:(_sbSCnt+1))
+#define vDrvTvdIncSCnt()      (_sbSCnt = (_sbSCnt == 20) ?20:(_sbSCnt+1))
 #define vDrvTvdDecSCnt()      (_sbSCnt = (_sbSCnt == 0x0)?0x0:(_sbSCnt-1))
 #define fgDrvTvdIsSCnt(bCnt)  ((_sbSCnt==(bCnt))? TRUE : FALSE)
 #endif
