@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/10 $
+ * $Date: 2015/04/08 $
  * $RCSfile: dmx_api.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1600,8 +1600,6 @@ VOID _DMX_VCTSoftFilterEnable(BOOL fgEnable, UINT8 TableId)
 
     UINT32 u4Ctrl;
     UINT8 u1bitoffset;
-
-    _DMX_Lock();
   
     u4Ctrl = VCT_SOFTFILTER_SETTING;
 
@@ -1609,7 +1607,6 @@ VOID _DMX_VCTSoftFilterEnable(BOOL fgEnable, UINT8 TableId)
     //if((TableId!=0xc7)&&(TableId!=0xc8)&&(TableId!=0xc9)&&(TableId!=0xcd))
     if((TableId!=0xc8)&&(TableId!=0xc9))
     {
-           _DMX_Unlock();
            LOG(5,"[%S],VCT softfilter error,table id not meet.\n",__FUNCTION__);
            return;
     }
@@ -1638,7 +1635,6 @@ VOID _DMX_VCTSoftFilterEnable(BOOL fgEnable, UINT8 TableId)
     }
     
     VCT_SOFTFILTER_SETTING = u4Ctrl;   
-    _DMX_Unlock();
     
 #endif
 }
