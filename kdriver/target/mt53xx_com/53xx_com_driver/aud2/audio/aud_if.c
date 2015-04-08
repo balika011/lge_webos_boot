@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/08 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2719,6 +2719,8 @@ void AUD_PlayAudClip(UINT8 u1DspId, UINT8 u1DecId, UINT32 u4Channel, BOOL fgPlay
 
     x_memset((VOID*)VIRTUAL((UINT32)u4ClipChlVolumn), 0, sizeof(UINT8) * (UINT8)AUD_CH_NUM);
 
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_4, APROC_REG_DMIX_AMIXER1_CLIP), 1);
+
     for (i = (UINT8)AUD_CH_FRONT_LEFT; i <= (UINT8)AUD_CH_SUB_WOOFER; i++)
     {
         // Get the original channel volumn
@@ -2794,6 +2796,9 @@ void AUD_StopAudClip(UINT8 u1DspId, UINT8 u1DecId)
             AUD_DspChannelDelay(u1DspId, _au1ChannelDelay[u1DecId][i], (AUD_CH_T)i, u1DecId);
         }
     }
+
+    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_POSTPROC_4, APROC_REG_DMIX_AMIXER1_CLIP), 0);
+    
     _fgClipChnVolChanged = FALSE; //Andrew Wen 2007/9/10 Sometime AP call StopClip before PlayClip
 }
 

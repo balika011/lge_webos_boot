@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/07 $
+ * $Date: 2015/04/08 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4783,7 +4783,9 @@ typedef enum {
     APROC_REG_DMIX_AMIXER2_WAIT,
     APROC_REG_DMIX_AMIXER0_INFO, //0x10
     APROC_REG_DMIX_AMIXER1_INFO,
-    APROC_REG_DMIX_AMIXER2_INFO
+    APROC_REG_DMIX_AMIXER2_INFO,
+    APROC_REG_DMIX_AMIXER1_CLIP
+    
 } APROC_ASM_POSTPROC4_T;
 
 
