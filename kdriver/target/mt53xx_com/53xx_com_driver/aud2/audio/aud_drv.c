@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/07 $
+ * $Date: 2015/04/08 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #31 $
+ * $Revision: #32 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2727,7 +2727,18 @@ static void _AudHDMIParserThread(void* pvArg)
 
 				   if(_arParserInfo[u1DecId]._fgDTSCD == TRUE)
 				   {
+				       if(u4TransferSZ > 256)
+				       {
+				           x_memset((VOID*)VIRTUAL(u4StreamAddr), 0, u4TransferSZ);
+						   DSP_FlushInvalidateDCacheFree(u4StreamAddr, u4TransferSZ);
+				       }
+				       if(u4TransferSZ > 10)
+				       {
+				           u4TransferSZ = 10;
+				       }
+					   DSP_FlushInvalidateDCacheFree(u4StreamAddr, u4TransferSZ);	
 				       do_BigEnd_to_LittleEnd1((INT16*)(VIRTUAL(u4StreamAddr)), u4TransferSZ/2);
+					   DSP_FlushInvalidateDCacheFree(u4StreamAddr, u4TransferSZ);
 				   }
                    //parser max transfer size=15.5M always > raw data frame size
                    if(!_arParserInfo[u1DecId]._fgFmtChg)
@@ -7206,7 +7217,7 @@ static void _AudBitRateChangedNotify(void)
 #define ADDR_D2RC_CMM_END_SIZE     (0x000C9) ///080C9h
 static void _AudDtvOnPlayThread(void* pvArg)
 {
-    UINT32 u4CmmSize;
+    //UINT32 u4CmmSize;
     UINT32 u4Count = 0;
 #if 0    //APROC debug only
     static HAL_TIME_T PrevTime;
@@ -7246,14 +7257,14 @@ static void _AudDtvOnPlayThread(void* pvArg)
             }
             _u4ThreadTime=0;
         }
-
+/*
         u4CmmSize = DSP_COMMON_DRAM_READ (AUD_DSP0, ADDR_D2RC_CMM_END_SIZE);
         if(u4CmmSize > vGetFBMCMMSize())
         { 
             LOG(0, "Error!!! DSP CMM Size (0x%x) larger than FBM CMM Size (0x%x)\n", u4CmmSize,vGetFBMCMMSize());
             //ASSERT(0);
         }
-
+*/
         // Bitrate changed notify
     #ifdef CC_AUD_BITRATE_CHG_NOTIFY
         //vDspBitRateChangedNotify();
