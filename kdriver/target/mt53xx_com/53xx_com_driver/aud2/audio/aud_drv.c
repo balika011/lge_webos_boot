@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/09 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #33 $
+ * $Revision: #34 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7045,6 +7045,15 @@ static void _DtvLockCheck(UINT8 u1DecId)
         eDecStatus = AUD_DECODE_NOT_SUPPORT;
     }
     #endif
+    else if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecFormat == AUD_FMT_DRA) &&
+             (AUD_IsDecoderPlay(AUD_DSP0, u1DecId)) &&
+             (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) &&
+             (DSP_GetDraInputFs(u1DecId) == FALSE))
+    {
+        LOG(0 ,"DRA input FS not support!\n");
+        eDecStatus = AUD_DECODE_NOT_SUPPORT;        
+        AUD_DSPCmdStop(AUD_DSP0,u1DecId);
+    } 
     else if (_afgDtvPesLock[u1DecId] || _afgDtvLock[u1DecId])
 #else
     if (_afgDtvPesLock[u1DecId] || _afgDtvLock[u1DecId])

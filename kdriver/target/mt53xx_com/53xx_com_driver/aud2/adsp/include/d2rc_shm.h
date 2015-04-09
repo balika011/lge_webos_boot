@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/09 $
  * $RCSfile: d2rc_shm.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -389,8 +389,10 @@ DRAM_APE_SUB_FRM_NO		.set	(RISC_APE_INFO_BASE + 03h)
 #define ADDR_RC2D_SACD_DECODED_FRAME            (ADDR_D2RC_DECODING_INFO_BASE)
 
 // DRA
-#define ADDR_D2RC_DRA_CH_NUM                      (ADDR_D2RC_DECODING_INFO_BASE)
-#define ADDR_D2RC_DAR_CH_NUM_DEC2                 (ADDR_D2RC_DECODING_INFO_BASE_DEC2)
+#define ADDR_D2RC_DRA_CH_NUM                    (ADDR_D2RC_DECODING_INFO_BASE)
+#define ADDR_D2RC_DRA_LFE_EXIST                 (ADDR_D2RC_DECODING_INFO_BASE+1)
+#define ADDR_D2RC_DAR_CH_NUM_DEC2               (ADDR_D2RC_DECODING_INFO_BASE_DEC2)
+#define ADDR_D2RC_DRA_LFE_EXIST_DEC2            (ADDR_D2RC_DECODING_INFO_BASE_DEC2+1)
 
 //VORBIS, ///CC_VORBIS_SUPPORT
 #define ADDR_D2RC_VORBIS_SAMPLING_RATE          (ADDR_D2RC_RISC_INFO_SAMPLING_RATE) // 8020h

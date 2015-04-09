@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/09 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1461,7 +1461,8 @@ void _GetAacAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
 
 void _GetDraAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
 {
-    UINT8 u1ChNum = 0;
+    UINT8 u1ChNum = 0;    
+    UINT8 u1LFECh = 0;
     UINT8 u1FS = 0;
 
 #ifdef CC_MT5391_AUD_3_DECODER
@@ -1479,7 +1480,8 @@ void _GetDraAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
 
         if (u1DecId == AUD_DEC_MAIN)
         {
-            u1ChNum = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DRA_CH_NUM));
+            u1ChNum = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DRA_CH_NUM));            
+            u1LFECh = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DRA_LFE_EXIST)); //LFE exist or not
         }
 #ifdef CC_MT5391_AUD_3_DECODER
         else if (u1DecId == AUD_DEC_AUX)
@@ -1487,7 +1489,8 @@ void _GetDraAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
         else
 #endif
         {
-            u1ChNum = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DAR_CH_NUM_DEC2));
+            u1ChNum = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DAR_CH_NUM_DEC2));            
+            u1LFECh = (UINT8)(wReadDspWORD(AUD_DSP0, ADDR_D2RC_DRA_LFE_EXIST_DEC2));//LFE exist or not
         }
 #ifdef CC_MT5391_AUD_3_DECODER
         else
@@ -1543,26 +1546,60 @@ void _GetDraAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
             break;
         }
 
-        switch (u1ChNum)
+        //LFE exist or not
+        if (u1LFECh)
         {
-            case 0: // 1+1
-                prAudInfo->e_aud_type = AUD_TYPE_DUAL_MONO;
-                break;
-            case 1: // 1/0
-                prAudInfo->e_aud_type = AUD_TYPE_MONO;
-                break;
-            case 2: // 2/0
-                prAudInfo->e_aud_type = AUD_TYPE_STEREO;
-                break;
-            case 3: // 3/0
-                prAudInfo->e_aud_type = AUD_TYPE_3_0;
-                break;
-            case 5:
-                prAudInfo->e_aud_type = AUD_TYPE_5_1;
-                break;
-            default:
-                prAudInfo->e_aud_type = AUD_TYPE_STEREO;
-                break;
+            switch (u1ChNum)
+            {
+                case 0: // 1+1.L
+                	prAudInfo->e_aud_type = AUD_TYPE_DUAL_MONO_LFE;
+               	    break;
+                case 1: // 1/0.L
+                	prAudInfo->e_aud_type = AUD_TYPE_MONO_LFE;
+               	    break;
+                case 2: // 2/0.L
+                	prAudInfo->e_aud_type = AUD_TYPE_STEREO_LFE;
+               	    break;
+                case 3: // 3/0.L
+                	prAudInfo->e_aud_type = AUD_TYPE_3_1;
+               	    break;
+                case 4: // 2/2.L
+                	prAudInfo->e_aud_type = AUD_TYPE_4_1;
+               	    break;
+                case 5: //5.1
+                	prAudInfo->e_aud_type = AUD_TYPE_5_1;
+               	    break;
+                default:
+                	prAudInfo->e_aud_type = AUD_TYPE_STEREO_LFE;
+                	break;
+             }
+        }
+        else
+        {           
+            switch (u1ChNum)
+            {
+                case 0: // 1+1
+                	prAudInfo->e_aud_type = AUD_TYPE_DUAL_MONO;
+               	    break;
+                case 1: // 1/0
+                	prAudInfo->e_aud_type = AUD_TYPE_MONO;
+               	    break;
+                case 2: // 2/0
+                	prAudInfo->e_aud_type = AUD_TYPE_STEREO;
+               	    break;
+                case 3: // 3/0
+                	prAudInfo->e_aud_type = AUD_TYPE_3_0;
+               	    break;
+                case 4: // 4/0
+                	prAudInfo->e_aud_type = AUD_TYPE_4_0;
+               	    break;
+                case 5:
+                	prAudInfo->e_aud_type = AUD_TYPE_5_0;
+               	    break;
+                default:
+                	prAudInfo->e_aud_type = AUD_TYPE_STEREO;
+                	break;
+            }
         }
     }
 }
@@ -8312,7 +8349,8 @@ void DSP_GetDtvAudInfo(UINT8 u1DecId, AUD_DEC_INFO_T * prAudInfo)
     case AAC_STREAM:
         _GetAacAudInfo(u1DecId,  prAudInfo);
         break;
-    case DRA_STREAM:
+    case DRA_STREAM:        
+        LOG(3, "DSP_GetDtvAudInfo, ID = %d, Type = %d\n", u1DecId, (*prAudInfo).e_aud_type);
         _GetDraAudInfo(u1DecId,  prAudInfo);
         break;
     default:
@@ -8443,6 +8481,50 @@ UINT32 DSP_GetVorbisErrorCode(UINT8 u1DecId)
     }
 }
 #endif
+
+BOOL DSP_GetDraInputFs(UINT8 u1DecId)
+{
+    BOOL fgSupport = TRUE;
+    UINT32 u4IntputFS = 8;
+
+    /*
+    Index   Hz
+    0       8000
+    1       11025
+    2       12000    
+    3       16000
+    4       22050
+    5       24000
+    6       32000
+    7       44100
+    8       48000
+    9       88200
+    10      96000
+    11      174600
+    12      192000
+    */
+    
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        u4IntputFS = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_INFO_INPUT_SAMPLING_RATE) >> 8);
+    }
+    else if (u1DecId == AUD_DEC_AUX)
+    {
+        u4IntputFS = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_INFO_INPUT_SAMPLING_RATE_DEC2) >> 8);
+    }
+    else if (u1DecId == AUD_DEC_THIRD)
+    {
+        u4IntputFS = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_INFO_INPUT_SAMPLING_RATE_DEC3) >> 8);
+    }
+
+    if (u4IntputFS > 8)
+    {
+        fgSupport = FALSE;        
+    }
+    
+    return (fgSupport);
+        
+}
 
 #if defined(CC_AUD_DOLBY_SUPPORT_DDCO) || defined(CC_AUD_DOLBY_SUPPORT_DDT)
 UINT8 u1GetAacChNum(UINT8 u1DecId)

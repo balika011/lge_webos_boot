@@ -81,9 +81,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/16 $
+ * $Date: 2015/04/09 $
  * $RCSfile: dsp_intf.h,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -192,7 +192,7 @@ extern void vLogFlowControl(UINT32 u4DspRIntData);
 extern UINT8 u1GetAacChNum(UINT8 u1DecId);
 extern UINT8 u1GetAacVersion(UINT8 u1DecId);
 extern UINT8 u1GetAacTSFormat(UINT8 u1DecId);
-
+extern BOOL DSP_GetDraInputFs(UINT8 u1DecId);
 //-----------------------------------------------------------------------------
 // Public functions
 //-----------------------------------------------------------------------------
