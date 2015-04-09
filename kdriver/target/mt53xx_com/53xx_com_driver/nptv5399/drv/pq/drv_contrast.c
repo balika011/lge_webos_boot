@@ -250,7 +250,8 @@ void vDrvSetSecondLumaCurveWinInit(void)
     bWin[2] = CLIP(((wReadQualityTable(QUALITY_SKIN_HMAX)<<2) + 192/u1HSlope)>>2, 100, 255);
     bWin[3] = CLIP(((wReadQualityTable(QUALITY_SKIN_HMIN)<<2) - 192/u1HSlope)>>2, 50, 255);
 
-    vDrvSetSatHue2DWindowBound(0, bWin[0], bWin[1], bWin[2], bWin[3]);
+	//No need to set 2D window, ADL control by LGE, and LGE use 2D window1 to get sat result
+    //vDrvSetSatHue2DWindowBound(0, bWin[0], bWin[1], bWin[2], bWin[3]);
 }
 
 void vDrvADLUpdateParam(void)
