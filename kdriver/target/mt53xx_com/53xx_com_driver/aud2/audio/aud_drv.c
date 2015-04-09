@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #32 $
+ * $Revision: #33 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2354,7 +2354,7 @@ static void _AudFeedStreamThread(const void* pvArg)
 
     if (pfAudDecNfy != NULL)
     {
-        pfAudDecNfy((void *)AUD_NFY_STREAM, AUD_DEC_MAIN, AUD_COND_AUD_CLIP_PLAY_DONE, 0, 0);
+        pfAudDecNfy((void *)AUD_NFY_STREAM, u1DecId, AUD_COND_AUD_CLIP_PLAY_DONE, 0, 0);
     }
     LOG(9, "Dec(%d) stream size 0x%08x finished\n", u1DecId,
            _arAudDecoder[u1DspId][u1DecId].rMemBuffer.u4Length);
