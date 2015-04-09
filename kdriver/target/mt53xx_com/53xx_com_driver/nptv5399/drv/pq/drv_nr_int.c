@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/04/09 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1510,7 +1510,19 @@ void vDrvNRPQInit(void)
     _SWW(NR_MO_04, 0xF,MOBNR_VAGAINST_ST);
     _SWW(NR_MO_04, 0x70,MOBNR_VLEAKAGE_ST);
     _SWW(NR_MO_05, 0x20,MOBNR_VLINESUMTH_ST);
-#endif    
+#endif   
+
+	_SWW(NR_FWBNR_0B, 8, NR_FWBNR_CONF_OFST); 
+
+	_SWW(NR_FWBNR_0C, 0x50, NR_FWBNR_VBLK_FRM_AVG_LS_TH1_MO);
+	_SWW(NR_FWBNR_0C, 0x6E, NR_FWBNR_VBLK_FRM_AVG_LS_TH1_ST);
+	_SWW(NR_FWBNR_0C, 0x6F, NR_FWBNR_VBLK_FRM_AVG_LS_TH2_MO);
+	_SWW(NR_FWBNR_0C, 0x82, NR_FWBNR_VBLK_FRM_AVG_LS_TH2_ST);
+	_SWW(NR_FWBNR_0D, 0x700, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_MO);
+	_SWW(NR_FWBNR_0D, 0x900, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_ST);
+	_SWW(NR_FWBNR_0D, 0x0, NR_FWBNR_CONF_GAIN_PIX_CNT);	
+	_SWW(NR_FWBNR_0E, 0xE6, NR_FWBNR_MOIDX_DEC);
+
     vDrvNRSet3DNRAutoStrength(0);
     NR_FW_NM_Init();
     NR_FW_ANR_Init();

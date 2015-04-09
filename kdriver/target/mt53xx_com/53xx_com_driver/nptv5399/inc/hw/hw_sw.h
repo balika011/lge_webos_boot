@@ -3806,6 +3806,27 @@ extern UINT32 SW_DRAM_BASE_PHY;
     #define NR_FWBNR_ADAP_VTBSS_TH2     Fld( 8, 8, AC_MSKDW) //[15:8]
     #define NR_FWBNR_ADAP_VTBSH_TH2     Fld( 8,16, AC_MSKDW) //[23:16]
     #define NR_FWBNR_CONF_OFST          Fld( 8,24, AC_MSKDW) //[31:24]    
+#define NR_FWBNR_0C u4SWReg(0x8334)
+    #define NR_FWBNR_VBLK_FRM_AVG_LS_TH1_MO      Fld( 8, 0, AC_MSKDW) //[7:0]
+    #define NR_FWBNR_VBLK_FRM_AVG_LS_TH1_ST      Fld( 8, 8, AC_MSKDW) //[15:8]
+    #define NR_FWBNR_VBLK_FRM_AVG_LS_TH2_MO      Fld( 8,16, AC_MSKDW) //[23:16]
+    #define NR_FWBNR_VBLK_FRM_AVG_LS_TH2_ST      Fld( 8,24, AC_MSKDW) //[31:24]    
+#define NR_FWBNR_0D u4SWReg(0x8338)
+    #define NR_FWBNR_CONF_GAIN_PIX_CNT_TH_MO      Fld( 12, 0, AC_MSKDW) //[11:0]
+    #define NR_FWBNR_CONF_GAIN_PIX_CNT_TH_ST      Fld( 12, 12, AC_MSKDW) //[23:12]
+    #define NR_FWBNR_CONF_GAIN_PIX_CNT            Fld( 8, 24, AC_MSKDW) //[31:24]
+#define NR_FWBNR_0E u4SWReg(0x833C)
+	#define NR_FWBNR_LOG1      				Fld( 1, 0, AC_MSKB0) //[0:0]
+	#define NR_FWBNR_LOG2      				Fld( 1, 1, AC_MSKB0) //[1:1]
+	#define NR_FWBNR_LOG3      				Fld( 1, 2, AC_MSKB0) //[2:2]
+	#define NR_FWBNR_LOG4      				Fld( 1, 3, AC_MSKB0) //[3:3]
+	#define NR_FWBNR_LOG5      				Fld( 1, 4, AC_MSKB0) //[4:4]
+	#define NR_FWBNR_HD_REJECT_EN      		Fld( 1, 5, AC_MSKB0) //[5:5]
+	#define NR_FWBNR_TEXTURE_REJECT      	Fld( 1, 6, AC_MSKB0) //[6:6]
+	#define NR_FWBNR_LOG6      				Fld( 1, 7, AC_MSKB0) //[7:7]
+	#define NR_FWBNR_CONF_GAIN_PIX_CNT_EN   Fld( 1, 8, AC_MSKB1) //[8:8]
+	#define NR_FWBNR_MOIDX					Fld( 8, 16, AC_MSKDW) //[16:23]
+	#define NR_FWBNR_MOIDX_DEC				Fld( 8, 24, AC_MSKDW) //[31:24]
     
 #define NR_STA_BNR_00 u4SWReg(0x8340)
     #define NR_STA_BNR_H_AMOUNT         Fld(16, 0, AC_MSKDW) //[15:0]
