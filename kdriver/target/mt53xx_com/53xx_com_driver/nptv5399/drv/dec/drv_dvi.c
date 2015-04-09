@@ -4111,12 +4111,15 @@ void vDviChkModeChange(void)
 
                     // check if timing
                 LOG(1,"the input height is %d and refresh rate is %d and interlace is %d and DVI timing is %d\n",wHDMIResoHeight(),bHDMIRefreshRate(),fgHDMIinterlaced(),PreDviTiming);
-                if((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080p_60))
+                if(((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080p_60))\
+					||((wHDMIResoHeight() == 480)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_480P))\
+					||((wHDMIResoHeight() == 720)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_720p_60))\
+					||((wHDMIResoHeight() == 540)&&(bHDMIRefreshRate() <= 50)&&(fgHDMIinterlaced())&&(PreDviTiming == MODE_1080i)))
                 {                    
 					if((_bVStableCnt > 60 && _bHStableCnt > 60 ) || \
 										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 60))
 					{
-					    LOG(1,"from 1080p60 change to 1080p24 stable\n");
+					    LOG(1,"from p/i 60 change to p/i 24 stable\n");
 						if(_bWidthStableCnt>=10)
 						   {
 							   _bWidthStableFlg = 1;
