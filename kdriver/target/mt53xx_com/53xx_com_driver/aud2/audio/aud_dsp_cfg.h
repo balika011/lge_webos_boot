@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -871,6 +871,7 @@ extern void vAproc_PostProcVol_Get (UINT32 u4Item, UINT32 *pu4Addr);
 extern void _AUD_UserSetMixSndInputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineVol);
 extern void _AUD_UserSetMixSndMute(UINT8 u4MixIdex, UINT8 u1Mute);
 extern void _AUD_UserSetMixSndOutputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineVol);
+extern BOOL _AUD_IsDecInputMute(UINT8 u1DecId);
 extern void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute);
 extern void _AUD_UserSetDecInputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol);
 extern void _AUD_UserSetDecOutputVol(UINT8 u1DecId, UINT8 u1MainVol, UINT8 u1FineVol);

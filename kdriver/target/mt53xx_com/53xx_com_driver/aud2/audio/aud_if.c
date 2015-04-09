@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1687,12 +1687,14 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
     {
         _afgDecPause[u1DspId][u1DecId] = FALSE;
         VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_RESUME));
-#ifdef CC_ENABLE_AOMX
-        if ((eStreamFrom != AUD_STREAM_FROM_GST) || !AUD_GetMMAudioOnly(u1DecId))
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER) 
+#if defined(CC_ENABLE_AOMX) && defined(CC_AUD_DDI)
+        if ((eStreamFrom != AUD_STREAM_FROM_GST) || !_AUD_IsDecInputMute(u1DecId))
         {
             _AudAprocInputMute(u1DecId, FALSE); 
         }
-#endif        
+#endif
+#endif
     }
     else
     {
@@ -1728,9 +1730,11 @@ INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
     if (AUD_IsDecoderPlay(u1DspId, u1DecId))
     {
         _afgDecPause[u1DspId][u1DecId] = TRUE;
-#ifdef CC_ENABLE_AOMX        
+#if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
+#if defined(CC_ENABLE_AOMX) && defined(CC_AUD_DDI)
         _AudAprocInputMute(u1DecId, TRUE);
         x_thread_delay(40);
+#endif        
 #endif        
     }
     VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_PAUSE));

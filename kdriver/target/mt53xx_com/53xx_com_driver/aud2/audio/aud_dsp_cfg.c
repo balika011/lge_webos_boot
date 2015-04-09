@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/09 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #54 $
+ * $Revision: #55 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27721,6 +27721,11 @@ void _AUD_UserSetMixSndOutputVol(UINT8 u4MixIdex, UINT8 u1MainVol, UINT8 u1FineV
     _vAUD_Aproc_Set(APROC_CONTROL_TYPE_MIXSND, APROC_IOCTRL_MIXSND_IN_TRIM, pu4Addr, 2);
 }
 
+BOOL _AUD_IsDecInputMute(UINT8 u1DecId)
+{
+    return _fgInputMute[u1DecId];
+}
+
 void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 {  
     UINT32 u4Idx;
@@ -27732,6 +27737,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
 
     UNUSED(eStreamFrom);
     eStreamFrom = _AudGetStrSource(u1DecId);
+    //No input mute for Gstreamer: may cause sound cutting
     if (fgMute && (eStreamFrom != AUD_STREAM_FROM_GST))
     {
         i4Vol = 0;
