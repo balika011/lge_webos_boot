@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/03 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_dsp_if.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3343,7 +3343,8 @@ void AUD_DspGetAtvTvSys(MW_TV_AUD_SYS_T * prTvAudSys)
 //-----------------------------------------------------------------------------
 TV_AUD_SYS_T AUD_DspGetAtvTvSystem(void)
 {
-    return _AUD_DspGetAtvTvSystem();
+    //return _AUD_DspGetAtvTvSystem();
+	return AUD_DspGetTvSrcMode();
 }
 
 /** AUD_DspGetAtvTvSystemStrength

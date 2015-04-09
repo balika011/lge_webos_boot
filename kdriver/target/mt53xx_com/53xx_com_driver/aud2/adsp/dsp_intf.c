@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/19 $
+ * $Date: 2015/04/09 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3457,6 +3457,10 @@ void vDspTvSysChangeNotify(TV_AUD_SYS_T eTvSys)
             //AUD_SetDecType(AUD_DEC_AUX, AUD_STREAM_FROM_ANALOG_TUNER, AUD_FMT_A2);
             _eAtvFmtChgDecFmt = AUD_FMT_A2;
             _guAudDspTrigAtvFmtchg= 1;
+			if(eTvSys==SV_A2_DK1)
+			{
+			    _guAudDspTrigAtvFmtchg= 0;
+			}
 #ifdef CC_AUD_DDI           
             DSP_SetTvSrcMode(eTvSys);
 #endif
