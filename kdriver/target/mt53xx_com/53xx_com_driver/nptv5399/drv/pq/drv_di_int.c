@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/06 $
+ * $Date: 2015/04/09 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,6 +637,16 @@ static void _vDrvDISetIFQuality(UINT8 bPath)
     {
         vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_IF_01, 0x800, CZP_3D_TH);
     }
+	//for DTV & ATV 576i timing use more strict film detection condition.
+    if ((((bGetSignalTypeNew(VDP_1) == SV_ST_MPEG)&&(VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE))||
+		(bGetSignalTypeNew(VDP_1) == SV_ST_TV))&&(bDrvVideoGetTiming(VDP_1) == MODE_625I))
+    {    	
+        vIO32WriteFldAlign(MCVP_FILM_01, 0x2, FIELD_MOTION_DET_TYPE);
+    }
+	else
+	{
+        vIO32WriteFldAlign(MCVP_FILM_01, 0x1, FIELD_MOTION_DET_TYPE);
+	}	
     
     if (DiPQMode.eIfQty < E_DI_QUALITY_NUM_MODE)
     {
