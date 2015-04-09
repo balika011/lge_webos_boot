@@ -303,7 +303,7 @@ UINT32 PmxDisplay(UINT32 u4Background, UINT8 colordepth, UINT8 epi,UINT8 frctype
 		Splash_MICOM_PanelOn();
 		udelay(20*1000);	//20msec delay
 		//printf("MTV Tool. LVDS even/odd swap!!\n");
-#ifndef NetcastMTV // webOS for MTV
+#ifdef NetcastMTV // webOS for MTV
 		if(panelRes == 1)
 			PANEL_SetLvdsPCBSwap(TRUE);
 #endif
