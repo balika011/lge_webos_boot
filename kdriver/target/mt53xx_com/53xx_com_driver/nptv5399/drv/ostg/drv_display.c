@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/09 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3235,7 +3235,8 @@ void vSetSuperFlipMirrorConfig(UINT8 u1SuperCfgOnOff, UINT8 u1SuperFlip, UINT8 u
 }
 #endif
 
-#ifdef CC_FLIP_MIRROR_FROM_DDI
+//enbale the flip mir function ,control by LG hal in A5LR
+#if 1 
 #ifdef CC_FLIP_MIRROR_SUPPORT
 static BOOL _fgIsMirrorOn = FALSE; 
 static BOOL _fgIsFlipOn = FALSE; 
@@ -3250,7 +3251,8 @@ UINT8 u1SetFlipMirrorConfig(BOOL fgMirrorEn, BOOL fgFlipEn)
 
 UINT8 u1GetFlipMirrorConfig(void)
 {
-    static UINT8 u1FlipMirrorEnable= 0 ;
+    UINT8 u1FlipMirrorEnable= 0 ;
+
     if (_fgIsMirrorOn)
     {
         u1FlipMirrorEnable |= SYS_MIRROR_CONFIG_ON ;
