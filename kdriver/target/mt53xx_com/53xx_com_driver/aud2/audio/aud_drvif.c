@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/05 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -277,7 +277,7 @@ BOOL AUD_IsFifoEmpty(UINT8 u1DspId, UINT8 u1DecId)
 
 	if (fgRet)
     {
-        LOG(0, "Auto Stop For FIFO(%d) is empty. Data (%d),  AputBank (%d), Retry (%d)\n", u1DecId, u4DataSizeLast[u1DecId], u4FrmCntLast[u1DecId], u4RetryCnt[u1DecId]);    
+        LOG(2, "Auto Stop For FIFO(%d) is empty. Data (%d),  AputBank (%d), Retry (%d)\n", u1DecId, u4DataSizeLast[u1DecId], u4FrmCntLast[u1DecId], u4RetryCnt[u1DecId]);    
         u4DataSizeLast[u1DecId] = 0;
         u4FrmCntLast[u1DecId] = 0;
         u4RetryCnt[u1DecId] = 0;

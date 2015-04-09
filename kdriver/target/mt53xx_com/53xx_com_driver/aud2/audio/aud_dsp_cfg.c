@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/06 $
+ * $Date: 2015/04/09 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #53 $
+ * $Revision: #54 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -9348,11 +9348,11 @@ void _AUD_DspChannelMute(UINT8 u1DspId, UINT8 u1DecId, AUD_CH_T eChannel, BOOL f
     {
         if (u1DecId == AUD_DEC_MAIN)
         {
-            LOG(0, "Output Mute %-10s, MuteEnable(%d)\n", pStr, fgMute);
+            LOG(1, "Output Mute %-10s, MuteEnable(%d)\n", pStr, fgMute);
         }
         else if ((u1DecId == AUD_DEC_AUX) && (eChannel == AUD_CH_FRONT_LEFT))
         {
-            LOG(0, "Output Mute SCART     , MuteEnable(%d)\n", fgMute);
+            LOG(1, "Output Mute SCART     , MuteEnable(%d)\n", fgMute);
         }
     }
 #endif
@@ -12703,7 +12703,7 @@ BOOL _AUD_GetDspIECConfig(void)
 //-----------------------------------------------------------------------------
 BOOL _AUD_SetSPDIFEnable(BOOL fgEnable, BOOL fgLight)
 {
-    LOG(0, "Output Mute SPDIF     , MuteEnable(%d), Light(%d)\n", !fgEnable, fgLight);
+    LOG(1, "Output Mute SPDIF     , MuteEnable(%d), Light(%d)\n", !fgEnable, fgLight);
     VERIFY(x_sema_lock(_ahSpdifCtlSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     if(fgEnable)
     {
@@ -27728,7 +27728,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     AUD_DEC_STREAM_FROM_T eStreamFrom;
     AUD_DEC_ID_VALIDATE(u1DecId);
 
-    LOG(0, "Input Mute AUD_DEC%d, MuteEnable(%d)\n", u1DecId, fgMute);
+    LOG(1, "Input Mute AUD_DEC%d, MuteEnable(%d)\n", u1DecId, fgMute);
 
     UNUSED(eStreamFrom);
     eStreamFrom = _AudGetStrSource(u1DecId);
@@ -27889,7 +27889,7 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
-    LOG(0, "SoundConnect:  %-10s %-10s %s\n", _paAudOutPortName[eAudioOutPort],paConnect[fgEnable], 
+    LOG(1, "SoundConnect:  %-10s %-10s %s\n", _paAudOutPortName[eAudioOutPort],paConnect[fgEnable], 
         AUD_EnumToName(eAudOutSelTbl, AUD_ARRAY_SIZE(eAudOutSelTbl), u4OutSel));
     
     switch (eAudioOutPort)
