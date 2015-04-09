@@ -828,7 +828,8 @@ void vDrvSetSatHue2DWindowBound(UINT8 bWinSel, UINT8 bSatUpper, UINT8 bSatLower,
 static void vDrvSetSatHue2DWinInit(void)
 {
     UINT32 i;
-    UINT8 bWin[SAT_HUE_2DWIN_NUM][4] = {{   40,  5,  100,   78},     
+	//Initial value for LGE A5LR
+    UINT8 bWin[SAT_HUE_2DWIN_NUM][4] = {{   0xF,  0x0,  0xFF,   0x0},     
                                         {   32,  8,   95,   83},
                                         {  255,  0,  192,  128}};
 
