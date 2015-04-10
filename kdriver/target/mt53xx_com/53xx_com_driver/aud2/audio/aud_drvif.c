@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -106,6 +106,7 @@
 #include "x_assert.h"
 #include "dsp_common.h"
 #include "aud_hw.h"
+#include "aud_dsp_cfg.h"
 
 //-----------------------------------------------------------------------------
 // Configurations
@@ -668,71 +669,77 @@ UINT32 AUD_GetEmptyRetryThres(void)
 	return 	FIFO_EMPTY_RETRY_THRESHOLD;
 }
 
-static DATA_ENDIAN_T _gDTSEnInfo = DEC_BIG_ENDIAN;
+static DATA_ENDIAN_T _gDTSEnInfo[AUD_DEC_MAX] = {DEC_BIG_ENDIAN, DEC_BIG_ENDIAN, DEC_BIG_ENDIAN};
 
-void AUD_SetDTSInfo (DATA_ENDIAN_T endian)
+void AUD_SetDTSInfo (UINT8 u1DecId, DATA_ENDIAN_T endian)
 {
     UINT32 u4Mode = 0; //bit0: 1: DTS CD, 0: others, bit
 
-    if(endian != _gDTSEnInfo)
+    if(endian != _gDTSEnInfo[u1DecId])
     {
-        _gDTSEnInfo = endian;
-		if (AUD_GetDTSInfo() == DEC_LITTLE_ENDIAN)
-		{
-			u4Mode = 0x1;			  
-		}
-		else
-		{
-			u4Mode = 0x0;	
-		}
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
-        LOG (2, "AUD_SetDTSInfo: %d\n", _gDTSEnInfo);
+        _gDTSEnInfo[u1DecId] = endian;
+        if (AUD_GetSpdifRawDec() == u1DecId)
+        {
+    		if (AUD_GetDTSInfo(u1DecId) == DEC_LITTLE_ENDIAN)
+    		{
+    			u4Mode = 0x1;			  
+    		}
+    		else
+    		{
+    			u4Mode = 0x0;	
+    		}
+            _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_MODE, (UINT32 *) &u4Mode, 1); 
+        }
+        LOG (2, "AUD_SetDTSInfo(%d): %d\n", u1DecId, _gDTSEnInfo[u1DecId]);
     }
 }
 
-DATA_ENDIAN_T AUD_GetDTSInfo (void)
+DATA_ENDIAN_T AUD_GetDTSInfo (UINT8 u1DecId)
 {
-    return _gDTSEnInfo;
+    return _gDTSEnInfo[u1DecId];
 }
 
-static UINT32 _gu4DTSFrameSize = 512;
+static UINT32 _gu4DTSFrameSize[AUD_DEC_MAX] = {512, 512, 512};
 
-void AUD_SetDTSFrameSize(UINT32 u4Size)
+void AUD_SetDTSFrameSize(UINT8 u1DecId, UINT32 u4Size)
 {
     UINT32 u4Reg0;
     SPDIF_BURST_INFO_T eBurstInfo;
     UINT16 u2Nsnum;
 		
-    if(u4Size != _gu4DTSFrameSize)
+    if(u4Size != _gu4DTSFrameSize[u1DecId])
     {
-        _gu4DTSFrameSize = u4Size;
-    	switch (AUD_GetDTSFrameSize())
-    	{
-    	case 1024:
-    		eBurstInfo = BURST_INFO_DTS_1024;
-    		u4Reg0 = APROC_RAW_DTS_1024;
-    		u2Nsnum = 0x400;
-    		break;
-    	case 2048:
-    		eBurstInfo = BURST_INFO_DTS_2048;
-    		u4Reg0 = APROC_RAW_DTS_2048;
-    		u2Nsnum = 0x800; 
-    		break;
-    	case 512: 
-    	default:
-    		u2Nsnum = 0x200; 
-    		eBurstInfo = BURST_INFO_DTS_512;
-    		u4Reg0 = APROC_RAW_DTS_512; 				   
-    		break;
-    	}
-        _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);    
-        LOG (2, "AUD_SetDTSFrameSize: %d\n", _gu4DTSFrameSize);
+        _gu4DTSFrameSize[u1DecId] = u4Size;
+        if (AUD_GetSpdifRawDec() == u1DecId)
+        {
+            switch (AUD_GetDTSFrameSize(u1DecId))
+            {
+            case 1024:
+            	eBurstInfo = BURST_INFO_DTS_1024;
+            	u4Reg0 = APROC_RAW_DTS_1024;
+            	u2Nsnum = 0x400;
+            	break;
+            case 2048:
+            	eBurstInfo = BURST_INFO_DTS_2048;
+            	u4Reg0 = APROC_RAW_DTS_2048;
+            	u2Nsnum = 0x800; 
+            	break;
+            case 512: 
+            default:
+            	u2Nsnum = 0x200; 
+            	eBurstInfo = BURST_INFO_DTS_512;
+            	u4Reg0 = APROC_RAW_DTS_512; 				   
+            	break;
+            }
+            _vAUD_Aproc_Set (APROC_CONTROL_TYPE_IEC, APROC_IOCTRL_IEC_RAWAUDFMT, (UINT32 *)&u4Reg0, 1);
+        }
+        LOG (2, "AUD_SetDTSFrameSize: %d\n", _gu4DTSFrameSize[u1DecId]);
     }
 }
 
-UINT32 AUD_GetDTSFrameSize (void)
+UINT32 AUD_GetDTSFrameSize (UINT8 u1DecId)
 {
-    return _gu4DTSFrameSize;
+    return _gu4DTSFrameSize[u1DecId];
 }
 
 

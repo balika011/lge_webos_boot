@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #55 $
+ * $Revision: #56 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3070,7 +3070,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
                 eBurstInfo = BURST_INFO_DTS;
                 u2Nsnum = 0x200; // 512 samples
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
-                if (AUD_GetDTSInfo() == DEC_LITTLE_ENDIAN)
+                if (AUD_GetDTSInfo(_u1SpdifRawDec) == DEC_LITTLE_ENDIAN)
                 {
                     u4Mode = 0x1;             
                 }
@@ -3078,7 +3078,7 @@ static void _AudDspSetIec(AUD_IEC_T eIecCfg, BOOL fgEnable)
 				{
                     u4Mode = 0x0;   
 				}
-                switch (AUD_GetDTSFrameSize())
+                switch (AUD_GetDTSFrameSize(_u1SpdifRawDec))
                 {
                 case 1024:
                     eBurstInfo = BURST_INFO_DTS_1024;
@@ -13264,11 +13264,17 @@ void _AUD_DspGetSoundBarStatus(UINT8 *pId, UINT8 *pdata)
     *pdata = uReadShmUINT8(AUD_DSP0, B_IEC_SOUNDBAR_DATA);
 }
 
-void _AUD_UserSetSpdifRawDec(UINT8 u1DecId)
+#endif
+
+void AUD_SetSpdifRawDec(UINT8 u1DecId)
 {
    _u1SpdifRawDec = u1DecId;
 }
-#endif
+
+UINT8 AUD_GetSpdifRawDec(void)
+{
+    return _u1SpdifRawDec;
+}
 
 #ifdef CC_AUD_MIXSOUND_SUPPORT
 //-----------------------------------------------------------------------------

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7329,7 +7329,7 @@ void AUD_SetUserCommmand(UINT32 u4CmdType, UINT32 u4Index,
         _AUD_UserSetDecOutCtrl((AUD_OUT_PORT_T)u4Index, u4Arg1, (BOOL)u4Arg2);
         break;
     case AUD_USER_SET_SPDIF_RAW_DEC:
-        _AUD_UserSetSpdifRawDec(u4Index);
+        AUD_SetSpdifRawDec(u4Index);
         break;
 #endif
 #endif 

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #21 $
+ * $Revision: #22 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11589,10 +11589,10 @@ extern UINT32 AUD_DspQueryChannelDelay(UINT8 u1ChIdx); //QUERY_DELAY
 extern void AUD_SetSyncDbgLvl(UINT16 u2Flag);
 extern UINT16 AUD_GetSyncDbgLvl(void);
 
-extern DATA_ENDIAN_T AUD_GetDTSInfo (void);
-extern void AUD_SetDTSInfo (DATA_ENDIAN_T endian);
-extern void AUD_SetDTSFrameSize(UINT32 u4Size);
-extern UINT32 AUD_GetDTSFrameSize (void);
+extern DATA_ENDIAN_T AUD_GetDTSInfo (UINT8 u1DecId);
+extern void AUD_SetDTSInfo (UINT8 u1DecId, DATA_ENDIAN_T endian);
+extern void AUD_SetDTSFrameSize(UINT8 u1DecId, UINT32 u4Size);
+extern UINT32 AUD_GetDTSFrameSize (UINT8 u1DecId);
 
 #ifdef  CC_AUD_HDMI_PARSER_2_0_SUPPORT
 extern void AUD_DrvGetParserDetect(UINT8 u1DecId, BOOL* pfgDeteced);

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/12 $
+ * $Date: 2015/04/10 $
  * $RCSfile: dsp_init.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -885,7 +885,7 @@ void vDecCommonInit (UINT8 u1DspId)
         #endif
         break;
     case DTSDEC_STREAM:
-        if (AUD_GetDTSInfo())
+        if (AUD_GetDTSInfo(AUD_DEC_MAIN))
         {
             //Big Endian
             vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG, 0xffd9);
@@ -1494,7 +1494,7 @@ void vDecCommonInitDec2 (UINT8 u1DspId)
         }
         break;
     case DTSDEC_STREAM:
-        if (AUD_GetDTSInfo())
+        if (AUD_GetDTSInfo(AUD_DEC_AUX))
         {
             //Big Endian
             vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC2, 0xffd9);
@@ -2013,7 +2013,7 @@ case AC3_STREAM:
 #endif
         break;
     case DTSDEC_STREAM:
-        if (AUD_GetDTSInfo())
+        if (AUD_GetDTSInfo(AUD_DEC_THIRD))
         {
         	//Big Endian
             vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC3, 0xffd9);
@@ -2023,7 +2023,7 @@ case AC3_STREAM:
         	//Little Endian
         	vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_FLAG_DEC3, 0xfffb);
         }
-        AUD_SetDTSInfo(DEC_BIG_ENDIAN); //reset to Big Endian
+        //AUD_SetDTSInfo(DEC_BIG_ENDIAN); //reset to Big Endian
         vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_LFE_mixto_FRONT_DEC3, 0);
         vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DRC_ONOFF_DEC3,       9);
         vWriteDspWORD (u1DspId, ADDR_RC2D_DTS_DIALNORM_ONOFF_DEC3,  9);

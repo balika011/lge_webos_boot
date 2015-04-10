@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -442,8 +442,10 @@ extern void _AUD_DspSetIEC(UINT8 u1DecId);
 extern void _AUD_DspSetSoundBarOnOff(BOOL fgOnOff);
 extern void _AUD_DspSetSoundBarIDData(UINT32 Id, UINT8 data, UINT8 volumeInfo);
 extern void _AUD_DspGetSoundBarStatus(UINT8 *pId, UINT8 *pdata);
-extern void _AUD_UserSetSpdifRawDec(UINT8 u1DecId); 
 #endif
+extern void AUD_SetSpdifRawDec(UINT8 u1DecId);
+extern UINT8 AUD_GetSpdifRawDec(void);
+
 #ifdef CC_AUD_MIXSOUND_SUPPORT
 extern void _AUD_DspMixSndEnable(BOOL fgEnable);
 extern void _AUD_DspMixSndMute(BOOL fgMute);
