@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/11 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #18 $
+ * $Revision: #19 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -1052,7 +1052,7 @@ static void _vDrvDIMutliCadence(void)
     //}
     else if ((DiPar.PdPar.u4FldBit == 8) && (DiPar.PdPar.u4FrmBit == 8))
     {
-        DiPar.PdPar.u2FilmMode = E_DI_FILM_44;
+        //DiPar.PdPar.u2FilmMode = E_DI_FILM_44; //To avoid wrongly detect 44 in DTV 
     }
     else if ((DiPar.PdPar.u4FldBit == 10) && (DiPar.PdPar.u4FrmBit == 10))
     {
@@ -1111,7 +1111,7 @@ static void _vDrvDIMutliCadence(void)
         
             if (wTest == FW_FILM_FR_SEQ_44)
             {
-                DiPar.PdPar.u2FilmMode = E_DI_FILM_44;
+                //DiPar.PdPar.u2FilmMode = E_DI_FILM_44;
                 break;
             }
         }
@@ -1130,7 +1130,7 @@ static void _vDrvDIMutliCadence(void)
                 
                 if (wTest == FW_FILM_FR_SEQ_66)
                 {
-                    DiPar.PdPar.u2FilmMode = E_DI_FILM_66;
+                   //DiPar.PdPar.u2FilmMode = E_DI_FILM_66; //To avoid wrongly detect 
                     break;
                 }
             }
@@ -2265,7 +2265,8 @@ static void _vDrvIFAdaptive(UINT8 bPath)
     if (IS_SD_TIMING(bPath) && (u4DrvTDTV3DModeQuery() == E_TDTV_UI_3D_MODE_OFF))
     {
         _vDrvDIFieldInverse();
-        _vDrvDICzpAdaptive();          
+        _vDrvDICzpAdaptive(); 
+
     }
     if(!IS_SD_HEIGHT(bPath) && (u4DrvTDTV3DModeQuery() == E_TDTV_UI_3D_MODE_OFF))
     {
