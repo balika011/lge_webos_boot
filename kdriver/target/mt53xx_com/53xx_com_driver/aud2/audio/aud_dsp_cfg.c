@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/10 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #56 $
+ * $Revision: #57 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27898,12 +27898,45 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     UINT32 u4Reg, u4OutSelVal;
     UINT8 u1DecId = 0xFF;
     CHAR * paConnect[2] = {"Disconnect", "Connect"};
+    AUD_DEC_STREAM_FROM_T eStreamFrom;
+    AUD_FMT_T eDecType;
     
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
     LOG(1, "SoundConnect:  %-10s %-10s %s\n", _paAudOutPortName[eAudioOutPort],paConnect[fgEnable], 
         AUD_EnumToName(eAudOutSelTbl, AUD_ARRAY_SIZE(eAudOutSelTbl), u4OutSel));
-    
+    if((eAudioOutPort == AUD_SPDIF) && (fgEnable == TRUE))
+    {
+        if(u4OutSel == APROC_OUT_SEL_DEC0)
+        {
+            AUD_GetDecodeType(AUD_DSP0, AUD_DEC_MAIN, &eStreamFrom, &eDecType);
+			if((eStreamFrom == AUD_STREAM_FROM_HDMI) && (eDecType == AUD_FMT_DTS))
+			{
+			    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 1);
+				LOG(1, "HDMI DTS enable in dec0\n");
+			}
+			else
+			{
+				vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 0);
+				LOG(1, "!!!NotHDMI DTS enable in dec0\n");
+			}
+        }
+		else if(u4OutSel == APROC_OUT_SEL_DEC1)
+		{
+            AUD_GetDecodeType(AUD_DSP0, AUD_DEC_AUX, &eStreamFrom, &eDecType);
+			if((eStreamFrom == AUD_STREAM_FROM_HDMI) && (eDecType == AUD_FMT_DTS))
+			{
+			    vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 1);
+				LOG(1, "HDMI DTS enable in dec1\n");
+			}
+			else
+			{
+				vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 0);
+				LOG(1, "!!!NotHDMI DTS enable in dec1\n");
+			}
+
+		}
+    }
     switch (eAudioOutPort)
     {
     case AUD_SPEAKER:

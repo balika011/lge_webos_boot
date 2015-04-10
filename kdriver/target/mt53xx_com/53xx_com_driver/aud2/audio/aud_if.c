@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/10 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -935,6 +935,7 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
 
     VERIFY(x_sema_lock(_hSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     VERIFY(x_sema_lock(_hAsynCmdSema, X_SEMA_OPTION_WAIT) == OSR_OK);
+	vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 0);
 
 #ifdef CC_DUAL_AUD_DEC_SUPPORT
     if(u1DecId==AUD_DEC_SUB)        
