@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/06 $
+ * $Date: 2015/04/10 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1011,6 +1011,9 @@ void vDrvTDCSet(void)
     
 	if(_rTvd3dStatus.eSourceType==SV_ST_TV)  
 	{
+		//turn off WeakC for ATV, for E-25/E-05 etc channel WeakC cause color flicker.
+		vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
+		
 		// turn off Cube comb for PAL E-52 Channel vertical color line have some diagonal running line.
 		vIO32WriteFldAlign(COMB3D_1F, SV_OFF, CB_3D_CUBE_FILTER_Y_EN);
 		vIO32WriteFldAlign(COMB3D_1F, SV_OFF, CB_3D_CUBE_FILTER_C_EN);
@@ -1018,12 +1021,12 @@ void vDrvTDCSet(void)
 		switch(bHwTvdMode())
 		{
 			case SV_CS_NTSC358:		// for ATV FSC change color bar issue.
-				vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);				
+				//vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);				
 				vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENBOUND);
 				vIO32WriteFldAlign(COMB2D_07, SV_ON, REG_ENUNIFORM_SPCLR);
 				break;
 			case SV_CS_PAL_N:
-				vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
+				//vIO32WriteFldAlign(COMB2D_00, SV_OFF, ENFWEAKC);
 				break;
 			default:
 				break;			
@@ -1087,54 +1090,127 @@ static void vAdaptive3DCombGain(void)
 {
     UINT8  bTVDNoiseLevel;
     UINT32 dwTdc3dMotion;
-    UINT32 dwTdc3dColorSum;
+    UINT32 dwTdc3dColorSum,dwTdc3dMBPixCnt, dwTdc3dLumaSum, dwTdc3dLumaEdge;
     
     bTVDNoiseLevel = bTvdSignalStrengthLevel(1);
     dwTdc3dMotion = IO32ReadFldAlign(STA_COMB_05, MOPIXCNTSTA);
     dwTdc3dColorSum = IO32ReadFldAlign(STA_COMB_08, COLORSUMSTA);
+	dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
+	dwTdc3dLumaSum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
+	dwTdc3dLumaEdge = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+
+	if(IO32ReadFldAlign(TDC_FW_00, TDC_3DGAIN_DEBUG))
+	{
+		Printf("\n***vAdaptive3DCombGain bTVDNoiseLevel=%x,dwTdc3dMotion=%x,dwTdc3dColorSum=%x ,dwTdc3dMBPixCnt=%x\n",
+			bTVDNoiseLevel,dwTdc3dMotion,dwTdc3dColorSum,dwTdc3dMBPixCnt);
+		Printf("dwTdc3dLumaSum=%x, dwTdc3dLumaEdge=%x, Still Frame=%x\n",
+			dwTdc3dLumaSum,dwTdc3dLumaEdge,IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME));
+	}
+	
     //New 3D function, 3D PAL CVBS diff is so big, the Fluke output Colorbar with Circle, have some shake on the circle
-    if ((_rTvd3dStatus.eSourceType==SV_ST_TV)&&(_rTvd3dStatus.bTvdMode == SV_CS_PAL))
+    if (_rTvd3dStatus.eSourceType==SV_ST_TV)
     {
-        if ((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)
-            &&(dwTdc3dColorSum >=0x2000000)
-            &&(dwTdc3dMotion>0x6000)&&(dwTdc3dMotion<0xF000)
-            )
-        {
-            vIO32WriteFldAlign(COMB3D_0F, 0, REG_D3GAINCV);
-            vIO32WriteFldAlign(COMB3D_0F, 2, REG_D3GAINY);
-			vIO32WriteFldAlign(COMB3D_06, 0x50, REG_LOSTI_LUMATH);
-			vIO32WriteFldAlign(COMB3D_13, 0x14, REG_MOTIONTH);
-        }
-        else
-        {
-			//vIO32WriteFldAlign(C_COMB_1B, 4, D3GAIN_CV);
-            vIO32WriteFldAlign(COMB3D_0F, 0, REG_D3GAINY);
-            
-            if ((bTVDNoiseLevel >= 0x3D)&&(bTVDNoiseLevel <= 0x47))
-            {
-                vIO32WriteFldAlign(COMB3D_0F, 4, REG_D3GAINCV);
-                vIO32WriteFldAlign(COMB3D_06, 0x58 +((0x47 -bTVDNoiseLevel)<<4), REG_LOSTI_LUMATH);
-                vIO32WriteFldAlign(COMB3D_13, 0x16 +(0x47 -bTVDNoiseLevel), REG_MOTIONTH);
-            }
-            else if (bTVDNoiseLevel > 0x47)
-            {
-                vIO32WriteFldAlign(COMB3D_0F, 4, REG_D3GAINCV);
-                vIO32WriteFldAlign(COMB3D_06, 0x50, REG_LOSTI_LUMATH);
-                vIO32WriteFldAlign(COMB3D_13, 0x14, REG_MOTIONTH);
-            }
-            else if ((bTVDNoiseLevel == 0x3C))
-            {
-                vIO32WriteFldAlign(COMB3D_0F, 2, REG_D3GAINCV);
-                vIO32WriteFldAlign(COMB3D_06, 0xFF, REG_LOSTI_LUMATH);
-                vIO32WriteFldAlign(COMB3D_13, 0x22, REG_MOTIONTH);
-            }
-            else if ((bTVDNoiseLevel <= 0x3B))
-            {
-                vIO32WriteFldAlign(COMB3D_0F, 1, REG_D3GAINCV);
-                vIO32WriteFldAlign(COMB3D_06, 0xFF, REG_LOSTI_LUMATH);
-                vIO32WriteFldAlign(COMB3D_13, 0x22, REG_MOTIONTH);
-            }
-        }        
+    	if(_rTvd3dStatus.bTvdMode == SV_CS_PAL)
+    	{	
+    		UINT8 bD3GainCV = 0x4;
+            UINT8 bD3GainY = 0x0;
+            UINT8 bLOSTI_LUMATH = 0x58;
+           // UINT8 bPALMOTION45TH = 0x82;
+            UINT8 bMotionTH = 0x14;
+		    UINT8 bRegCVMO_EN =0x1;
+			UINT8 bCvbsDiffTh = 0x82;
+			UINT8 bUniformTh =0x10;
+			
+	        if ((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)
+	            &&(dwTdc3dColorSum >=0x2000000)
+	            &&(dwTdc3dMotion>0x6000)&&(dwTdc3dMotion<0xF000)
+	            )
+	        {
+	        	bD3GainCV = 0x0;
+				bD3GainY =0x2;
+				bLOSTI_LUMATH =0x50;
+				bMotionTH = 0x14;
+	        }
+			else if((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)
+				&&(dwTdc3dColorSum < 0x2200000)&&(dwTdc3dColorSum > 0x1000000)
+				&&(((dwTdc3dMBPixCnt < 0xE800)&&(dwTdc3dMBPixCnt > 0xCA00))||		//E-05/BBC1 
+				   ((dwTdc3dMBPixCnt < 0xF100)&&(dwTdc3dMBPixCnt > 0xEF00)))		//E-25
+				&&(dwTdc3dMotion < 0x600)&&(dwTdc3dMotion > 0xF0)
+				)
+			{
+				//pacth modify setting
+				bCvbsDiffTh = 0xFF;
+				bUniformTh = 0x2;
+			}
+			else if ((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)	//E-25
+				&&(dwTdc3dColorSum < 0x1700000)&&(dwTdc3dColorSum > 0xE00000)
+				&&(dwTdc3dMBPixCnt < 0xFA00)&&(dwTdc3dMBPixCnt > 0xEE00)
+				&&(dwTdc3dMotion < 0xF00)&&(dwTdc3dMotion > 0x600)
+				)
+			{
+				bCvbsDiffTh = 0xFF;
+				bRegCVMO_EN = 0x0;
+				bD3GainCV = 0x0;
+			}
+			else if((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)		//E-52
+				&&(dwTdc3dColorSum < 0x3200000)&&(dwTdc3dColorSum > 0x1200000)
+				&&(dwTdc3dMBPixCnt < 0x500)&&(dwTdc3dMBPixCnt > 0x100)
+				&&(dwTdc3dMotion < 0x6000)&&(dwTdc3dMotion > 0x3000)
+				&&(dwTdc3dLumaEdge < 0x80000)&&((dwTdc3dLumaEdge > 0x45000))
+				)
+			{
+				bCvbsDiffTh = 0xFF;
+			}
+			else if((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)		//I-11 CN model
+				&&(dwTdc3dColorSum < 0x1000000)&&(dwTdc3dColorSum > 0x600000)
+				&&(dwTdc3dMBPixCnt < 0x11000)&&(dwTdc3dMBPixCnt > 0xD000)
+				&&(dwTdc3dMotion < 0x600)&&(dwTdc3dMotion > 0x50)
+				&&(dwTdc3dLumaEdge < 0x135000)&&(dwTdc3dLumaEdge > 0x115000)
+				)
+			{				
+				bCvbsDiffTh = 0xFF;
+				bD3GainCV = 0x0;
+			}
+	        else
+	        {
+	        	
+				//vIO32WriteFldAlign(C_COMB_1B, 4, D3GAIN_CV);
+				bD3GainY = 0x0;
+	            
+	            if ((bTVDNoiseLevel >= 0x3D)&&(bTVDNoiseLevel <= 0x47))
+	            {
+	            	bD3GainCV = 0x4;
+					bLOSTI_LUMATH = 0x58 + ((0x47 -bTVDNoiseLevel)<<4);
+					bMotionTH = 0x16 +(0x47 -bTVDNoiseLevel);
+	            }
+	            else if (bTVDNoiseLevel > 0x47)
+	            {
+	            	bD3GainCV = 0x4;
+					bLOSTI_LUMATH = 0x50;
+					bMotionTH = 0x14;
+	            }
+	            else if ((bTVDNoiseLevel == 0x3C))
+	            {
+	            	bD3GainCV = 0x2;
+					bLOSTI_LUMATH = 0xFF;
+					bMotionTH = 0x22;
+	            }
+	            else if ((bTVDNoiseLevel <= 0x3B))
+	            {
+	            	bD3GainCV = 0x1;
+					bLOSTI_LUMATH = 0xFF;
+					bMotionTH = 0x22;				
+	            }
+	        }
+			
+			vIO32WriteFldAlign(COMB3D_0F, bD3GainCV, REG_D3GAINCV);
+			vIO32WriteFldAlign(COMB3D_0F, bD3GainY, REG_D3GAINY);
+			vIO32WriteFldAlign(COMB3D_06, bLOSTI_LUMATH, REG_LOSTI_LUMATH);
+			vIO32WriteFldAlign(COMB3D_13, bMotionTH, REG_MOTIONTH);
+			vIO32WriteFldAlign(COMB3D_02, bRegCVMO_EN, REG_ENCVMO);
+			vIO32WriteFldAlign(COMB3D_03, bCvbsDiffTh, REG_CVBS_DIFF_TH);
+			vIO32WriteFldAlign(COMB3D_06, bUniformTh, REG_UNIFORMTH);			
+    	}
 	}
 }
 

@@ -2229,6 +2229,7 @@ extern UINT32 SW_DRAM_BASE_PHY;
 	#define TDC_US14_EN   Fld(1, 5, AC_MSKB0) 
 	#define TDC_CCRD2_DEBUG			Fld(1, 6, AC_MSKB0) 
 	#define TDC_CCRD_DEBUG 		Fld(1, 7, AC_MSKB0) 
+	#define TDC_3DGAIN_DEBUG	Fld(1, 8, AC_MSKB1)
 #define TDC_FW_01    u4SWReg(0x3804)
     #define COLOR_EDGE_TH      Fld(16,   0, AC_FULLW10)
     
