@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/10 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #34 $
+ * $Revision: #35 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -144,6 +144,7 @@ LINT_EXT_HEADER_BEGIN
 #endif
 #include "vdec_drvif.h"
 #include "b2r_drvif.h"
+#include "b2r_if.h"
 
 #ifdef CC_AUD_ENABLE_PLAY_MUTE_CONTROL
 #include "srm_drvif.h"
@@ -7689,6 +7690,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
     UINT32 u4WpOffset;
     UINT32 u4ShiftDecWp;
     UINT32 u4DeltaWp;
+    UINT32 u4EsId;
 
     static UINT8 u1ADPanPrev = 0;
     static UINT8 u1ADFadPrev = 0;
@@ -7703,6 +7705,8 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
     {
         return FALSE;
     }
+
+    u4EsId = VDP_Vdp2Es((UCHAR)_u1VideoFrameFlag);
 
     // Check valid DevicedId;
     AUD_DEC_ID_VALIDATE_3(prPes->u1DeviceId); //Klocwork .. Only DecId 0,1,2 use this function.
@@ -8304,7 +8308,7 @@ BOOL AUD_SendAudioPes(const DMX_AUDIO_PES_T* prPes)
 #if 0//def CC_AUD_DDI
         else if ((0 == u1PathID) && (MPV_IsDisplay(u1PathID) || (VDP_GetTimeShfitStartPlay(0) || _fgPvrPause)))
 #else
-        else if (MPV_IsDisplay(_u1VideoFrameFlag))          
+        else if (MPV_IsDisplay((UCHAR)u4EsId))          
 #endif
         {
             LOG(5, "_u1VideoFrameFlag = %d (0: main, 1: sub)\n", _u1VideoFrameFlag);
