@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/04/11 $
  * $RCSfile: pod_cis.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
 
 /** @file pod_cis.c
@@ -2072,10 +2072,18 @@ INT32 PODCI_WriteCor(UINT16  u2CorAddress,
                    UINT8   u1CorValue)
 {
     UINT16 u2CorAddr = u2CorAddress;
+    
     if (u2CorAddr > 0xFFE)
     {
         u2CorAddr = 0xFFE;
     }
+    
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("PODCI_WriteCor: Card no exist !\n");
+        return -1;
+    }
+    
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u2CorAddr); /* COR address */
     PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, u1CorValue); /* COR value */
     PCMCIAHW_WRITE32(REG_CMD, (UINT32)((PC_SDA_WRITE & (UINT32)ATTRIBUTE_MEM_OP) | ICMD_IE)); /* COR is located in atribute memory */
@@ -2094,6 +2102,12 @@ INT32 PODCI_WriteCor(UINT16  u2CorAddress,
 //-----------------------------------------------------------------------------
 INT32 PODCI_ReadCor(UINT16 u2CorAddress)
 {
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("PODCI_ReadCor: Card no exist !\n");
+        return -1;
+    }
+    
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u2CorAddress); /* COR address */
     PCMCIAHW_WRITE32(REG_CMD, (UINT32)((PC_SDA_READ & (UINT32)ATTRIBUTE_MEM_OP) | ICMD_IE)); // COR is located in atribute memory
     (void)PCMCIA_GetCmdStatusDone();
@@ -2104,6 +2118,13 @@ INT32 PODCI_ReadCor(UINT16 u2CorAddress)
 INT32 PODCI_CheckCIS(UINT8* pu1Cis, UINT16 *addrcor, UINT8 *cor)
 {
     CI_error_t           error;
+    
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("PODCI_CheckCIS: Card no exist !\n");
+        return -1;
+    }
+    
     error = _PODCI_PHYS_CheckCIS(pu1Cis, MAX_CISLEN ,addrcor, cor);
     if ( error != CI_SUCCESS ) 
     {

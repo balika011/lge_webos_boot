@@ -74,9 +74,9 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/02/04 $
+ * $Date: 2015/04/11 $
  * $RCSfile: podci_ctrl.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *---------------------------------------------------------------------------*/
   
  
@@ -194,6 +194,12 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
             return POD_INVALID_ACCESS_MODE;
     }
 
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("_PCMCIAHW_ReadCard: Card no exist !\n");
+        return POD_READ_ERROR;
+    }
+    
     /* Get data length for this read operation */
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4SizeRegLsAddr); /* LS */
     PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_READ | ICMD_IE));
@@ -247,7 +253,13 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
             {
                 u2TmpDataLen = u2DataLen;
             }
-			
+            
+            if ( !PCMCIA_DetectCard() )
+            {
+                printf("_PCMCIAHW_ReadCard: Card no exist !\n");
+                return POD_READ_ERROR;
+            }
+
             HalFlushInvalidateDCacheMultipleLine((UINT32)pu1DataBuf, u2DataLen);
             PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
             PCMCIAHW_WRITE32(REG_DRAM_ADDR, PHYSICAL((UINT32)pu1DataBuf));
@@ -278,6 +290,12 @@ static INT32 _PCMCIAHW_ReadCard(UINT8* pu1Data, UINT16* pu2DataLen, BOOL bUseDMA
         PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
         for (u2I = 0; u2I < *pu2DataLen; u2I++)
         {
+            if ( !PCMCIA_DetectCard() )
+            {
+                printf("_PCMCIAHW_ReadCard: Card no exist !\n");
+                return POD_READ_ERROR;
+            }
+						
             PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_READ | ICMD_IE));
             if ( PCMCIA_GetCmdStatusDone() != TRUE )
             {
@@ -332,6 +350,12 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
             return POD_INVALID_ACCESS_MODE;
     }
 
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("_PCMCIAHW_WriteCard: Card no exist !\n");
+        return POD_WRITE_ERROR;
+    }
+						
     /* Get DAIE and FRIE status */
     if (PODCI_GetDaFrIntStatus(eAccessMode, &u1DaFrSts) != POD_OK)
     {
@@ -399,6 +423,7 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
     {
         bUseDMA = TRUE;
     }
+    
     if ( bUseDMA )
     {
         UINT16 u2TmpDataLen = 0;
@@ -414,10 +439,17 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
             {
                 u2TmpDataLen = u2DataLen;
             }
-			x_memcpy((void*)pu1DataBuf, (void*)pu1TmpData, u2DataLen);
-			HalFlushInvalidateDCacheMultipleLine((UINT32)pu1DataBuf, u2DataLen);
+            
+            if ( !PCMCIA_DetectCard() )
+            {
+                printf("_PCMCIAHW_WriteCard: Card no exist !\n");
+                return POD_WRITE_ERROR;
+            }
+		
+            x_memcpy((void*)pu1DataBuf, (void*)pu1TmpData, u2DataLen);
+            HalFlushInvalidateDCacheMultipleLine((UINT32)pu1DataBuf, u2DataLen);
             LOG(1, "PODCI_WriteCardReg:Physical address=0x%x, virtual address=0x%x\n", PHYSICAL((UINT32)pu1DataBuf), (UINT32)pu1DataBuf);
-			PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
+            PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
             PCMCIAHW_WRITE32(REG_DRAM_ADDR, PHYSICAL((UINT32)pu1DataBuf));
             PCMCIAHW_WRITE32(REG_BYTE_CNT, u2DataLen);
             PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_DMA_WRITE | ICMD_IE | SWIA)); /* Lock device output address */
@@ -426,7 +458,8 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
                 LOG(1, "PODCI_WriteCardReg err2\n");
                 return POD_WRITE_ERROR;
             }
-			if ( u2DataLen > DATA_CH_BUF_SIZE )
+
+            if ( u2DataLen > DATA_CH_BUF_SIZE )
             {
                 u2DataLen -= DATA_CH_BUF_SIZE;
                 pu1TmpData += DATA_CH_BUF_SIZE;
@@ -437,25 +470,31 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
             }
         }
     
-       // LOG(0, "_PCMCIAHW_WriteCard err5\n");
+        // LOG(0, "_PCMCIAHW_WriteCard err5\n");
         //return POD_WRITE_ERROR;
     }
     else
     {
-    /* Write the data out sequentially */
-    PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
-    for (u2I = 0; u2I < u2DataLen; u2I++)
-    {
-        PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, (UINT32)(pu1Data[u2I]));
-        PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_WRITE | ICMD_IE));
-        if ( PCMCIA_GetCmdStatusDone() != TRUE )
+        /* Write the data out sequentially */
+        PCMCIAHW_WRITE32(REG_DEV_ADDR, u4DataRegAddr);
+        for (u2I = 0; u2I < u2DataLen; u2I++)
         {
+            if ( !PCMCIA_DetectCard() )
+            {
+                printf("_PCMCIAHW_WriteCard: Card no exist !\n");
+                return POD_WRITE_ERROR;
+            }
+        			
+            PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, (UINT32)(pu1Data[u2I]));
+            PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_WRITE | ICMD_IE));
+            if ( PCMCIA_GetCmdStatusDone() != TRUE )
+            {
                 LOG(0, "_PCMCIAHW_WriteCard err6\n");
-            return POD_WRITE_ERROR;
+                return POD_WRITE_ERROR;
             }
         }
-    }
-
+	}
+		
     u1CmdRegister &= (0xFF-HC);
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4CtrlStsRegAddr);
     PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, u1CmdRegister); /* HC -> 0 */
@@ -466,8 +505,8 @@ static INT32 _PCMCIAHW_WriteCard(const UINT8* pu1Data, UINT16 u2DataLen, BOOL bU
         return POD_WRITE_ERROR;
     }
 
-            return POD_OK;
-        }
+    return POD_OK;
+}
 
 #if 0
 //-----------------------------------------------------------------------------
@@ -842,7 +881,15 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     UINT32              u4SizeRegMsAddr;
     UINT16*             pu2BufSize;
     UINT16              u2Tmp;
-    LOG(0, "_PODCI_NegotiateBufSize\n");
+    
+    LOG(3, "_PODCI_NegotiateBufSize\n");
+    
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("_PODCI_NegotiateBufSize: Card no exist !\n");
+        return FALSE;
+    }
+    
     VERIFY(PODCI_GetPodCiAccessMode(&eAccessMode) == POD_OK);
     switch (eAccessMode)
     {
@@ -872,8 +919,8 @@ static BOOL _PODCI_NegotiateBufSize(UINT16* pu2Buf)
     *pu2Buf = 16;
     
     //
-	u1CmdRegister = RS|DAIE;
-	LOG(3,"[N] u1CmdRegister is 0x%x\n", u1CmdRegister);
+    u1CmdRegister = RS|DAIE;
+    LOG(3,"[N] u1CmdRegister is 0x%x\n", u1CmdRegister);
     /* Reset channel */
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4CtrlStsRegAddr);
     PCMCIAHW_WRITE32(REG_SDA_DATA_WRITE, u1CmdRegister); /* RS -> 1 */
@@ -1113,7 +1160,12 @@ INT32 PODCI_GetDaFrIntStatus(POD_ACCESS_MODE_T    eAccessMode,
             return POD_INVALID_ACCESS_MODE;
     }
 
-
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("PODCI_GetDaFrIntStatus: Card no exist !\n");
+        return POD_CMD_ERROR;
+    }
+    
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4CtrlStsRegAddr);
     PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_READ | ICMD_IE));
     if ( PCMCIA_GetCmdStatusDone() != TRUE )
@@ -1377,9 +1429,21 @@ INT32 PODCI_WaitForModuleStatus(UINT8    u1StatusBit,
             return POD_INVALID_ACCESS_MODE;
     }
 
+    if ( !PCMCIA_DetectCard() )
+    {
+        printf("PODCI_WaitForModuleStatus stage1: Card no exist !\n");
+        return POD_CMD_ERROR;
+    }
+				
     PCMCIAHW_WRITE32(REG_DEV_ADDR, u4CtrlStsRegAddr);
     while (u2Count < u2TimeOut)
     {
+        if ( !PCMCIA_DetectCard() )
+        {
+            printf("PODCI_WaitForModuleStatus stage2: Card no exist !\n");
+            return POD_CMD_ERROR;
+        }
+	
         PCMCIAHW_WRITE32(REG_CMD, (UINT32)(PC_SDA_READ | ICMD_IE));
         if ( PCMCIA_GetCmdStatusDone() != TRUE )
         {
@@ -1501,7 +1565,7 @@ BOOL PODCI_ResetChannel(void)
 INT32 PODCI_ReadCard(POD_IO_STATE_T   eIoState, UINT8* pu1Data, UINT16* pu2DataLen)
 {
     INT32               i4Return = POD_OK;
-
+    
     switch (eIoState)
     {
         case POD_SDA:
@@ -1526,7 +1590,7 @@ INT32 PODCI_WriteCard(POD_IO_STATE_T eIoState, const UINT8* pu1Data, UINT16 u2Da
 {
     UINT16  u2NgoBufSize=0;
     INT32   i4Return;
-
+    
     i4Return = PODCI_GetNegotiatedBufSize(&u2NgoBufSize);
     if (i4Return != POD_OK)
     {
