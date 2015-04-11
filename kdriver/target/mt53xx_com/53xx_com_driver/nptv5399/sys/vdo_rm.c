@@ -1029,6 +1029,16 @@ void vVRMUpdateMIBResolutionWithOvsn(UINT8 bPath)
                     }
                     curVrmInfo.u2Height = ALIGN_8_CEIL(curVrmInfo.u2Height);
                 }
+				
+                if ((curVrmInfo.u2Y - (curVrmInfo.u2Y & ~0x7)) > (ALIGN_8_CEIL(curVrmInfo.u2Y) - curVrmInfo.u2Y))
+                {
+                    curVrmInfo.u2Y = ALIGN_8_CEIL(curVrmInfo.u2Y);
+                }
+                else
+                {
+                    curVrmInfo.u2Y &= ~0x7;
+                }
+				
             }
 		    else // make it align to 4
             {
@@ -1049,6 +1059,15 @@ void vVRMUpdateMIBResolutionWithOvsn(UINT8 bPath)
                         curVrmInfo.u2Y -= (ALIGN_4_CEIL(curVrmInfo.u2Height)-curVrmInfo.u2Height)/2;
                     }
                     curVrmInfo.u2Height = ALIGN_4_CEIL(curVrmInfo.u2Height);
+                }
+				
+                if ((curVrmInfo.u2Y - (curVrmInfo.u2Y & ~0x3)) > (ALIGN_4_CEIL(curVrmInfo.u2Y) - curVrmInfo.u2Y))
+                {
+                    curVrmInfo.u2Y = ALIGN_4_CEIL(curVrmInfo.u2Y);
+                }
+                else
+                {
+                    curVrmInfo.u2Y &= ~0x3;
                 }
             }
         }
@@ -1074,6 +1093,15 @@ void vVRMUpdateMIBResolutionWithOvsn(UINT8 bPath)
                     }
                     curVrmInfo.u2Height = ALIGN_4_CEIL(curVrmInfo.u2Height);
                 }
+				
+                if ((curVrmInfo.u2Y - (curVrmInfo.u2Y & ~0x3)) > (ALIGN_4_CEIL(curVrmInfo.u2Y) - curVrmInfo.u2Y))
+                {
+                    curVrmInfo.u2Y = ALIGN_4_CEIL(curVrmInfo.u2Y);
+                }
+                else
+                {
+                    curVrmInfo.u2Y &= ~0x3;
+                }
             }
 		    else // make it align to 2
             {
@@ -1085,6 +1113,8 @@ void vVRMUpdateMIBResolutionWithOvsn(UINT8 bPath)
                 {
                     curVrmInfo.u2Height = ALIGN_2_CEIL(curVrmInfo.u2Height);
                 }
+				
+                curVrmInfo.u2Y = curVrmInfo.u2Y + (curVrmInfo.u2Y & 0x1); //make it even,Rounding 
             }
         }
     }
