@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/12 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -783,8 +783,6 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
                 NR_WM(NXNR_2C,P_Fld(0x20,NX_VBLK_TXTR_TAP_SLOPE)|P_Fld(0x40,NX_VBLK_TXTR_BASE_STR_SLOPE)|P_Fld(0x60,NX_VBLK_TXTR_BASE_STR_TH));
       	        _SWW(NR_FWBNR_0A, 0x0C,NR_FWBNR_ADAP_VBFS_TH1);
               	_SWW(NR_FWBNR_0B, 0x0F,NR_FWBNR_ADAP_VBFS_TH2);    
-				_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_VBLK_PS0);
-				_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_HBLK_PS0);
 				_u4VBLKTxtrTapSlop = 0x20;
 			}
 			else if(eBnmMode== E_BNM_COMP_I ||eBnmMode== E_BNM_HDMI_I)//hdmi&ypbpr i
@@ -793,8 +791,6 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
                 NR_WM(NXNR_2B,P_Fld(0x0C,NX_VBLK_BASE_FILTER_STR)|P_Fld(0x10,NX_VBLK_EDGE_SLOPE)/*|P_Fld(0x10,NX_VBLK_EDGE_TH)*/);                
                 NR_WM(NXNR_2C,P_Fld(0x10,NX_VBLK_TXTR_TAP_SLOPE)|P_Fld(0x40,NX_VBLK_TXTR_BASE_STR_SLOPE)|P_Fld(0x60,NX_VBLK_TXTR_BASE_STR_TH));
                 _SWW(NR_FWBNR_0A, 0x08,NR_FWBNR_ADAP_VBFS_TH1);
-				_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_VBLK_PS0);
-				_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_HBLK_PS0);
 				_u4VBLKTxtrTapSlop = 0x10;
                 //_SWW(NR_FWBNR_0B, 0x0E,NR_FWBNR_ADAP_VBFS_TH2);
                 _SWW(MCNR_39, 0x01,DNR0_EN);
@@ -805,6 +801,7 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_TEXTURE_REJECT);
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_CONF_GAIN_PIX_CNT_EN);
 			_u4AdapVBFSTh2 = 0x08;
+			_SWW(NR_FWBNR_0E, 0x1, NR_FWBNR_CONF_GAIN_NM_EN);
             break;           
 		case MODE_625I:
 			if(eBnmMode==E_BNM_CVBS)//av&atv
@@ -813,8 +810,6 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
                 NR_WM(NXNR_2B,P_Fld(0x0F,NX_VBLK_BASE_FILTER_STR)|P_Fld(0x20,NX_VBLK_EDGE_SLOPE)/*|P_Fld(0x10,NX_VBLK_EDGE_TH)*/);                
                 NR_WM(NXNR_2C,P_Fld(0x20,NX_VBLK_TXTR_TAP_SLOPE)|P_Fld(0x40,NX_VBLK_TXTR_BASE_STR_SLOPE)|P_Fld(0x60,NX_VBLK_TXTR_BASE_STR_TH));
       	        _SWW(NR_FWBNR_0A, 0x0C,NR_FWBNR_ADAP_VBFS_TH1);
-				_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_VBLK_PS0);
-				_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_HBLK_PS0);
 				_u4VBLKTxtrTapSlop = 0x20;
               	//_SWW(NR_FWBNR_0B, 0x0F,NR_FWBNR_ADAP_VBFS_TH2);                            
 			}
@@ -824,8 +819,6 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
                 NR_WM(NXNR_2B,P_Fld(0x0C,NX_VBLK_BASE_FILTER_STR)|P_Fld(0x10,NX_VBLK_EDGE_SLOPE)/*|P_Fld(0x10,NX_VBLK_EDGE_TH)*/);                
                 NR_WM(NXNR_2C,P_Fld(0x10,NX_VBLK_TXTR_TAP_SLOPE)|P_Fld(0x40,NX_VBLK_TXTR_BASE_STR_SLOPE)|P_Fld(0x60,NX_VBLK_TXTR_BASE_STR_TH));
                 _SWW(NR_FWBNR_0A, 0x08,NR_FWBNR_ADAP_VBFS_TH1);
-				_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_VBLK_PS0);
-				_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_HBLK_PS0);
 				_u4VBLKTxtrTapSlop = 0x10;
                 //_SWW(NR_FWBNR_0B, 0x0E,NR_FWBNR_ADAP_VBFS_TH2);            
 			}
@@ -835,6 +828,7 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_TEXTURE_REJECT);
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_CONF_GAIN_PIX_CNT_EN);
 			_u4AdapVBFSTh2 = 0x08;
+			_SWW(NR_FWBNR_0E, 0x1, NR_FWBNR_CONF_GAIN_NM_EN);
             //bnr
 //            NR_WM(NXNR_2B,P_Fld(8,NX_VBLK_BASE_FILTER_STR)/*|P_Fld(0x1A,NX_VBLK_EDGE_SLOPE)|P_Fld(0x10,NX_VBLK_EDGE_TH)*/);
 //            _SWWM(NR_FWBNR_07,P_Fld(0x10,NR_FWBNR_TXPXL_CNT_TH_VAL_0)|P_Fld(0x40,NR_FWBNR_TXPXL_CNT_TH_VAL_1)|P_Fld(0x40,NR_FWBNR_TXPXL_CNT_TH_VAL_2)|P_Fld(0x80,NR_FWBNR_TXPXL_CNT_TH_VAL_3));
@@ -856,12 +850,11 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
             _SWW(NR_FWBNR_0B, 0x08,NR_FWBNR_ADAP_VBFS_TH2);
             _SWW(NR_FWBNR_0B, 0x80,NR_FWBNR_ADAP_VTBSS_TH2);
             _SWW(NR_FWBNR_0B, 0x30,NR_FWBNR_ADAP_VTBSH_TH2); 
-			_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_VBLK_PS0);
-			_SWW(NR_FWBNR_02, 0x9, NR_FWBNR_HBLK_PS0);
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_TEXTURE_REJECT);
 			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_CONF_GAIN_PIX_CNT_EN);
 			_u4AdapVBFSTh2 = 0x08;
 			_u4VBLKTxtrTapSlop = 0x10;
+			_SWW(NR_FWBNR_0E, 0x1, NR_FWBNR_CONF_GAIN_NM_EN);
 			break;
 		case MODE_720p_60:	
 	    case MODE_1080i_48:
@@ -877,14 +870,13 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
             _SWW(NR_FWBNR_0B, 0x0F,NR_FWBNR_ADAP_VBFS_TH2);
             _SWW(NR_FWBNR_0B, 0x50,NR_FWBNR_ADAP_VTBSS_TH2);
             _SWW(NR_FWBNR_0B, 0x15,NR_FWBNR_ADAP_VTBSH_TH2);
-			_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_VBLK_PS0);
-			_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_HBLK_PS0);
 			_SWW(NR_FWBNR_0D, 0x700, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_MO);
 			_SWW(NR_FWBNR_0D, 0x900, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_ST);
 			_SWW(NR_FWBNR_0E, 0x1, NR_FWBNR_TEXTURE_REJECT);
 			_SWW(NR_FWBNR_0E, 0x1, NR_FWBNR_CONF_GAIN_PIX_CNT_EN);
 			_u4AdapVBFSTh2 = 0x0F;
 			_u4VBLKTxtrTapSlop = 0x14;
+			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_CONF_GAIN_NM_EN);
 			break;
 			
 		case MODE_1080p_24:
@@ -902,14 +894,13 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
             _SWW(NR_FWBNR_0B, 0x0F,NR_FWBNR_ADAP_VBFS_TH2);
             _SWW(NR_FWBNR_0B, 0x50,NR_FWBNR_ADAP_VTBSS_TH2);
             _SWW(NR_FWBNR_0B, 0x15,NR_FWBNR_ADAP_VTBSH_TH2); 
-			_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_VBLK_PS0);
-			_SWW(NR_FWBNR_02, 0xC, NR_FWBNR_HBLK_PS0);
 			_SWW(NR_FWBNR_0D, 0x800, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_MO);
 			_SWW(NR_FWBNR_0D, 0xC20, NR_FWBNR_CONF_GAIN_PIX_CNT_TH_ST);
 			_SWW(NR_FWBNR_0E, ((bGetVideoDecType(VDP_1)!=SV_VD_YPBPR) ? 0x1 : 0x0), NR_FWBNR_TEXTURE_REJECT);
 			_SWW(NR_FWBNR_0E, ((bGetVideoDecType(VDP_1)!=SV_VD_YPBPR) ? 0x1 : 0x0), NR_FWBNR_CONF_GAIN_PIX_CNT_EN);
 			_u4AdapVBFSTh2 = 0x0F;
 			_u4VBLKTxtrTapSlop = 0x14;
+			_SWW(NR_FWBNR_0E, 0x0, NR_FWBNR_CONF_GAIN_NM_EN);
 			break;
 			
 		default:
@@ -931,6 +922,10 @@ void vDrvNRSetMoANRParamByTiming(UINT32 u4VdoTiming,E_BNM_MODE eBnmMode)
   	//_SWW(NR_FWBNR_0B, 0x40,NR_FWBNR_ADAP_VTBSS_TH2);
   	_SWW(NR_FWBNR_0A, 0x20,NR_FWBNR_ADAP_VTBSH_TH1);
   	//_SWW(NR_FWBNR_0B, 0x60,NR_FWBNR_ADAP_VTBSH_TH2); 
+
+	_SWW(NR_FWBNR_0F, 0x0, NR_FWBNR_CONF_GAIN_NM);
+	_SWW(NR_FWBNR_0F, 0xC, NR_FWBNR_CONF_GAIN_NM_TH1);
+	_SWW(NR_FWBNR_0F, 0x10, NR_FWBNR_CONF_GAIN_NM_TH2);
     
 	if(_EN(EN_LOG_ANR))
 	{

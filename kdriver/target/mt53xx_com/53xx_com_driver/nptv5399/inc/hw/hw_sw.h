@@ -3826,6 +3826,8 @@ extern UINT32 SW_DRAM_BASE_PHY;
 	#define NR_FWBNR_TEXTURE_REJECT      	Fld( 1, 6, AC_MSKB0) //[6:6]
 	#define NR_FWBNR_LOG6      				Fld( 1, 7, AC_MSKB0) //[7:7]
 	#define NR_FWBNR_CONF_GAIN_PIX_CNT_EN   Fld( 1, 8, AC_MSKB1) //[8:8]
+	#define NR_FWBNR_LOG7      				Fld( 1, 9, AC_MSKB1) //[9:9]
+	#define NR_FWBNR_CONF_GAIN_NM_EN		Fld( 1, 10, AC_MSKB1)//[10:10]
 	#define NR_FWBNR_MOIDX					Fld( 8, 16, AC_MSKDW) //[16:23]
 	#define NR_FWBNR_MOIDX_DEC				Fld( 8, 24, AC_MSKDW) //[31:24]
     
@@ -3855,6 +3857,10 @@ extern UINT32 SW_DRAM_BASE_PHY;
 #define NR_STA_BNR_06 u4SWReg(0x835C)
     #define NR_STA_BNR_H_MAJOY_PERIOD_CNT         Fld(16, 0, AC_MSKDW) //[15:0]
     #define NR_STA_BNR_V_MAJOY_PERIOD_CNT      Fld(16,16, AC_MSKDW) //[31:16]
+#define NR_FWBNR_0F u4SWReg(0x8360)
+    #define NR_FWBNR_CONF_GAIN_NM	          Fld( 8, 0, AC_MSKDW) //[7:0]
+    #define NR_FWBNR_CONF_GAIN_NM_TH1	      Fld( 8, 8, AC_MSKDW) //[15:8]
+    #define NR_FWBNR_CONF_GAIN_NM_TH2	      Fld( 8, 16, AC_MSKDW) //[23:16]
 #endif  // BNR_NEW_FW
 
 #define NR_MNR_00   u4SWReg(0x8380)
