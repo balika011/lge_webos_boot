@@ -103,6 +103,7 @@ extern void vSetLVDSDAPadPDForceOn(void);
 #ifdef CC_MT5399
 extern UINT32 vDrvLVDSsettingDrivingCurrent(UINT8 bCurrent);
 #endif
+extern void vSetLVDSPadOn(void);
 extern void u4ReadAPad(void);
 extern void vSetLVDSAPad(UINT8 u1OnOff, UINT16 u4BExtEn, UINT16 u4BDrvPwd,UINT16 u4AExtEn, UINT16 u4ADrvPwd);
 extern void u4ReadDPadPD(void);

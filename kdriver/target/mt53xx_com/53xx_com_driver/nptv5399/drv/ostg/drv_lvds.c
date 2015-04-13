@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/13 $
  * $RCSfile: drv_lvds.c,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 #ifdef CC_UP8032_ATV
@@ -1140,6 +1140,289 @@ void vSetPairSeqInverse(UINT8 u1Type)
 // [MT5880/5860] Analog related setting - 0: OCK ; 1: O5 ; 2: O4 ; 3: O3 ; 4: O2 ; 5: O1 ; 6: O1 ; 7: ECK ; 8: E5 ; 9: E4 ; 10: E3 ; 11: E2 ; 12: E1 ; 13: E0
 
  u1PairSeqInverse = u1Type;
+}
+
+void vSetLVDSPadOn(void)
+{
+	UINT32 u4DispBit;
+    UINT32 u4LVDSPort;
+    UINT32 u4PDValue = 0;
+    UINT32 u4TwoChMerge;
+	UINT32 u4LvdsCtrlAEven;
+	UINT32 *pu4PinMap;
+
+	u4DispBit = DISP_BIT;
+
+	// for force power on lvds analog pad.
+	if(IS_FORCE_LVDS_ANA_4CH_ON)
+	{
+		u4LVDSPort = FOUR_PORT; 
+	}
+	else if(IS_FORCE_LVDS_ANA_2CH_ON)
+	{
+    	u4LVDSPort = DUAL_PORT;	
+	}
+	else
+	{
+    	u4LVDSPort = LVDS_OUTPUT_PORT;
+	}	
+	
+    u4TwoChMerge = (LVDS_OUTPUT_PORT == DUAL_PORT)? 1: 0;
+    #ifdef DRV_SUPPORT_EXTMJC
+    if (IS_COMPANION_CHIP_ON())
+    {
+        if (vDrvGetCurLvdsMode() !=  eLvdsVidNormal)        
+        {
+            u4DispBit = DISP_30BIT;
+            u4LVDSPort = DUAL_PORT;
+
+            if ((vDrvGetCurLvdsMode() == eLvdsVidYuv422TwoPort8Bit) || (vDrvGetCurLvdsMode() == eLvdsVidYuv422TwoPort) || (vDrvGetCurLvdsMode() == eLvdsVidRgb444TwoPort))
+            {
+                u4TwoChMerge = 1;
+            }
+            else if ((vDrvGetCurLvdsMode() == eLvdsVidYuv422OnePort) || (vDrvGetCurLvdsMode() == eLvdsVidRgb444OnePort) || (vDrvGetCurLvdsMode() == eLvdsVidYuv422OnePort8Bit) || (vDrvGetCurLvdsMode() == eLvdsVidRgb444OnePort8Bit))
+            {
+                u4TwoChMerge = 0;
+            }
+        }
+    }
+    #endif
+
+	if(LVDS_DISP_ODD_SW)
+	{
+		u4LvdsCtrlAEven = 1;
+	}
+	else if (LVDS_USE_INDEPENDENT_SETTING)
+	{
+	    if ((LVDS_A_INDEPENDENT_SETTING ==1) || (LVDS_A_INDEPENDENT_SETTING ==0))
+	    {
+			u4LvdsCtrlAEven = LVDS_A_INDEPENDENT_SETTING;
+	    }	
+		else
+		{
+			u4LvdsCtrlAEven = 0;
+		}
+	}	
+	else
+	{
+		u4LvdsCtrlAEven = DRVCUST_PanelGet(eLvdsACtrlEven);
+	}	
+            
+    switch (u4DispBit)
+    {
+        case DISP_30BIT:
+            // enable LVDS 10-bit
+            vIO32WriteFldAlign(LVDSB_REG06, 1, RG_10B_EN);                
+			#ifdef CC_MT5399
+            if(u4LVDSPort == FOUR_PORT)
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 1, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);
+				u4PDValue = 0;
+            }
+            else       
+			#endif
+            if (u4LVDSPort == DUAL_PORT)
+            {
+				if (IS_PANEL_L12R12)
+				{            
+                 vIO32WriteFldAlign(LVDSB_REG06, 1, RG_4CH);                
+                 vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);                
+				}
+				else
+				{            
+                 vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                 vIO32WriteFldAlign(LVDSB_REG06, u4TwoChMerge, RG_DUAL);                
+				}					
+                
+                #ifdef CC_MT5399
+                u4PDValue = 0x00fff000; // PD BO/BE
+                #else
+				if (u1PairSeqInverse)
+                u4PDValue = 0x0003;				
+				else					
+                u4PDValue = 0x3000;   // PD O5, E5
+                #endif
+            }
+            else  // single port
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);                
+                if (u4LvdsCtrlAEven == 1)  // power down Port A-Odd
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+					u4PDValue = 0x00ffffC0;
+					else
+                    u4PDValue = 0x00fff03f; // PD BO/BE/AO
+                    #else
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x3F03;
+                    else
+                    u4PDValue = 0x303F;     // PD O0~O5, OCK, E5
+					#endif
+                }
+                else if (u4LvdsCtrlAEven == 0) // power down Port A-Even
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x00ffff3f;
+					else	
+                    u4PDValue = 0x00ffffc0; // PD BO/BE/AE
+                    #else
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x00FF;
+                    else					
+					u4PDValue = 0x3FC0;     // PD E0~E5, ECK, O5
+					#endif
+                }
+            }
+            break;
+
+        case DISP_24BIT:
+            // disable LVDS 10-bit
+            vIO32WriteFldAlign(LVDSB_REG06, 0, RG_10B_EN);
+			#ifdef CC_MT5399
+            if(u4LVDSPort == FOUR_PORT)
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 1, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);
+				if (u1PairSeqInverse)
+				u4PDValue = 0x00082082;
+				else					
+				u4PDValue = 0x00410410;  // PD O4, E4 
+            }
+            else
+			#endif
+            if (u4LVDSPort == DUAL_PORT)
+            {
+				if (IS_PANEL_L12R12)
+				{            
+                 vIO32WriteFldAlign(LVDSB_REG06, 1, RG_4CH);                
+                 vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);
+				}
+				else
+				{            
+                 vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                 vIO32WriteFldAlign(LVDSB_REG06, 1, RG_DUAL);
+				}
+				#ifdef CC_MT5399
+				if (u1PairSeqInverse)
+				u4PDValue = 0x00fff082;
+				else
+                u4PDValue = 0x00fff410;   // PD BO/BE/AE4/AO4
+                #else
+				if (u1PairSeqInverse)
+				u4PDValue = 0x020B;
+				else
+                u4PDValue = 0x3410;   // PD O5, O4, E5, E4
+				#endif
+            }
+            else  // single port
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);
+                if (u4LvdsCtrlAEven == 1)  // power down Port A-Odd
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x00ffffC2;
+                    else
+                    u4PDValue = 0x00fff43f;   // PD BO/BE/AO/AE4
+                    #else
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x3F0B;
+                    else
+                    u4PDValue = 0x343F;     // PD O0~O5, OCK, E5, E4
+					#endif
+                }
+                else if (u4LvdsCtrlAEven == 0) // power down Port A-Even
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x00fff0bf;
+                    else					
+                    u4PDValue = 0x00ffffd0;   // PD BO/BE/AE/AO4
+                    #else
+					if (u1PairSeqInverse)
+                    u4PDValue = 0x02FF;
+                    else					
+                    u4PDValue = 0x3FD0;     // PD E0~E5, ECK, O5, O4
+					#endif
+                }
+            }
+            break;
+
+        case DISP_18BIT:
+            // disable LVDS 10-bit
+            vIO32WriteFldAlign(LVDSB_REG06, 0, RG_10B_EN);                
+            if (u4LVDSPort == DUAL_PORT)
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 1, RG_DUAL);
+				#ifdef CC_MT5399
+				if (u1PairSeqInverse)
+				u4PDValue = 0x00fff186;
+				else
+				u4PDValue = 0x00fff618;
+				#else
+				if (u1PairSeqInverse)
+				u4PDValue = 0x061B;					
+				else
+				u4PDValue = 0x3618; // PD 05, 04 , 03, E5, E4, E3
+				#endif
+           }
+            else  // single port
+            {
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_4CH);                
+                vIO32WriteFldAlign(LVDSB_REG06, 0, RG_DUAL);
+                if (u4LvdsCtrlAEven == 1)  // power down Port A-Odd
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+					u4PDValue = 0x00ffffc6;						
+					else	
+					u4PDValue = 0x00fff63f;
+					#else
+					if (u1PairSeqInverse)
+					u4PDValue = 0x3F1B;
+					else
+					u4PDValue = 0x363F;  // PD O0~O5, OCK, E5, E4, E3
+					#endif
+                }
+                else if (u4LvdsCtrlAEven == 0) // power down Port A-Even
+                {
+                	#ifdef CC_MT5399
+					if (u1PairSeqInverse)
+					u4PDValue = 0x00fff1bf;						
+					else
+					u4PDValue = 0x00ffffd8;
+					#else
+					if (u1PairSeqInverse)
+					u4PDValue = 0x06FF;
+					else					
+					u4PDValue = 0x3FD8;  // PD E0~E5, ECK, O5 ,O4 ,O3
+					#endif
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+
+	if(!(NULL == (pu4PinMap = (UINT32 *)DRVCUST_PanelGet(ePanelLvds10bitPinMap))))
+	{
+		u4PDValue = 0; // force powen on all pair
+	}
+
+    // Analog Pair Power down control
+    _u4APadPDValue = u4PDValue;
+	vSetLVDSPadPD(u4PDValue);
+	// Some case the digital pad control is different with analog pad control by LVDS Port Contrl (ex: OSD and Data seperated)
+	u4LVDSPort = LVDS_OUTPUT_PORT;
+    // Digital Pair Power down control
+	vSetLVDSPadSourcePD(u4DispBit,u4LVDSPort);
 }
 
 extern UINT8 _Lvds7To4FifoReset;
