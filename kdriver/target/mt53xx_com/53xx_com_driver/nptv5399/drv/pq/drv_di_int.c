@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/11 $
+ * $Date: 2015/04/13 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #19 $
+ * $Revision: #20 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -1288,6 +1288,7 @@ static void _vDrvDIPDFwFilmDetetion(void)
     UINT32 u4FrmSeq, u4FrmSeqNew;
     UINT32 u4FldSeq, u4FldSeqNew;    
     static UINT32 u4FrmMoThld = 0, u4FldMoThld = 0; 
+	static UINT8  u1FldWCnt;
     UINT8 u1Film24To50Det = IO32ReadFldAlign(PSCAN_FWFILM_06, DET_24TO50_EN);
 
     //FW FILM DETECTION 
@@ -1376,18 +1377,31 @@ static void _vDrvDIPDFwFilmDetetion(void)
                 DiPar.PdPar.bFilm24To50 = SV_FALSE;             
                 LOG(5, "Other Film sequence\n");            
             }
+			else if((DiPar.PdPar.bFilm24To50 == SV_TRUE) && (DiPar.PdPar.u4FldBit == 4) 
+				&&!((u4FldSeqNew == 0x5) || (u4FldSeqNew == 0xA)))
+			{
+				DiPar.PdPar.bFilm24To50 = SV_FALSE;
+				LOG(5," Exit 24 to 50 \n");
+			}
         }                                                                                                                     
         else                                                                                                                  
         {   
             if ((DiPar.PdPar.u4FldBit == 4) && (DiPar.PdPar.bFldCnt == 0x12))
 			{
 				DiPar.PdPar.bFilm24To50 = u1Film24To50Det ? SV_TRUE : SV_FALSE;
+				u1FldWCnt=0;
 				LOG(5, "This 24 to 50 sequence\n");
 			}
 			else if ((DiPar.PdPar.u4FldBit != 4) && (DiPar.PdPar.bFldCnt > 0x4))
 			{
 				DiPar.PdPar.bFilm24To50 = SV_FALSE;
 				LOG(5, "Other Film sequence jump\n");
+			}
+			else if((DiPar.PdPar.bFilm24To50 == SV_TRUE) && (DiPar.PdPar.u4FldBit == 4) 
+					&&!((u4FldSeqNew == 0x5) || (u4FldSeqNew == 0xA)))
+			{
+				DiPar.PdPar.bFilm24To50 = SV_FALSE;
+				LOG(5,"exit 24 to 50  else\n");
 			}
 			else
 			{
@@ -1402,6 +1416,20 @@ static void _vDrvDIPDFwFilmDetetion(void)
 
             //LOG(5, "Field Mask %4x  Seq %4x %4x \n", u2FldMaskCur, u4FldSeq, u4FldSeqNew);
         }        
+    }
+	else
+	{	   
+		if((DiPar.PdPar.bFilm24To50 == SV_TRUE) && (u1FldWCnt == 7))
+		{
+			DiPar.PdPar.bFilm24To50 = SV_FALSE;
+			DiPar.PdPar.bFldCB = 0;                                                                                               
+			DiPar.PdPar.u4FldBit = 0;   
+			DiPar.PdPar.u4FldMask = 0; 
+			DiPar.PdPar.bFwBadEdit = 0;  
+			DiPar.PdPar.bFldCnt = 0;  
+			LOG(5,"Exit 24to50 for no fldbit!\n");
+		}
+		u1FldWCnt = (u1FldWCnt > 7 ) ? 0 : (u1FldWCnt+1); 		
     }       
 
     //Frame Mask matching                                                                                                           
