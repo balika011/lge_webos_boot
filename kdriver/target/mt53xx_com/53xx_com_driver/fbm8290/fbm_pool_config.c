@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/13 $
  * $RCSfile: fbm_pool_config.c,v $
- * $Revision: #16 $
+ * $Revision: #17 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3848,10 +3848,12 @@ static inline UINT32 u4DecideFlipModule(UINT32 u4VdpId, UINT32 u4ScalerMode, UIN
             {
                 u4FlipModule = FLIP_BY_PSCAN;
             }
+            /*
             else if((u1IsMPEG) && (u4VdpId == VDP_1))
             {
                 u4FlipModule = FLIP_BY_B2R;
             }
+            */
             else if (u4VdpId == VDP_2)
             {
                 u4FlipModule = FLIP_BY_SCALER;
@@ -3867,7 +3869,8 @@ static inline UINT32 u4DecideFlipModule(UINT32 u4VdpId, UINT32 u4ScalerMode, UIN
                     u4FlipModule = FLIP_BY_PSCAN;
                 }
             }
-            if((ucTVEEnable)&&(!env->u1IsMPEG[VDP_1])&&(!env->u1IsMPEG[VDP_2])&&(u4VdpId==VDP_2))
+            //if((ucTVEEnable)&&(!env->u1IsMPEG[VDP_1])&&(!env->u1IsMPEG[VDP_2])&&(u4VdpId==VDP_2))
+            if((ucTVEEnable)&&(u4VdpId==VDP_2))
             {
                 u4FlipModule = FLIP_NONE;
             }
