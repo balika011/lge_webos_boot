@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/14 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #58 $
+ * $Revision: #59 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -117,6 +117,7 @@ LINT_EXT_HEADER_BEGIN
 //#include "dsp_data.h"
 #include "drv_adsp.h"
 #include "aud_if.h"
+#include "aud_pll.h"
 //#include "aud_hw.h"
 #include "drvcust_if.h"
 #include "adac_if.h"
@@ -1350,6 +1351,8 @@ const AUD_ENUM_TO_NAME_T eChannelOutMap[] =
     {AUD_CH_AUX_FRONT_LEFT, "SCART"},
     {AUD_CH_BYPASS_LEFT, "MONITER"},
 };
+
+static BOOL bApll2Setting = FALSE;
 
 //-----------------------------------------------------------------------------
 // Static functions
@@ -16662,14 +16665,14 @@ void _AUD_LGSEFN000(UINT8 fNo, VOID* u1CV_param_buf, UINT16 noParam, UINT8 dataO
 		u4Reg = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_INIT));
 		u4Reg |= (1<<fNo);
 		vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_INIT), u4Reg);
-		Printf ("[LGSE][INIT] fNo=%d, noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
+		//Printf ("[LGSE][INIT] fNo=%d, noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
 	}
 	else if (_argLgseFnPara[fNo].dataOption == ADEC_LGSE_VARIABLES)
 	{
 		u4Reg = u4AprocReg_Read (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_VAR));
 		u4Reg |= (1<<fNo);
 		vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_LGSE_0, APROC_REG_LGSE_MODIFIED_VAR), u4Reg);
-		Printf ("[LGSE][VAR] fNo=%d noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
+		//Printf ("[LGSE][VAR] fNo=%d noParam=%d, pParams[0]=0x%x\n", fNo, _argLgseFnPara[fNo].noParam, *((UINT32 *)_argLgseFnPara[fNo].pParams));
 	}
 #else
 
@@ -27900,6 +27903,7 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     CHAR * paConnect[2] = {"Disconnect", "Connect"};
     AUD_DEC_STREAM_FROM_T eStreamFrom;
     AUD_FMT_T eDecType;
+	SAMPLE_FREQ_T eSampleRate;
     
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
 
@@ -27968,6 +27972,11 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
                 vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 1);
             }
         }
+		if (_AUD_GetApll2SettingFlag())
+		{
+			eSampleRate = AUD_GetSampleFreq(u1DecId);
+			AudPll2Setting(eSampleRate);
+		}
         break;
     case AUD_AV_OUT:
         u4Reg = APROC_REG_SEL_DSP_MON_IN;
@@ -28008,6 +28017,17 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     
     _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, u4Reg, &u4OutSelVal, 1);   
 }
+
+void _AUD_Apll2NeedSetting(BOOL bflag)
+{
+	bApll2Setting = bflag;
+}
+
+BOOL _AUD_GetApll2SettingFlag (void)
+{
+	return bApll2Setting;
+}
+
 #endif
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER) //#A0005
 

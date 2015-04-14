@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/14 $
  * $RCSfile: aud_dsp_cfg.h,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -881,6 +881,8 @@ extern void _AUD_UserSetDecChannelGain(UINT8 u1DecId, UINT8 u1LetfMainVol,
                     UINT8 u1LeftFineVol, UINT8 u1RightMainVol, UINT8 u1RightFineVol);
 extern void _AUD_UserSetDecInputDelay(UINT8 u1DecId, UINT16 u2DelayTime);
 extern void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL fgEnable); 
+extern void _AUD_Apll2NeedSetting(BOOL bflag);
+extern BOOL _AUD_GetApll2SettingFlag(void);
 #endif
 #endif
 #if defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER)
