@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/13 $
+ * $Date: 2015/04/14 $
  * $RCSfile: srm_rule.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -374,16 +374,9 @@ static UINT32 _SrmScposRule5882_DDRXx2(SRM_VDP_INFO_T* prSrmVdpInfo, SRM_VDP_CRT
         {
             u4Mode |= FBM_POOL_MODE_SCPOS_FULL;
         }
-        else if (prSrmVdpInfo[VDP_1].u4Resolution > SRM_VDP_SD_RESOLUTION)
+        else if ((prSrmVdpInfo[VDP_1].u4Resolution > SRM_VDP_SD_RESOLUTION) && (prSrmVdpInfo[VDP_1].u4InputFrameRate > 20))
         {
-            if((bGetSignalType(VDP_1) == SV_ST_MPEG) &&(prSrmVdpInfo[VDP_1].u4InputFrameRate <= 24))
-            {//For seamless low frame rate/input height  frame tear issue
-                u4Mode |= FBM_POOL_MODE_SCPOS_FULL;
-            }
-            else
-            {
-                u4Mode |= FBM_POOL_MODE_SCPOS_PSCAN_DISP;
-            }
+            u4Mode |= FBM_POOL_MODE_SCPOS_PSCAN_DISP;
         }
         else
         {
