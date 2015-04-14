@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/14 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #57 $
+ * $Revision: #58 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -27744,7 +27744,7 @@ void _AUD_UserSetDecInputMute(UINT8 u1DecId, BOOL fgMute)
     UNUSED(eStreamFrom);
     eStreamFrom = _AudGetStrSource(u1DecId);
     //No input mute for Gstreamer: may cause sound cutting
-    if (fgMute && (eStreamFrom != AUD_STREAM_FROM_GST))
+    if (fgMute)
     {
         i4Vol = 0;
     }
