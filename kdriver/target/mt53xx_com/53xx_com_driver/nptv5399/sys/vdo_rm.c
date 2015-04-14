@@ -314,6 +314,7 @@ UINT32 vVRMGetEventFlg(UINT8 bPath)
     return _u4VRMEventFlag[bPath];
 }
 
+extern UINT8 u1Seamless3DNROffTrig;
 VOID vVRMSetEventFlg(UINT8 bPath, UINT32 u4arg)
 {
     CRIT_STATE_T csState;
@@ -325,6 +326,10 @@ VOID vVRMSetEventFlg(UINT8 bPath, UINT32 u4arg)
         _u4VRMEventFlag[SV_VP_PIP] |= (u4arg);
     }
     
+	if((VRM_EVENT_BY_B2R == u4arg) && (bPath == SV_VP_MAIN))
+	{
+		u1Seamless3DNROffTrig = SV_TRUE;
+	}
     x_crit_end(csState);
     return;
 }

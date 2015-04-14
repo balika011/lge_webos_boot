@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/14 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -124,6 +124,11 @@ static UINT8 _u1Init = 0;
 static volatile UINT8 _u1NrProcFlg = 0;
 UINT8 _u1Is_TVDNM_Stable =0;
 UINT8 _u1TVDStable=0;
+
+//For seamless disable 3dnr
+static UINT8 u1SeamlessCnt = 20;
+static UINT8 u13DNROnOffPre = SV_FALSE;
+UINT8 u1Seamless3DNROffTrig = SV_FALSE;
 
 // NR MCNR_R2C_interval
 static UINT8 bR2CInterval = 5;
@@ -1557,6 +1562,22 @@ void vDrvNRISR(void)
 
     if (!_u1Init)
         return;
+
+	//For seamless, when resolution change, disable 3DNR 6 frames, because it will make flash ghost
+	if(u1Seamless3DNROffTrig)
+	{
+		//LOG(1, "---------------->NRISR: u1Seamless3DNROff: %d, u1SeamlessCnt: %d \n", u1Seamless3DNROffTrig, u1SeamlessCnt);
+		u13DNROnOffPre = NR_R(MCNR_00, MCNR_ENABLE);
+		NR_W(MCNR_00, SV_OFF, MCNR_ENABLE);
+		u1SeamlessCnt = 0;
+		u1Seamless3DNROffTrig = SV_FALSE;
+	}
+	if(u1SeamlessCnt == 6)
+	{
+		NR_W(MCNR_00, u13DNROnOffPre, MCNR_ENABLE);
+	}
+	
+	u1SeamlessCnt = (u1SeamlessCnt >= 20) ? 20 : (u1SeamlessCnt+1);
 
     u4Start = _u4GetCurrLineCnt();
     _u1NrProcFlg = 0;
