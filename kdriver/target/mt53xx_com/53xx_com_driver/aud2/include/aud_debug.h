@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/15 $
  * $RCSfile: aud_debug.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -91,6 +91,11 @@
 
 #define DEFINE_IS_LOG	AUD_IsLog
 #include "x_debug.h"
+
+#define LOG_AUD_DEF(FLAG, FMT...)     \
+    do { \
+        if (FLAG) { LOG(0, FMT); } else { LOG(2, FMT); }\
+    } while(0)
 
 #endif /* __AUD_DEBUG_H__ */
 

@@ -19676,8 +19676,7 @@ static INT32 _AudUsbBoot(INT32 i4Argc, const CHAR ** szArgv)
 extern BOOL _AUD_GetNotifyFunc(AudDecNfyFct * pfNfyFunc); 
 static INT32 _AudUserDebugMask(INT32 i4Argc, const CHAR ** szArgv)
 {
-    AudDecNfyFct pfAudDecNfy = NULL;
-
+    AudDecNfyFct pfAudDecNfy = NULL; 
     UINT32 u4DebugMask;
 
     if (i4Argc < 2)
@@ -19689,8 +19688,7 @@ static INT32 _AudUserDebugMask(INT32 i4Argc, const CHAR ** szArgv)
         return -1;
     }
 
-    VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE);
-
+    VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE); 
     u4DebugMask = (UINT32)StrToInt(szArgv[1]);
     if (pfAudDecNfy != NULL)
     {
@@ -19701,6 +19699,19 @@ static INT32 _AudUserDebugMask(INT32 i4Argc, const CHAR ** szArgv)
 
 }
 
+extern BOOL fgAudDefLogEn;
+static INT32 _AudDefLogEnable(INT32 i4Argc, const CHAR ** szArgv)
+{
+
+    if (i4Argc < 2)
+    {
+        Printf(" de [Enable]\n");
+        Printf(" 0: disable, 1: enable,"); 
+        return -1;
+    } 
+    fgAudDefLogEn = (BOOL)StrToInt(szArgv[1]);
+    return 0;
+}
 static INT32 _AudQueryPtsQueue(INT32 i4Argc, const CHAR **szArgv)
 {
     UINT16 u2Size;
@@ -21278,7 +21289,8 @@ static CLI_EXEC_T _arAudCmdTbl[] =
 #ifdef ADSP_BIN_SUPPORT
     {"UsbBoot", "ubt",	_AudUsbBoot,			NULL,	"Test Usb boot"},
 #endif
-    {"udbgmsk", "udm",	_AudUserDebugMask,			NULL,	"user debug mask", CLI_GUEST },        
+    {"udbgmsk", "udm",	_AudUserDebugMask,			NULL,	"user debug mask", CLI_GUEST },
+    {"defen", "de",	_AudDefLogEnable,			NULL,	"default log enable", CLI_GUEST }, 
     {NULL,      NULL, NULL, NULL, NULL, CLI_SUPERVISOR}
 };
 

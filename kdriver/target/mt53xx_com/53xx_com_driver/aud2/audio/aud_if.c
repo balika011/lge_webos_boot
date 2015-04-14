@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/15 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -342,6 +342,9 @@ extern AUD_DEC_MUTE_TYPE_T _aeMuteType[AUD_DEC_NUM];
 extern void vAprocMain_Close(void);
 #endif
 #endif
+
+BOOL fgAudDefLogEn = TRUE;
+BOOL fgAudDefLog[AUD_DEC_MAX] = {TRUE, TRUE, TRUE, TRUE};
 
 const AUD_ENUM_TO_NAME_T eAudStreamFromTbl[] = 
 {
@@ -925,14 +928,22 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
     AUD_FMT_T eFmt;
     UINT8 u1OriMainID;
 
-    UNUSED(u1OriMainID);    
-    LOG(1, "CMD: set DecType: Dsp(%d) AUD_DEC%d Input(%s) Codec(%s)\n", u1DspId, u1DecId, 
-        AUD_EnumToName(eAudStreamFromTbl, AUD_ARRAY_SIZE(eAudStreamFromTbl), eStreamFrom), 
-        AUD_EnumToName(eAudDrvFmtTbl, AUD_ARRAY_SIZE(eAudDrvFmtTbl), eDecFmt));
-
+    UNUSED(u1OriMainID);
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
-
+    if (fgAudDefLogEn && (eStreamFrom != AUD_STREAM_FROM_ANALOG_TUNER))
+    {
+        fgAudDefLog[u1DecId] = TRUE;
+    }
+    else
+    {
+        fgAudDefLog[u1DecId] = FALSE;
+    }
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], 
+        "CMD: set DecType: Dsp(%d) AUD_DEC%d Input(%s) Codec(%s)\n", u1DspId, u1DecId, 
+        AUD_EnumToName(eAudStreamFromTbl, AUD_ARRAY_SIZE(eAudStreamFromTbl), eStreamFrom), 
+        AUD_EnumToName(eAudDrvFmtTbl, AUD_ARRAY_SIZE(eAudDrvFmtTbl), eDecFmt));
+    
     VERIFY(x_sema_lock(_hSema, X_SEMA_OPTION_WAIT) == OSR_OK);
     VERIFY(x_sema_lock(_hAsynCmdSema, X_SEMA_OPTION_WAIT) == OSR_OK);
 	vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_DBG_IEC_TIME), 0);
@@ -1090,6 +1101,7 @@ INT32 AUD_SetDecType(UINT8 u1DspId, UINT8 u1DecId,  AUD_DEC_STREAM_FROM_T eStrea
     }
 
     VERIFY(x_sema_unlock(_hSema) == OSR_OK);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set DecType: Dsp(%d) AUD_DEC%d OK\n", u1DspId, u1DecId);
 
     return AUD_OK;
 }
@@ -1468,7 +1480,7 @@ INT32 AUD_DSPCmdPlay(UINT8 u1DspId, UINT8 u1DecId)
 #endif
 #endif    
 
-    LOG(2, "CMD: set Play: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Play: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1544,6 +1556,7 @@ INT32 AUD_DSPCmdPlay(UINT8 u1DspId, UINT8 u1DecId)
 #endif    
 #endif    
     VERIFY(x_sema_unlock(_hSema) == OSR_OK);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Play: Dsp(%d) AUD_DEC%d OK\n", u1DspId, u1DecId);
 
     return AUD_OK;
 }
@@ -1675,7 +1688,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
     AUD_DEC_STREAM_FROM_T eStreamFrom = AUD_STREAM_FROM_OTHERS;
     AUD_GetStreamFrom(AUD_DSP0, u1DecId, &eStreamFrom);
 
-    LOG(2, "CMD: set Resume: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Resume: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1703,6 +1716,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
     }
     VERIFY(x_sema_unlock(_hSema) == OSR_OK);
 
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Resume: Dsp(%d) AUD_DEC%d OK\n", u1DspId, u1DecId); 
     return AUD_OK;
 }
 
@@ -1720,7 +1734,7 @@ INT32 AUD_DSPCmdResume(UINT8 u1DspId, UINT8 u1DecId)
 //-----------------------------------------------------------------------------
 INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
 {
-    LOG(2, "CMD: set Pause: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Pause: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1741,6 +1755,7 @@ INT32 AUD_DSPCmdPause(UINT8 u1DspId, UINT8 u1DecId)
     VERIFY(AUD_DRVCmd(u1DspId, u1DecId, AUD_CMD_PAUSE));
 
     VERIFY(x_sema_unlock(_hSema) == OSR_OK);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Pause: Dsp(%d) AUD_DEC%d OK\n", u1DspId, u1DecId);
 
     return AUD_OK;
 }
@@ -1816,7 +1831,7 @@ INT32 AUD_DSPCmdStop(UINT8 u1DspId, UINT8 u1DecId)
 #endif    
 #endif
 
-    LOG(2, "CMD: set Stop: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Stop: Dsp(%d) AUD_DEC%d\n", u1DspId, u1DecId);
 
     AUD_DSP_ID_VALIDATE(u1DspId);
     AUD_DEC_ID_VALIDATE(u1DecId);
@@ -1930,6 +1945,7 @@ INT32 AUD_DSPCmdStop(UINT8 u1DspId, UINT8 u1DecId)
 
     VERIFY(x_sema_unlock(_hSema) == OSR_OK);
     _afgDecPause[u1DspId][u1DecId] =  FALSE;
+    LOG_AUD_DEF(fgAudDefLog[u1DecId], "CMD: set Stop: Dsp(%d) AUD_DEC%d OK\n", u1DspId, u1DecId);
 
     return AUD_OK;
 }
