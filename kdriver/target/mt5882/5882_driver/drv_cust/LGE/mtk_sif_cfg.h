@@ -108,7 +108,9 @@ static SIF_CONFIG_T _rSifConfig =
 //#define SIF_CFG_TRI_DELAY_DEV_ADDR (0)
 EXTERN BOOL _SIF_ISR_IsPdwncMasterEnable(void);
 EXTERN BOOL _SIF_ISR_IsPdwncMaster1Enable(void);
-
+#ifndef CC_MTK_LOADER
+EXTERN UINT32 u4LGEDPORT;
+#endif
 static void SIF_MtkCfgPinSetFunc(UINT8 u1Channel)
 {
     UINT32 u4Reg = 0;
@@ -212,6 +214,16 @@ static void SIF_MtkCfgPinSetFunc(UINT8 u1Channel)
         IO_WRITE32(PDWNC_BASE, 0xB4, u4Reg);
 #endif
     }
+
+//don't allow enable jtag mode after u4LGEDPORT set to TRUE
+#ifndef CC_MTK_LOADER
+	if(u4LGEDPORT)
+	{
+		u4Reg = IO_READ32(PDWNC_BASE, 0xB8);
+		u4Reg &= ~(0x80);
+		IO_WRITE32(PDWNC_BASE, 0xB8, u4Reg);
+	}
+#endif
 #ifndef CC_MTK_LOADER
     x_crit_end(rCrit);
 #endif
