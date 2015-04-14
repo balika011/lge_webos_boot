@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/14 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1853,6 +1853,7 @@ typedef enum
     AUD_COND_STREAM_FORMAT_CHG,
     AUD_COND_MUTE_STATE_CHG,
     AUD_COND_AUD_MEM_STATE_CHG,
+    AUD_COND_AUD_USER_DEBUG_MASK,
     AUD_COND_INPUT_SOURCE_STATE_CHG,
 }   AUD_COND_NFY_T;
 

@@ -19673,6 +19673,34 @@ static INT32 _AudUsbBoot(INT32 i4Argc, const CHAR ** szArgv)
 }
 #endif
 
+extern BOOL _AUD_GetNotifyFunc(AudDecNfyFct * pfNfyFunc); 
+static INT32 _AudUserDebugMask(INT32 i4Argc, const CHAR ** szArgv)
+{
+    AudDecNfyFct pfAudDecNfy = NULL;
+
+    UINT32 u4DebugMask;
+
+    if (i4Argc < 2)
+    {
+        Printf(" udm [DebugMask]\n");
+        Printf("    (0001h) save log to file: /tmp/hal_audio.log.txt\n");
+        Printf("    (0002h) HAL auido common log\n"); 
+        Printf("    (0004h) HAL auido atv log\n"); 
+        return -1;
+    }
+
+    VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE);
+
+    u4DebugMask = (UINT32)StrToInt(szArgv[1]);
+    if (pfAudDecNfy != NULL)
+    {
+        pfAudDecNfy((void *)AUD_NFY_STREAM, AUD_DEC_MAIN, AUD_COND_AUD_USER_DEBUG_MASK,
+                    u4DebugMask, 0);
+    }
+    return 0;
+
+}
+
 static INT32 _AudQueryPtsQueue(INT32 i4Argc, const CHAR **szArgv)
 {
     UINT16 u2Size;
@@ -21250,6 +21278,7 @@ static CLI_EXEC_T _arAudCmdTbl[] =
 #ifdef ADSP_BIN_SUPPORT
     {"UsbBoot", "ubt",	_AudUsbBoot,			NULL,	"Test Usb boot"},
 #endif
+    {"udbgmsk", "udm",	_AudUserDebugMask,			NULL,	"user debug mask", CLI_GUEST },        
     {NULL,      NULL, NULL, NULL, NULL, CLI_SUPERVISOR}
 };
 
