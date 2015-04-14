@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/13 $
+ * $Date: 2015/04/14 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #20 $
+ * $Revision: #21 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,8 +508,17 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
     if (bPath == VDP_1)
     {
         DiPQMode.bFilmOnOff_Y = (u1OnOff & DiPQMode.bCfgFilmOnOff & _u1DrvDIFullQualityOnOff(bPath));
-        DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
- 
+      
+ 		// enable multicadence detection in MM and disable in ATV&DTV for  LG's require 
+		if (((bGetSignalType(VDP_1) == SV_ST_MPEG)&&(VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE))
+			|| (bGetSignalType(VDP_1) == SV_ST_TV))
+        {
+            DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
+        }
+        else
+        {
+            DiPQMode.bFilmOnOff_MultiCadence = (DiPQMode.bFilmOnOff_Y & SUPPORT_MULTI_CADENCE);
+        }		
         if (IS_DI_Y4C4(VDP_1))
         {
             DiPQMode.bFilmOnOff_C = DiPQMode.bFilmOnOff_Y;
@@ -536,13 +545,6 @@ static void _vDrvFilmDefaultOnOff(UINT8 bPath, UINT8 u1OnOff)
                 u1DI_Is50HZ = SV_FALSE;
                 break;
         }
-        
-        /*if ((VDP_GetPlayMode(bPath) == FBM_FBG_DTV_MODE)
-			&&(bGetSignalType(VDP_1) == SV_ST_MPEG))
-        {
-        	// enable multicadence detection in DTV for LG's require
-            DiPQMode.bFilmOnOff_MultiCadence = SV_OFF;
-        }*/
     }    
 }
 
