@@ -164,7 +164,11 @@ ifeq "$(CUST_CLR_IMG)" "true"
 endif
 ifeq "$(SECURE_CUSTKEY)" "y"
 ifeq "$(SECURE_BOOT_V2)" "true"
-	$(T_MTK) u-boot_pack_secure.lzhs 0 2 0 $(AES_KEY2) $(SIGGEN_KEY)
+ifeq "$(CC_LOADER_SECURE_T)" "y"
+	$(T_MTK) u-boot_pack_secure.lzhs 0 2 0 $(AES_KEY2) $(SIGGEN_KEY
+else
+	$(SIGN_TOOL)	u-boot_pack_secure.lzhs u-boot_pack_secure.lzhs 1 131072 32 $(SIGGEN_KEY)
+endif
 else
 	$(T_MTK) u-boot_pack_secure.lzhs 0 2 0 $(SIGGEN_KEY)
 endif

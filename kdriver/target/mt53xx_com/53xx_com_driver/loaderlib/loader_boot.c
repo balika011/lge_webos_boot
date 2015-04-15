@@ -130,6 +130,553 @@
 #include "x_bim.h"
 
 #endif 
+#ifdef CC_L_DUAL_BOOT
+		struct partition_info *pPart = 0;
+#endif
+typedef unsigned long long u64;
+UINT32 u4ImageAddr;
+UINT32  u4DstAddr;
+
+#if 1//def CC_SECURE_ROM_BOOT
+static int emmc_read(u64 offset, void* addr, size_t cnt)
+{
+    return 0;
+}
+#include "gcpu_if.h"
+
+#define VERIFY_APPS_DONE 		(0x0001)
+#define VERIFY_KERNEL_DONE		(0x0010)
+#define VERIFY_TZFW_DONE		(0x0100)
+#define MAX_BUF_COUNT       0x100
+#define SHA1HashSize        32
+#define MD5_HASH_SIZE       16
+#define BOOT_COLD		(0x1 << 0)
+#define BOOT_SNAPSHOT	(0x1 << 1)
+typedef unsigned long		ulong;
+
+//-----------------------------------------------------------------------------
+// Include files
+//-----------------------------------------------------------------------------
+
+#if 1//def CC_A1_SECURE_BOOT
+//#define CC_USE_SHA1
+//#define CC_USE_HW_SHA1
+#define CC_USE_SHA256
+#define CC_USE_HW_SHA256
+
+
+
+#else
+#define CC_USE_MD5
+#endif // CC_A1_SECURE_BOOT
+
+unsigned int u4FragSize = 0;
+unsigned int u4FragNum = 0;
+typedef struct{
+	unsigned int frag_num;
+	unsigned int frag_size;
+	
+}signature_header;
+
+int verify_done = 0;
+
+
+//-----------------------------------------------------------------------------
+// Static variables
+//-----------------------------------------------------------------------------
+int X_CalculateSHA256(UINT8 *pu1MessageDigest, UINT32 StartAddr, UINT32 u4Size)
+{
+    int err;
+    
+#ifdef CC_USE_HW_SHA256
+    MD_PARAM_T rParam;
+    UINT32 u4BufStart;
+
+    GCPU_Init(0);
+
+    if((StartAddr == 0) || (u4Size == 0))
+    {
+    
+	printf("if((StartAddr == 0) || (u4Size == 0))\n");
+        return -1;
+    }
+
+    if(((StartAddr & 0xf0) >> 4) % 4 != 0)
+{
+		printf(" \n if(((StartAddr & 0xf0) >> 4) % 4 != 0)\n");
+
+        return -1;
+    }
+
+    rParam.u4SrcStartAddr = (UINT32)StartAddr;
+    rParam.u4SrcBufStart = GCPU_LINER_BUFFER_START(StartAddr);
+    rParam.u4SrcBufEnd = GCPU_LINER_BUFFER_END(StartAddr + u4Size);
+    rParam.u4DatLen = u4Size;
+    rParam.fgFirstPacket = TRUE;
+    rParam.fgLastPacket = TRUE;
+    rParam.u8BitCnt = 0;
+
+    err = GCPU_Cmd(0, GCPU_SHA_256, &rParam);
+    
+    x_memcpy(pu1MessageDigest, rParam.au1Hash, 32);
+#else
+    SHA1Context sha;
+
+    err = SHA1Reset(&sha);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Reset Error.\n");
+    }
+
+    err = SHA1Input(&sha, (const unsigned char *)StartAddr, u4Size);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Input Error.\n");
+    }
+
+    err = SHA1Result(&sha, pu1MessageDigest);
+    if (err)
+    {
+        //CHIP_DisplayString("SHA1Result Error.\n");
+    }
+#endif
+
+    return err;
+}
+
+
+#define LOADER_DWORDSWAP(u4Tmp) (((u4Tmp & 0xff) << 24) | ((u4Tmp & 0xff00) << 8) | ((u4Tmp & 0xff0000) >> 8) | ((u4Tmp & 0xff000000) >> 24))
+
+BOOL loader_DataSwap(UINT32 *pu4Dest, UINT32 *pu4Src, UINT32 u4Size, UINT32 u4Mode)
+{
+    INT32 i = 0;
+    UINT32 u4Tmp;
+
+    if (u4Mode == 0)
+    {
+        for (i = 0; i < u4Size; i++) //memcpy
+        {
+            *(pu4Dest + i) = *(pu4Src + i);
+        }
+    }
+    else if (u4Mode == 1) //Endien Change
+    {
+        for (i = 0; i < u4Size; i++)
+        {
+            u4Tmp = *(pu4Src + i);
+            u4Tmp = LOADER_DWORDSWAP(u4Tmp);
+            *(pu4Dest + i) = u4Tmp;
+        }
+    }
+    else if (u4Mode == 2) //Head Swap
+    {
+        for (i = 0; i < u4Size; i++)
+        {
+            *(pu4Dest + u4Size - 1 - i) = *(pu4Src + i);
+        }
+    }
+    else if (u4Mode == 3) //Head Swap + Endien Change
+    {
+        for (i = 0; i < u4Size; i++)
+        {
+            u4Tmp = *(pu4Src + i);
+            u4Tmp = LOADER_DWORDSWAP(u4Tmp);
+            *(pu4Dest + u4Size - 1 - i) = u4Tmp;
+        }
+    }
+
+    return TRUE;
+}
+
+void ExtractPKCSblock(UINT32 au4CheckSum[], UINT8 au1ExtractMsg[])
+{
+	UINT8 au1Block[256];
+    INT32 i;
+
+    x_memset(au1Block, 0, 256);
+    loader_DataSwap((UINT32 *)au1Block, au4CheckSum, 64, 3);
+    if (au1Block[0] == 0x02 && au1Block[1] == 0x00)
+    {
+		x_memcpy(au1ExtractMsg, &au1Block[256-32], 32);
+	//	dumpBinary(au1Block,64,"au1Block ");
+    }
+    else
+    {
+        printf("ERROR: Bad data entryption.\n");
+    }
+}
+
+#define SIGNATURE_SIZE          (64)                    // 32bit * 64
+enum
+{
+    VERIFY_OK,
+    VERIFY_FAILED
+};
+
+// A1 secure flow----------------------------------------------------------------------------------------------------------------------
+#if 1//def CC_A1_SECURE_BOOT
+
+#define BUFFER_ADDRESS  0x4000000
+#define SIG_SIZE        256
+#define PAD_ALIGN       4095 //4k
+
+//#define SECURE_DEBUG
+
+static void dumpBinary(unsigned char* bin, int size, char* name)
+{
+#ifdef SECURE_DEBUG
+    int i = 0;
+    printf("%s=", name);
+
+    for (i = 0; i < size; i++)
+    {
+        if (i%16 == 0)
+        {
+            printf("\n");
+        }
+        printf("%02x ", bin[i]);
+    }
+
+    printf("\n");
+#endif
+}
+
+
+// return 0 -> OK, return -1 -> fail
+int copyFlash(const char* szPartName, unsigned char* pu1DestDram, unsigned int u4FlashOffset, unsigned int u4Size)
+{
+    return 0;
+}
+
+// return 0 -> OK, return -1 -> fail
+static int getFlashPartFileSize(const char* szPartName, unsigned int* pu4Size)
+{
+    struct partition_info* mpi = get_partition_by_name(szPartName);
+
+    if (mpi == NULL)
+    {
+        printf("^R^failed to get partition free\n");
+        return -1;
+    }
+
+    if (mpi->valid == NO)
+    {
+        printf("^R^Partition is Not valid! => Skip!");
+        return -1;
+    }
+
+    if (!mpi->filesize)
+    {
+        printf("^g^File image size is Zero, Using partition size!!");
+        printf("sizeof mpi->size : %d", sizeof(mpi->size));
+        *pu4Size = mpi->size;
+    }
+    else
+    {
+        *pu4Size = mpi->filesize;
+    }
+
+    return 0;
+}
+
+//unsigned int random(void)
+//{
+//    return BIM_READ32(REG_RW_TIMER2_LOW);
+//}
+UINT32 au4CheckSumTemp[SIGNATURE_SIZE];
+char LoadVesion[8];
+
+int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char *pu1EncryptedSignature)
+{
+    BYTE au1ExtractMsg[32];
+    BYTE au1MessageDigest[32];
+    LDR_ENV_T* prLdrEnv = (LDR_ENV_T*)CC_LDR_ENV_OFFSET;
+#ifdef 	SECURE_DEBUG
+
+    UINT8 au4CustKey[256] = {
+		0x99, 0xc4, 0xcd, 0x15, 0xaf, 0x54, 0xe0, 0xf6, 0x0f, 0x70, 0x25, 0x12, 
+	   0xfd, 0x30, 0x83, 0xb6, 0x0e, 0x00, 0x09, 0x91, 0xa2, 0x78, 0xd9, 0x54, 
+	   0x01, 0xae, 0xb1, 0xbd, 0xb1, 0x4d, 0x8e, 0x06, 0x57, 0x64, 0x64, 0x38, 
+	   0x85, 0x04, 0xe9, 0x65, 0x8e, 0x1a, 0x64, 0xca, 0xf5, 0xa1, 0x14, 0x85, 
+	   0x51, 0x6c, 0x5f, 0xbc, 0xe2, 0x23, 0xbb, 0x99, 0xe1, 0xd9, 0x30, 0x3d, 
+	   0x05, 0x71, 0x06, 0x7a, 0xe4, 0xbc, 0x51, 0x25, 0x23, 0xf8, 0x52, 0x9f, 
+	   0x31, 0xae, 0x24, 0x0e, 0x68, 0x4c, 0x4c, 0x5e, 0x22, 0x7f, 0x31, 0x28, 
+	   0x73, 0x2b, 0x93, 0x8b, 0x0a, 0x40, 0x15, 0xe5, 0x9f, 0xa5, 0xbd, 0xe7, 
+	   0xfb, 0xb0, 0x53, 0xf5, 0xcd, 0x8b, 0x8c, 0x9e, 0x21, 0x6a, 0xdb, 0xd3, 
+	   0x4d, 0xca, 0xb2, 0xb6, 0x60, 0xab, 0xaf, 0xb9, 0x3f, 0xec, 0x5a, 0x85, 
+	   0xd2, 0x69, 0x40, 0xda, 0x04, 0xa2, 0xd2, 0x56, 0x91, 0x62, 0x72, 0x1d, 
+	   0xd6, 0x4c, 0xe2, 0x1d, 0x8d, 0x26, 0xc2, 0xaf, 0x77, 0x78, 0xad, 0x6c, 
+	   0x14, 0xe1, 0xde, 0xa0, 0x6d, 0xdf, 0xc4, 0x18, 0x8d, 0x19, 0xb5, 0xe3, 
+	   0x1a, 0x5e, 0xda, 0x37, 0xfd, 0x85, 0x10, 0x7a, 0xca, 0xc2, 0x07, 0x99, 
+	   0x3b, 0x13, 0x89, 0x02, 0xd5, 0x3a, 0xfd, 0x18, 0xf9, 0x9e, 0x0b, 0xfd, 
+	   0xf9, 0x2d, 0xa3, 0x83, 0xdc, 0x63, 0x71, 0x27, 0x19, 0x66, 0xd7, 0xf1, 
+	   0xf3, 0x60, 0x4f, 0x5d, 0xa9, 0xe9, 0x63, 0x79, 0x72, 0x3d, 0x03, 0x5e, 
+	   0x6a, 0x2e, 0x09, 0xe6, 0x22, 0xd8, 0x42, 0x09, 0xa8, 0x66, 0x04, 0x5c, 
+	   0xea, 0x0e, 0xfa, 0x56, 0x5a, 0xd7, 0xfc, 0x28, 0x91, 0x6c, 0x55, 0xc1, 
+	   0x73, 0x3a, 0x10, 0x31, 0x57, 0x0b, 0x6e, 0x71, 0xd8, 0xbb, 0xc4, 0x04, 
+	   0x7e, 0xc7, 0x68, 0xb2, 0xa4, 0xc6, 0x54, 0x71, 0x83, 0xd7, 0x73, 0xfc, 
+	   0x6a, 0x91, 0xbc, 0xc2
+    	};
+#endif
+
+    if (BIM_IS_SECURE_BOOT)
+    {
+        INT32 i4Ret = -1;
+		static INT32 IsAlradyHaveKey = 0;
+		
+		int i = 0;
+		UINT32 au4CheckSum[SIGNATURE_SIZE];
+#if 1//def SECURE_DEBUG
+        printf("verifySignature u4StartAddr=%x, u4Size=%x\n", u4StartAddr, u4Size);
+#endif
+
+#ifndef SECURE_DEBUG
+	if (!IsAlradyHaveKey)
+		{
+        	x_memcpy((void*)au4CheckSumTemp, (void*)prLdrEnv->au4CustKey, sizeof(prLdrEnv->au4CustKey));
+        	x_memcpy((void*)LoadVesion, (void*)prLdrEnv->LoadVesion, sizeof(prLdrEnv->LoadVesion));
+			IsAlradyHaveKey = 1;
+		}
+			
+#if 1//def SECURE_DEBUG
+			
+				for (i = 0; i < 8; i++)
+				{
+
+					printf("%02x ", LoadVesion[i]);
+				}
+			
+				printf("\n");
+#endif
+        x_memcpy((void*)au4CheckSum, (void*)au4CheckSumTemp, sizeof(au4CheckSum));
+#else  //use vendor public key
+        x_memcpy((void*)au4CheckSum, (void*)au4CustKey, 256);
+
+#endif
+        dumpBinary((unsigned char*)pu1EncryptedSignature, SIG_SIZE, "encrypted signature");
+        dumpBinary((unsigned char*)au4CheckSum, SIG_SIZE, "public key");
+        dumpBinary((unsigned char*)u4StartAddr, 4096, "signed image");
+
+        // RSA verification via au4Signature and au4CheckSum(public key)
+        // Then save the decrypted PKCS block into au4CheckSum
+        i4Ret = RSADecryption((UINT32*)pu1EncryptedSignature, au4CheckSum, au4CheckSum);
+        if (i4Ret != VERIFY_OK)
+        {
+            printf("RSADecryption error\n");
+            return -2;
+        }
+
+        ExtractPKCSblock(au4CheckSum, au1ExtractMsg);
+        dumpBinary((unsigned char*)au1ExtractMsg, SHA1HashSize, "au1ExtractMsg");
+
+        x_memset(au1MessageDigest, 0, SHA1HashSize);
+
+        X_CalculateSHA256(au1MessageDigest, u4StartAddr, u4Size);
+        dumpBinary((unsigned char*)au1MessageDigest, SHA1HashSize, "au1MessageDigest");
+
+        if (x_memcmp(au1ExtractMsg, au1MessageDigest, SHA1HashSize) != 0)
+        {
+            printf("signature check fail!\n");
+           // writeFullVerifyOTP();
+			while(1);
+            return -1;
+        }
+        else
+        {
+            printf("SOK\n");
+            return 0;
+        }
+    }
+    else
+    {
+	    printf("Secure boot\n");
+        return 0;
+    }
+}
+unsigned char au1EncryptedSignature[SIG_SIZE];
+unsigned char au1Frag[8];
+
+int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
+{
+    unsigned int offset = 0, image_size = 0;
+    unsigned char *pu1Image;
+    int ret = -1;
+	signature_header header;
+
+	printf("full verify ~~ \n");
+	
+    // 0. check if partition exist
+    if (getFlashPartFileSize(szPartName, &image_size) != 0)
+    {
+        printf("partition name doesn't exist\n");
+        return -1;
+    }
+	printf("pname = %s \n", szPartName);
+	printf("image_size = 0x%x \n", image_size);
+
+    if (preloaded)
+    {
+        pu1Image = (unsigned char *)addr;
+    }
+    else
+    {
+        // 1. copy image
+        pu1Image = (unsigned char *)addr;
+        if (copyFlash(szPartName, pu1Image, 0, image_size) != 0)
+        {
+            printf("copy image fail\n");
+            return -1;
+        }
+    }
+	
+	printf("pu1Image = 0x%x \n", pu1Image);
+	image_size -=8;
+		// 2. get fragment 
+		
+		 x_memcpy((void*)&header, (void*)(pu1Image+image_size), 8);
+		x_memcpy((void*)au1Frag, (void*)(pu1Image+image_size), 8);
+		 
+		//u4FragNum = au1Frag[0]|(au1Frag[1]<<8)|(au1Frag[2]<<16)|(au1Frag[3]<<24);
+			//u4FragSize = au1Frag[4]|(au1Frag[5]<<8)|(au1Frag[6]<<16)|(au1Frag[7]<<24);
+		dumpBinary((unsigned char*)au1Frag, 8, "framement parameter");
+		
+		printf("header.frag_num  = %d\n", header.frag_num);
+		printf("header.frag_size  = %d\n", header.frag_size);
+
+	u4FragNum = header.frag_num;
+	u4FragSize = header.frag_size ;
+
+    // 2. get encrypted signature
+     x_memcpy((void*)au1EncryptedSignature, (void*)(pu1Image+image_size-SIG_SIZE), SIG_SIZE);
+
+    // 3. verify signature
+#if 1//def SIGN_USE_PARTIAL
+    ret = verifySignature((unsigned int)pu1Image, image_size - (u4FragNum+1)*(SIG_SIZE), au1EncryptedSignature);
+#else
+	ret = verifySignature((unsigned int)pu1Image, image_size - SIG_SIZE, au1EncryptedSignature);
+#endif
+
+    return ret;
+}
+
+
+
+int verifyPartialPartition(const char *szPartName, ulong addr, unsigned int preloaded)
+{
+
+    return 0;
+}
+
+
+
+
+typedef struct
+{
+	const char* part_name;
+	uint32_t	mode;
+} verify_list_t;
+
+/* Only For Test in Citrix */
+static verify_list_t verify_list[] =
+{
+	{"boot", BOOT_COLD},
+};
+
+static int is_verify_part(int idx, int boot_mode)
+{
+	if( boot_mode & verify_list[idx].mode)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+int sb_verify_image(const char *szPartName, ulong addr, unsigned int flag)
+{
+	if(flag == 1)
+		return verifyPartition(szPartName,addr, 1);
+	else
+		return verifyPartialPartition(szPartName,addr, 1);
+}
+
+int verify_apps(int boot_mode)
+{
+    int         idx;
+    uint64_t    offset;
+    unsigned int    filesize, imgsize;
+    uint8_t*    sign;
+    uint32_t    sign_size;
+    uint32_t    flags = 1;
+    uint32_t    loop_cnt;
+    int         IsFullverify = 1;
+    int         ret = 0;
+    int         retry_cnt = 0;
+	ulong 		addr = 0x8000000;
+
+    
+
+	loop_cnt = sizeof(verify_list)/sizeof(verify_list_t);
+
+
+    printf("\033[0;32m flags for verifying application is 0x%x \033[0m\n",flags);
+
+	x_memcpy(addr,u4DstAddr,pPart->filesize);
+    for(idx=0; idx<loop_cnt; idx++)
+    {
+        if( IsFullverify || is_verify_part(idx, boot_mode) )
+        {
+
+//          if( !get_swumode() && !strcmp(verify_list[idx].part_name,"swue") ) //not swum on case
+//          {
+//              printf("\033[0;32m skip swue verification ... \033[0m\n");
+//              continue;
+//          }
+
+            offset = pPart->offset;
+            filesize = pPart->filesize;
+            imgsize = filesize;                 
+            printf("\033[0;32m[%d]Verifying image offset 0x%x  partition size [%d] \033[0m\n", offset,filesize);
+
+            do {            
+                ret = sb_verify_image(pPart->name, addr, flags);
+                retry_cnt++;
+                printf("\033[0;32msb_verify_application check %d time \033[0m\n",retry_cnt);
+            } while (ret < 0 && retry_cnt < 1);
+
+            if (ret < 0)
+            {
+                printf("\033[0;32m %s verification failed in %d check ... fullverify flag will be set and System will stop \033[0m\n",verify_list[idx].part_name, retry_cnt);
+                goto verify_error;
+            }
+
+            retry_cnt = 0;      
+
+        }
+    }
+
+    printf("\033[0;32m Application integrity verified \033[0m\n");
+    verify_done |= VERIFY_APPS_DONE;
+
+	//Clear full verify flag on this point in resume mode
+	if (IsFullverify)
+	{
+		if ( verify_done == VERIFY_APPS_DONE )
+		{
+			printf("\033[0;31m Full Verify is all ok, Full Verify will be clear to partial \033[0m\n");
+			IsFullverify = 0;
+		}	
+	}
+	
+    return 0;
+
+verify_error:
+    printf("\033[0;32m Verify error !!!\033[0m\n");
+    return -1;
+}
+
+#endif // CC_A1_SECURE_BOOT
+
+#endif // CC_SECURE_ROM_BOOT
 
 #define FIRMWARE_FLASH_OFFSET           LOADER_MAX_SIZE
 #if 0
@@ -628,9 +1175,6 @@ UINT32 LDR_ImageDecompress(LDR_DATA_T *prLdrData)
     IMAGE_HEADER_T* prHeader;
     UINT32 u4FirmwareExecAddr = 0;
     UINT32 u4IfSecondImage = 0;
-#ifdef CC_L_DUAL_BOOT
-		struct partition_info *pPart = 0;
-#endif
 
     _u4DualOffset = DRVCUST_InitGet(eLoaderDualBootOffset);
     u4IfSecondImage = prLdrData->rDtvCfg.u1Flags2 & DTVCFG_FLAG2_IMAGE_BANK;    // 0 for the first image, 1 for the second one
@@ -648,7 +1192,6 @@ if (BIM_IS_SECURE_BOOT)
 #endif
 // 1. read lzhs header
 #if !defined(CC_NAND_BOOT) && !defined(CC_EMMC_BOOT) // nor boot
-    UINT32 u4ImageAddr;
 
     if (_u4DualOffset && u4IfSecondImage)
     {
@@ -670,8 +1213,8 @@ if (BIM_IS_SECURE_BOOT)
         _u415MBImageAddr = (UINT32)x_mem_alloc(MAX_COMPRESS_IMAGE_SIZE);
     }
     u4ImageAddr = _u415MBImageAddr;
+    //u4ImageAddr = (u4ImageAddr + 0x40) & ~(0x40 - 1); //64-bytes alignment
     u4ImageAddr = (u4ImageAddr & 0xfffffff0) + 0x00000010; //16-bytes alignment
-
 #ifdef CC_LOAD_UBOOT
 #ifdef CC_L_DUAL_BOOT
 		if (0 != init_partinfo())
@@ -680,6 +1223,7 @@ if (BIM_IS_SECURE_BOOT)
 		}
 	
 		pPart = get_used_partition("boot");
+		
 		Printf("\nDualBoot Flash load lzhs header from 0x%x to dram(0x%x), size=2048\n", (UINT32)(pPart->offset & 0xffffffff), u4ImageAddr);
 		CHIP_FlashCopyToDRAMLZHS(0, u4ImageAddr, (UINT32)(pPart->offset & 0xffffffff), (2*1024));
 #else
@@ -708,7 +1252,7 @@ if (BIM_IS_SECURE_BOOT)
 
 // 2. read uboot/sys compressed image for lzds decoding
 #ifdef CC_LOAD_UBOOT
-    UINT32 u4DstSize, u4DstAddr;
+    UINT32 u4DstSize;
     UINT8 u1Checksum;
     BOOL fgIsLzhs = TRUE;
     PFN_IMAGE pfnImage;
@@ -733,11 +1277,15 @@ if (BIM_IS_SECURE_BOOT)
     {
         fgIsLzhs = FALSE;
         u4DstAddr = u4FirmwareExecAddr - 0x10;
+		
+        Printf("fgIsLzhs = FALSE;\n");
     }
     else
     {
         fgIsLzhs = TRUE;
         u4DstAddr = u4ImageAddr;
+		
+        Printf("fgIsLzhs = TRUE;\n");
     }
 #if defined(CC_NAND_BOOT) || defined(CC_EMMC_BOOT) /* nand or emmc boot */
     UINT32 u4ImageLzhsSize;
@@ -746,12 +1294,21 @@ if (BIM_IS_SECURE_BOOT)
     #if defined(CC_SECURE_BOOT_ALL)
     u4ImageLzhsSize += 0x300;
     #endif
+	if(!pPart->filesize)
+		{
+			
+			u4ImageLzhsSize = pPart->filesize;
+		}
+	else
+		{
+			u4ImageLzhsSize += 0x4000;
+		}
 #ifdef CC_L_DUAL_BOOT
 		Printf("\nDualBoot Flash load image from 0x%x to dram(0x%x), size=0x%x\n", (UINT32)(pPart->offset & 0xffffffff), u4DstAddr, u4ImageLzhsSize);
 		CHIP_FlashCopyToDRAMLZHS(0, u4DstAddr, (UINT32)(pPart->offset & 0xffffffff), u4ImageLzhsSize);
 #else
 		Printf("\nFlash load image from 0x%x to dram(0x%x), size=0x%x\n", LOADER_MAX_SIZE, u4ImageAddr, u4ImageLzhsSize);
-		CHIP_FlashCopyToDRAMLZHS(0, u4DstAddr, LOADER_MAX_SIZE, u4ImageLzhsSize);
+		CHIP_FlashCopyToDRAMLZHS(0, u4DstAddr, LOADER_MAX_SIZE, u4ImageLzhsSize );
 #endif
 
     #ifdef CC_SECURE_BOOT_SCRAMBLE
@@ -895,7 +1452,11 @@ do
     #if defined(CC_SECURE_BOOT_V2) && defined(CC_SECURE_BOOT_ALL)
         if (BIM_IS_SECURE_BOOT)
         {
-            BIM_VerifyImgSig(u4DstAddr);
+        	#if defined(CC_LOADER_SECURE_T)
+			BIM_VerifyImgSig(u4DstAddr);
+			#else
+            verify_apps(BOOT_COLD);//
+            #endif
         }
     #endif  // defined(CC_SECURE_BOOT_V2) && defined(CC_SECURE_BOOT_ALL)
     if(!fgIsLzhs)
