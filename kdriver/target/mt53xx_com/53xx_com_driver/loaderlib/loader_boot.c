@@ -1294,7 +1294,7 @@ if (BIM_IS_SECURE_BOOT)
     #if defined(CC_SECURE_BOOT_ALL)
     u4ImageLzhsSize += 0x300;
     #endif
-	if(!pPart->filesize)
+	if(pPart->filesize)
 		{
 			
 			u4ImageLzhsSize = pPart->filesize;
