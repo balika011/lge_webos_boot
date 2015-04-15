@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/15 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #36 $
+ * $Revision: #37 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6793,6 +6793,7 @@ static void _DtvLockCheck(UINT8 u1DecId)
     UINT16        u2NoFrameCntIncreaseMax;
     UINT16        u2CheckProfileThreshold;
     UINT16        u2CheckErrorThreshold;
+    UINT32 u4Idx, u4v0;
 
     // Get notify function
     VERIFY(_AUD_GetNotifyFunc(&pfAudDecNfy) == TRUE);
@@ -7051,9 +7052,22 @@ static void _DtvLockCheck(UINT8 u1DecId)
              (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) &&
              (DSP_GetDraInputFs(u1DecId) == FALSE))
     {
-        LOG(0 ,"DRA input FS not support!\n");
-        eDecStatus = AUD_DECODE_NOT_SUPPORT;        
-        AUD_DSPCmdStop(AUD_DSP0,u1DecId);
+        LOG(1 ,"DRA input FS not support!\n");
+        u4Idx = APROC_IOCTR_TRIM_AMIXER0; 
+        if (u1DecId == AUD_DEC_AUX)
+        {
+            u4Idx = APROC_IOCTR_TRIM_AMIXER1;
+        }
+        else if (u1DecId == AUD_DEC_THIRD)
+        {
+            u4Idx = APROC_IOCTR_TRIM_AMIXER2;
+        }
+        _vAUD_Aproc_Get (APROC_CONTROL_TYPE_TRIM, u4Idx, (UINT32 *) &u4v0, 1);
+        
+        if (u4v0 != 0)
+        {
+            _AUD_UserSetDecInputMute(u1DecId, TRUE);
+        }
     } 
     else if (_afgDtvPesLock[u1DecId] || _afgDtvLock[u1DecId])
 #else

@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/11 $
+ * $Date: 2015/04/15 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8500,6 +8500,8 @@ BOOL DSP_GetDraInputFs(UINT8 u1DecId)
     12      192000
     */
     
+    DSP_FlushInvalidateDCache(AUD_DSP0, CACHE_FLUSH_TYPE_DATA, TYPE_COMM_DRAM_IDX);    
+
     if (u1DecId == AUD_DEC_MAIN)
     {
         u4IntputFS = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_INFO_INPUT_SAMPLING_RATE) >> 8);
