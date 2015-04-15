@@ -478,6 +478,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
         if (x_memcmp(au1ExtractMsg, au1MessageDigest, SHA1HashSize) != 0)
         {
             printf("signature check fail!\n");
+			while(1);
            // writeFullVerifyOTP();
            return -1;
         }
