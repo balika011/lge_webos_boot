@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/31 $
+ * $Date: 2015/04/15 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2425,6 +2425,24 @@ UINT32 AUD_GetMixSndRingFifoBufferLevel(UINT8 u1StreamId)
         return 0;
     }
 }
+UINT32 AUD_GetMixSndRingFifoFreeBufferSize(UINT8 u1StreamId)
+{
+    UINT32 u4RingFifoBufferSize;
+    if ((u1StreamId + ALSA_MIXSND_STREAM_ID) < MAX_AUD_MIXSND_STREAM_NUM)
+    {
+		_rAudMixSndStream[u1StreamId + ALSA_MIXSND_STREAM_ID].u4Residual =
+                ((_rAudMixSndRingFifo[u1StreamId].u4WP >= _rAudMixSndRingFifo[u1StreamId].u4RP) ?
+                (_rAudMixSndRingFifo[u1StreamId].u4WP - _rAudMixSndRingFifo[u1StreamId].u4RP) :
+                (_rAudMixSndRingFifo[u1StreamId].u4SZ - _rAudMixSndRingFifo[u1StreamId].u4RP + _rAudMixSndRingFifo[u1StreamId].u4WP));
+        u4RingFifoBufferSize = _rAudMixSndRingFifo[u1StreamId].u4SZ - _rAudMixSndStream[u1StreamId + ALSA_MIXSND_STREAM_ID].u4Residual ;
+        return u4RingFifoBufferSize;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 
 #ifdef  ALSA_PCMDEC_PATH  
 void AUD_SetDSPDecoderType(AUD_FMT_T u4DspDecType)

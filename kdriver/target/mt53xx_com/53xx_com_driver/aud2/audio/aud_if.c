@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/15 $
  * $RCSfile: aud_if.c,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6338,6 +6338,21 @@ UINT32 AUD_FillPcmBufer(UINT8 u1DecId, UINT32* lpBuffer2, UINT32 size2)
         return FALSE;
     }
 }
+
+extern void vDspSetFifoReadPtr(UINT8 u1DspId, UCHAR ucDecId, UINT32 u4ReadPtr);
+void AUD_DirectFlushFifo(UINT8 u1DecId)
+{
+    UINT32 u4AFifoWp;
+    UINT32 u4AFifoRp;
+    UINT32 u4AFifoSA;
+    u4AFifoSA = u4GetAFIFOStart(AUD_DSP0, u1DecId);
+    u4AFifoWp = u4AFifoSA;
+    u4AFifoRp = u4AFifoSA;
+    _AUD_DMX_UpdateWritePtr(u1DecId, PHYSICAL(u4AFifoWp));
+    vDspSetFifoReadPtr(AUD_DSP0, u1DecId, u4AFifoRp);
+    
+}
+
 
 #ifdef CC_AUD_DDI
 BOOL AUD_PlayMuteSetChannelDelayReady(UINT16 u2ChannId)
