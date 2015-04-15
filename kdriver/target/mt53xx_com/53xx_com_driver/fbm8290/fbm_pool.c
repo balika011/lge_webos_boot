@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/15 $
  * $RCSfile: fbm_pool.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -2822,6 +2822,11 @@ else
 #endif
 
     return (_arPool);
+}
+
+
+void _FBM_Resume(void){
+	TZ_FBM_Initialization(_arPool,sizeof(_arPool));
 }
 
 
