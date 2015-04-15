@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/14 $
+ * $Date: 2015/04/16 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #5 $
+ * $Revision: #6 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1567,12 +1567,15 @@ void vDrvNRISR(void)
 	if(u1Seamless3DNROffTrig)
 	{
 		//LOG(1, "---------------->NRISR: u1Seamless3DNROff: %d, u1SeamlessCnt: %d \n", u1Seamless3DNROffTrig, u1SeamlessCnt);
-		u13DNROnOffPre = NR_R(MCNR_00, MCNR_ENABLE);
-		NR_W(MCNR_00, SV_OFF, MCNR_ENABLE);
+		if(u1SeamlessCnt > 12)
+		{
+			u13DNROnOffPre = NR_R(MCNR_00, MCNR_ENABLE);
+			NR_W(MCNR_00, SV_OFF, MCNR_ENABLE);
+		}
 		u1SeamlessCnt = 0;
 		u1Seamless3DNROffTrig = SV_FALSE;
 	}
-	if(u1SeamlessCnt == 6)
+	if(u1SeamlessCnt == 12)
 	{
 		NR_W(MCNR_00, u13DNROnOffPre, MCNR_ENABLE);
 	}
