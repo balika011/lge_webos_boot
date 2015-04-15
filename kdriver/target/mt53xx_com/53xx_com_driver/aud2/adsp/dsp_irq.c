@@ -75,7 +75,7 @@
 /***************    MTK CONFIDENTIAL & COPYRIGHTED     ****************/
 /***************                                       ****************/
 /***************  $Modtime:: 04/12/06 3:31p    $       ****************/
-/***************  $Revision: #1 $       ****************/
+/***************  $Revision: #2 $       ****************/
 /***************                                       ****************/
 /***************   Description : DSP Control routines  ****************/
 /***************                                       ****************/
@@ -118,7 +118,7 @@ UINT32 dwAoutMIPS = 0;
 void vAoutMIPSQuery(void)
 {
     Printf("dwAoutIndex: %d\n", dwAoutIndex);
-    Printf("dwAoutMIPS: %d\n", dwAoutMIPS);    
+    Printf("dwAoutMIPS: %d\n", dwAoutMIPS);
     Printf("Cycle: %d\n", (dwAoutIndex == 0) ? 0 : dwAoutMIPS/dwAoutIndex);
 }
 
@@ -146,12 +146,12 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
     case INT_D2RC_WAKEUP_OK:
         _rDspStatus[u1DspId][AUD_DEC_MAIN].fgDspWakeUpOk = TRUE;
         u4Msg = ADSPTASK_MSG_NO_COMMAND; // Refine ADSP control
-        break;     
-    case INT_D2RC_FLOW_CONTROL:  /* Just for LOG */  
+        break;
+    case INT_D2RC_FLOW_CONTROL:  /* Just for LOG */
         u4DspRIntData = (u4DspRIntData >> 8);
         DSP_FlushInvalidateDCache(u1DspId, CACHE_FLUSH_TYPE_DATA, TYPE_COMM_DRAM_IDX);
-        
-        if (u4DspRIntData == D2RC_FLOW_CONTROL_MODE_CHANGE) 
+
+        if (u4DspRIntData == D2RC_FLOW_CONTROL_MODE_CHANGE)
         {
             if (_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == AC3_STREAM)
             {
@@ -162,7 +162,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
                 LOG(7, "[DSP_IRQ]Receive Dec0 MPEG mode change Int, Mode = %x\n",dReadDspCommDram(u1DspId, ADDR_D2RC_MPEG_MODE)>>8);
             }
         }
-        else if (u4DspRIntData == D2RC_FLOW_CONTROL_MODE_CHANGE_DEC2) 
+        else if (u4DspRIntData == D2RC_FLOW_CONTROL_MODE_CHANGE_DEC2)
         {
             if (_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == AC3_STREAM)
             {
@@ -174,7 +174,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
             }
         }
 #ifdef CC_MT5391_AUD_3_DECODER
-        else if (u4DspRIntData==D2RC_FLOW_CONTROL_MODE_CHANGE_DEC3) 
+        else if (u4DspRIntData==D2RC_FLOW_CONTROL_MODE_CHANGE_DEC3)
         {
             if ((_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == MPEG12_STREAM) || (_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == MPEG3_STREAM))
             {
@@ -183,7 +183,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         }
 #endif
         vLogFlowControl(u4DspRIntData);
-        u4Msg = u4IntFlowControl(u1DspId, u4DspRIntData); // refine ADSP control       
+        u4Msg = u4IntFlowControl(u1DspId, u4DspRIntData); // refine ADSP control
         break;
 #ifdef DSP_SUPPORT_NPTV
     // refine ADSP control
@@ -193,11 +193,11 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         break;
     case INT_DSP_PAL_DETECTED_MODE:
         // we put (u4DspRIntData>>8) in high word of message
-        u4Msg = (UINT32)(ADSPTASK_MSG_INT_PAL_MODE)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);        
+        u4Msg = (UINT32)(ADSPTASK_MSG_INT_PAL_MODE)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);
         break;
     case INT_DSP_JPN_DETECTED_MODE:
         // we put (u4DspRIntData>>8) in high word of message
-        u4Msg = (UINT32)(ADSPTASK_MSG_INT_JPN_MODE)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);        
+        u4Msg = (UINT32)(ADSPTASK_MSG_INT_JPN_MODE)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);
         break;
     case INT_DSP_MINER_NOTIFY:
         // we put (u4DspRIntData>>8) in high word of message
@@ -210,7 +210,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         u4Msg = wReadDspWORD(u1DspId, ADDR_DETECTED_TYPE);
         u4Msg = u4Msg<<16;
         u4Msg = u4Msg|ADSPTASK_MSG_INT_DETECTOR_NOTIFY;
-	  break;        
+	  break;
     case INT_DSP_DETECTOR_DEC2_NOTIFY:
         _rDspStatus[u1DspId][AUD_DEC_AUX].fgDspDetected = TRUE;		
         u4Msg = wReadDspWORD(u1DspId, ADDR_DETECTED_TYPE);
@@ -222,11 +222,11 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         u4Msg = wReadDspWORD(u1DspId, ADDR_DETECTED_TYPE);
         u4Msg = u4Msg<<16;
         u4Msg = u4Msg|ADSPTASK_MSG_INT_DETECTOR_DEC3_NOTIFY;
-	  break;	  
+	  break;	
     case INT_DSP_CHANGE_ATV_STANDARD:
         u4Msg = (UINT32)(ADSPTASK_MSG_INT_ATV_CHANGE)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);
         LOG(7, "[DSP_IRQ]Log for decoder detects ATV standard change\n");
-	  break;  
+	  break;
     case INT_DSP_HDEV_AUTO_SWITCH:
         LOG(7, "[DSP_IRQ]High deviation mode auto switch...\n");
         u4Msg = (UINT32)(ADSPTASK_MSG_INT_ATV_HDEV_SWITCH)|(u4DspRegR_D2rSda(u1DspId) & 0xFFFF0000L);
@@ -238,29 +238,29 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
 #endif
     case INT_D2RC_PTS_1ST_REFRESH:
         _rDspStatus[u1DspId][AUD_DEC_MAIN].fgDspPtsSet = TRUE;
-        u4Msg = ADSPTASK_MSG_NO_COMMAND; //Refine ADSP control 
+        u4Msg = ADSPTASK_MSG_NO_COMMAND; //Refine ADSP control
         if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_STC_DIFF) == AUD_DBG_SYNC_STC_DIFF)
         {
             LOG(5, "[DSP_IRQ]DSP interrupt RISC - PTS 1st refresh\n");
-            vDspLogAoutEnablePTS();        
+            vDspLogAoutEnablePTS();
         }
         else
         {
             LOG(7, "[DSP_IRQ]DSP interrupt RISC - PTS 1st refresh\n");
-        }        	        
+        }        	
         break;
     case INT_D2RC_PTS_1ST_REFRESH_DEC2:
         //_rDspStatus[AUD_DEC_MAIN].fgDspPtsSet = TRUE;
         u4Msg = ADSPTASK_MSG_NO_COMMAND;
         if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_STC_DIFF) == AUD_DBG_SYNC_STC_DIFF)
-        { 
+        {
             LOG(5, "[DSP_IRQ]AUX DSP interrupt RISC - PTS 1st refresh\n");
-            vDspLogAoutEnablePTS();        
+            vDspLogAoutEnablePTS();
         }
         else
         {
-            LOG(7, "[DSP_IRQ]AUX DSP interrupt RISC - PTS 1st refresh\n");            
-        }        
+            LOG(7, "[DSP_IRQ]AUX DSP interrupt RISC - PTS 1st refresh\n");
+        }
         #ifdef MIXSOUND_MIPS_MEASURE
         dwAoutIndex++;
         dwAoutMIPS += u4DspRIntData;
@@ -276,7 +276,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         }
         else
         {
-            LOG(7, "[DSP_IRQ]Third DSP interrupt RISC - PTS 1st refresh\n");            
+            LOG(7, "[DSP_IRQ]Third DSP interrupt RISC - PTS 1st refresh\n");
         }
         break;
     case INT_D2RC_PCM_DETECT_RAW_MUTE:
@@ -292,7 +292,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
             AUD_MM_Set_Dec_Fmt_Conflict(AUD_DEC_MAIN, TRUE);
             break;
         case TYPE_MP3:
-            LOG(5, "[DSP_IRQ][FMT_CONFLICT] MPEG decoder Can't play MP3 bitstream\n");            
+            LOG(5, "[DSP_IRQ][FMT_CONFLICT] MPEG decoder Can't play MP3 bitstream\n");
             // Stop at aout reinit
             // notify audio driver about format conflict
             AUD_MM_Set_Dec_Fmt_Conflict(AUD_DEC_MAIN, TRUE);
@@ -302,7 +302,7 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
         }
         _rDspVars[u1DspId][AUD_DEC_MAIN].dwDspMpgTyp = (u4DspRIntData >> 8);
         u4Msg = ADSPTASK_MSG_NO_COMMAND;
-        break;        
+        break;
     case INT_D2RC_PRINT_DATA:
         if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_PTS_FRESH) == AUD_DBG_SYNC_PTS_FRESH)
         {
@@ -321,8 +321,8 @@ UINT32 u4DspIRQSvc (UINT8 u1DspId)
     case INT_D2RC_LOG_DUMP:
     case INT_D2RC_DSP_INFO:
     case INT_D2RC_BLUETOOTH_INDEX:
-    case INT_D2RC_UPLOAD_INDEX: 
-    case INT_D2RC_VORBIS_CODEBOOK:        
+    case INT_D2RC_UPLOAD_INDEX:
+    case INT_D2RC_VORBIS_CODEBOOK:
         vSendADSPTaskData(u1DspId, u4DspDataBackup);//ADSP Data Queue.
         u4Msg = ADSPTASK_MSG_INTERRUPT_DATA;
         break;
@@ -354,14 +354,14 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
     UINT8 u1DspId_2;
 
     vGetADSPTaskData(&u1DspId_2, &u4DspRIntData); //ADSP Data Queue.
-    
+
     //Read Int Addr. and Data
     bDspRIntAddr = (u4DspRIntData & 0xFF);
     u4DspRIntData = (u4DspRIntData >> 8);
     i4DspData = 0;
-    
+
     //Clear DSP Interrupt in IRQ already.
-    
+
     //Interrupt Service
     switch (bDspRIntAddr)
     {
@@ -378,7 +378,7 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
     case INT_D2RC_VORBIS_CODEBOOK:
         DSP_FlushInvalidateDCache(u1DspId, CACHE_FLUSH_TYPE_DATA, TYPE_COMM_DRAM_IDX);
         _uVorbisIntDec = (UINT8)(dReadDspCommDram(u1DspId, ADDR_D2RC_RISC_VORBIS_INT_DEC)>>8);
-        if((_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == VORBIS_STREAM)||(_rDspVars[u1DspId][AUD_DEC_AUX].bDspStrTyp == VORBIS_STREAM)||(_rDspVars[u1DspId][AUD_DEC_THIRD].bDspStrTyp == VORBIS_STREAM)) 
+        if((_rDspVars[u1DspId][AUD_DEC_MAIN].bDspStrTyp == VORBIS_STREAM)||(_rDspVars[u1DspId][AUD_DEC_AUX].bDspStrTyp == VORBIS_STREAM)||(_rDspVars[u1DspId][AUD_DEC_THIRD].bDspStrTyp == VORBIS_STREAM))
         {
             LOG(0, "********** INT_D2RC_VORBIS_CODEBOOK ***********\n");
             // Construct the Huffman Tree
@@ -428,17 +428,17 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
                 // (+) positive
                 i4DspData = (INT32)u4DspRIntData;
             }
-            {                   
+            {
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_HIGH);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_LOW);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_LOW);
-                
+
                 pts = dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_STC_HIGH) | (dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_STC_LOW) >> 16);
                 stc = (dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH) << 24) | dReadDspCommDram(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_LOW);
 
                 LOG(5, "DSP_TASK] Main audio pts = %08x, stc = %08x, stc_diff\n", pts, stc, i4DspData);
-            }              
+            }
             break;
         case LOG_STC_DIFF_DEC2:
             if(u4DspRIntData & 0x800000)
@@ -452,17 +452,17 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
                 // (+) positive
                 i4DspData = (INT32)u4DspRIntData;
             }
-            {                   
+            {
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_HIGH_DEC2);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_LOW_DEC2);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH_DEC2);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_LOW_DEC2);
-                
+
                 pts = dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_STC_HIGH_DEC2) | (dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_STC_LOW_DEC2) >> 16);
                 stc = (dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH_DEC2) << 24) | dReadDspCommDram(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_LOW_DEC2);
 
                 LOG(5, "DSP_TASK]Aux audio pts = %08x, stc = %08x, stc_diff = %d\n", pts, stc, i4DspData);
-            }                        
+            }
             break;
         case LOG_STC_DIFF_DEC3:
             if( u4DspRIntData&0x800000 )
@@ -476,7 +476,7 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
                 // (+) positive
                 i4DspData = (INT32)u4DspRIntData;
             }
-            {                
+            {
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_HIGH_DEC3);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_STC_LOW_DEC3);
                 DSP_FlushInvalidateDCacheSmall2(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH_DEC3);
@@ -485,17 +485,17 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
                 stc = (dReadDspCommDram32(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_HIGH_DEC3) << 24) | dReadDspCommDram(u1DspId_2, ADDR_D2RC_DRAM_CURRENT_STC_LOW_DEC3);
 
                 LOG(5, "DSP_TASK] 3rd pts = %08x, stc = %08x, stc_diff = %d\n", pts, stc, i4DspData);
-            }            
+            }
             break;
-        case LOG_STC_ADJUST_FRAME: 
+        case LOG_STC_ADJUST_FRAME:
             if (!(u4DspRIntData&0x800000))
-            { 
+            {
                 // (+) audio drop occurs
                 LOG(8, "[DSP_TASK]Main audio drop frame count = %d\n", u4DspRIntData>>8);
             }
             else
             {
-                u4DspRIntData = (~u4DspRIntData + 1) & 0xffffff; 
+                u4DspRIntData = (~u4DspRIntData + 1) & 0xffffff;
                 // (-) audio repeat occurs
                 LOG(8, "[DSP_TASK]Main audio repeat frame count = %d\n", u4DspRIntData>>8);
             }
@@ -503,7 +503,7 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
             break;
         case LOG_STC_ADJUST_FRAME_DEC2:
             if (!(u4DspRIntData&0x800000))
-            { 
+            {
                 // (+) audio drop occurs
                 LOG(8, "[DSP_TASK]Aux audio drop frame count = %d\n", u4DspRIntData>>8);
             }
@@ -517,13 +517,13 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
             break;
         case LOG_STC_ADJUST_FRAME_DEC3:
             if (!(u4DspRIntData&0x800000))
-            { 
+            {
                 // (+) audio drop occurs
                 LOG(8, "[DSP_TASK]3rd audio drop frame count = %d\n", u4DspRIntData>>8);
             }
             else
             {
-                u4DspRIntData = (~u4DspRIntData + 1) & 0xffffff; 
+                u4DspRIntData = (~u4DspRIntData + 1) & 0xffffff;
                 // (-) audio repeat occurs
                 LOG(8, "[DSP_TASK]3rd audio repeat frame count = %d\n", u4DspRIntData>>8);
             }
@@ -531,7 +531,7 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
         case LOG_AOUT_OK_ENABLE:
             u4DspRIntData <<= 8;
     	    u4DspRIntData |= (dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_2)>>8);
-    	    u4DspRIntData2 = dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	    
+    	    u4DspRIntData2 = dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	
             u4DspRIntData2 <<= 8;
     	    u4DspRIntData2 |= (dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_4)>>8);
             LOG(7, "[DSP_TASK]Main audio start output. (PTS, STC)=(0x%08x, 0x%08x)\n", u4DspRIntData2,u4DspRIntData);
@@ -539,12 +539,12 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
             HAL_TIME_T dt;
             HAL_GetTime(&dt);
             LOG(0, "[DSP_TASK] %u.%06u s [AV SYNC] 4 Main audio start output. (PTS, STC)=(0x%08x, 0x%08x)\n", dt.u4Seconds, dt.u4Micros, u4DspRIntData2,u4DspRIntData);
-            #endif 
+            #endif
             break;
         case LOG_AOUT_OK_ENABLE_DEC2:
             u4DspRIntData <<= 8;
     	    u4DspRIntData |= (dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_2)>>8);
-    	    u4DspRIntData2 = dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	    
+    	    u4DspRIntData2 = dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	
             u4DspRIntData2 <<= 8;
     	    u4DspRIntData2 |= (dReadDspCommDram(u1DspId_2, ADDR_D2RC_RISC_LOG_DUMP_DATA_4)>>8);
             LOG(7, "[DSP_TASK]Aux audio start output. (PTS, STC)=(0x%08x, 0x%08x)\n", u4DspRIntData2,u4DspRIntData);
@@ -553,7 +553,7 @@ void vDspIntSvc_Data (UINT8 u1DspId)     //ADSP Data Queue.
             break;
     	}
     	break;
-    default: 
+    default:
         break;
     }
 
@@ -576,49 +576,49 @@ UINT32 u4IntFlowControl(UINT8 u1DspId, UINT32 u4DspRIntData)
         case D2RC_FLOW_CONTROL_AOUT_ENABLE:
             vDspAOutEnable(u1DspId, AUD_DEC_MAIN);
             u4RetMsg = ADSPTASK_MSG_INT_AOUT_ENABLE;
-            LOG(5, "[DSP_IRQ]Dec0 Aout Enable\n");
+            LOG(2, "[DSP_IRQ]Dec0 Aout Enable\n");
         break;
         case D2RC_FLOW_CONTROL_AOUT_ENABLE_DEC2:
             vDspAOutEnable(u1DspId, AUD_DEC_AUX);
             u4RetMsg = ADSPTASK_MSG_INT_AOUT_ENABLE_DEC2;
-            LOG(5, "[DSP_IRQ]Dec1 Aout Enable\n"); 
+            LOG(2, "[DSP_IRQ]Dec1 Aout Enable\n");
         break;
         case D2RC_FLOW_CONTROL_FLUSH_DONE:
             vDspFlushDone(u1DspId, AUD_DEC_MAIN);
             u4RetMsg = ADSPTASK_MSG_INT_STOP;
-            LOG(5, "[DSP_IRQ]Dec0 flush done\n"); 
+            LOG(2, "[DSP_IRQ]Dec0 flush done\n");
         break;
         case D2RC_FLOW_CONTROL_FLUSH_DONE_DEC2:
             vDspFlushDone(u1DspId, AUD_DEC_AUX);
             u4RetMsg = ADSPTASK_MSG_INT_STOP_DEC2;
-            LOG(5, "[DSP_IRQ]Dec1 flush done\n"); 
+            LOG(2, "[DSP_IRQ]Dec1 flush done\n");
         break;
         case D2RC_FLOW_CONTROL_UPDATE_EFFECT:
             u4RetMsg = ADSPTASK_MSG_INT_UPDATE_EFFECT;
-            LOG(5, "[DSP_IRQ]Dec0 flow control update effect\n"); 
+            LOG(2, "[DSP_IRQ]Dec0 flow control update effect\n");
         break;
 #ifdef CC_AUD_EFFECT_MUTE_PROTECT
         case D2RC_FLOW_CONTROL_UPDATE_EFFECT_END:
             u4RetMsg = ADSPTASK_MSG_INT_UPDATE_EFFECT_END;
-            LOG(5, "[DSP_IRQ]Dec1 flow control effect reinit end\n"); 
-        break;      
+            LOG(2, "[DSP_IRQ]Dec1 flow control effect reinit end\n");
+        break;
 #endif
         case D2RC_FLOW_CONTROL_SAMPLING_RATE:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLE_RATE;
-            LOG(5, "[DSP_IRQ]DSP(%d) Dec0 set sampling rate\n", u1DspId); 
+            LOG(2, "[DSP_IRQ]DSP(%d) Dec0 set sampling rate\n", u1DspId);
         break;
         case D2RC_FLOW_CONTROL_SAMPLING_RATE_DEC2:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLE_RATE_DEC2;
-            LOG(5, "[DSP_IRQ]Dec1 set sampling rate\n"); 
+            LOG(2, "[DSP_IRQ]Dec1 set sampling rate\n");
         break;
         case D2RC_FLOW_CONTROL_MODE_CHANGE:
             u4RetMsg = ADSPTASK_MSG_INT_MODE_CHANGE;
-            LOG(5, "[DSP_IRQ]Dec0 mode change\n");             
+            LOG(2, "[DSP_IRQ]Dec0 mode change\n");
         break;
         case D2RC_FLOW_CONTROL_MODE_CHANGE_DEC2:
             u4RetMsg = ADSPTASK_MSG_INT_MODE_CHANGE_DEC2;
-            LOG(5, "[DSP_IRQ]Dec1 mode change\n");             
-        break;        
+            LOG(2, "[DSP_IRQ]Dec1 mode change\n");
+        break;
         case D2RC_FLOW_CONTROL_PAUSE_OK:
         case D2RC_FLOW_CONTROL_PAUSE_OK_DEC2:
         // none handling
@@ -627,49 +627,49 @@ UINT32 u4IntFlowControl(UINT8 u1DspId, UINT32 u4DspRIntData)
         case D2RC_FLOW_CONTROL_AOUT_ENABLE_DEC3:
             vDspAOutEnable(u1DspId, AUD_DEC_THIRD);
             u4RetMsg = ADSPTASK_MSG_INT_AOUT_ENABLE_DEC3;
-            LOG(5, "[DSP_IRQ]Dec2 Aout Enable\n"); 
-            break;   
+            LOG(2, "[DSP_IRQ]Dec2 Aout Enable\n");
+            break;
         case D2RC_FLOW_CONTROL_FLUSH_DONE_DEC3:
             vDspFlushDone(u1DspId, AUD_DEC_THIRD);
             u4RetMsg = ADSPTASK_MSG_INT_STOP_DEC3;
-            LOG(5, "[DSP_IRQ]Dec2 flush done\n"); 
-            break;    
+            LOG(2, "[DSP_IRQ]Dec2 flush done\n");
+            break;
         case D2RC_FLOW_CONTROL_SAMPLING_RATE_DEC3:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLE_RATE_DEC3;
-            LOG(5, "[DSP_IRQ]Dec2 set sampling rate\n");
-            break;    
+            LOG(2, "[DSP_IRQ]Dec2 set sampling rate\n");
+            break;
         case D2RC_FLOW_CONTROL_MODE_CHANGE_DEC3:
             u4RetMsg = ADSPTASK_MSG_INT_MODE_CHANGE_DEC3;
-            LOG(5, "[DSP_IRQ]Dec2 mode change\n");                         
-            break;            
+            LOG(5, "[DSP_IRQ]Dec2 mode change\n");
+            break;
 #endif
         case D2RC_FLOW_CONTROL_SAMPLING_RATE_CHANGE:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLING_RATE_CHANGE;
-            LOG(5, "[DSP_IRQ]Dec0 decoder's sampling rate change\n");                         
+            LOG(2, "[DSP_IRQ]Dec0 decoder's sampling rate change\n");
             break;
         case D2RC_FLOW_CONTROL_SAMPLING_RATE_CHANGE_DEC2:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLING_RATE_CHANGE_DEC2;
-            LOG(5, "[DSP_IRQ]Dec1 decoder's sampling rate change\n");                         
+            LOG(2, "[DSP_IRQ]Dec1 decoder's sampling rate change\n");
             break;
 #ifdef CC_AUD_4_DECODER_SUPPORT
         case D2RC_FLOW_CONTROL_AOUT_ENABLE_DEC4:
             vDspAOutEnable(u1DspId, AUD_DEC_4TH);
             u4RetMsg = ADSPTASK_MSG_INT_AOUT_ENABLE_DEC4;
-            LOG(5, "[DSP_IRQ]Dec3 Aout Enable\n"); 
-            break;   
+            LOG(5, "[DSP_IRQ]Dec3 Aout Enable\n");
+            break;
         case D2RC_FLOW_CONTROL_FLUSH_DONE_DEC4:
             vDspFlushDone(u1DspId, AUD_DEC_4TH);
             u4RetMsg = ADSPTASK_MSG_INT_STOP_DEC4;
-            LOG(5, "[DSP_IRQ]Dec3 flush done\n"); 
-            break;    
+            LOG(5, "[DSP_IRQ]Dec3 flush done\n");
+            break;
         case D2RC_FLOW_CONTROL_SAMPLING_RATE_DEC4:
             u4RetMsg = ADSPTASK_MSG_INT_SAMPLE_RATE_DEC4;
             LOG(5, "[DSP_IRQ]Dec3 set sampling rate\n");
-            break;    
+            break;
         case D2RC_FLOW_CONTROL_MODE_CHANGE_DEC4:
             u4RetMsg = ADSPTASK_MSG_INT_MODE_CHANGE_DEC4;
-            LOG(5, "[DSP_IRQ]Dec3 mode change\n");                         
-            break;            
+            LOG(5, "[DSP_IRQ]Dec3 mode change\n");
+            break;
 #endif
         default:
             break;
@@ -681,19 +681,19 @@ void vDspLogAoutEnablePTS(void)
 {
     UINT32 u4Data1;
     UINT32 u4Data2;
-    
+
     UNUSED(vDspLogAoutEnablePTS);
     UNUSED(u4Data1);
     UNUSED(u4Data2);
-    DSP_FlushInvalidateDCacheSmall2(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA);    
+    DSP_FlushInvalidateDCacheSmall2(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA);
 
     u4Data1 = dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA);
     u4Data1 <<= 8;
     u4Data1 |= (dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA_2)>>8);
-    u4Data2 = dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	    
+    u4Data2 = dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA_3);    	
     u4Data2 <<= 8;
     u4Data2 |= (dReadDspCommDram(AUD_DSP0, ADDR_D2RC_RISC_LOG_DUMP_DATA_4)>>8);
-    
+
     if ((AUD_GetSyncDbgLvl()&AUD_DBG_SYNC_STC_DIFF) == AUD_DBG_SYNC_STC_DIFF)
     {
         LOG(5, "[DSP_IRQ](PTS,STC) = (0x%x,0x%x),ONLY for Sys-Master play dbg ref.\n", u4Data2,u4Data1);
