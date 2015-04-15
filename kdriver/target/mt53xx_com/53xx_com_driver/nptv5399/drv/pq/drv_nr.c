@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/12 $
+ * $Date: 2015/04/15 $
  * $RCSfile: drv_nr.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -125,6 +125,7 @@
 #include "x_os.h"
 #include "x_bim.h"
 #include "x_hal_5381.h"
+#include "source_select.h"
 
 #define NR_THREAD_CREATE
 
@@ -1143,6 +1144,17 @@ void vDrvNRSetQuality(UINT8 u1Interlace, UINT16 u2Width, UINT16 u2Height)
         P_Fld((u1Interlace ? (u4SADHistWinV/2) : u4SADHistWinV), MCNR_SAD_HIST_VS)|
         P_Fld((u1Interlace ? (u4SADHistWinV/2) : u4SADHistWinV), MCNR_SAD_HIST_VE));
 
+	if(SV_ST_TV == bGetSignalType(SV_VP_MAIN))
+	{
+		_SWW(NR_AUTO_03, 0x1a, LPF_LEVEL_MIN);
+		_SWW(NR_AUTO_03, 0x40, LPF_LEVEL_MAX);
+	}
+	else
+	{
+		_SWW(NR_AUTO_03, 0x00, LPF_LEVEL_MIN);
+		_SWW(NR_AUTO_03, 0x00, LPF_LEVEL_MAX);
+	}
+	
     _rNrPrm.u1SADWindowH = u4SADHistWinH;
     _rNrPrm.u1SADWindowV = u4SADHistWinV;
 
