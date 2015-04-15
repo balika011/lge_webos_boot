@@ -108,6 +108,7 @@
 #ifdef CC_EMMC_BOOT
 #include "msdc_if.h"
 #endif
+//#define CC_LOADER_SECURE_T
 
 #include "zip.h"
 #include "x_ckgen.h"
@@ -478,8 +479,7 @@ int verifySignature(unsigned int u4StartAddr, unsigned int u4Size, unsigned char
         {
             printf("signature check fail!\n");
            // writeFullVerifyOTP();
-			while(1);
-            return -1;
+           return -1;
         }
         else
         {
@@ -1224,7 +1224,7 @@ if (BIM_IS_SECURE_BOOT)
 	
 		pPart = get_used_partition("boot");
 		
-		Printf("\nDualBoot Flash load lzhs header from 0x%x to dram(0x%x), size=2048\n", (UINT32)(pPart->offset & 0xffffffff), u4ImageAddr);
+		Printf("\nDualBoot Flash load lzhs header from 0x%x to dram(0x%x),pPart->filesize =0x%x size=2048\n", (UINT32)(pPart->offset & 0xffffffff), u4ImageAddr,pPart->filesize);
 		CHIP_FlashCopyToDRAMLZHS(0, u4ImageAddr, (UINT32)(pPart->offset & 0xffffffff), (2*1024));
 #else
 		Printf("\nFlash load lzhs header from 0x%x to dram(0x%x), size=2048\n", LOADER_MAX_SIZE, u4ImageAddr);
@@ -1455,7 +1455,10 @@ do
         	#if defined(CC_LOADER_SECURE_T)
 			BIM_VerifyImgSig(u4DstAddr);
 			#else
-            verify_apps(BOOT_COLD);//
+			if(pPart->filesize)
+				{
+					verify_apps(BOOT_COLD);//
+				}
             #endif
         }
     #endif  // defined(CC_SECURE_BOOT_V2) && defined(CC_SECURE_BOOT_ALL)
