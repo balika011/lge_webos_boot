@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/15 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -176,6 +176,13 @@
 #include "drv_vbyone.h"
 #include "panel.h"
 
+#ifndef CC_MTK_LOADER
+#include <linux/file.h>
+#include <linux/fs.h>
+#include <linux/fcntl.h>
+#include <linux/slab.h>
+#include <asm/uaccess.h>
+#endif
 
 //luis@2007/7/5, for vIO32WriteFldXXX
 /*lint -save -e666*/
@@ -1263,6 +1270,9 @@ void vGetPostScalerStatus(void)
 #endif
 #endif
 
+	#ifndef CC_MTK_LOADER
+	printf("Get flip mir %d\n",((u2DrvReadTooloptions(5) >> 8) & 1));
+	#endif
     Printf("===== [Setting] ===== \n");
 	Printf("[HSync] Htoal=%d Hactive=%d  Hfp= %d Hbp= %d Hwidth=%d\n", 
 		   wDrvGetOutputHTotal(),
@@ -3235,6 +3245,48 @@ void vSetSuperFlipMirrorConfig(UINT8 u1SuperCfgOnOff, UINT8 u1SuperFlip, UINT8 u
 }
 #endif
 
+#ifndef CC_MTK_LOADER
+UINT16 u2DrvReadTooloptions(UINT8 id)  /* from 1 to 7 */
+{
+	struct file *filp;
+	UINT16 tool_options[7];
+
+	if (id > 7)
+		return 0;
+
+	filp = filp_open("/proc/cmdline", O_RDONLY, S_IRUSR|S_IWUSR);
+	if (!IS_ERR(filp))
+	{
+		char *buf;
+		int i, read_size;
+		mm_segment_t fs;
+
+		buf = (char *)kmalloc(PAGE_SIZE, GFP_KERNEL);
+
+		fs = get_fs();
+		set_fs(get_ds());
+		read_size = filp->f_op->read(filp, buf, PAGE_SIZE, &filp->f_pos);
+		buf[read_size] = '\0';
+		set_fs(fs);
+
+		filp_close(filp, NULL);
+
+		for (i = 0; i < strlen(buf); ++i)
+		{
+			if (strncmp("ToolOpt", &buf[i], 7) == 0)
+			{
+				sscanf(&buf[i], "ToolOpt=%d:%d:%d:%d:%d:%d:%d",
+						&tool_options[0], &tool_options[1], &tool_options[2],
+						&tool_options[3], &tool_options[4], &tool_options[5], &tool_options[6]);
+				break;
+			}
+		}
+		kfree(buf);
+	}
+	return tool_options[id-1];
+}
+#endif
+
 //enbale the flip mir function ,control by LG hal in A5LR
 #if 1 
 #ifdef CC_FLIP_MIRROR_SUPPORT
@@ -3253,15 +3305,23 @@ UINT8 u1GetFlipMirrorConfig(void)
 {
     UINT8 u1FlipMirrorEnable= 0 ;
 
-    if (_fgIsMirrorOn)
+    if (_fgIsMirrorOn 
+		#ifndef CC_MTK_LOADER
+		|| ((u2DrvReadTooloptions(5) >> 8) & 1)
+		#endif
+		)
     {
         u1FlipMirrorEnable |= SYS_MIRROR_CONFIG_ON ;
     }
-    if(_fgIsFlipOn)
+    if(_fgIsFlipOn 
+		#ifndef CC_MTK_LOADER
+		|| ((u2DrvReadTooloptions(5) >> 8) & 1)
+		#endif
+		)
     {
         u1FlipMirrorEnable |= SYS_FLIP_CONFIG_ON ;
     }
-    
+
     return u1FlipMirrorEnable;
 }
 #endif

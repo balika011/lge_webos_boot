@@ -97,7 +97,7 @@
  *
  * $Modtime: 04/03/23 7:08p $
  *
- * $Revision: #2 $
+ * $Revision: #3 $
 *************************************************************************/
 
 #ifndef _DRV_DISPLAY_H_
@@ -256,6 +256,8 @@ extern UINT8   bSI_DISPLAY_DCLK_TYPE;
 extern UINT8 u1SetFlipMirrorConfig(BOOL fgMirrorEn, BOOL fgFlipEn);
 extern UINT8 u1GetFlipMirrorConfig(void);
 extern UINT32 u4GetFlipMirrorModule(UINT32 u4VdpId);
+extern UINT16 u2DrvReadTooloptions(UINT8 id);
+
 
 //set post mute enbale in ISR
 #define POST_MUTE_ALIGN_VSYNC
