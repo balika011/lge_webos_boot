@@ -296,6 +296,7 @@ extern UINT8   _bDviDeChgCnt;
 extern UINT8   _bDviPixClkChgCnt;
 
 extern UINT8 _bDviModeChged;
+extern UINT8 PreDviTiming;
 extern void vCloseIec(void);
 extern void vOpenIec(void);
 
@@ -6458,13 +6459,13 @@ void vHDMIMainLoop(void)
                 vHDMIHPDLow(eHdmiPort);
                 vHDMITMDSCTRL(eHdmiPort,FALSE);
                 vHDMIDDCBusCTRL(FALSE);
-#endif
-
+#endif				
                 vHDMISwRst();
                 vHDMIHDCPRst();
 #if MUTE_TEMP
                 vHDMIVideoOutOff();
 #endif
+				PreDviTiming = 0;
                 _arHdmiRx[eHdmiPort]._bHdmiSyncActive = 0;
                 _arHdmiRx[eHdmiPort]._bHDMIFastSW = 0;
                 _arHdmiRx[eHdmiPort]._bResStableCnt = 0;

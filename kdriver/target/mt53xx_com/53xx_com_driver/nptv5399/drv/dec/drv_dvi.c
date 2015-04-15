@@ -274,7 +274,7 @@ UINT32 _bQueryMode;
 UINT32 _bCurQueryMode;
 static UINT8 _bHandleAudio = 1;
 HAL_TIME_T rNoAviTime;
-static UINT8 PreDviTiming = 0;
+UINT8 PreDviTiming = 0;
 ////////////////////////////////////////////////////////////////////////////////
 extern UINT8 _bHDMIScanInfo;
 extern UINT8 _bHDMIAspectRatio;
@@ -4111,13 +4111,13 @@ void vDviChkModeChange(void)
 
                     // check if timing
                 LOG(1,"the input height is %d and refresh rate is %d and interlace is %d and DVI timing is %d\n",wHDMIResoHeight(),bHDMIRefreshRate(),fgHDMIinterlaced(),PreDviTiming);
-                if(((wHDMIResoHeight() == 1080)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080p_60))\
-					||((wHDMIResoHeight() == 480)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_480P))\
-					||((wHDMIResoHeight() == 720)&&(bHDMIRefreshRate() == 24)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_720p_60))\
-					||((wHDMIResoHeight() == 540)&&(bHDMIRefreshRate() <= 50)&&(fgHDMIinterlaced())&&(PreDviTiming == MODE_1080i)))
+                if(((wHDMIResoHeight() == 1080)&&((bHDMIRefreshRate() == 24)||(bHDMIRefreshRate() == 60))&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_1080p_60))\
+					||((wHDMIResoHeight() == 480)&&(bHDMIRefreshRate() == 60)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_480P))\
+					||((wHDMIResoHeight() == 720)&&(bHDMIRefreshRate() == 60)&&(!fgHDMIinterlaced())&&(PreDviTiming == MODE_720p_60))\
+					||((wHDMIResoHeight() == 540)&&(bHDMIRefreshRate() == 60)&&(fgHDMIinterlaced())&&(PreDviTiming == MODE_1080i)))
                 {                    
-					if((_bVStableCnt > 60 && _bHStableCnt > 60 ) || \
-										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 60))
+					if((_bVStableCnt > 50 && _bHStableCnt > 50 ) || \
+										(u1IsHdmiFastSw(eActiveHdmiPort) && _bVStableCnt > 50))
 					{
 					    LOG(1,"from p/i 60 change to p/i 24 stable\n");
 						if(_bWidthStableCnt>=10)
