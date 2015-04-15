@@ -93,11 +93,11 @@
  *
  * Last changed:
  * -------------
- * $Author: dtvbm11 $
+ * $Author: p4admin $
  *
  * $Modtime: 04/03/23 7:08p $
  *
- * $Revision: #1 $
+ * $Revision: #2 $
 *************************************************************************/
 
 #ifndef _DRV_DISPLAY_H_
@@ -193,6 +193,8 @@ extern void vDrvVByOneSignalOnOff(BOOL fgOnOff);
 extern void vDrvSetErrorLimit(UINT32 u4Error);
 
 extern void vDrvSetAllMute(UINT8 bOnOff);
+extern void vDrvSetAllMuteInISR(UINT8 bOnOff);
+
 
 extern void vDrvVideoSetMuteColor(UINT8 bPath, UINT32 u4Bg);
 
@@ -254,6 +256,9 @@ extern UINT8   bSI_DISPLAY_DCLK_TYPE;
 extern UINT8 u1SetFlipMirrorConfig(BOOL fgMirrorEn, BOOL fgFlipEn);
 extern UINT8 u1GetFlipMirrorConfig(void);
 extern UINT32 u4GetFlipMirrorModule(UINT32 u4VdpId);
+
+//set post mute enbale in ISR
+#define POST_MUTE_ALIGN_VSYNC
 
 //Flag for system flip/mirror config
 #define SYS_FLIP_CONFIG_ON (1U << 0)

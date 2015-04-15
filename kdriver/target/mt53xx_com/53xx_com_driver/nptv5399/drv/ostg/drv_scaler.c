@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/27 $
+ * $Date: 2015/04/15 $
  * $RCSfile: drv_scaler.c,v $
- * $Revision: #8 $
+ * $Revision: #9 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3333,6 +3333,11 @@ void (*_pfVdoVSSCb)(void) = NULL;
 EXTERN UINT8 VssWriteFreeze ;
 EXTERN UINT8 VssWriteUnFreeze[GFX_SRC_SEL_MAX];
 
+#ifdef POST_MUTE_ALIGN_VSYNC
+extern BOOL _bPoseMuteOnOff ;
+extern BOOL _bPoseMuteInVsycn ;
+#endif
+
 static void _vDrvScpipISR(UINT16 u2Vector)
 {
     static UINT32 CRC_Min, CRC_Mout;
@@ -3428,6 +3433,15 @@ static void _vDrvScpipISR(UINT16 u2Vector)
         #ifndef CC_UP8032_ATV
         PMX_OnOutputVSync();
         #endif
+		
+		#ifdef POST_MUTE_ALIGN_VSYNC
+		if(_bPoseMuteInVsycn == TRUE)
+		{
+			_bPoseMuteInVsycn = FALSE;
+			vRegWriteFldAlign(MUTE_00, _bPoseMuteOnOff,  R_MUTE_POST_EN);
+		}
+		#endif
+		
         wptr = u4ScpipGetDramWStatus(SV_VP_MAIN);
         if (rptr != u4ScpipGetDramRStatus(SV_VP_MAIN))
         {

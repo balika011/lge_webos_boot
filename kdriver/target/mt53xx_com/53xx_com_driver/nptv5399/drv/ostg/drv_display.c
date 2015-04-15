@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/15 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #10 $
+ * $Revision: #11 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -3403,6 +3403,30 @@ void vDrvSetAllMute(UINT8 bOnOff)
 {
     vRegWriteFldAlign(MUTE_00, bOnOff,  R_MUTE_POST_EN);
 }
+
+#ifndef CC_MTK_LOADER
+#ifdef POST_MUTE_ALIGN_VSYNC
+extern BOOL _bPoseMuteOnOff;
+extern BOOL _bPoseMuteInVsycn ;
+#endif
+
+void vDrvSetAllMuteInISR(UINT8 bOnOff)
+{
+	#ifdef POST_MUTE_ALIGN_VSYNC		
+		if(fgIsVsyncIsrStart == 1)
+		{
+			_bPoseMuteOnOff = bOnOff;
+			_bPoseMuteInVsycn = TRUE;
+		}
+		else
+		{
+			vRegWriteFldAlign(MUTE_00, bOnOff,	R_MUTE_POST_EN);
+		}
+	#else
+		vRegWriteFldAlign(MUTE_00, bOnOff,  R_MUTE_POST_EN);
+	#endif
+}
+#endif
 
 UINT32 u4DrvCalPanelRatio(void)
 {

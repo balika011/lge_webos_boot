@@ -185,6 +185,11 @@ extern SRM_TV_MODE_T _eApplicationMode;
 extern BOOL bForceMJCMute;
 #endif
 
+#ifdef POST_MUTE_ALIGN_VSYNC
+BOOL _bPoseMuteOnOff = FALSE;
+BOOL _bPoseMuteInVsycn = FALSE;
+#endif
+
 //---------------------------------------------------------------------------
 // Imported functions
 //---------------------------------------------------------------------------
