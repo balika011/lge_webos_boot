@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/15 $
  * $RCSfile: fbm_pool.c,v $
- * $Revision: #4 $
+ * $Revision: #5 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1784,7 +1784,7 @@ else
 {
     SRMFBM_SetConf(FBM_MEM_CFG_MT5882_3DTV);
 }
-	u4FbmStartAddr = BSP_GetMemSize()- SRMFBM_GetConf();
+	u4FbmStartAddr = DRVCUST_OptGet(eFbmMemAddr);
 #if defined(CC_FBM_2ND_CHANNEL)
 #if defined(CC_TRUSTZONE_IN_CHB)
     u4FbmStartAddr2 = DRAM_CHB_START_ADDR + BSP_GetChBMemSize() - SRMFBM_CHB_GetConf() - DRVCUST_OptGet(eTrustzoneMemSize);
