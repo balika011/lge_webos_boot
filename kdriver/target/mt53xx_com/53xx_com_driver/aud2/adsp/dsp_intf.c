@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/15 $
+ * $Date: 2015/04/16 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -9098,10 +9098,31 @@ void DSP_SetASRCNumeratorQuarter(BOOL fgEnable)
     if (fgEnable)
     {
         vWriteDspShmWORD (AUD_DSP0, W_SYSTEM_CTRL2, u2ReadDspShmWORD(AUD_DSP0, W_SYSTEM_CTRL2) | 0x100);
+#ifdef CC_AUD_ARM_RENDER
+		if (IS_IC_5890_ES1())
+		{
+			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_AENV_0, APROC_REG_AENV_SRC_HALF_PLL_MODE), 2);
+		}	 
+		else
+		{
+			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_AENV_0, APROC_REG_AENV_SRC_HALF_PLL_MODE), 3);    
+		}
+#endif
     }
     else
     {
         vWriteDspShmWORD (AUD_DSP0, W_SYSTEM_CTRL2, u2ReadDspShmWORD(AUD_DSP0, W_SYSTEM_CTRL2) & (~0x100));
+#ifdef CC_AUD_ARM_RENDER
+		if (IS_IC_5890_ES1())
+		{
+			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_AENV_0, APROC_REG_AENV_SRC_HALF_PLL_MODE), 0);
+		}	 
+		else
+		{
+			vAprocReg_Write(APROC_ASM_ADDR (APROC_ASM_ID_AENV_0, APROC_REG_AENV_SRC_HALF_PLL_MODE), 1);    
+		}
+
+#endif
     }
 }
 
