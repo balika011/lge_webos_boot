@@ -74,10 +74,10 @@
  *---------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------
  *
- * $Author: dtvbm11 $
- * $Date: 2015/01/09 $
+ * $Author: p4admin $
+ * $Date: 2015/04/16 $
  * $RCSfile: aud_drvif.h,v $
- * $Revision: #1 $
+ * $Revision: #2 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -124,6 +124,7 @@ extern BOOL AUD_IsFifoEmpty(UINT8 u1DspId, UINT8 u1DecId);
 extern BOOL AUD_GetAinCfg(AUD_DEC_STREAM_FROM_T eStreamFrom, AIN_CFG_T* prAinCfg);
 extern void AUD_HdmiModeMute(UINT8 u1DecId, BOOL fgMute);
 extern void AUD_HdmiDrvModeMute(UINT8 u1DecId, BOOL fgMute);
+extern void AUD_GST_SetDecInputMute(UINT8 u1DecId, BOOL fgMute);
 extern void AUD_AoutDacFs(UINT8 u1DecId, SAMPLE_FREQ_T eFs);
 extern void AUD_AinCfg(UINT8 u1DecId, AUD_DEC_STREAM_FROM_T eStrSrc, const AIN_CFG_T* prAinCfg);
 extern void AUD_AtunerSigStableNotify(BOOL fgSatble);
