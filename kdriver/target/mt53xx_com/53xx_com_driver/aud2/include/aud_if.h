@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/14 $
+ * $Date: 2015/04/16 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -6609,6 +6609,7 @@ extern void AUD_SetGstEncFlag(BOOL u1EncFlag);
 extern UINT8 AUD_GetGstEncFlag(void);
 #endif
 extern INT32 _AudDumpAudioData (const INT8 *fileName, const INT8 *buf, size_t count);
+extern void AUD_GST_SetDecInputMute(UINT8 u1DecId, BOOL fgMute);
 //-----------------------------------------------------------------------------
 // AUD_DSPCmdPlay
 //
