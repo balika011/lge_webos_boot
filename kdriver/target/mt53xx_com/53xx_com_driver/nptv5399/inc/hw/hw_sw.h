@@ -2166,6 +2166,11 @@ extern UINT32 SW_DRAM_BASE_PHY;
 #define PSCAN_FW_ADAPTIVE_FILM_0C       u4SWReg(0x30B0)
     #define SMALL_MO_THLD                   Fld(32, 0, AC_FULLDW)
 
+#define PSCAN_FW_ADAPTIVE_FILM_0D       u4SWReg(0x30B4)
+	#define EG_MO_MIN_TH 					Fld(8, 0, AC_MSKB0)
+	#define MULTICAD_HD_EG_PATCH_EN			Fld(1, 8, AC_MSKB1)
+
+
    
 #define PSCAN_FW_ADAPTIVE_DAR_00       u4SWReg(0x30C0)
     #define DAR_V_MAX_MIN                   Fld(8, 0, AC_FULLB0)

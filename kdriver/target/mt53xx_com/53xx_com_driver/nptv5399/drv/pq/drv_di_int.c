@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/16 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #22 $
+ * $Revision: #23 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +161,7 @@ UINT8 u1smooth_still;
 static HANDLE_T _hDIAdaptivePDIsrSema;
 
 static UINT8 _u1DIState =0;
+static UINT8  u1CheckValid = SV_TRUE; //For LG 2224 error detect check
 // Chroma Jaggy & DTV Tearing Setting
 #define SCPQ_TH_TOTAL 5
 const UINT8 u1CJaggyTh[SCPQ_TH_TOTAL] = {4, 7, 10, 13, 16};
@@ -738,6 +739,8 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, 0x16, EG_MO_FILTER_L);
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x10, EG_MO_MIN_TH);	//for multicadence 2224 
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x1, MULTICAD_HD_EG_PATCH_EN); //for multicadence 2224 
 			if(IS_PANEL_2D_N_3D_L12R12 && PANEL_GetPanelWidth()<1200)
 			{
 				vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, 0x28, EG_MO_FILTER_H); 
@@ -770,6 +773,8 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MIN);    
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x10, FR_MO_FILTER_L);
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x30, FR_MO_FILTER_H);
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x0, EG_MO_MIN_TH);	
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x0, MULTICAD_HD_EG_PATCH_EN);	
 
             if (IS_PANEL_L12R12)
             {
@@ -795,6 +800,8 @@ static void _vDrvDISetPDQuality(UINT8 bPath)
             vIO32WriteFldAlign(PSCAN_FWFILM_02, 0x20, FRM_MIN);     
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x08, FR_MO_FILTER_L);
             vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_08, 0x28, FR_MO_FILTER_H);
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x0, EG_MO_MIN_TH);
+			vIO32WriteFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, 0x0, MULTICAD_HD_EG_PATCH_EN);	
 
             if (IS_PANEL_L12R12)
             {
@@ -1093,6 +1100,10 @@ static void _vDrvDIMutliCadence(void)
             if (wTest == FW_FILM_FR_SEQ_2224)
             {
                 DiPar.PdPar.u2FilmMode = E_DI_FILM_2224;
+				if(!u1CheckValid)
+				{
+					DiPar.PdPar.u2FilmMode = E_DI_FILM_NONE;
+				}
                 break;
             }
 
@@ -2530,6 +2541,12 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     UINT32 u4FrMoFilterTh, u4EgMoFilterTh;
     static UINT32 u4FrMo[4], u4EgMo[4];
     static UINT32 u4Index = 0;
+
+	UINT32 i;
+	static UINT32 u4Index2 = 0;
+	static UINT32 u4EgMoMin[32];
+	static UINT32 u4MinMoCnt = 0;
+	UINT32 u4EgMoZeroCnt = 0; //count for EG motion less than EG_MO_MIN_TH
     
     //Subtitle Detection
     static UINT32 u4EgMin[2];
@@ -2553,6 +2570,7 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     UINT32 u4EgMoFilterThLow= IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_FILTER_L);
     UINT32 u4EgMoFilterThHigh= IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_FILTER_H);
     UINT32 u4EgMoFilterBit = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_09, EG_MO_LARGE_BIT);
+	UINT32 u4EgMoMinTh = IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D, EG_MO_MIN_TH);
     UINT32 u4ASL = u1DrvGetASL();
     UINT32 u4APL = bDrvGetAPL();
     UINT32 u4OnOff = SV_ON;
@@ -2560,7 +2578,37 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     //Adaptive Film Mode Parameter        
     u4FrMo[u4Index] = DiSta.PdSta.u4FrmMotion;
     u4EgMo[u4Index] = DiSta.PdSta.u4EdgMotion;
-    
+
+	//multicadenc detection check for wrongly detect as 2224 in HDMI HD 
+	if(IO32ReadFldAlign(PSCAN_FW_ADAPTIVE_FILM_0D,MULTICAD_HD_EG_PATCH_EN))
+	{
+		//Edge Motion min count
+		u4EgMoMin[u4Index2] = DiSta.PdSta.u4EdgMotion;
+		for(i = 0; i < 32; i++)
+		{
+			if(u4EgMoMin[i] < u4EgMoMinTh)
+			{
+				u4EgMoZeroCnt = MIN(u4EgMoZeroCnt+1, 32);
+			}
+		}
+		
+		u4MinMoCnt = (u4EgMoZeroCnt > 11)?(MIN(u4MinMoCnt+1, 32)):0;	
+		
+		if(u4EgMoZeroCnt > 11)
+		{
+			u4MinMoCnt = MIN(u4MinMoCnt+1, 32);
+		}
+		else
+		{		
+			u4MinMoCnt= 0;
+			u1CheckValid = SV_TRUE;	
+		}
+		
+		if(u4MinMoCnt > 10)
+		{
+			u1CheckValid = SV_FALSE;
+		}
+	}
     u4MaxFrMo = MAX(u4FrMo[(u4Index)&3], MAX(u4FrMo[(u4Index-1)&3], u4FrMo[(u4Index-2)&3]));
     u4MaxEgMo = MAX(u4EgMo[(u4Index)&3], MAX(u4EgMo[(u4Index-1)&3], u4EgMo[(u4Index-2)&3]));    
 
@@ -2659,6 +2707,7 @@ static void _vDrvPDAdaptive(UINT8 bPath)
     }
     MDDI_WRITE_FLD(VDP_1, MCVP_FILM_27, u4OnOff, R_22ENABLE);  
     u4Index= (u4Index+1)&3;        
+	u4Index2 = (u4Index2+1)&0x1F;
 }
 
 void vDrvDIAdaptivePDSemaUnlock(void)
