@@ -97,7 +97,7 @@
 *
 * $Modtime: 04/06/01 6:05p $
 *
-* $Revision: #39 $
+* $Revision: #40 $
 ****************************************************************************/
 /**
 * @file drv_tvd.c
@@ -7159,12 +7159,12 @@ void vTvd3dVSyncISR(void)
 #endif
     {
 		fgPreVPres_0 = _sbDrvTvdVpresStateMachine(&_sbVpresState);
-		LOG(1, "[TVD_DBG_MSG] Only Scart use state machine.\n");
+		LOG(3, "[TVD_DBG_MSG] Only Scart use state machine.\n");
     }
     else
     {
         fgPreVPres_0 = fgHwTvdVPres();
-		LOG(1, "[TVD_DBG_MSG] ATV and AV do not use the state machine.\n");
+		LOG(3, "[TVD_DBG_MSG] ATV and AV do not use the state machine.\n");
     }
 
 #else
@@ -7991,6 +7991,34 @@ if((_rTvd3dStatus.eSourceType==SV_ST_TV )&& (_rTvEnabledCS.u1TvdEnNTSC358) && (_
 }
 
 #endif
+
+// Brazil hsync unstable issue
+
+#if 1
+	if ((_svDrvTvdCheckSignalStatus((UINT8)SV_VDO_STABLE))&&(_svDrvTvdGetNRLevel()> 45)
+				&& (_rTvd3dStatus.eSourceType == SV_ST_TV) && (_rTvd3dStatus.bTvdMode == SV_CS_PAL_M)
+				&& !fgHwTvdTrick()&& !fgHwTvdVCRBV()
+				&&(IO32ReadFldAlign(TG_STA_00, SERR_WIDTH)>0x95)&&(IO32ReadFldAlign(TG_STA_00, SERR_WIDTH)<0xB0)
+				&& fgHwTvdVLock()&&fgHwTvdBLock()
+				&& !fgHwTvdFHPos() && !fgHwTvdFHNeg()
+				&& IO32ReadFldAlign(TG_STA_05, LINE_STDFH_FLAG)&&IO32ReadFldAlign(TG_STA_05, FRAME_STDFH_FLAG)
+				&& !fgHwTvdCoChannel()
+				&&  IO32ReadFldAlign(STA_CTG_02, CNR_LOW_FLAG)
+				&&(_na_state==NA_LOWNOISE)
+		        &&(IO32ReadFldAlign(STA_CDET_01, CAGC_STA)>0x120)
+				)
+	
+	{
+		vIO32WriteFldAlign(TG_0B, SV_OFF, AUTO_MLLOCK);
+		vIO32WriteFldAlign(TG_04, SV_OFF, LF_AUTO);
+		vIO32WriteFldAlign(TG_09, SV_ON, IIR_LLOCK_EN);
+        vIO32WriteFldAlign(TG_0C, TG_HSLICE_DEFAULT, HSLICE_ADJ);
+		LOG(1,"[TVD_DBG_MSG]Brazil HSYNC unstable issue.\n");
+		
+	}
+				
+#endif
+
 
 }
 
