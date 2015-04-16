@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/16 $
  * $RCSfile: aud_if.h,v $
- * $Revision: #24 $
+ * $Revision: #25 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11594,6 +11594,7 @@ extern UINT16 AUD_GetSyncDbgLvl(void);
 extern DATA_ENDIAN_T AUD_GetDTSInfo (UINT8 u1DecId);
 extern void AUD_SetDTSInfo (UINT8 u1DecId, DATA_ENDIAN_T endian);
 extern void AUD_SetDTSFrameSize(UINT8 u1DecId, UINT32 u4Size);
+extern void AUD_SetDTSPcVal(UINT8 u1DecId, UINT32 u4Pc);
 extern UINT32 AUD_GetDTSFrameSize (UINT8 u1DecId);
 
 #ifdef  CC_AUD_HDMI_PARSER_2_0_SUPPORT

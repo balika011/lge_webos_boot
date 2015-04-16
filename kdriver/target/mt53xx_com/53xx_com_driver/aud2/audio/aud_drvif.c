@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/16 $
  * $RCSfile: aud_drvif.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -747,4 +747,24 @@ UINT32 AUD_GetDTSFrameSize (UINT8 u1DecId)
     return _gu4DTSFrameSize[u1DecId];
 }
 
+void AUD_SetDTSPcVal(UINT8 u1DecId, UINT32 u4Pc)
+{
+    if (AUD_GetSpdifRawDec() == u1DecId)
+    {
+        switch (u4Pc)
+        {
+        case 0xc:
+			_gu4DTSFrameSize[u1DecId] = 1024;
+        	break;
+        case 0xd:
+			_gu4DTSFrameSize[u1DecId] = 2048;
+        	break;
+        case 0xb: 
+			_gu4DTSFrameSize[u1DecId] = 512;
+        	break;
+		default:
+			break;
+        }
+    }
+}
 

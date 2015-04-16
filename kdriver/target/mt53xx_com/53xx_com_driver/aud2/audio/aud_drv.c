@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/15 $
+ * $Date: 2015/04/16 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #37 $
+ * $Revision: #38 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11074,7 +11074,19 @@ BOOL AUD_DrvCheckIECSyncWord(UINT8 u1DecId, AUD_HDMI_PARSER_INFO_T * prParserInf
 	}
     if((prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_14)||(prParserInfo->u4PaPb == IEC_SYNCWORD_DTS_16))
     {
-        prParserInfo->eSpdifInfo.u2format = 0xB; //find DTS header set pc as dts
+        switch (u4SamplePerFrame)
+    	{
+    		case 1024:
+				prParserInfo->eSpdifInfo.u2format = 0xC; //find DTS header set pc as dts
+				break;
+			case 2048:
+				prParserInfo->eSpdifInfo.u2format = 0xD; //find DTS header set pc as dts
+				break;
+			case 512:
+			default:
+				prParserInfo->eSpdifInfo.u2format = 0xB; //find DTS header set pc as dts
+				break;
+    	}
         prParserInfo->_fgDTSCD = TRUE;   //DTS CD parser flag
         prParserInfo->_fgDTSSW = TRUE;  //DTS CD detect flg
         LOG(9,"Detect as DTS CD.\n");
@@ -11104,9 +11116,12 @@ BOOL AUD_DrvCheckIECSyncWord(UINT8 u1DecId, AUD_HDMI_PARSER_INFO_T * prParserInf
         }
         if (prParserInfo->eSpdifInfo.u2format != u2SyncWord)
         {
-            LOG(7, "Hdmi parser Pc change from %d to %d.\n", prParserInfo->eSpdifInfo.u2format, u2SyncWord);
+            LOG(0, "Hdmi parser Pc change from %d to %d.\n", prParserInfo->eSpdifInfo.u2format, u2SyncWord);
+			prParserInfo->eSpdifInfo.u2format = u2SyncWord;
+			// reset the _gu4DTSFrameSize[], when DTSCD switch to normal DTS.
+			// Because there is no format change when DTSCD switch to normal DTS, _AudDspSetIec() may use the wrong frame size value.
+			AUD_SetDTSPcVal(u1DecId, u2SyncWord);
         }
-        prParserInfo->eSpdifInfo.u2format = u2SyncWord;
         //LOG(8,"prParserInfo->eSpdifInfo.u2format = 0x%x.\n",prParserInfo->eSpdifInfo.u2format);
         if(i<AUD_RAW_NUM)
         {
