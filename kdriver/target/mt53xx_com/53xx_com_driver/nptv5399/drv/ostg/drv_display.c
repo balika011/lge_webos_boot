@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/15 $
+ * $Date: 2015/04/16 $
  * $RCSfile: drv_display.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -278,6 +278,11 @@ UINT8 fgBLCustomCtrl=0;  // 1: Backlight can be controled by the customer.
 
 BOOL fgBrowserModeEn = SV_FALSE;
 BOOL fgSpeIPTVSEn = SV_FALSE;
+
+#ifdef CC_FLIP_MIRROR_SUPPORT
+static BOOL _fgIsFlipMirToolOpion = FALSE; 
+#endif
+
 typedef struct{
     UINT16 u2FrameRate;	
     UINT16 u2Width;
@@ -1271,7 +1276,7 @@ void vGetPostScalerStatus(void)
 #endif
 
 	#ifndef CC_MTK_LOADER
-	printf("Get flip mir %d\n",((u2DrvReadTooloptions(5) >> 8) & 1));
+	//printf("Get flip mir %d\n",((u2DrvReadTooloptions(5) >> 8) & 1));
 	#endif
     Printf("===== [Setting] ===== \n");
 	Printf("[HSync] Htoal=%d Hactive=%d  Hfp= %d Hbp= %d Hwidth=%d\n", 
@@ -2246,7 +2251,12 @@ void vDrvDisplayInit(void)
     vPscPreInit();
 #endif
 
-    
+	#ifndef CC_MTK_LOADER
+	#ifdef CC_FLIP_MIRROR_SUPPORT
+    _fgIsFlipMirToolOpion = (u2DrvReadTooloptions(5) >> 8) & 1;
+    #endif
+	#endif
+	
 // vpll init
     #ifndef CC_MTK_LOADER
     #ifdef NEW_COUNTRY_TYPE
@@ -3305,19 +3315,11 @@ UINT8 u1GetFlipMirrorConfig(void)
 {
     UINT8 u1FlipMirrorEnable= 0 ;
 
-    if (_fgIsMirrorOn 
-		#ifndef CC_MTK_LOADER
-		|| ((u2DrvReadTooloptions(5) >> 8) & 1)
-		#endif
-		)
+    if(_fgIsMirrorOn || _fgIsFlipMirToolOpion)
     {
         u1FlipMirrorEnable |= SYS_MIRROR_CONFIG_ON ;
     }
-    if(_fgIsFlipOn 
-		#ifndef CC_MTK_LOADER
-		|| ((u2DrvReadTooloptions(5) >> 8) & 1)
-		#endif
-		)
+    if(_fgIsFlipOn || _fgIsFlipMirToolOpion)
     {
         u1FlipMirrorEnable |= SYS_FLIP_CONFIG_ON ;
     }
