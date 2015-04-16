@@ -259,6 +259,7 @@ static BOOL _fgAudMute = FALSE;
 #ifdef CC_HDMI_CONFIG_BOARD
 static E_HDMI_BOARD_TYPE eBoardType = ATSC_INT_EDID;
 #endif
+static UINT8 _bUnstableCnt = 0;
 #define IS_AUD_MUTE()   _fgAudMute
 
 #define hdmi_audio 0
@@ -6581,6 +6582,7 @@ void vHDMIMainLoop(void)
                 {
 
                     _arHdmiRx[eHdmiPort]._bTxSTBY = 0;
+					_bUnstableCnt = 0;
 
                     HAL_GetTime(&rCurTime);
 
@@ -6662,7 +6664,8 @@ void vHDMIMainLoop(void)
                 vHdmiStableMonitor(eHdmiPort);
 
                  vHdmiAvMuteMonitor(eHdmiPort);
-
+                 vHdmiFIFOCauseNoSignalMonitor();
+				 
                 if(_bDviModeChged)
                 {
                     vHDMIMuteAudio();
@@ -6707,6 +6710,13 @@ void vHDMIMainLoop(void)
                 {
                     _arHdmiRx[eHdmiPort]._bSCDTdelay = 0;
                 }
+				if(_bUnstableCnt > 10)//reset 2nd fifo when signal is unstable
+				{   
+				    LOG(1, "signal error, reset 2nd FIFO\n");
+					vIO32WriteFldAlign(TMDS_CTRL0 + u4ActiveHdmiRegBase, 1, C_DATA_SYNC_AUTO);
+					vIO32WriteFldAlign(TMDS_CTRL0 + u4ActiveHdmiRegBase, 0, C_DATA_SYNC_AUTO);
+					_bUnstableCnt = 0;
+				}
 
                 // Check HDMI Mode
                 _bHdmiMode = u1IO32Read1B(AUDP_STAT_0 + u4ActiveHdmiRegBase) & 0x1;
@@ -10591,3 +10601,17 @@ E_HDMI_BOARD_TYPE eHDMIBoardType(void)
     return eBoardType;
 }
 #endif
+void vHdmiFIFOCauseNoSignalMonitor(void)
+{
+    if(((wHDMIHTotal() == 0)&&(wHDMIVTotal() == 0)&&(bHDMIRefreshRate() == 1)&&(!(u1IO32Read1B(AUDP_STAT_0 + u4ActiveHdmiRegBase)& 0x01))&&(_arHdmiRx[eActiveHdmiPort]._bHDMIState == HDMI_STATE_AUTH))||((wHDMIResoHeight() == 0)&&(_arHdmiRx[eActiveHdmiPort]._bHDMIState == HDMI_STATE_AUTH)))
+    {
+	   _bUnstableCnt++;
+    }
+    else
+    {
+       _bUnstableCnt =0;
+	}
+	
+
+}
+

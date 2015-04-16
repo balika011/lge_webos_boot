@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date  $
  * $RCSfile: drv_hdmi.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 #ifndef _DRV_HDMI_H_
@@ -713,4 +713,5 @@ BOOL fgHDMIIsPixelRepeate(void);
 E_HDMI_BOARD_TYPE eHDMIGetBoardType(VOID);
 E_HDMI_BOARD_TYPE eHDMIBoardType(VOID);
 #endif
+void vHdmiFIFOCauseNoSignalMonitor(void);
 
