@@ -134,6 +134,8 @@
 #ifdef CC_L_DUAL_BOOT
 		struct partition_info *pPart = 0;
 #endif
+unsigned int image_size = 0;
+
 typedef unsigned long long u64;
 UINT32 u4ImageAddr;
 UINT32  u4DstAddr;
@@ -499,7 +501,7 @@ unsigned char au1Frag[8];
 
 int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 {
-    unsigned int offset = 0, image_size = 0;
+    unsigned int offset = 0;
     unsigned char *pu1Image;
     int ret = -1;
 	signature_header header;
@@ -507,11 +509,13 @@ int verifyPartition(const char *szPartName, ulong addr, unsigned int preloaded)
 	printf("full verify ~~ \n");
 	
     // 0. check if partition exist
+    #if 0
     if (getFlashPartFileSize(szPartName, &image_size) != 0)
     {
         printf("partition name doesn't exist\n");
         return -1;
     }
+	#endif
 	printf("pname = %s \n", szPartName);
 	printf("image_size = 0x%x \n", image_size);
 
@@ -635,6 +639,7 @@ int verify_apps(int boot_mode)
 
             offset = pPart->offset;
             filesize = pPart->filesize;
+			image_size = pPart->filesize;
             imgsize = filesize;                 
             printf("\033[0;32m[%d]Verifying image offset 0x%x  partition size [%d] \033[0m\n", offset,filesize);
 
