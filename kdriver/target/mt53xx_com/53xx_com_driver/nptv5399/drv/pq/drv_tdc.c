@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/10 $
+ * $Date: 2015/04/17 $
  * $RCSfile: drv_tdc.c,v $
- * $Revision: #13 $
+ * $Revision: #14 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1089,6 +1089,7 @@ static void vGOHFrom1D(void)
 static void vAdaptive3DCombGain(void)
 {
     UINT8  bTVDNoiseLevel;
+	UINT8  bTdc3dChromaFlickerFiledCnt;
     UINT32 dwTdc3dMotion;
     UINT32 dwTdc3dColorSum,dwTdc3dMBPixCnt, dwTdc3dLumaSum, dwTdc3dLumaEdge;
     
@@ -1098,6 +1099,7 @@ static void vAdaptive3DCombGain(void)
 	dwTdc3dMBPixCnt = IO32ReadFldAlign(STA_COMB_06, MBPIXCNTSTA);
 	dwTdc3dLumaSum = IO32ReadFldAlign(STA_COMB_07, LUMASUMSTA);
 	dwTdc3dLumaEdge = IO32ReadFldAlign(STA_COMB_09, LUMAEDGESTA);
+	bTdc3dChromaFlickerFiledCnt = IO32ReadFldAlign(STA_COMB_04, CHROMAFLICKERFIELDCNT);
 
 	if(IO32ReadFldAlign(TDC_FW_00, TDC_3DGAIN_DEBUG))
 	{
@@ -1154,9 +1156,10 @@ static void vAdaptive3DCombGain(void)
 			}
 			else if((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)		//E-52
 				&&(dwTdc3dColorSum < 0x3200000)&&(dwTdc3dColorSum > 0x1200000)
-				&&(dwTdc3dMBPixCnt < 0x500)&&(dwTdc3dMBPixCnt > 0x100)
-				&&(dwTdc3dMotion < 0x6000)&&(dwTdc3dMotion > 0x3000)
-				&&(dwTdc3dLumaEdge < 0x80000)&&((dwTdc3dLumaEdge > 0x45000))
+				&&(dwTdc3dMBPixCnt < 0x1000)&&(dwTdc3dMBPixCnt > 0x100)
+				&&(dwTdc3dMotion < 0x8000)&&(dwTdc3dMotion > 0x2000)
+				&&(dwTdc3dLumaEdge < 0x90000)&&((dwTdc3dLumaEdge > 0x35000))
+				&&(bTdc3dChromaFlickerFiledCnt > 0x9)
 				)
 			{
 				bCvbsDiffTh = 0xFF;
@@ -1164,7 +1167,7 @@ static void vAdaptive3DCombGain(void)
 			else if((IO32ReadFldAlign(STA_COMB_0C, STILL_FRAME)==1)		//I-11 CN model
 				&&(dwTdc3dColorSum < 0x1000000)&&(dwTdc3dColorSum > 0x600000)
 				&&(dwTdc3dMBPixCnt < 0x11000)&&(dwTdc3dMBPixCnt > 0xD000)
-				&&(dwTdc3dMotion < 0x600)&&(dwTdc3dMotion > 0x50)
+				&&(dwTdc3dMotion < 0x1500)&&(dwTdc3dMotion > 0x50)
 				&&(dwTdc3dLumaEdge < 0x135000)&&(dwTdc3dLumaEdge > 0x115000)
 				)
 			{				
@@ -1891,7 +1894,7 @@ void vTdcDotCrawlReduce(void)
                 vRegWriteFldAlign (COMB3D_0B, 0x8, REG_D2D3SMALLTH);
                 vRegWriteFldAlign(COMB2D_06, 0x10, PVCVBSVERTH);				
                 
-                _fgMovingCans = 1;
+             //   _fgMovingCans = 1;
             }
             else //107
             {
