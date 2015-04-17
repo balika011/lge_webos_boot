@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/17 $
  * $RCSfile: fbm_drvif.h,v $
- * $Revision: #14 $
+ * $Revision: #15 $
 
  *
  *---------------------------------------------------------------------------*/
@@ -1083,10 +1083,11 @@ typedef struct
 #if defined(CC_MT5395)
 #define FBM_IMG_RESIZE_LIMITATION (192)
 #elif  defined(CC_MT5399)|| defined(CC_MT5880)|| defined(CC_MT5860) ||defined(CC_MT5890)||defined(CC_MT5882)
-#define FBM_IMG_RESIZE_LIMITATION (112)
+#define FBM_IMG_RESIZE_LIMITATION (64)
 #else
-#define FBM_IMG_RESIZE_LIMITATION (192)
+#define FBM_IMG_RESIZE_LIMITATION (64)
 #endif
+
 #define FBM_IMG_RESIZE_LIMITATION_MAX (1920)
 #define FBM_IMG_RESIZE_NETFLIX_WIDTH (1280)
 #define FBM_IMG_RESIZE_NETFLIX_HEIGHT (720)
