@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/15 $
+ * $Date: 2015/04/17 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #60 $
+ * $Revision: #61 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1351,8 +1351,6 @@ const AUD_ENUM_TO_NAME_T eChannelOutMap[] =
     {AUD_CH_AUX_FRONT_LEFT, "SCART"},
     {AUD_CH_BYPASS_LEFT, "MONITER"},
 };
-
-static BOOL bApll2Setting = FALSE;
 
 extern BOOL fgAudDefLogEn; 
 extern BOOL fgAudDefLog[AUD_DEC_MAX];
@@ -13272,9 +13270,49 @@ void _AUD_DspGetSoundBarStatus(UINT8 *pId, UINT8 *pdata)
 
 #endif
 
+extern void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn);
 void AUD_SetSpdifRawDec(UINT8 u1DecId)
 {
-   _u1SpdifRawDec = u1DecId;
+	SAMPLE_FREQ_T eSampleRate = FS_48K;
+	AUD_DEC_STREAM_FROM_T eStreamFromDec0;
+	AUD_DEC_STREAM_FROM_T eStreamFromDec1;
+
+	_u1SpdifRawDec = u1DecId;
+	eSampleRate = AUD_GetSampleFreq(u1DecId);
+	//AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFrom);
+	if (u1DecId == AUD_DEC_MAIN)
+	{
+		AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFromDec0);
+		AUD_DRVGetStreamFrom (0, AUD_DEC_AUX, &eStreamFromDec1);
+		LOG(1, "AUD_SetSpdifRawDec: u1DecId=%d, eSampleRate=%d, eStreamFrom=%d, status=%d\n", u1DecId, eSampleRate, eStreamFromDec0, AUD_DRVGetAudioState(0, AUD_DEC_AUX));
+		if ((eStreamFromDec0 == AUD_STREAM_FROM_GST) &&
+			(eStreamFromDec1 == AUD_STREAM_FROM_HDMI) && 
+			(AUD_DRVGetAudioState(0, AUD_DEC_AUX) == AUD_ON_PLAY))
+		{
+			vDviSetConnetForAudio(0, 0);
+		}
+		else
+		{
+			vDviSetConnetForAudio(0, 1);
+		}
+	}
+	else if (u1DecId == AUD_DEC_AUX)
+	{
+		AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFromDec1);
+		AUD_DRVGetStreamFrom (0, AUD_DEC_MAIN, &eStreamFromDec0);
+		LOG(1, "AUD_SetSpdifRawDec: u1DecId=%d, eSampleRate=%d, eStreamFrom=%d, status=%d\n", u1DecId, eSampleRate, eStreamFromDec1, AUD_DRVGetAudioState(0, AUD_DEC_MAIN));
+		if ((eStreamFromDec1 == AUD_STREAM_FROM_GST) &&
+			(eStreamFromDec0 == AUD_STREAM_FROM_HDMI) && 
+			(AUD_DRVGetAudioState(0, AUD_DEC_MAIN) == AUD_ON_PLAY))
+		{
+			vDviSetConnetForAudio(0, 0);
+		}
+		else
+		{
+			vDviSetConnetForAudio(0, 1);
+		}
+	}
+	AudPll2Setting(eSampleRate);
 }
 
 UINT8 AUD_GetSpdifRawDec(void)
@@ -27906,7 +27944,6 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     CHAR * paConnect[2] = {"Disconnect", "Connect"};
     AUD_DEC_STREAM_FROM_T eStreamFrom;
     AUD_FMT_T eDecType;
-	SAMPLE_FREQ_T eSampleRate;
     
     AUD_OUT_PORT_VALIDATE(eAudioOutPort);
     LOG_AUD_DEF(fgAudDefLogEn, "SoundConnect:  %-10s %-10s %s\n", 
@@ -27976,11 +28013,6 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
                 vAprocReg_Write (APROC_ASM_ADDR (APROC_ASM_ID_AENV_1, APROC_REG_AENV_IEC_RAWMUTE), 1);
             }
         }
-		if (_AUD_GetApll2SettingFlag())
-		{
-			eSampleRate = AUD_GetSampleFreq(u1DecId);
-			AudPll2Setting(eSampleRate);
-		}
         break;
     case AUD_AV_OUT:
         u4Reg = APROC_REG_SEL_DSP_MON_IN;
@@ -28021,17 +28053,6 @@ void _AUD_UserSetDecOutCtrl(AUD_OUT_PORT_T eAudioOutPort, UINT32 u4OutSel, BOOL 
     
     _vAUD_Aproc_Set (APROC_CONTROL_TYPE_SEL, u4Reg, &u4OutSelVal, 1);   
 }
-
-void _AUD_Apll2NeedSetting(BOOL bflag)
-{
-	bApll2Setting = bflag;
-}
-
-BOOL _AUD_GetApll2SettingFlag (void)
-{
-	return bApll2Setting;
-}
-
 #endif
 #endif //defined(CC_AUD_ARM_SUPPORT) && defined(CC_AUD_ARM_RENDER) //#A0005
 

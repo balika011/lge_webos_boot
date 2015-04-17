@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/14 $
+ * $Date: 2015/04/17 $
  * $RCSfile: aud_cfg.c,v $
- * $Revision: #11 $
+ * $Revision: #12 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1915,12 +1915,14 @@ void  AUD_SetSampleFreq(UINT8 u1DecId, SAMPLE_FREQ_T eSmpFreq)
                 || ((_AudGetStrFormat(AUD_DEC_MAIN) == AUD_FMT_AAC || _AudGetStrFormat(AUD_DEC_AUX) == AUD_FMT_AAC || ((_AudGetStrFormat(AUD_DEC_THIRD) == AUD_FMT_AAC) && _IsTriOnlyDecMode())) && !_AUD_DspIsDDCOEnable()))
             {
                 //PLL setting
-                _AUD_Apll2NeedSetting(TRUE);
+                if (AUD_GetSpdifRawDec() == u1DecId)
+            	{
+                	AudPll2Setting(eSmpFreq);
+            	}
             }
             else
             {
                 AudPll2Setting(FS_48K);
-				_AUD_Apll2NeedSetting(FALSE);
             }
         }
         else if (_aeStrSrcConf[AUD_DEC_MAIN] == AUD_STREAM_FROM_HDMI)
