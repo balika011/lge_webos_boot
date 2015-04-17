@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/16 $
+ * $Date: 2015/04/17 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #38 $
+ * $Revision: #39 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -7050,7 +7050,7 @@ static void _DtvLockCheck(UINT8 u1DecId)
     else if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecFormat == AUD_FMT_DRA) &&
              (AUD_IsDecoderPlay(AUD_DSP0, u1DecId)) &&
              (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) &&
-             (DSP_GetDraInputFs(u1DecId) == FALSE))
+             (DSP_GetDraInputFs(u1DecId) == FALSE) && DSP_GetAoutEnable(AUD_DSP0, u1DecId))
     {
         LOG(1 ,"DRA input FS not support!\n");
         u4Idx = APROC_IOCTR_TRIM_AMIXER0; 
@@ -7069,6 +7069,16 @@ static void _DtvLockCheck(UINT8 u1DecId)
             _AUD_UserSetDecInputMute(u1DecId, TRUE);
         }
     } 
+    else if ((_arAudDecoder[AUD_DSP0][u1DecId].eDecFormat == AUD_FMT_DRA) &&
+             (AUD_IsDecoderPlay(AUD_DSP0, u1DecId)) &&
+             (_arAudDecoder[AUD_DSP0][u1DecId].eStreamFrom == AUD_STREAM_FROM_DIGITAL_TUNER) &&
+             (DSP_GetDraDataRateChange(u1DecId) == TRUE))
+    {
+        LOG(1 ,"DRA  Data Rate Change!\n");
+        AUD_DSPCmdStop(AUD_DSP0 , u1DecId);      
+        AUD_DSPCmdPlay(AUD_DSP0, u1DecId);
+    }
+        
     else if (_afgDtvPesLock[u1DecId] || _afgDtvLock[u1DecId])
 #else
     if (_afgDtvPesLock[u1DecId] || _afgDtvLock[u1DecId])

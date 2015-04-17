@@ -81,9 +81,9 @@
  *-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/09 $
+ * $Date: 2015/04/17 $
  * $RCSfile: dsp_intf.h,v $
- * $Revision: #3 $
+ * $Revision: #4 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -193,6 +193,7 @@ extern UINT8 u1GetAacChNum(UINT8 u1DecId);
 extern UINT8 u1GetAacVersion(UINT8 u1DecId);
 extern UINT8 u1GetAacTSFormat(UINT8 u1DecId);
 extern BOOL DSP_GetDraInputFs(UINT8 u1DecId);
+extern BOOL DSP_GetDraDataRateChange(UINT8 u1DecId);
 //-----------------------------------------------------------------------------
 // Public functions
 //-----------------------------------------------------------------------------

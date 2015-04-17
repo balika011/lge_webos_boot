@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/16 $
+ * $Date: 2015/04/17 $
  * $RCSfile: dsp_intf.c,v $
- * $Revision: #12 $
+ * $Revision: #13 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -8523,6 +8523,39 @@ BOOL DSP_GetDraInputFs(UINT8 u1DecId)
     return (fgSupport);
         
 }
+
+UINT32 DraDataRateLast = 0;
+
+BOOL DSP_GetDraDataRateChange(UINT8 u1DecId)
+{
+    BOOL fgDataRateChanged = FALSE;
+    UINT32 u4IntputDataRate = 0;
+    
+    if (u1DecId == AUD_DEC_MAIN)
+    {
+        u4IntputDataRate = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_DRA_FRAME_CNT_HIGH) >> 8);
+        if( u4IntputDataRate != DraDataRateLast)
+        {
+            fgDataRateChanged = TRUE;
+            DraDataRateLast = u4IntputDataRate;
+            LOG(1,"[LGE]###DSP_GetDraDataRateChange01 DraDataRateLast=%x\n",DraDataRateLast);
+        }
+    }
+    else if (u1DecId == AUD_DEC_AUX)
+    {
+        u4IntputDataRate = (UINT32)(dReadDspCommDram(AUD_DSP0, ADDR_D2RC_DRA_FRAME_CNT_HIGH_DEC2) >> 8);
+        if( u4IntputDataRate != DraDataRateLast)
+        {
+            fgDataRateChanged = TRUE;
+            DraDataRateLast = u4IntputDataRate;
+            LOG(1,"[LGE]###DSP_GetDraDataRateChange02 DraDataRateLast=%x\n",DraDataRateLast);
+        }
+    }
+
+    return (fgDataRateChanged);
+        
+}
+
 
 #if defined(CC_AUD_DOLBY_SUPPORT_DDCO) || defined(CC_AUD_DOLBY_SUPPORT_DDT)
 UINT8 u1GetAacChNum(UINT8 u1DecId)
