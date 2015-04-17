@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/16 $
+ * $Date: 2015/04/17 $
  * $RCSfile: drv_di_int.c,v $
- * $Revision: #23 $
+ * $Revision: #24 $
  *
  *---------------------------------------------------------------------------*/
 ////////////////////////////////////////////////////////////////////////////////
@@ -2010,6 +2010,7 @@ static void _vDrvDIDTVTearDetection(void)
     static UINT32 u4PreDTVTearConf = 0;
     static UINT32 u4PreDTVTearOFST = 0;
     static UINT32 u4UpdateCnt = 0;
+	static UINT8  u1UpdateHap = SV_FALSE;
 
     u4MoThOrder = IO32ReadFldAlign(VDP_SCPQ_05, SCPQ_MOTION_TH_ORDER);
     u4MoTh = 2 << u4MoThOrder;
@@ -2065,6 +2066,7 @@ static void _vDrvDIDTVTearDetection(void)
         
             vIO32WriteFldAlign(VDP_SCPQ_03, u4PreDTVTearOFST, SCPQ_CUST_VC_OFST);
             vIO32WriteFldAlign(VDP_SCPQ_03, u4PreDTVTearOFST, SCPQ_CUST_VY_OFST);
+			u1UpdateHap = SV_TRUE;
         
             if (u4Update == SV_TRUE)
             {
@@ -2073,6 +2075,16 @@ static void _vDrvDIDTVTearDetection(void)
             }
         }
     }
+	else
+	{
+		if(u4PreDTVTearOFST != 0 && u1UpdateHap == SV_TRUE)
+		{
+		    vIO32WriteFldAlign(VDP_SCPQ_03, 0, SCPQ_CUST_VC_OFST);
+            vIO32WriteFldAlign(VDP_SCPQ_03, 0, SCPQ_CUST_VY_OFST);
+			vApiRegisterVideoEvent(PE_EVENT_SCALER_V, SV_VP_MAIN, SV_ON);
+			u1UpdateHap = SV_FALSE;
+		}
+	}
 
     u4UpdateCnt++;
 }
