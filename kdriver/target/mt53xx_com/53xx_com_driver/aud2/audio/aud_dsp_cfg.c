@@ -77,7 +77,7 @@
  * $Author: p4admin $
  * $Date: 2015/04/17 $
  * $RCSfile: aud_dsp_cfg.c,v $
- * $Revision: #61 $
+ * $Revision: #62 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -13274,45 +13274,28 @@ extern void vDviSetConnetForAudio(UINT8 bchannel,UINT8 fgIsOn);
 void AUD_SetSpdifRawDec(UINT8 u1DecId)
 {
 	SAMPLE_FREQ_T eSampleRate = FS_48K;
-	AUD_DEC_STREAM_FROM_T eStreamFromDec0;
-	AUD_DEC_STREAM_FROM_T eStreamFromDec1;
+	AUD_DEC_STREAM_FROM_T eStreamFromDec;
+	AUD_FMT_T eFormat;
 
 	_u1SpdifRawDec = u1DecId;
 	eSampleRate = AUD_GetSampleFreq(u1DecId);
-	//AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFrom);
-	if (u1DecId == AUD_DEC_MAIN)
+	eFormat = _AudGetStrFormat(u1DecId);
+
+	AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFromDec);
+	LOG(1, "AUD_SetSpdifRawDec: u1DecId=%d, eSampleRate=%d, eStreamFrom=%d\n", u1DecId, eSampleRate, eStreamFromDec);
+	if (eStreamFromDec == AUD_STREAM_FROM_GST)
 	{
-		AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFromDec0);
-		AUD_DRVGetStreamFrom (0, AUD_DEC_AUX, &eStreamFromDec1);
-		LOG(1, "AUD_SetSpdifRawDec: u1DecId=%d, eSampleRate=%d, eStreamFrom=%d, status=%d\n", u1DecId, eSampleRate, eStreamFromDec0, AUD_DRVGetAudioState(0, AUD_DEC_AUX));
-		if ((eStreamFromDec0 == AUD_STREAM_FROM_GST) &&
-			(eStreamFromDec1 == AUD_STREAM_FROM_HDMI) && 
-			(AUD_DRVGetAudioState(0, AUD_DEC_AUX) == AUD_ON_PLAY))
+		vDviSetConnetForAudio(0, 0);
+		if ((eFormat == AUD_FMT_AC3) || (eFormat == AUD_FMT_DTS) || (eFormat == AUD_FMT_AAC))
 		{
-			vDviSetConnetForAudio(0, 0);
+			AudPll2Setting(eSampleRate);
 		}
 		else
 		{
-			vDviSetConnetForAudio(0, 1);
-		}
+
+			AudPll2Setting(FS_48K);
+		}		
 	}
-	else if (u1DecId == AUD_DEC_AUX)
-	{
-		AUD_DRVGetStreamFrom (0, u1DecId, &eStreamFromDec1);
-		AUD_DRVGetStreamFrom (0, AUD_DEC_MAIN, &eStreamFromDec0);
-		LOG(1, "AUD_SetSpdifRawDec: u1DecId=%d, eSampleRate=%d, eStreamFrom=%d, status=%d\n", u1DecId, eSampleRate, eStreamFromDec1, AUD_DRVGetAudioState(0, AUD_DEC_MAIN));
-		if ((eStreamFromDec1 == AUD_STREAM_FROM_GST) &&
-			(eStreamFromDec0 == AUD_STREAM_FROM_HDMI) && 
-			(AUD_DRVGetAudioState(0, AUD_DEC_MAIN) == AUD_ON_PLAY))
-		{
-			vDviSetConnetForAudio(0, 0);
-		}
-		else
-		{
-			vDviSetConnetForAudio(0, 1);
-		}
-	}
-	AudPll2Setting(eSampleRate);
 }
 
 UINT8 AUD_GetSpdifRawDec(void)
