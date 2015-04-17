@@ -3689,13 +3689,6 @@ static BOOL _VPUSH_MoveData(VOID* prdec, VDEC_BYTES_INTO_T *prBytesInfo)
     }
     #endif
     LOG(9, "vpush: size=%d, addr=0x%08x, pts=0x%llx\n", prBytesInfo->u4BytesSize, prBytesInfo->u4BytesAddr, prBytesInfo->u8BytesPTS);
-
-    if(prVdec->fgNonFirst==FALSE && prVdec->fgIsSecureInput)
-    {
-        LOG(0,"First secure data, skip.");
-        prVdec->fgNonFirst = TRUE;
-        return TRUE;
-    }
     
     if(prVdec->fgIsSecureInput)
 	{
@@ -3884,7 +3877,7 @@ The Decode should register the funciton pointer, and implement the fucntion to P
 #endif
         }
 
-        if (prVdec->fgInsertStartcode && prVdec->fgNonFirst)
+        if (prVdec->fgInsertStartcode && prVdec->fgNonFirst && prVdec->fgPacketAppend==FALSE)
         {
             ptr = (UCHAR*)prBytesInfo->u4BytesAddr;
             if (((ptr[0] == 0x00) && (ptr[1] == 0x00) && (ptr[2] == 0x01)) ||
@@ -3892,10 +3885,6 @@ The Decode should register the funciton pointer, and implement the fucntion to P
             {
                 // already have start code in BDU, no need to insert start code
             }
-			else if (prBytesInfo->fgAppend)
-			{
-				// append data to previous packet, no need to insert start code
-			}
 			else if (prBytesInfo->u4BytesSize == 0)
 			{
 			    LOG(3, "%s(L:%d) u4BytesSize == 0\n", __FUNCTION__, __LINE__);
