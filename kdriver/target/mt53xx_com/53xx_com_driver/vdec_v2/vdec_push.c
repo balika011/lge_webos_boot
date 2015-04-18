@@ -210,7 +210,7 @@ static void _VPUSH_VDEC_Nfy(
     {
     case VDEC_COND_CTRL_DONE:
         {
-            LOG(6, "%s(%d): VDEC_COND_CTRL_DONE(%d)\n", __FUNCTION__, __LINE__, u4Data1);
+            LOG(2, "%s(%d): VDEC_COND_CTRL_DONE(%d)\n", __FUNCTION__, __LINE__, u4Data1);
             if(u4Data1 == 1)//(UINT32)VID_DEC_CTRL_STOP)
             {
                 _VPUSH_SendCmd((VOID*)prVdec, (UINT32)VPUSH_CMD_STOP);
@@ -3412,7 +3412,7 @@ static void _VPUSH_FlushEsmQ(UCHAR ucEsId)
         return;
     }
 
-    LOG(6, "Vpush Flush Es for changing channel %d\n",ucEsId);
+    LOG(2, "Vpush Flush Es %d Start\n",ucEsId);
     _VDEC_LockFlushMutex(ucEsId);
     prVdecEsInfo->fgFlushEsmQ = TRUE;
 
@@ -3432,7 +3432,7 @@ static void _VPUSH_FlushEsmQ(UCHAR ucEsId)
     // lock until flush done in main loop
     _VDEC_LockFlushSema(ucEsId);
 
-    LOG(6, "Vpush Flush Es finish\n");
+    LOG(2, "Vpush Flush Es finish\n");
 }
 
 static BOOL  _VPUSH_DmxMoveSecureData(VDEC_T *prVdec,const DMX_MM_DRM_AES_T *prAesSetting,DMX_MM_DATA_T* pDmxMMData,BOOL fgMove)
@@ -4193,6 +4193,61 @@ void _VPUSH_SendCmd(VOID* prdec, UINT32 u4Cmd)
     UNUSED(_VPUSH_GetMsgCountInQ(prdec));
 }
 
+static VOID _VPUSH_FlushDataMsg(VDEC_T* prVdec)
+{
+    UINT16 u4CmdMsgCnt = 0, u2MsgQIdx, u2MstCount = 0;
+    SIZE_T zMsgSize;
+    INT32 i4Ret;
+    VDEC_MSG_INTO_T rMsgTmp;
+    
+    while (OSR_OK == x_msg_q_receive(&u2MsgQIdx, &rMsgTmp, &zMsgSize,
+                                     &(prVdec->hMsgQ), 1, X_MSGQ_OPTION_NOWAIT))
+    {
+        ASSERT(zMsgSize == sizeof(VDEC_MSG_INTO_T));
+        if (rMsgTmp.eMsgType == VPUSH_MSG_DATA)
+        {    
+            if(prVdec->fgGstPlay)
+            {
+                if (!_VPUSH_PutDataDone(prVdec, rMsgTmp.u.rBytesInfo.u4BytesTag))
+                {
+                    LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
+                }
+            }
+            else
+            {
+                if (!_VPUSH_PutDataDone(prVdec, prVdec->rMsg.u.rBytesInfo.u4BytesAddr))
+                {
+                    LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
+                }
+            }
+        }
+        else if(rMsgTmp.eMsgType == VPUSH_MSG_CMD)
+        {
+            LOG(1, "[VPUSH] ID=%d, _VPUSH_FlushDataMsg Got Cmd %d\n",prVdec->ucVPushId,rMsgTmp.u.eCmd);
+            i4Ret = x_msg_q_send(prVdec->hMsgQ,(void*)&rMsgTmp, sizeof(VDEC_MSG_INTO_T), 254);
+            if(i4Ret != OSR_OK)
+            {
+                LOG(1, "[VPUSH] ID=%d, _VPUSH_FlushDataMsg Send Cmd fail\n",prVdec->ucVPushId);
+            }
+            u4CmdMsgCnt ++;
+        }
+
+        i4Ret = x_msg_q_num_msgs(prVdec->hMsgQ, &u2MstCount);
+
+        if (i4Ret == OSR_NO_MSG)
+        {
+            u2MstCount = 0;
+        }
+
+        if(u2MstCount == u4CmdMsgCnt)
+        {
+            break;
+        }
+    }
+
+    return ;
+}
+
 ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
 {
     VDEC_ES_INFO_T *prVdecEsInfo;
@@ -4248,9 +4303,8 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
         switch (prVdec->rMsg.u.eCmd)
         {
             case VPUSH_CMD_STOP:
-                prVdecEsInfoKeep->fgVPush = FALSE;                
+                LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_STOP START\n",prVdec->ucVPushId);
                 prVdecEsInfoKeep->fgLowLatency = FALSE;
-                prVdecEsInfo->fgMMPlayback = FALSE;
                 prVdec->ePreviousState = prVdec->eCurState;
                 prVdec->eCurState = VPUSH_ST_STOP;
                 prVdec->u4PreviousStopId = prVdec->u4CurStopId;
@@ -4263,12 +4317,7 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                             &(prVdec->hMsgQ), 1, X_MSGQ_OPTION_NOWAIT);
                 }
                 UNUSED(_VPUSH_GetMsgCountInQ(prdec));
-                LOG(6, "%s(%d): VPUSH_CMD_STOP\n", __FUNCTION__, __LINE__);
-                if(prVdec->rInpStrm.fnCb.pfnVdecStopDone)
-                {
-                    prVdec->rInpStrm.fnCb.pfnVdecStopDone(
-                             prVdec->rInpStrm.fnCb.u4StopTag);
-                }
+
                 if(prVdec->hStopSema)
                 {
                     VERIFY(x_sema_unlock(prVdec->hStopSema) == OSR_OK);
@@ -4286,35 +4335,23 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 prVdec->fgFirstVideoChunk = TRUE;
                 prVdec->fgInsertStartcode = FALSE;
                 prVdec->fgGotEos = FALSE;
+
+                if(prVdec->rInpStrm.fnCb.pfnVdecStopDone)
+                {
+                
+                    LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_STOP Done Callback\n",prVdec->ucVPushId);
+                    prVdec->rInpStrm.fnCb.pfnVdecStopDone(
+                             prVdec->rInpStrm.fnCb.u4StopTag);
+                }
+                
+                LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_STOP End\n",prVdec->ucVPushId);
                 break;
             case VPUSH_CMD_FLUSH:
-                
-                while (OSR_OK == x_msg_q_receive(&u2MsgQIdx, &rMsgTmp, &zMsgSize,
-                                                 &(prVdec->hMsgQ), 1, X_MSGQ_OPTION_NOWAIT))
-                {
-                    ASSERT(zMsgSize == sizeof(VDEC_MSG_INTO_T));
-                    if (rMsgTmp.eMsgType == VPUSH_MSG_DATA)
-                    {    
-                        if(prVdec->fgGstPlay)
-                        {
-                            if (!_VPUSH_PutDataDone(prVdec, rMsgTmp.u.rBytesInfo.u4BytesTag))
-                            {
-                                LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
-                            }
-                        }
-                        else
-                        {
-                            if (!_VPUSH_PutDataDone(prVdec, prVdec->rMsg.u.rBytesInfo.u4BytesAddr))
-                            {
-                                LOG(3, "%s(%d): _VPUSH_PutDataDone fail when do flush\n", __FUNCTION__, __LINE__);
-                            }
-                        }
-                    }
-                }
-               
-                LOG(1, "%s(%d): Get VPUSH_CMD_FLUSH\n",__FUNCTION__, __LINE__);
+
+                LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_FLUSH START\n",prVdec->ucVPushId);
+
+                _VPUSH_FlushDataMsg(prVdec);
                 UNUSED(_VPUSH_GetMsgCountInQ(prdec));
-                DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                 //flush first make sure vdec can unlock from get frame.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
                 {
@@ -4326,23 +4363,16 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 _VPUSH_FlushEsmQ(prVdec->ucVdecId);
                 VDEC_ReleaseDispQ(prVdec->ucVdecId);
                 FBM_SetFrameBufferFlag(prVdecEsInfo->ucFbgId,FBM_FLAG_DISP_READY);
-                
+
+                DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                 //flush again to free frame flushed.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
                 {
                     FBM_FlushLockToEmptyQ(prVdecEsInfo->ucFbgId);
                 }
-                LOG(1, "%s(%d): VPUSH_CMD_FLUSH u4DmxAvailSize(%d)\n",\
-                    __FUNCTION__, __LINE__,\
-                    DMX_MUL_GetEmptySize(prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid));
-				
+               
                 prVdec->rDecryptInfo.u4TempBufWp=0;
                 prVdec->rDecryptInfo.fgReseted=TRUE;
-                if(prVdec->rInpStrm.fnCb.pfnVdecFlushDone)
-                {
-                    prVdec->rInpStrm.fnCb.pfnVdecFlushDone(
-                             prVdec->rInpStrm.fnCb.u4FlushTag);
-                }
 
                 if(prVdec->hFlushSema)
                 {
@@ -4354,6 +4384,15 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 prVdec->u4TimerConter  = 0;
                 prVdec->u2LastEsCnt = 0;
                 x_memset(prVdec->pPreDelta,0,sizeof(INT16) * VPUSH_PREDATA_CNT);
+
+                if(prVdec->rInpStrm.fnCb.pfnVdecFlushDone)
+                {
+                    LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_FLUSH Done Callback\n",prVdec->ucVPushId);
+                    prVdec->rInpStrm.fnCb.pfnVdecFlushDone(
+                             prVdec->rInpStrm.fnCb.u4FlushTag);
+                }
+
+                LOG(1, "[VPUSH] ID=%d, VPUSH_CMD_FLUSH END\n",prVdec->ucVPushId);
                 //prVdec->fgNonFirst = FALSE;
                 break;
             case VPUSH_CMD_PLAY:
@@ -4519,14 +4558,14 @@ BOOL _VPUSH_Stop(VOID* prdec)
     
     prVdec->eCurStateSync = VPUSH_ST_STOP;
     VDEC_Stop(prVdec->ucVdecId);
-
+    
     return TRUE;
 }
 
 
 BOOL _VPUSH_Flush(VOID* prdec)
 {
-    //VDEC_T *prVdec;
+    VDEC_T *prVdec;
     //VDEC_DEC_NFY_INFO_T rNfyInfo;
     if(!prdec)
     {
@@ -4535,11 +4574,20 @@ BOOL _VPUSH_Flush(VOID* prdec)
     }
 
     LOG(6, "%s(%d)\n", __FUNCTION__, __LINE__);
-
-    //prVdec = (VDEC_T*)prdec;
-
-    _VPUSH_SendCmd(prdec, (UINT32)VPUSH_CMD_FLUSH);
-    return TRUE;
+    
+    prVdec = (VDEC_T*)prdec;
+    
+    if(prVdec->eCurStateSync == VPUSH_ST_STOP)
+    {
+        LOG(1,"_VPUSH_Flush Vpush(%d) is stoped\n",prVdec->ucVPushId);
+        return FALSE;
+    }
+    else
+    {
+        _VPUSH_SendCmd(prdec, (UINT32)VPUSH_CMD_FLUSH);
+        return TRUE;
+    }
+    
 }
 
 
@@ -5936,7 +5984,8 @@ static VOID _VPUSH_CheckData(HANDLE_T  pt_tm_handle, VOID *pv_tag)
     {
         // From LG's request, do not check underrun after EOS is got
     }
-    else if (VPUSH_ST_PLAY == prVdec->eCurState && prVdec->u8TotalPushSize > 0 && prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_NETWORK_RTC)
+    else if (VPUSH_ST_PLAY == prVdec->eCurState && prVdec->eCurStateSync == VPUSH_ST_PLAY && 
+        prVdec->u8TotalPushSize > 0 && prVdecEsInfo->eMMSrcType != SWDMX_SRC_TYPE_NETWORK_RTC)
     {
         UINT16 u2QueueSize, u2MaxQueueSize;
         INT32 i4DeltaSum = 0,i4Idx;
@@ -6137,6 +6186,7 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
     VDEC_T *prVdec;
     VDEC_DEC_NFY_INFO_T rNfyInfo;
     VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep;
+    VDEC_ES_INFO_T *prVdecEsInfo;
 
     if(!prdec)
     {
@@ -6192,7 +6242,7 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
     prVdec->dwFirst4CC = 0 ;
     
     //FBM_ClrFrameBufferGlobalFlag(0xFF, FBM_FLAG_FB_DECODE_ONLY);
-
+    LOG(1,"[VPUSH] Release Vpush(%d) Vdec(%d)\n",prVdec->ucVPushId,prVdec->ucVdecId);
 	if(prVdec->ucVdecId<VDEC_PUSH_MAX_DECODER)
 	{
 		x_memset(&rNfyInfo, 0, sizeof(VDEC_DEC_NFY_INFO_T));
@@ -6200,13 +6250,15 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
 		rNfyInfo.pfDecNfy = NULL;
 		VDEC_SetDecNfy(prVdec->ucVdecId, &rNfyInfo);
 	}
+    
     _prVdecPush->fgOccupied[prVdec->ucVPushId] = FALSE;
     prVdec->fgFirstVideoChunk = TRUE;
     prVdec->ucVdecId = prVdec->ucVPushId;
     prVdec->ucChannelId = prVdec->ucVPushId;
 
-#if 1 // inform VDEC_NotifyStop release done, keep this in the last!!!
     prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(prVdec->ucVdecId);
+    prVdecEsInfo = _VDEC_GetEsInfo(prVdec->ucVdecId);
+
     if (prVdecEsInfoKeep->hWaitStopSema)
     {
         INT32 i4Ret = x_sema_unlock(prVdecEsInfoKeep->hWaitStopSema);
@@ -6219,7 +6271,9 @@ VOID _VPUSH_ReleaseVideoDecoder(VOID* prdec)
         LOG(0,"[warning!]dmx not released, force do it\n");
         _VPUSH_ReleaseDmx(prdec);
     }
-#endif
+
+    prVdecEsInfoKeep->fgVPush = FALSE;     
+    prVdecEsInfo->fgMMPlayback = FALSE;
 
     prVdec->fgIsSecureInput = FALSE;
     return;
