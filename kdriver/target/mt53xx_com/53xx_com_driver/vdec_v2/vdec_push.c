@@ -4363,7 +4363,6 @@ ENUM_VPUSH_MSG_T _VPUSH_ReceiveMsg(VOID* prdec, BOOL bIsBlock)
                 _VPUSH_FlushEsmQ(prVdec->ucVdecId);
                 VDEC_ReleaseDispQ(prVdec->ucVdecId);
                 FBM_SetFrameBufferFlag(prVdecEsInfo->ucFbgId,FBM_FLAG_DISP_READY);
-
                 DMX_MM_FlushBuffer(prVdec->u1DmxPid);
                 //flush again to free frame flushed.
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL && prVdec->fgGstPlay == FALSE)
@@ -5866,15 +5865,28 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
             #endif
             {
                 UINT16 u2QueueSize, u2MaxQueueSize;                
-                VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep = NULL;
-                u4DmxAvailSize = DMX_MUL_GetEmptySize(
-                    prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid);                
+                VDEC_ES_INFO_KEEP_T *prVdecEsInfoKeep = NULL;               
                 prVdecEsInfoKeep = _VDEC_GetEsInfoKeep(prVdec->ucVdecId);
                 if(!prVdecEsInfoKeep)
                 {
                     LOG(3, "%s(%d): prVdecEsInfoKeep null\n", __FUNCTION__, __LINE__);
                     ASSERT(0);
                 }
+
+                if(prVdecEsInfoKeep->fgDecoderReady == FALSE)
+                {
+                    i4Ret = x_msg_q_send(prVdec->hMsgQ, (void *)&prVdec->rMsg,sizeof(VDEC_MSG_INTO_T), 254);
+                    if(i4Ret != OSR_OK)
+                    {
+                        Printf("[VPUSH] Roll back data message error 1\n");
+                    }
+                    LOG(2,"[VPUSH] Wait Vdec(%d) ready\n",prVdec->ucVdecId);
+                    x_thread_delay(5);
+                    continue;
+                }
+                
+                u4DmxAvailSize = DMX_MUL_GetEmptySize(
+                    prVdec->u1DmxId, DMX_PID_TYPE_ES_VIDEO, prVdec->u1DmxPid); 
                 VDEC_GetQueueInfo(prVdec->ucVdecId, &u2QueueSize, &u2MaxQueueSize);                
                 if(prVdecEsInfoKeep->eVPushPlayMode != VDEC_PUSH_MODE_TUNNEL)
                 {
@@ -5912,7 +5924,7 @@ VOID _VPUSH_PushLoop(VOID* pvArg)
                     if(i4Ret != OSR_OK)
                     {
                         ASSERT(0);
-                        LOG(0, "%s(%d): i4Ret(%d))\n", __FUNCTION__, __LINE__, i4Ret);
+                        Printf("[VPUSH] Roll back data message error 2\n");
                     }
                     x_thread_delay(100);
                 }

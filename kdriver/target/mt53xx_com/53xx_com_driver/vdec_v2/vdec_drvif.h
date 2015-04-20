@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/04/08 $
+ * $Date: 2015/04/20 $
  * $RCSfile: vdec_drvif.h,v $
- * $Revision: #17 $
+ * $Revision: #18 $
  *---------------------------------------------------------------------------*/
 
 /** @file vdec_drvif.h
@@ -2044,6 +2044,7 @@ typedef struct
     BOOL fgVPushDecodeOnly; // output to OSD plane, we does not use b2r output
     BOOL fgVPushFBGFromInst;
     BOOL fgPatternMode;
+    BOOL fgDecoderReady;
     UINT8 u1AvSyncTestMode;
     UINT8 u1FbmMidMode;
     UINT32 u4AvSyncCnt;

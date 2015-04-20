@@ -33,9 +33,9 @@
  * or disclosure of this information in whole or in part is prohibited.
  *-----------------------------------------------------------------------------
  * $Author: p4admin $
- * $Date: 2015/04/02 $
+ * $Date: 2015/04/20 $
  * $RCSfile: vdec_type.h,v $
- * $Revision: #7 $
+ * $Revision: #8 $
  *---------------------------------------------------------------------------*/
 
 /** @file mpv_push.h
@@ -91,9 +91,9 @@ LINT_EXT_HEADER_END
 #define VDEC_PUSH_ES_START           (0)
 #define VDEC_PUSH_CHANNEL_START      (1)
 #ifdef CC_SUPPORT_TV_STAGEFRIGHT
-#define VDEC_PUSH_MSG_Q_SIZE       (VDEC_INPUT_DATA_QUEUE_NUMBER + 240)
+#define VDEC_PUSH_MSG_Q_SIZE       (VDEC_INPUT_DATA_QUEUE_NUMBER + 480)
 #else
-#define VDEC_PUSH_MSG_Q_SIZE       (VDEC_INPUT_DATA_QUEUE_NUMBER + 240)
+#define VDEC_PUSH_MSG_Q_SIZE       (VDEC_INPUT_DATA_QUEUE_NUMBER + 480)
 #endif
 #define VDEC_PUSH_STACK_SIZE       (8172)
 #ifdef MPV_SEMI_HOST // for FPGA, lower to cli thread. We could key in command
