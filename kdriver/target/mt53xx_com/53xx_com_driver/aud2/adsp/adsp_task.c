@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/02/10 $
+ * $Date: 2015/04/20 $
  * $RCSfile: adsp_task.c,v $
- * $Revision: #2 $
+ * $Revision: #3 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -1173,6 +1173,9 @@ void vADSPTaskMain_Init(void)
     _uDspState[AUD_DSP1] = (UINT8)DSP_IDLE; // initially, we enter suspend mode
 #endif    
 
+	/*LG A5lr modification. Init dmx getbits str and end addr*/
+	AUD_WRITE32(REG_DMX_STR, DSP_INTERNAL_ADDR(u4GetAFIFOStart(AUD_DSP0, AUD_DEC_AUX) >> 2));
+    AUD_WRITE32(REG_DMX_END, DSP_INTERNAL_ADDR(u4GetAFIFOEnd(AUD_DSP0, AUD_DEC_AUX) >> 2));
 }
 
 /******************************************************************************
