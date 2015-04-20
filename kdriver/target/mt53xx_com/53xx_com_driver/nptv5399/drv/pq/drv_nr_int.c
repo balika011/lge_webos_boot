@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/16 $
+ * $Date: 2015/04/20 $
  * $RCSfile: drv_nr_int.c,v $
- * $Revision: #6 $
+ * $Revision: #7 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -762,6 +762,7 @@ static void _vScnChgCnt(void)
     {
         u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP);
         _u1ScnChg =1;
+		_u1ScnChgMotion =0xFF;
         _rNmSta.u1NLScnChgCnt = 0;
         LOG(1,"===============> NR Scene Change  \n");
     }
@@ -806,39 +807,53 @@ static void _vScnChgCnt(void)
         
     }
 
+	LOG(2, "~~~~~~~~~~~~~~_rNmSta.u4HomoSum: %d   _u1ScnChgMotion: %d\n", _rNmSta.u4HomoSum, _u1ScnChgMotion);
     //update NL second time when motion
-    if ((_u1ScnChgMotion !=1) && (_rNmSta.u4HomoSum > _SWR(NR_NM_08, NM_SC_MO_TH)))
-    {
-        if (_SWR(NR_NM_07, NR_NM_SC_MO_CONTI_EN))
-        {
-            if (_u1ScnChgMotion ==0)
-            {
-                u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
-                _u1ScnChgMotion =2;
-            }
-                
-            //if still happens during skip_mo period, reset skip_mo again => need to wait skip_mo frames
-            if ((_rNmSta.u4HomoSum <= _SWR(NR_NM_08, NM_SC_MO_TH))&& (u1ScSkip >0))
-            {
-                u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
-                LOG(1,"===============> NR Scene Change   and   Motion  : Reset Skip_Mo \n");
-            }   
-            else
-            {
-                _u1ScnChgMotion =1;
-                _rNmSta.u1NLScnChgCnt = 0;
-                LOG(1,"===============> NR Scene Change   and   Motion : update NL \n");
-            }
-        }
-        else
-        {
-        u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
-        _u1ScnChgMotion =1;
-        _rNmSta.u1NLScnChgCnt = 0;
-        LOG(1,"===============> NR Scene Change   and   Motion \n");
-        }
+	if (((_u1ScnChgMotion == 0) || (_u1ScnChgMotion == 2)) && (_rNmSta.u4HomoSum > _SWR(NR_NM_08, NM_SC_MO_TH)))
+	{
+		if (_SWR(NR_NM_07, NR_NM_SC_MO_CONTI_EN))
+		{
+			if (_u1ScnChgMotion ==0)
+			{
+				u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
+				_u1ScnChgMotion =2;
+			}
 
-    } 
+			if((_u1ScnChgMotion == 2) && (u1ScSkip == 1))
+			{
+				_u1ScnChgMotion =1;
+				_rNmSta.u1NLScnChgCnt = 0;
+				LOG(1,"===============> NR Scene Change   and	Motion : update NL \n");
+			}
+    #if 0
+			//if still happens during skip_mo period, reset skip_mo again => need to wait skip_mo frames
+			if ((_rNmSta.u4HomoSum <= _SWR(NR_NM_08, NM_SC_MO_TH))&& (u1ScSkip >0))
+			{
+				u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
+				LOG(1,"===============> NR Scene Change   and	Motion	: Reset Skip_Mo \n");
+			}	
+			else if(u1ScSkip == 0)
+			{
+				_u1ScnChgMotion =1;
+				_rNmSta.u1NLScnChgCnt = 0;
+				LOG(1,"===============> NR Scene Change   and	Motion : update NL \n");
+			}
+	#endif
+		}
+		else
+		{
+			u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
+			_u1ScnChgMotion =1;
+			_rNmSta.u1NLScnChgCnt = 0;
+			LOG(1,"===============> NR Scene Change   and	Motion \n");
+		}
+
+	}
+	else if((_u1ScnChgMotion == 2) && (_rNmSta.u4HomoSum <= _SWR(NR_NM_08, NM_SC_MO_TH))&& (u1ScSkip > 0))
+	{
+		u1ScSkip = _SWR(NR_NM_07, NM_SC_HIST_SKIP_MO);
+		LOG(1,"===============> NR Scene Change   and	Motion	: Reset Skip_Mo \n");
+	}
     _rNmSta.u1ScnChgCnt = u1ScSkip;
 }
 
@@ -1528,6 +1543,7 @@ void vDrvNRPQInit(void)
 	_SWW(NR_FWBNR_0D, 0x0, NR_FWBNR_CONF_GAIN_PIX_CNT);	
 	_SWW(NR_FWBNR_0E, 0xE6, NR_FWBNR_MOIDX_DEC);
 
+	_SWW(NR_NM_07, 0x1, NR_NM_SC_MO_CONTI_EN);
     vDrvNRSet3DNRAutoStrength(0);
     NR_FW_NM_Init();
     NR_FW_ANR_Init();
