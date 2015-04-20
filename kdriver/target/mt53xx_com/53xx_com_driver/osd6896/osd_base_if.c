@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/03/23 $
+ * $Date: 2015/04/20 $
  * $RCSfile: osd_base_if.c,v $
- * $Revision: #9 $
+ * $Revision: #10 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -4041,11 +4041,7 @@ UINT32 OSD_BASE_GetDisplayWidth(VOID)
     }
 #endif
 
-#if 0
     return PANEL_GetPanelWidth();
-#else
-	return 1920;
-#endif
 }
 
 UINT32 OSD_BASE_GetDisplayHeight(VOID)
@@ -4059,9 +4055,5 @@ UINT32 OSD_BASE_GetDisplayHeight(VOID)
     }
 #endif
 
-#if 0
     return PANEL_GetPanelHeight();
-#else
-	return 1080;
-#endif
 }
