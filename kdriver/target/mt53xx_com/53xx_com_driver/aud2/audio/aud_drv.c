@@ -75,9 +75,9 @@
 /*-----------------------------------------------------------------------------
  *
  * $Author: p4admin $
- * $Date: 2015/04/17 $
+ * $Date: 2015/04/21 $
  * $RCSfile: aud_drv.c,v $
- * $Revision: #39 $
+ * $Revision: #40 $
  *
  *---------------------------------------------------------------------------*/
 
@@ -11501,11 +11501,11 @@ static void _AudAdjustDelayByAudFmt(UINT16 u2VdpDelay, UINT16* pu2AudDelay)
       // i2Auddelay = u2VdpDelay - 25;
        if(eAudDecFormat == AUD_FMT_AC3)
        {         
-         i2Auddelay = u2VdpDelay - 45;
+         i2Auddelay = u2VdpDelay - 65;
        }
        if(eAudDecFormat == AUD_FMT_MPEG)
        {
-         i2Auddelay = u2VdpDelay - 35;
+         i2Auddelay = u2VdpDelay - 45;
        }
        if(i2Auddelay<0)  i2Auddelay = 0;
        
