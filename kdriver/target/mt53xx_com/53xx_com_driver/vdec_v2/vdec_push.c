@@ -4224,7 +4224,7 @@ static VOID _VPUSH_FlushDataMsg(VDEC_T* prVdec)
         else if(rMsgTmp.eMsgType == VPUSH_MSG_CMD)
         {
             LOG(1, "[VPUSH] ID=%d, _VPUSH_FlushDataMsg Got Cmd %d\n",prVdec->ucVPushId,rMsgTmp.u.eCmd);
-            i4Ret = x_msg_q_send(prVdec->hMsgQ,(void*)&rMsgTmp, sizeof(VDEC_MSG_INTO_T), 254);
+            i4Ret = x_msg_q_send(prVdec->hMsgQ,(void*)&rMsgTmp, sizeof(VDEC_MSG_INTO_T), 255);
             if(i4Ret != OSR_OK)
             {
                 LOG(1, "[VPUSH] ID=%d, _VPUSH_FlushDataMsg Send Cmd fail\n",prVdec->ucVPushId);
